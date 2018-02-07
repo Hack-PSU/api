@@ -114,6 +114,10 @@ function verifyACL(level) {
 
 /** ********************** ROUTES ******************************** */
 
+router.get("/", (req, res, next) => {
+  res.status(200).send({"response": "authorized"});
+});
+
 /**
  * @api {get} /admin/registered Get registered hackers
  * @apiVersion 0.1.1

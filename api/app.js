@@ -25,6 +25,7 @@ const index = require('./routes/index');
 const users = require('./routes/users');
 const register = require('./routes/register');
 const admin = require('./routes/admin');
+const pi = require('./routes/pi');
 
 
 const serviceAccount = require('./hackpsu18-firebase-adminsdk-xf07l-ccc564f4ad');
@@ -61,6 +62,7 @@ app.use('/v1/users', users);
 app.use('/v1/register', register);
 app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 app.use('/v1/admin', admin);
+app.use('/v1/pi', pi);
 
 
 // catch 404 and forward to error handler

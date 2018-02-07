@@ -1,11 +1,25 @@
 const express = require('express');
 const database = require('../helpers/database');
-const io = require('socket.io')();
+const router = express.Router();
+const ws = require('express-ws')(router);
 
-io.on('connection', (socket) => {
-  socket.on('scan', (data) => {
-    socket.emit('hear-me', data);
-  })
+router.use(function (req, res, next) {
+  console.log('middleware');
+  req.testing = 'testing';
+  return next();
 });
 
-module.exports = express.Router();
+router.get('/', function(req, res, next){
+  console.log('get route', req.testing);
+  res.end();
+});
+
+router.ws('/', function(ws, req) {
+  ws.on('message', function(msg) {
+    console.log(msg);
+    ws.send(msg);
+  });
+  console.log('socket', req.testing);
+});
+
+module.exports = router;

@@ -19,13 +19,14 @@
     "email-validator": "^1.1.1",
     "express": "~4.15.2",
     "express-limiter": "^1.6.1",
-    "express-ws": "^3.0.0",
+    "express-ws": "3.0.0",
     "firebase": "^4.8.1",
     "firebase-admin": "^5.6.0",
     "helmet": "^3.9.0",
     "morgan": "^1.9.0",
     "pug": "^2.0.0-rc.4",
-    "request": "latest"
+    "request": "latest",
+    "ws": "4.0.0"
   },
   "devDependencies": {
     "apidoc": "^0.17.6",

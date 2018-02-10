@@ -1,3 +1,4 @@
+const http = require("http");
 const express = require('express');
 const path = require('path');
 const logger = require('morgan');
@@ -9,12 +10,23 @@ const cors = require('cors');
 
 
 const app = express();
+/**
+ * Create HTTP server.
+ */
+const server = http.createServer(app);
+
+const expressws = require('express-ws')(app, server);
+/**
+ * Get port from environment and store in Express.
+ */
+const port = normalizePort(process.env.PORT || '5000');
+app.set('port', port);
 
 
 const whitelist = /^((https:\/\/)?((.*)\.)?hackpsu.(com|org))$/;
 const corsOptions = {
   origin: (origin, callback) => {
-    console.log(origin);
+    // console.log(origin);
     if (whitelist.test(origin)) {
       callback(null, true);
     } else {
@@ -27,7 +39,6 @@ const index = require('./routes/index');
 const users = require('./routes/users');
 const register = require('./routes/register');
 const admin = require('./routes/admin');
-const pi = require('./routes/pi');
 
 const serviceAccount = require('./hackpsu18-firebase-adminsdk-xf07l-ccc564f4ad');
 
@@ -63,7 +74,14 @@ app.use('/v1/users', users);
 app.use('/v1/register', register);
 app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 app.use('/v1/admin', admin);
-app.use('/v1/pi', pi);
+app.ws('/v1/pi', (ws, req) => {
+    ws.on('message', (msg) => {
+        console.log(msg);
+        ws.send(msg);
+    });
+    console.log('socket', req.testing);
+});
+
 
 
 // catch 404 and forward to error handler
@@ -91,4 +109,24 @@ app.use((err, req, res, next) => {
   }
 });
 
-module.exports = app;
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+    let port = parseInt(val, 10);
+
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
+
+    if (port >= 0) {
+        // port number
+        return port;
+    }
+
+    return false;
+}
+
+module.exports = server;

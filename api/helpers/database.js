@@ -1,9 +1,9 @@
 const squel = require('squel');
-// const admin = require('firebase-admin');
 const sql = require('mysql');
+const uuidv1 = require('uuid/v1');
+
 const sqlOptions = require('../helpers/constants').sqlConnection;
 const connection = sql.createConnection(sqlOptions);
-const JSONStream = require('JSONStream');
 
 connection.connect((err) => {
     if (err) {
@@ -21,7 +21,6 @@ function getRegistrations(limit) {
         .toString()
         .concat(';');
     return connection.query(query).stream();
-    // return admin.firestore().collection('registered-hackers').stream();
 }
 
 /**
@@ -34,9 +33,37 @@ function getPreRegistrations(limit) {
         .toString().concat(';');
     console.log(query);
     return connection.query(query).stream();
-    // return admin.firestore().collection('pre-registered').stream();
 }
 
-
-module.exports.getRegistrations = getRegistrations;
-module.exports.getPreRegistrations = getPreRegistrations;
+/**
+ *
+ * @param email
+ * @return {Promise<any>}
+ */
+function addPreRegistration(email) {
+    const query = squel.insert()
+        .into(process.env.NODE_ENV === 'test' ? 'PRE_REGISTRATION_TEST' : 'PRE_REGISTRATION')
+        .set('id', uuidv1().replace(/-/g, ""))
+        .set('email', email)
+        .toString()
+        .concat(';');
+    return new Promise((resolve, reject) => {
+        connection.query(query, (err, result) => {
+           if (err && err.errno === 1062) {
+               const error = new Error();
+               error.message  = "Email already provided";
+               error.status = 400;
+               reject(error);
+           } else if (err) {
+               reject(err);
+           } else {
+               resolve(result);
+           }
+        });
+    });
+}
+module.exports = {
+    getRegistrations,
+    getPreRegistrations,
+    addPreRegistration,
+};

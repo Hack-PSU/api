@@ -132,7 +132,8 @@ router.get("/", (req, res, next) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
-    if (parseInt(req.query.limit)) {
+    if (!req.query.limit || parseInt(req.query.limit)) {
+        let arr = [];
         database.getRegistrations(req.query.limit)
             .on('data', (document) => {
                 arr.push(document);
@@ -165,7 +166,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/preregistered', verifyACL(2), (req, res, next) => {
-    if (parseInt(req.query.limit)) {
+    if (!req.query.limit || parseInt(req.query.limit)) {
         let arr = [];
         database.getPreRegistrations(req.query.limit)
             .on('data', (document) => {

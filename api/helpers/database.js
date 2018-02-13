@@ -1,6 +1,6 @@
 const squel = require('squel');
 const sql = require('mysql');
-const uuidv1 = require('uuid/v1');
+const uuidv4 = require('uuid/v4');
 
 const sqlOptions = require('../helpers/constants').sqlConnection;
 const connection = sql.createConnection(sqlOptions);
@@ -15,9 +15,9 @@ connection.connect((err) => {
  * @return {Stream} Returns a continuous stream of data from the database
  */
 function getRegistrations(limit) {
-    const query = squel.select()
-        .from("registrations")
-        .limit(limit)
+    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+        .from("REGISTRATION")
+        .limit(limit ? limit : null)
         .toString()
         .concat(';');
     return connection.query(query).stream();
@@ -29,7 +29,7 @@ function getRegistrations(limit) {
 function getPreRegistrations(limit) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
         .from("PRE_REGISTRATION")
-        .limit(limit)
+        .limit(limit ? limit : null)
         .toString().concat(';');
     console.log(query);
     return connection.query(query).stream();
@@ -41,9 +41,9 @@ function getPreRegistrations(limit) {
  * @return {Promise<any>}
  */
 function addPreRegistration(email) {
-    const query = squel.insert()
+    const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
         .into(process.env.NODE_ENV === 'test' ? 'PRE_REGISTRATION_TEST' : 'PRE_REGISTRATION')
-        .set('id', uuidv1().replace(/-/g, ""))
+        .set('id', uuidv4().replace(/-/g, ""))
         .set('email', email)
         .toString()
         .concat(';');

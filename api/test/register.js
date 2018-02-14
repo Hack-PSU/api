@@ -3,75 +3,27 @@ process.env.NODE_ENV = 'test';
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const server = require('../app');
-const admin = require('firebase-admin');
+const sql = require("mysql");
+const squel = require("squel");
+const sqlOptions = require('../helpers/constants').sqlConnection;
+const connection = sql.createConnection(sqlOptions);
 
 const should = chai.should();
 
 chai.use(chaiHttp);
 
-/**
- * Deletes all documents in the provided collection
- * @param db
- * @param collectionPath
- * @param batchSize
- * @return {Promise<any>}
- */
-function deleteCollection(db, collectionPath, batchSize) {
-  const collectionRef = db.collection(collectionPath);
-  const query = collectionRef.orderBy('__name__').limit(batchSize);
-
-  return new Promise((resolve, reject) => {
-    deleteQueryBatch(db, query, batchSize, resolve, reject);
-  });
-}
-
-/**
- * Recursively batch deletes the collections in the provided collection, limiting
- * by the provided batch size.
- * @param db
- * @param query
- * @param batchSize
- * @param resolve
- * @param reject
- */
-function deleteQueryBatch(db, query, batchSize, resolve, reject) {
-  query.get()
-    .then((snapshot) => {
-      // When there are no documents left, we are done
-      if (snapshot.size === 0) {
-        return 0;
-      }
-
-      // Delete documents in a batch
-      const batch = db.batch();
-      snapshot.docs.forEach((doc) => {
-        batch.delete(doc.ref);
-      });
-
-      return batch.commit().then(() => snapshot.size);
-    }).then((numDeleted) => {
-      if (numDeleted === 0) {
-        resolve();
-        return;
-      }
-
-      // Recurse on the next process tick, to avoid
-      // exploding the stack.
-      process.nextTick(() => {
-        deleteQueryBatch(db, query, batchSize, resolve, reject);
-      });
-    })
-    .catch(reject);
-}
-
 // Scrub DB
 describe('pre-registration tests', () => {
   before((done) => {
-    deleteCollection(admin.firestore(), 'pre-registrations-test', 500)
-      .then(() => {
-        done();
-      }).catch((err) => {
-        done(err);
+      const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+          .from("PRE_REGISTRATION_TEST")
+          .toString()
+          .concat(';');
+      connection.query(query, (err, response, fields) => {
+          if (err) {
+              throw err;
+          }
+          done();
       });
   });
 

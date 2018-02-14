@@ -6,6 +6,8 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const firebase = require('firebase-admin');
+const fs = require("fs");
+const nodecipher = require("node-cipher");
 const cors = require('cors');
 
 
@@ -25,14 +27,14 @@ app.set('port', port);
 
 const whitelist = /^((https:\/\/)?((.*)\.)?hackpsu.(com|org))$/;
 const corsOptions = {
-  origin: (origin, callback) => {
-    // console.log(origin);
-    if (whitelist.test(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Allow all cross-origin requests for now
-    }
-  },
+    origin: (origin, callback) => {
+        // console.log(origin);
+        if (whitelist.test(origin)) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Allow all cross-origin requests for now
+        }
+    },
 };
 
 const index = require('./routes/index');
@@ -41,17 +43,26 @@ const register = require('./routes/register');
 const admin = require('./routes/admin');
 const pi = require('./routes/pi');
 
-const serviceAccount = require('./hackpsu18-firebase-adminsdk-xf07l-ccc564f4ad');
+nodecipher.decryptSync({
+    input: 'privatekey.aes',
+    output: 'config.json',
+    password: process.env.PKEY_PASS,
+    algorithm: 'aes-256-cbc-hmac-sha256'
+});
+
+const serviceAccount = require('./config.json');
 
 firebase.initializeApp({
-  credential: firebase.credential.cert(serviceAccount),
-  databaseURL: 'https://hackpsu18.firebaseio.com',
+    credential: firebase.credential.cert(serviceAccount),
+    databaseURL: 'https://hackpsu18.firebaseio.com',
 });
+
+fs.unlinkSync('./config.json');
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
 
 if (process.env.NODE_ENV !== 'test') {
-  app.use(cors(corsOptions));
+    app.use(cors(corsOptions));
 }
 
 // view engine setup
@@ -62,11 +73,11 @@ app.set('view engine', 'pug');
 // app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 // don't show the log when it is test
 if (process.env.NODE_ENV !== 'test') {
-  // use morgan to log at command line
-  app.use(logger('combined')); // 'combined' outputs the Apache style LOGs
+    // use morgan to log at command line
+    app.use(logger('combined')); // 'combined' outputs the Apache style LOGs
 }
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -78,30 +89,29 @@ app.use('/v1/admin', admin);
 app.use('/v1/pi', pi);
 
 
-
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
-  const err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+    const err = new Error('Not Found');
+    err.status = 404;
+    next(err);
 });
 
 // error handler
 app.use((err, req, res, next) => {
-  if (process.env.NODE_ENV !== 'test') {
-    console.error(err);
-  }
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+    if (process.env.NODE_ENV !== 'test') {
+        console.error(err);
+    }
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  if (err.body) {
-    res.send(err.body);
-  } else {
-    res.render('error');
-  }
+    // render the error page
+    res.status(err.status || 500);
+    if (err.body) {
+        res.send(err.body);
+    } else {
+        res.render('error');
+    }
 });
 
 /**

@@ -25,6 +25,7 @@
     "helmet": "^3.9.0",
     "morgan": "^1.9.0",
     "mysql": "2.15.0",
+    "node-cipher": "6.3.2",
     "pug": "^2.0.0-rc.4",
     "request": "latest",
     "squel": "5.12.0",

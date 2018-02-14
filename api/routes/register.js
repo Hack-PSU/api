@@ -4,6 +4,8 @@ const router = express.Router();
 const admin = require('firebase-admin');
 const validator = require('email-validator');
 
+const database = require('../helpers/database');
+
 
 /**
  * @api {post} /register/pre Pre-register for HackPSU
@@ -17,29 +19,37 @@ const validator = require('email-validator');
  * @apiUse IllegalArgumentError
  */
 router.post('/pre', (req, res, next) => {
-  if (req.body && req.body.email && validator.validate(req.body.email)) {
-    let emailsRef = null;
-    if (process.env.NODE_ENV === 'test') {
-      emailsRef = admin.firestore().collection('pre-registrations-test').doc();
+    if (!(req.body && req.body.email && validator.validate(req.body.email))) {
+        const error = new Error();
+        error.body = {error: 'Request body must be set and must be a valid email'};
+        error.status = 400;
+        next(error);
     } else {
-      emailsRef = admin.firestore().collection('pre-registrations').doc();
+        database.addPreRegistration(req.body.email)
+            .then(() => {
+                res.status(200).send("Success");
+            }).catch((err) => {
+            console.error(err);
+            err.status = err.status || 500;
+            next(err);
+        });
     }
-    emailsRef.set({ email: req.body.email })
-      .then(() => {
-        res.status(200).send('Success');
-      }).catch((err) => {
-        err.status = 500;
-        next(err);
-      }).catch((err) => {
-        err.status = 500;
-        next(err);
-      });
-  } else {
-    const error = new Error();
-    error.body = { error: 'Request body must be set and must be a valid email' };
-    error.status = 400;
-    next(error);
-  }
+    //     if (process.env.NODE_ENV === 'test') {
+    //         database.emailsRef = admin.firestore().collection('pre-registrations-test').doc();
+    //     } else {
+    //         emailsRef = admin.firestore().collection('pre-registrations').doc();
+    //     }
+    //     emailsRef.set({email: req.body.email})
+    //         .then(() => {
+    //             res.status(200).send('Success');
+    //         }).catch((err) => {
+    //         err.status = 500;
+    //         next(err);
+    //     }).catch((err) => {
+    //         err.status = 500;
+    //         next(err);
+    //     });
+    // }
 });
 
 module.exports = router;

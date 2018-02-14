@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const database = require('../helpers/database');
 
 /*************** HELPER FUNCTIONS ***************/
 
@@ -11,12 +12,23 @@ const router = express.Router();
 
 
 /*************** ROUTES *************************/
-router.ws('/', (ws, req) => {
+router.ws('/', (ws) => {
     ws.on('message', (msg) => {
         console.log(msg);
         ws.send(msg);
     });
-    console.log('socket', req.testing);
+});
+
+router.ws('/sql', (ws, req) => {
+   ws.on('message', (msg) => {
+       console.log(msg);
+       database.writePiMessage(msg)
+           .then((msg) => {
+               ws.send(msg);
+           }).catch((err) => {
+               ws.send(err);
+       });
+   })
 });
 
 module.exports = router;

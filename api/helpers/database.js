@@ -62,8 +62,32 @@ function addPreRegistration(email) {
         });
     });
 }
+
+/**
+ *
+ * @param msg
+ */
+function writePiMessage(msg) {
+   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+       .into("PI_TEST")
+       .set('time', new Date().getTime())
+       .set('message', msg)
+       .toString()
+       .concat(';');
+   return new Promise((resolve, reject) => {
+      connection.query(query, (err) => {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(msg);
+          }
+      });
+   });
+}
+
 module.exports = {
     getRegistrations,
     getPreRegistrations,
     addPreRegistration,
+    writePiMessage,
 };

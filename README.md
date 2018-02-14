@@ -13,6 +13,10 @@ Firstly, you'll need Nodejs. We recommend v8+
 Installing all dependencies:
 - `npm install`
 - `npm start` : Ignore the port 3306 error that may show up
+  - To setup the environment correctly, ask an exec team member for the environment variables and run the script like so:
+  - `PKEY_PASS=<password> RDS_HOSTNAME=<hostname> RDS_USERNAME=<username> RDS_PASSWORD=<password> RDS_DATABASE=<database_name> npm start`
+  - To test:
+  - `PKEY_PASS=<password> RDS_HOSTNAME=<hostname> RDS_USERNAME=<username> RDS_PASSWORD=<password> RDS_DATABASE=<database_name> npm test`
 
 [![Build Status](https://travis-ci.com/hackpsu-tech/hackPSUS2018-api.svg?token=rXBswytuwgwFX9F967pp&branch=master)](https://travis-ci.com/hackpsu-tech/hackPSUS2018-api)
 

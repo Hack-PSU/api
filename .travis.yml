@@ -27,5 +27,6 @@ deploy:
   region: us-east-2
   app: api
   env: api-dev
+  bucket_name: elasticbeanstalk-us-east-2-905020680040
   on:
     repo: hackpsu-tech/hackPSUS2018-api

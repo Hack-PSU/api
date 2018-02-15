@@ -5,7 +5,7 @@ const fs = require('fs');
 var admin = require('firebase-admin');
 const uuid = require('uuid/v4');
 
-var serviceAccount = require('../hackpsu18-firebase-adminsdk-xf07l-ccc564f4ad.json');
+var serviceAccount = require('../hackpsu18-firebase-adminsdk-xf07l-3905b29787');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),

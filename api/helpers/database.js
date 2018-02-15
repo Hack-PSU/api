@@ -12,77 +12,88 @@ connection.connect((err) => {
 });
 
 /**
+ * @param limit {Number} Limit the number of rows to retrieve
+ * @param offset {Number} Offset from start to retrieve at
  * @return {Stream} Returns a continuous stream of data from the database
  */
-function getRegistrations(limit) {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+function getRegistrations(limit, offset) {
+    const mLimit = parseInt(limit);
+    const mOffset = parseInt(offset);
+    const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .from("REGISTRATION")
-        .limit(limit ? limit : null)
+        .limit(mLimit ? mLimit : null)
+        .offset(mOffset ? mOffset : null)
         .toString()
         .concat(';');
     return connection.query(query).stream();
 }
 
 /**
+ * @param limit {Number} Limit the number of rows to retrieve
+ * @param offset {Number} Offset from start to retrieve at
  * @return {Stream} Returns a continuous stream of data from the database
  */
-function getPreRegistrations(limit) {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+function getPreRegistrations(limit, offset) {
+    const mLimit = parseInt(limit);
+    const mOffset = parseInt(offset);
+    const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .from("PRE_REGISTRATION")
-        .limit(limit ? limit : null)
+        .limit(mLimit ? limit : null)
+        .offset(mOffset ? offset : null)
         .toString().concat(';');
-    console.log(query);
     return connection.query(query).stream();
 }
 
 /**
  *
- * @param email
+ * @param email {String} the email
  * @return {Promise<any>}
  */
 function addPreRegistration(email) {
-    const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .into(process.env.NODE_ENV === 'test' ? 'PRE_REGISTRATION_TEST' : 'PRE_REGISTRATION')
-        .set('id', uuidv4().replace(/-/g, ""))
-        .set('email', email)
-        .toString()
-        .concat(';');
+        .setFieldsRows([
+            { id: uuidv4().replace(/-/g, ""), email: email },
+        ])
+        .toParam();
+    query.text = query.text.concat(';');
     return new Promise((resolve, reject) => {
-        connection.query(query, (err, result) => {
-           if (err && err.errno === 1062) {
-               const error = new Error();
-               error.message  = "Email already provided";
-               error.status = 400;
-               reject(error);
-           } else if (err) {
-               reject(err);
-           } else {
-               resolve(result);
-           }
+        connection.query(query.text, query.values, (err, result) => {
+            if (err && err.errno === 1062) {
+                const error = new Error();
+                error.message = "Email already provided";
+                error.status = 400;
+                reject(error);
+            } else if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
         });
     });
 }
 
 /**
  *
- * @param msg
+ * @param msg {String} Message to write
  */
 function writePiMessage(msg) {
-   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-       .into("PI_TEST")
-       .set('time', new Date().getTime())
-       .set('message', msg)
-       .toString()
-       .concat(';');
-   return new Promise((resolve, reject) => {
-      connection.query(query, (err) => {
-          if (err) {
-              reject(err);
-          } else {
-              resolve(msg);
-          }
-      });
-   });
+    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+        .into("PI_TEST")
+        .setFieldsRows([
+            { time: new Date().getTime(), message: msg }
+        ])
+        .toParam();
+    query.text = query.text.concat(';');
+    return new Promise((resolve, reject) => {
+        connection.query(query.text, query.values, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(msg);
+            }
+        });
+    });
 }
 
 module.exports = {

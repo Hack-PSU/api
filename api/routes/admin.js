@@ -132,9 +132,9 @@ router.get("/", (req, res, next) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
-    if (!req.query.limit || parseInt(req.query.limit)) {
+    if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
         let arr = [];
-        database.getRegistrations(req.query.limit)
+        database.getRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
             .on('data', (document) => {
                 arr.push(document);
             }).on('err', (err) => {
@@ -148,7 +148,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
     } else {
         const error = new Error();
         error.status = 400;
-        error.body = {"message": "Limit must be an integer"};
+        error.body = {"message": "Limit and offset must be integerss"};
         next(error);
     }
 });
@@ -166,9 +166,9 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/preregistered', verifyACL(2), (req, res, next) => {
-    if (!req.query.limit || parseInt(req.query.limit)) {
+    if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
         let arr = [];
-        database.getPreRegistrations(req.query.limit)
+        database.getPreRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
             .on('data', (document) => {
                 arr.push(document);
             }).on('err', (err) => {

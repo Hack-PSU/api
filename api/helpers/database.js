@@ -73,6 +73,7 @@ function addPreRegistration(email) {
     });
 }
 
+
 /**
  *
  * @param msg {String} Message to write

@@ -1,7 +1,9 @@
 /* eslint-disable max-len */
-const request = require('request');
 const constants = require('./constants');
+const ses = require('node-ses')
 
+const emailKey = require("../helpers/constants").emailKey;
+const client = ses.createClient(emailKey);
 /**
  * This function substitutes the provided
  * @param {String} html A string of HTML text that forms the body of the email. All substitutables must be formatted as $substitutable$. The HTML MUST contain the $NAME$ substitutable.
@@ -22,8 +24,16 @@ module.exports.emailSubstitute = function emailSubstitute(html, name, substituti
  * @param options Contains the options for the POST request. For schema, refer to function createEmailRequest or the SendInBlue API
  * @return {Promise<any>}
  */
-module.exports.sendEmail = function sendEmail(options) {
+module.exports.sendEmail = function sendEmail(data) {
   return new Promise((resolve, reject) => {
+    client.sendEmail(data, function (err, data, res) {
+      if (err) {
+        reject(error);
+      }
+      else resolve(res);
+    });
+    /*
+
     request(options, (error, response, body) => {
       if (error) {
         reject(error);
@@ -31,9 +41,19 @@ module.exports.sendEmail = function sendEmail(options) {
         resolve(response);
       }
     });
+    */
   });
 };
 
+
+/*`from` - email address from which to send (required)
+`subject` - string (required). Must be encoded as UTF-8
+`message` - can be html (required). Must be encoded as UTF-8.
+`altText` - plain text version of message. Must be encoded as UTF-8.
+`to` - email address or array of addresses
+`cc` - email address or array of addresses
+`bcc` - email address or array of addresses
+`replyTo` - email address
 /**
  * This generates the proper email send POST request format
  * @param {String} email The email ID to send the email to
@@ -42,8 +62,15 @@ module.exports.sendEmail = function sendEmail(options) {
  * @param {String} name The name of the recipient
  * @return {Object} { data, options }
  */
-module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject, name) {
+module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject) {
   const data = {
+    to: email, 
+    from: 'team@hackpsu.org', 
+    subject: subject, 
+    message: htmlContent,
+    replyTo: 'team@hackpsu.org'
+    }
+    /*
     to: [{ email, name }],
     sender: {
       email: 'team@hackpsu.org',
@@ -61,9 +88,8 @@ module.exports.createEmailRequest = function createEmailRequest(email, htmlConte
       'api-key': process.env.SENDINBLUE_API_KEY,
     },
     json: true,
-  };
+  };*/
   return {
     data,
-    options,
   };
 };

@@ -265,8 +265,8 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
                 promises.push(new Promise((resolve) => {
                     // Substitute HTML with name/emails and send email
                     const subHTML = functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions); // Substitute the substitutables in the html
-                    const request = functions.createEmailRequest(emailObject.email, subHTML, req.body.subject, emailObject.name); // Generate the POST request
-                    functions.sendEmail(request.options)
+                    const request = functions.createEmailRequest(emailObject.email, subHTML, req.body.subject); // Generate the POST request
+                    functions.sendEmail(request.data)
                         .then((response) => {
                             resolve(response); // If succesful, resolve
                         }).catch((error) => {

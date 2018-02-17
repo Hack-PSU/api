@@ -23,5 +23,9 @@ module.exports = {
         user     : process.env.RDS_USERNAME || 'user',
         password : process.env.RDS_PASSWORD || 'secret',
         database : process.env.RDS_DATABASE || 'my_db',
+    },
+    emailKey: {
+        key: process.env.AWS_ACCESS_KEY_ID,
+        secret: process.env.AWS_SECRET_ACCESS_KEY 
     }
 };

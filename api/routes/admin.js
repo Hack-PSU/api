@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 const constants = require('../helpers/constants');
 const functions = require('../helpers/functions');
+const validator = require('email-validator');
 
 const express = require('express');
 const authenticator = require('../helpers/auth');
@@ -18,6 +19,7 @@ const router = express.Router();
 /**
  * Administrator authentication middleware
  */
+ 
 router.use((req, res, next) => {
     if (req.headers.idtoken) {
         authenticator.checkAuthentication(req.headers.idtoken)
@@ -186,6 +188,40 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
         next(error);
     }
 });
+
+
+/**
+ * @api {get} /admin/userid Get userId corresponding the email associated with the id
+ * @apiVersion 0.1.1
+ * @apiName Get User Id
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiParam {string} email - the email that is associated to the seeking userID 
+ * @apiSuccess {object} Object containing {uid, displayName}
+ * @apiUse IllegalArgumentError
+ */
+router.get('/userid',verifyACL(3), (req, res, next) => {
+  console.log(req.query);
+  if(!(req.query && req.query.email && validator.validate(req.body.email))){
+    const error = new Error();
+    error.status = 400;
+    error.body = {error: "request query must be set and a valid email"};
+    next(error);
+  } else {
+    authenticator.getUserID(req.body).then((user) => {
+      res.status(200).send({uid: user.uid, displayName: user.displayName});
+    }).catch((error) => {
+      const err = new Error();
+      console.error(error);
+      err.status = error.status || 500;
+      err.body = error.message;
+      next(err);
+    })
+  }
+})
+
 
 /**
  * @api {post} /admin/makeadmin Elevate a user's privileges

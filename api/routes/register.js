@@ -23,33 +23,37 @@ aws.config.update({
     region: 'us-east-2'
 });
 
-const s3 = new aws.S3();   
+const s3 = new aws.S3();
 
-const storage = multers3({ 
-	s3: s3,
-	bucket: 'hackpsus2018-resumes',
-	metadata: function (req, file, cb) {
-      cb(null, {fieldName: file.fieldname,
-      			uid: req.body.data.uid});
+const storage = multers3({
+    s3: s3,
+    bucket: 'hackpsus2018-resumes',
+    serverSideEncryption: 'AES256',
+    metadata: function (req, file, cb) {
+        console.log(req.body);
+        cb(null, {
+            fieldName: file.fieldname,
+            uid: req.body.uid
+        });
     },
     key: function (req, file, cb) {
-       cb(null,req.body.data.uid + '-' + req.body.data.firstName + "-" + req.body.data.lastName + "-HackPSUS2018.pdf");
+        cb(null, req.body.uid + '-' + req.body.firstName + "-" + req.body.lastName + "-HackPSUS2018.pdf");
     }
-})
+});
 
 
 const upload = multer({
-  fileFilter: function (req, file, cb) {
-    if (path.extname(file.originalname) !== '.pdf') {
-      return cb(new Error('Only pdfs are allowed'));
-    }
+    fileFilter: function (req, file, cb) {
+        if (path.extname(file.originalname) !== '.pdf') {
+            return cb(new Error('Only pdfs are allowed'));
+        }
 
-    cb(null, true);
-  },
-  storage: storage,
-  limits: {fileSize: 1024 * 1024 * 10} //limit to 10MB
+        cb(null, true);
+    },
+    storage: storage,
+    limits: {fileSize: 1024 * 1024 * 10} //limit to 10MB
 });
- 
+
 
 //const database = require('../helpers/database');
 
@@ -62,18 +66,18 @@ const upload = multer({
 
 router.use((req, res, next) => {
 
-	console.log(req.clientIp)
+    console.log(req.clientIp);
 
     if (req.headers.idtoken) {
-    	
+
         authenticator.checkAuthentication(req.headers.idtoken)
             .then((decodedToken) => {
-    
-                    res.locals.privilege = decodedToken.privilege;
-                    res.locals.uid = decodedToken.uid;
-                    
-                    next();
-              
+
+                res.locals.privilege = decodedToken.privilege;
+                res.locals.uid = decodedToken.uid;
+
+                next();
+
             }).catch((err) => {
             const error = new Error();
             error.status = 401;
@@ -140,12 +144,12 @@ router.post('/pre', (req, res, next) => {
  * @apiVersion 0.1.1
  * @apiName Registration
  * @apiGroup Registration
- * @apiParam 
-	request header {
+ * @apiParam
+ request header {
 		idtoken: user's idtoken
 	}
 
- 	request Body {
+ request Body {
 		data:{ 
 			firstName: {
                 type: 'string',
@@ -236,59 +240,43 @@ router.post('/pre', (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 
-router.post('/', upload.single('resume'), (req,res,next) => {
-	
-	if(req.body.data.travelReimbursement == 'true'){ 
-		req.body.data.travelReimbursement = true;
-	} else {
-		req.body.data.travelReimbursement = false;
-	}
+router.post('/', upload.single('resume'), (req, res, next) => {
+    console.log(req.body);
 
-	if(req.body.data.fisrtHackathon == 'true'){ 
-		req.body.data.firstHackathon = true;
-	} else {
-		req.body.data.firstHackathon = false;
-	}
+    /** Converting boolean strings to booleans types in req.body */
+    req.body.travelReimbursement = req.body.travelReimbursement && req.body.travelReimbursement === 'true';
 
-	if(req.body.data.eighteenBeforeEvent == 'true'){ 
-		req.body.data.eighteenBeforeEvent = true;
-	} else {
-		req.body.data.eighteenBeforeEvent = false;
-	}
+    req.body.firstHackathon = req.body.firstHackathon && req.body.firstHackathon === 'true';
 
-	if(req.body.data.mlhCOC == 'true'){ 
-		req.body.data.mlhCOC = true;
-	} else {
-		req.body.data.mlhCOC = false;
-	}
+    req.body.eighteenBeforeEvent = req.body.eighteenBeforeEvent && req.body.eighteenBeforeEvent === 'true';
 
-	if(req.body.data.mlhDCP == 'true'){ 
-		req.body.data.mlhDCP = true;
-	} else {
-		req.body.data.mlhDCP = false;
-	}
+    req.body.mlhcoc = req.body.mlhcoc && req.body.mlhcoc === 'true';
+
+    req.body.mlhdcp = req.body.mlhdcp && req.body.mlhdcp === 'true';
 
 
-	if (!(req.body && req.body.data && validateRegistration(req.body.data) && validator.validate(req.body.data.email) && req.body.data.eighteenBeforeEvent && req.body.data.mlhCOC && req.body.data.mlhDCP)) {
+    if (!(req.body && validateRegistration(req.body) && validator.validate(req.body.email) && req.body.eighteenBeforeEvent && req.body.mlhcoc && req.body.mlhdcp)) {
         const error = new Error();
         error.body = {error: 'Reasons for error: Request body must be set, data object must be set, must use valid email, eighteenBeforeevent mlhCOC and mlhDCP must all be true'};
         error.status = 400;
         next(error);
-    } else{
-    res.status(200).send("Success");
+    } else {
+        // Add to database
+
+        res.status(200).send({response: "Success"});
     }
 
 
 });
 
-function validateRegistration(data){
-	const validate = ajv.compile(constants.registeredUserSchema);
-                if (validate(data)) {
-                	return true;                  
-                } else {              
-                   console.log(ajv.errorsText(validate.errors));
-                    return false;
-                }
+function validateRegistration(data) {
+    const validate = ajv.compile(constants.registeredUserSchema);
+    if (validate(data)) {
+        return true;
+    } else {
+        console.error(ajv.errorsText(validate.errors));
+        return false;
+    }
 }
 
 

@@ -53,7 +53,7 @@ function addPreRegistration(email) {
     const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .into(process.env.NODE_ENV === 'test' ? 'PRE_REGISTRATION_TEST' : 'PRE_REGISTRATION')
         .setFieldsRows([
-            { id: uuidv4().replace(/-/g, ""), email: email },
+            {id: uuidv4().replace(/-/g, ""), email: email},
         ])
         .toParam();
     query.text = query.text.concat(';');
@@ -73,6 +73,14 @@ function addPreRegistration(email) {
     });
 }
 
+function addRegistration(data) {
+    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+        .into(process.env.NODE_ENV === 'test' ? 'PRE_REGISTRATION_TEST' : 'PRE_REGISTRATION')
+        .setFieldsRows([
+//Figure this out
+        ]).toParam();
+}
+
 /**
  *
  * @param msg {String} Message to write
@@ -81,7 +89,7 @@ function writePiMessage(msg) {
     const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .into("PI_TEST")
         .setFieldsRows([
-            { time: new Date().getTime(), message: msg }
+            {time: new Date().getTime(), message: msg}
         ])
         .toParam();
     query.text = query.text.concat(';');

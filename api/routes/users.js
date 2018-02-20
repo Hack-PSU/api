@@ -43,7 +43,7 @@ router.use((req, res, next) => {
  */
 router.get('/', (req, res, next) => {
     if (res.locals.user) {
-        res.status(200).send({ admin: res.locals.user.admin, privilege: res.locals.user.privilege });
+        res.status(200).send({admin: res.locals.user.admin, privilege: res.locals.user.privilege});
     } else {
         const error = new Error();
         error.status = 500;

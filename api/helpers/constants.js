@@ -38,13 +38,13 @@ module.exports = {
                 maxLength: 45,
             },
             gender: { 
-                "enum":  ['Male','Female','Non-Binary','Prefer not to disclose']
+                "enum":  ['male','female','non-ninary','no-disclose']
             },
             shirtSize:{ 
                 "enum": ['XS','S','M','L','XL','XXL']
             },
             dietaryRestriction: {
-                "enum": ['Vegetarian','Vegan','Kosher','Allergies']  
+                "enum": ['vegetarian','vegan','kosher','allergies', 'halal']  
             },
             allergies: {
                 type: 'string',
@@ -67,7 +67,7 @@ module.exports = {
                 format: 'email'   
             },
             academicYear: {
-                "enum": ["Freshman", "Sophomore", "Junior", "Senior", "Graduate student", "Graduated within last 12 months"]
+                "enum": ["freshman", "sophomore", "junior", "senior", "higher"]
             },
             major: {
                 type: 'string',
@@ -84,7 +84,7 @@ module.exports = {
                 maxLength: 150
             },
             codingExperience: {
-                "enum": ["None","Beginner", "Intermediate", "Advanced"]
+                "enum": ["none","beginner", "intermediate", "advanced", 'null']
             },
             uid: {
                 type: 'string',
@@ -104,11 +104,14 @@ module.exports = {
             },
             project: { 
                 type: 'string'
+            },
+            return: {
+                type: 'string'
             }
 
 
             },
-            required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'phone', 'codingExperience', 'uid', 'eighteenBeforeEvent', 'mlhCOC', 'mlhDCP']
+            required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'phone', 'uid', 'eighteenBeforeEvent', 'mlhcoc', 'mlhdcp']
 
         }
     };

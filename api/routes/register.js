@@ -1,7 +1,6 @@
 const express = require('express');
 
 const router = express.Router();
-const admin = require('firebase-admin');
 const validator = require('email-validator');
 const authenticator = require('../helpers/auth');
 const constants = require('../helpers/constants');
@@ -13,21 +12,23 @@ const ajv = new Ajv({allErrors: true});
 const aws = require('aws-sdk');
 const multer = require('multer');
 const multers3 = require('multer-s3');
+const database = require("../helpers/database");
+const RegistrationModel = require("../helpers/RegistrationModel");
 
 //dependencies
 //multer, multer-s3, aws-sdk, request-ip
 
 aws.config.update({
-    secretAccessKey: '4oSXI2ppUhzIpZ17XJlYWiqrZLzMPl+MyDezgsYd',
-    accessKeyId: 'AKIAJMHIEHWHLXVVOG2Q',
-    region: 'us-east-2'
+    accessKeyId: constants.s3Connection.accessKeyId,
+    secretAccessKey: constants.s3Connection.secretAccessKey,
+    region: constants.s3Connection.region,
 });
 
 const s3 = new aws.S3();
 
 const storage = multers3({
     s3: s3,
-    bucket: 'hackpsus2018-resumes',
+    bucket: constants.s3Connection.s3BucketName,
     serverSideEncryption: 'AES256',
     metadata: function (req, file, cb) {
         console.log(req.body);
@@ -37,7 +38,7 @@ const storage = multers3({
         });
     },
     key: function (req, file, cb) {
-        cb(null, req.body.uid + '-' + req.body.firstName + "-" + req.body.lastName + "-HackPSUS2018.pdf");
+        cb(null, generateFileName(req.body.uid, req.body.firstNam, req.body.lastName));
     }
 });
 
@@ -144,7 +145,31 @@ router.post('/pre', (req, res, next) => {
  * @apiVersion 0.1.1
  * @apiName Registration
  * @apiGroup Registration
- * @apiParam
+ * @apiUse AuthArgumentRequired
+ * @apiParam {string} firstname First name of the user
+ * @apiParam {string} lastname sLast name of the user
+ * @apiParam {string} gender Gender of the user;
+ * @apiParam {enum} shirt_size [XS, S, M, L, XL, XXL]
+ * @apiParam {string} [dietary_restriction] The dietary restictions for the user
+ * @apiParam {string} [allergies] Any allergies the user might have
+ public travel_reimbursement;
+ public first_hackathon;
+ public university;
+ public email;
+ public academic_year;
+ public major;
+ public phone;
+ public resume;
+ public race;
+ public coding_experience;
+ public uid;
+ public eighteenBeforeEvent;
+ public mlh_coc;
+ public mlh_dcp;
+ public referral;
+ public project;
+ public expectations;
+ public veteran;
  request header {
 		idtoken: user's idtoken
 	}
@@ -175,7 +200,7 @@ router.post('/pre', (req, res, next) => {
                 minLength: 1,
                 maxLength: 45,
             },
-            travelReimbursement: {
+            travel_reimbursement: {
                 type: 'boolean'
             }, 
             firstHackathon: {
@@ -230,7 +255,7 @@ router.post('/pre', (req, res, next) => {
                 type: 'string'
             }
 			
-			required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'phone', 'codingExperience', 'uid', 'eighteenBeforeEvent', 'mlhCOC', 'mlhDCP']
+			required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travel_reimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'phone', 'codingExperience', 'uid', 'eighteenBeforeEvent', 'mlhCOC', 'mlhDCP']
         }, 
         resume: file(size must be below 10MB)}
 
@@ -242,7 +267,6 @@ router.post('/pre', (req, res, next) => {
 
 router.post('/', upload.single('resume'), (req, res, next) => {
     console.log(req.body);
-
     /** Converting boolean strings to booleans types in req.body */
     req.body.travelReimbursement = req.body.travelReimbursement && req.body.travelReimbursement === 'true';
 
@@ -254,16 +278,35 @@ router.post('/', upload.single('resume'), (req, res, next) => {
 
     req.body.mlhdcp = req.body.mlhdcp && req.body.mlhdcp === 'true';
 
+    req.body.veteran = req.body.veteran && req.body.veteran === 'true';
+
 
     if (!(req.body && validateRegistration(req.body) && validator.validate(req.body.email) && req.body.eighteenBeforeEvent && req.body.mlhcoc && req.body.mlhdcp)) {
         const error = new Error();
-        error.body = {error: 'Reasons for error: Request body must be set, data object must be set, must use valid email, eighteenBeforeevent mlhCOC and mlhDCP must all be true'};
+        error.body = {error: 'Reasons for error: Request body must be set, must use valid email, eighteenBeforeEvent mlhcoc and mlhdcp must all be true'};
         error.status = 400;
         next(error);
     } else {
         // Add to database
-
-        res.status(200).send({response: "Success"});
+        if (req.file) {
+            req.body.resume = 'https://s3.'
+                + constants.s3Connection.region
+                + '.amazonaws.com/'
+                + constants.s3Connection.s3BucketName
+                + '/'
+                + generateFileName(req.body.uid, req.body.firstName, req.body.lastName);
+        }
+        database.addRegistration(new RegistrationModel(req.body))
+            .then(() => {
+                database.setRegistrationSubmitted(req.body.uid)
+                res.status(200).send({response: "Success"});
+            }).catch((err) => {
+            console.error(err);
+            const error = new Error();
+            error.body = {error: err.message};
+            error.status = 400;
+            next(error);
+        });
     }
 
 
@@ -277,6 +320,10 @@ function validateRegistration(data) {
         console.error(ajv.errorsText(validate.errors));
         return false;
     }
+}
+
+function generateFileName(uid, firstName, lastName) {
+    return uid + '-' + firstName + "-" + lastName + "-HackPSUS2018.pdf"
 }
 
 

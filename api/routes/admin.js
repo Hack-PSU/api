@@ -191,15 +191,15 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
 
 
 /**
- * @api {get} /admin/userid Get userId corresponding the email associated with the id
- * @apiVersion 0.1.1
+ * @api {get} /admin/userid Get the uid corresponding to an email
+ * @apiVersion 0.2.0
  * @apiName Get User Id
  * @apiGroup Admin
  * @apiPermission Exec
  *
  * @apiUse AuthArgumentRequired
- * @apiParam {string} email - the email that is associated to the seeking userID 
- * @apiSuccess {object} Object containing {uid, displayName}
+ * @apiParam {string} email The email to query user id by
+ * @apiSuccess {object} Object {uid, displayName}
  * @apiUse IllegalArgumentError
  */
 router.get('/userid',verifyACL(3), (req, res, next) => {

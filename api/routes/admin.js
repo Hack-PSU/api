@@ -203,14 +203,13 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.get('/userid',verifyACL(3), (req, res, next) => {
-  console.log(req.query);
-  if(!(req.query && req.query.email && validator.validate(req.body.email))){
+  if(!(req.query && req.query.email && validator.validate(req.query.email))){
     const error = new Error();
     error.status = 400;
     error.body = {error: "request query must be set and a valid email"};
     next(error);
   } else {
-    authenticator.getUserID(req.body).then((user) => {
+    authenticator.getUserId(req.query.email).then((user) => {
       res.status(200).send({uid: user.uid, displayName: user.displayName});
     }).catch((error) => {
       const err = new Error();
@@ -220,7 +219,7 @@ router.get('/userid',verifyACL(3), (req, res, next) => {
       next(err);
     })
   }
-})
+});
 
 
 /**

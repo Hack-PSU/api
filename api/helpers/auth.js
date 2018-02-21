@@ -29,5 +29,8 @@ function getUserId(email){
 }
 
 
-module.exports.checkAuthentication = checkAuthentication;
-module.exports.elevate = elevate;
+module.exports = {
+    checkAuthentication,
+    elevate,
+    getUserId,
+};

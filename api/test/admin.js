@@ -122,7 +122,7 @@ describe('test user id', () => {
       .end((err, res) =>{
         res.should.have.status(401);
         err.response.body.should.be.a('object');
-        should.equal(err.response.body.error, 'You do not have sufficient permissions for this operation');
+        should.equal(err.response.body.error, 'ID Token must be provided');
         done();
       });
     });
@@ -146,14 +146,14 @@ describe('test user id', () => {
             }).catch(error => done(error));
         }).catch(err => done(err));
     });
-  })
+  });
   describe('admin auth success', () => {
     it('it should accept and return an userid associated with the email', (done) => {
       loginAdmin().then((user) => {
         user.getIdToken(true)
           .then((idToken) => {
             chai.request(server)
-              .get('/v1/admin/registered')
+              .get('/v1/admin/userid')
               .set('content-type', 'application/json')
               .set('idtoken', idToken)
               .query({email: 'test@email.com'})
@@ -166,7 +166,7 @@ describe('test user id', () => {
       }).catch(err => done(err));
     });
   });
-})
+});
 
 describe('test make admin', () => {
   const listener = null;
@@ -251,11 +251,11 @@ describe('test make admin', () => {
       });
     });
   });
-  describe('admin tries to make admin', () => {
+  describe.skip('admin tries to make admin', () => {
     let genUid = null;
     after((done) => {
       if (genUid) {
-        admin.auth().deleteUser(genUid);
+        admin.auth().deleteUser(genUid).catch(error => console.log(error));
       }
       if (listener) {
         listener();

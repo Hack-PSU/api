@@ -86,9 +86,6 @@ function setRegistrationSubmitted(uid) {
         .where("uid = ?", uid)
         .toParam();
     query.text = query.text.concat(';');
-    if (process.env.NODE_ENV === 'test') {
-        console.log(query);
-    }
     connection.query(query.text, query.values);
 }
 
@@ -102,14 +99,12 @@ function setRegistrationSubmitted(uid) {
  * @return {Promise<any>}
  */
 function addRegistration(data) {
-    console.log(data);
     const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .into(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
         .setFieldsRows([
             data
         ]).toParam();
     query.text = query.text.concat(';');
-    console.log(query);
     return new Promise((resolve, reject) => {
         connection.query(query.text, query.values, (err, result) => {
             if (err && err.errno === 1062) {

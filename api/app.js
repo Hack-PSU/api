@@ -37,6 +37,10 @@ const corsOptions = {
     },
 };
 
+app.options('/', (rqe, res, next) => {
+    next();
+});
+
 const index = require('./routes/index');
 const users = require('./routes/users');
 const register = require('./routes/register');
@@ -61,9 +65,7 @@ fs.unlinkSync('./config.json');
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
 
-if (process.env.NODE_ENV !== 'test') {
-    app.use(cors(corsOptions));
-}
+app.use(cors(corsOptions));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

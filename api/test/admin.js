@@ -106,6 +106,68 @@ describe('test get registered hackers', () => {
   });
 });
 
+describe('test user id', () => {
+  const listener = null;
+  afterEach(() => {
+    firebase.auth().signOut();
+    if(listener) {
+      listener();
+    }
+  });
+  describe('un-authenticated user tries to get user id', () => {
+    it('it should reject un-authenticated user with and unauthenticated message', (done) => {
+    chai.request(server)
+      .get('/v1/admin/userid')
+      .query({email: 'test@email.com'})
+      .end((err, res) =>{
+        res.should.have.status(401);
+        err.response.body.should.be.a('object');
+        should.equal(err.response.body.error, 'ID Token must be provided');
+        done();
+      });
+    });
+  });
+  describe('user with insufficient permission tries to get user id', () => {
+   it('it should reject with an lack of privileges message', (done) => {
+      loginRegular().then((user) => {
+         user.getIdToken(true)
+           .then((idToken) => {
+             chai.request(server)
+                .get('/v1/admin/userid')
+               .set('content-type', 'application/json')
+               .set('idtoken', idToken)
+               .query({email: 'test@email.com'})
+               .end((err, res) => {
+                 res.should.have.status(401);
+                 err.response.body.should.be.a('object');
+                 should.equal(err.response.body.error, 'You do not have sufficient permissions for this operation');
+                 done();
+                });
+            }).catch(error => done(error));
+        }).catch(err => done(err));
+    });
+  });
+  describe('admin auth success', () => {
+    it('it should accept and return an userid associated with the email', (done) => {
+      loginAdmin().then((user) => {
+        user.getIdToken(true)
+          .then((idToken) => {
+            chai.request(server)
+              .get('/v1/admin/userid')
+              .set('content-type', 'application/json')
+              .set('idtoken', idToken)
+              .query({email: 'test@email.com'})
+              .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                done();
+              });
+          }).catch(error => done(error));
+      }).catch(err => done(err));
+    });
+  });
+});
+
 describe('test make admin', () => {
   const listener = null;
   afterEach(() => {
@@ -189,11 +251,11 @@ describe('test make admin', () => {
       });
     });
   });
-  describe('admin tries to make admin', () => {
+  describe.skip('admin tries to make admin', () => {
     let genUid = null;
     after((done) => {
       if (genUid) {
-        admin.auth().deleteUser(genUid);
+        admin.auth().deleteUser(genUid).catch(error => console.log(error));
       }
       if (listener) {
         listener();

@@ -12,8 +12,8 @@ const should = chai.should();
 
 chai.use(chaiHttp);
 
-// Scrub DB
-describe('pre-registration tests', () => {
+describe.skip('pre-registration tests', () => {
+    // Scrub DB
     before((done) => {
         const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
             .from("PRE_REGISTRATION_TEST")

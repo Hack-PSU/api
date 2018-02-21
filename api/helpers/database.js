@@ -53,7 +53,7 @@ function addPreRegistration(email) {
     const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .into(process.env.NODE_ENV === 'test' ? 'PRE_REGISTRATION_TEST' : 'PRE_REGISTRATION')
         .setFieldsRows([
-            { id: uuidv4().replace(/-/g, ""), email: email },
+            {id: uuidv4().replace(/-/g, ""), email: email},
         ])
         .toParam();
     query.text = query.text.concat(';');
@@ -73,6 +73,54 @@ function addPreRegistration(email) {
     });
 }
 
+
+/**
+ *
+ * @param uid {string} UID of the user to set registration submission status
+ */
+function setRegistrationSubmitted(uid) {
+    const dbname = process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION';
+    const query = squel.update({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+        .table(dbname)
+        .set("submitted", true)
+        .where("uid = ?", uid)
+        .toParam();
+    query.text = query.text.concat(';');
+    connection.query(query.text, query.values);
+}
+
+
+
+
+
+/**
+ *
+ * @param data {Object} Data format that matches the registeredUserSchema
+ * @return {Promise<any>}
+ */
+function addRegistration(data) {
+    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+        .into(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
+        .setFieldsRows([
+            data
+        ]).toParam();
+    query.text = query.text.concat(';');
+    return new Promise((resolve, reject) => {
+        connection.query(query.text, query.values, (err, result) => {
+            if (err && err.errno === 1062) {
+                const error = new Error();
+                error.message = "User already registered";
+                error.status = 400;
+                reject(error);
+            } else if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
 /**
  *
  * @param msg {String} Message to write
@@ -81,7 +129,7 @@ function writePiMessage(msg) {
     const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .into("PI_TEST")
         .setFieldsRows([
-            { time: new Date().getTime(), message: msg }
+            {time: new Date().getTime(), message: msg}
         ])
         .toParam();
     query.text = query.text.concat(';');
@@ -96,9 +144,12 @@ function writePiMessage(msg) {
     });
 }
 
+
 module.exports = {
     getRegistrations,
     getPreRegistrations,
     addPreRegistration,
     writePiMessage,
+    addRegistration,
+    setRegistrationSubmitted
 };

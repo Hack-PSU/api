@@ -146,119 +146,30 @@ router.post('/pre', (req, res, next) => {
  * @apiName Registration
  * @apiGroup Registration
  * @apiUse AuthArgumentRequired
- * @apiParam {string} firstname First name of the user
- * @apiParam {string} lastname sLast name of the user
- * @apiParam {string} gender Gender of the user;
+ * @apiParam {String} firstname First name of the user
+ * @apiParam {String} lastname Last name of the user
+ * @apiParam {String} gender Gender of the user
  * @apiParam {enum} shirt_size [XS, S, M, L, XL, XXL]
- * @apiParam {string} [dietary_restriction] The dietary restictions for the user
- * @apiParam {string} [allergies] Any allergies the user might have
- public travel_reimbursement;
- public first_hackathon;
- public university;
- public email;
- public academic_year;
- public major;
- public phone;
- public resume;
- public race;
- public coding_experience;
- public uid;
- public eighteenBeforeEvent;
- public mlh_coc;
- public mlh_dcp;
- public referral;
- public project;
- public expectations;
- public veteran;
- request header {
-		idtoken: user's idtoken
-	}
-
- request Body {
-		data:{ 
-			firstName: {
-                type: 'string',
-                minLength: 1,
-                maxLength: 45,
-            },
-            lastName: {
-                type: 'string',
-                minLength: 1,
-                maxLength: 45,
-            },
-            gender: { 
-                "enum":  ['Male','Female','Non-Binary','Prefer not to disclose']
-            },
-            shirtSize:{ 
-                "enum": ['XS','S','M','L','XL','XXL']
-            },
-            dietaryRestriction: {
-                "enum": ['Vegetarian','Vegan','Kosher','Allergies']  
-            },
-            allergies: {
-                type: 'string',
-                minLength: 1,
-                maxLength: 45,
-            },
-            travel_reimbursement: {
-                type: 'boolean'
-            }, 
-            firstHackathon: {
-                type: 'boolean'
-            },
-            university: {
-                type: 'string',
-                minLength: 1, 
-                maxLength: 200,
-            },
-            email: {
-                type: 'string',
-                format: 'email'   
-            },
-            academicYear: {
-                "enum": ["Freshman", "Sophomore", "Junior", "Senior", "Graduate student", "Graduated within last 12 months"]
-            },
-            major: {
-                type: 'string',
-                minLength: 1,
-                maxLength: 100
-            },
-            phone: {
-                type: 'string', 
-                minLength: 1,
-                maxLength: 50
-            },
-            race: {
-                type: 'string',
-                maxLength: 150
-            },
-            codingExperience: {
-                "enum": ["None","Beginner", "Intermediate", "Advanced"]
-            },
-            uid: {
-                type: 'string',
-                maxLength: 150
-            },
-            eighteenBeforeEvent: {
-                type: 'boolean'
-            }, 
-            mlhCOC: {
-                type: 'boolean' 
-            },
-            mlhDCP: {
-                type: 'boolean'
-            },
-            referral: {
-                type: 'string'
-            },
-            project: { 
-                type: 'string'
-            }
-			
-			required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travel_reimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'phone', 'codingExperience', 'uid', 'eighteenBeforeEvent', 'mlhCOC', 'mlhDCP']
-        }, 
-        resume: file(size must be below 10MB)}
-
+ * @apiParam {String} [dietary_restriction] The dietary restictions for the user
+ * @apiParam {String} [allergies] Any allergies the user might have
+ * @apiParam {boolean} travelReimbursement=false
+ * @apiParam {boolean} firstHackathon=false Is this the user's first hackathon
+ * @apiParam {String} university The university that the user attends
+ * @apiParam {String} email The user's school email
+ * @apiParam {String} academicYear The user's current year in school
+ * @apiParam {String} major Intended or current major
+ * @apiParam {String} phone The user's phone number (For MLH)
+ * @apiParam {FILE} [resume] The resume file for the user (Max size: 10 MB)
+ * @apiParam {String} [ethnicity] The user's ethnicity
+ * @apiParam {String} codingExperience The coding experience that the user has
+ * @apiParam {String} uid The UID from their Firebase account
+ * @apiParam {boolean} eighteenBeforeEvent=true Will the person be eighteen before the event
+ * @apiParam {boolean} mlhcoc=true Does the user agree to the mlhcoc?
+ * @apiParam {boolean} mlhdcp=true Does the user agree to the mlh dcp?
+ * @apiParam {String} referral Where did the user hear about the Hackathon?
+ * @apiParam {String} project A project description that the user is proud of
+ * @apiParam {String} expectations What the user expects to get from the hackathon
+ * @apiParam {String} veteran=false Is the user a veteran?
  * @apiPermission valid user credentials
  *
  * @apiSuccess {String} Success
@@ -278,7 +189,7 @@ router.post('/', upload.single('resume'), (req, res, next) => {
 
     req.body.mlhdcp = req.body.mlhdcp && req.body.mlhdcp === 'true';
 
-    req.body.veteran = req.body.veteran && req.body.veteran === 'true';
+    req.body.veteran = req.body.veteran && req.body.veteran === 'true'; //TODO: Change to accept no-disclose
 
 
     if (!(req.body && validateRegistration(req.body) && validator.validate(req.body.email) && req.body.eighteenBeforeEvent && req.body.mlhcoc && req.body.mlhdcp)) {

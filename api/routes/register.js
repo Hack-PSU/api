@@ -29,6 +29,7 @@ const s3 = new aws.S3();
 const storage = multers3({
     s3: s3,
     bucket: constants.s3Connection.s3BucketName,
+    acl: 'public-read',
     serverSideEncryption: 'AES256',
     metadata: function (req, file, cb) {
         console.log(req.body);
@@ -38,7 +39,7 @@ const storage = multers3({
         });
     },
     key: function (req, file, cb) {
-        cb(null, generateFileName(req.body.uid, req.body.firstNam, req.body.lastName));
+        cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
     }
 });
 

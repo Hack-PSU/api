@@ -24,6 +24,8 @@ const should = chai.should();
 
 chai.use(chaiHttp);
 
+let listener = null;
+
 function login(email, password) {
   return new Promise((resolve, reject) => {
     firebase.auth().signInWithEmailAndPassword(email, password)

@@ -65,7 +65,7 @@ const upload = multer({
  * Login authentication middleware
  */
 
-router.use((req, res, next) => {
+function checkAuthentication(req, res, next) {
 
     console.log(req.clientIp);
 
@@ -91,7 +91,7 @@ router.use((req, res, next) => {
         error.body = {error: 'ID Token must be provided'};
         next(error);
     }
-});
+};
 
 
 /**
@@ -176,8 +176,7 @@ router.post('/pre', (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 
-router.post('/', upload.single('resume'), (req, res, next) => {
-    console.log(req.body);
+router.post('/', checkAuthentication, upload.single('resume'), (req, res, next) => {
     /** Converting boolean strings to booleans types in req.body */
     req.body.travelReimbursement = req.body.travelReimbursement && req.body.travelReimbursement === 'true';
 
@@ -209,7 +208,7 @@ router.post('/', upload.single('resume'), (req, res, next) => {
         }
         database.addRegistration(new RegistrationModel(req.body))
             .then(() => {
-                database.setRegistrationSubmitted(req.body.uid)
+                database.setRegistrationSubmitted(req.body.uid);
                 res.status(200).send({response: "Success"});
             }).catch((err) => {
             console.error(err);

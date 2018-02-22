@@ -86,7 +86,7 @@ router.use((req, res, next) => {
         error.body = {error: 'ID Token must be provided'};
         next(error);
     }
-});
+}); 
 
 
 /**
@@ -140,12 +140,13 @@ router.post('/pre', (req, res, next) => {
  * @apiVersion 0.1.1
  * @apiName Registration
  * @apiGroup Registration
- * @apiParam 
-	request header {
+ * @apiParam {Object} data: 
+ * @apiParamExample {Object} Request-Example: {
+	req.header: {
 		idtoken: user's idtoken
 	}
 
- 	request Body {
+ 	request.body: {
 		data:{ 
 			firstName: {
                 type: 'string',
@@ -228,7 +229,8 @@ router.post('/pre', (req, res, next) => {
 			
 			required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'phone', 'codingExperience', 'uid', 'eighteenBeforeEvent', 'mlhCOC', 'mlhDCP']
         }, 
-        resume: file(size must be below 10MB)}
+        resume: file(size must be below 10MB)} 
+    }
 
  * @apiPermission valid user credentials
  *

@@ -137,8 +137,8 @@ module.exports = {
     },
     s3Connection: {
         s3BucketName: 'hackpsus2018-resumes',
-        secretAccessKey: process.env.SECRET_ACCESS_KEY || '4oSXI2ppUhzIpZ17XJlYWiqrZLzMPl+MyDezgsYd', //TODO: Remove Ryan's Access Key
-        accessKeyId: process.env.ACCESS_KEY_ID || 'AKIAJMHIEHWHLXVVOG2Q',
+        secretAccessKey: process.env.SECRET_ACCESS_KEY,
+        accessKeyId: process.env.ACCESS_KEY_ID,
         region: 'us-east-2',
     },
 };

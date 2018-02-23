@@ -133,6 +133,20 @@ router.get("/", (req, res, next) => {
  *
  * @apiSuccess {Array} Array of registered hackers
  */
+/**
+ * @api {get} /admin/registered Get registered hackers
+ * @apiVersion 0.2.2
+ * @apiName Registered Hackers
+ * @apiGroup Admin
+ * @apiPermission Team Member
+ *
+ * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of registered hackers
+ */
 router.get('/registered', verifyACL(2), (req, res, next) => {
     if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
         let arr = [];
@@ -150,7 +164,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
     } else {
         const error = new Error();
         error.status = 400;
-        error.body = {"message": "Limit and offset must be integerss"};
+        error.body = {"message": "Limit and offset must be integers"};
         next(error);
     }
 });
@@ -162,6 +176,19 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
  * @apiGroup Admin
  * @apiPermission Team Member
  * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of registered hackers
+ */
+/**
+ * @api {get} /admin/preregistered Get pre-registered hackers
+ * @apiVersion 0.2.2
+ * @apiName Pre-registered Hackers
+ * @apiGroup Admin
+ * @apiPermission Team Member
+ * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
  *
  * @apiUse AuthArgumentRequired
  *

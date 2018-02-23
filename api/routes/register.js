@@ -32,7 +32,6 @@ const storage = multers3({
     acl: 'public-read',
     serverSideEncryption: 'AES256',
     metadata: function (req, file, cb) {
-        console.log(req.body);
         cb(null, {
             fieldName: file.fieldname,
             uid: req.body.uid
@@ -57,8 +56,6 @@ const upload = multer({
 });
 
 
-//const database = require('../helpers/database');
-
 
 /** **************** HELPER MIDDLEWARE ************************* */
 
@@ -67,9 +64,6 @@ const upload = multer({
  */
 
 function checkAuthentication(req, res, next) {
-
-    console.log(req.clientIp);
-
     if (req.headers.idtoken) {
 
         authenticator.checkAuthentication(req.headers.idtoken)
@@ -92,9 +86,27 @@ function checkAuthentication(req, res, next) {
         error.body = {error: 'ID Token must be provided'};
         next(error);
     }
-};
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
+function storeIP(req, res, next) {
+    if (process.env.NODE_ENV === 'prod') {
+        database.storeIP(req.ip, req.headers['user-agent'])
+            .on('end', () => {
+                next();
+            });
+    } else {
+        next();
+    }
+}
 
 
+/********************* ROUTES ****************************/
 /**
  * @api {post} /register/pre Pre-register for HackPSU
  * @apiVersion 0.1.1
@@ -117,27 +129,10 @@ router.post('/pre', (req, res, next) => {
             .then(() => {
                 res.status(200).send("Success");
             }).catch((err) => {
-            console.error(err);
             err.status = err.status || 500;
             next(err);
         });
     }
-    //     if (process.env.NODE_ENV === 'test') {
-    //         database.emailsRef = admin.firestore().collection('pre-registrations-test').doc();
-    //     } else {
-    //         emailsRef = admin.firestore().collection('pre-registrations').doc();
-    //     }
-    //     emailsRef.set({email: req.body.email})
-    //         .then(() => {
-    //             res.status(200).send('Success');
-    //         }).catch((err) => {
-    //         err.status = 500;
-    //         next(err);
-    //     }).catch((err) => {
-    //         err.status = 500;
-    //         next(err);
-    //     });
-    // }
 });
 
 
@@ -177,7 +172,7 @@ router.post('/pre', (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 
-router.post('/', checkAuthentication, upload.single('resume'), (req, res, next) => {
+router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, res, next) => {
     /** Converting boolean strings to booleans types in req.body */
     req.body.travelReimbursement = req.body.travelReimbursement && req.body.travelReimbursement === 'true';
 
@@ -212,7 +207,6 @@ router.post('/', checkAuthentication, upload.single('resume'), (req, res, next) 
                 database.setRegistrationSubmitted(req.body.uid);
                 res.status(200).send({response: "Success"});
             }).catch((err) => {
-            console.error(err);
             const error = new Error();
             error.body = {error: err.message};
             error.status = 400;
@@ -225,12 +219,7 @@ router.post('/', checkAuthentication, upload.single('resume'), (req, res, next) 
 
 function validateRegistration(data) {
     const validate = ajv.compile(constants.registeredUserSchema);
-    if (validate(data)) {
-        return true;
-    } else {
-        console.error(ajv.errorsText(validate.errors));
-        return false;
-    }
+    return !!validate(data);
 }
 
 function generateFileName(uid, firstName, lastName) {

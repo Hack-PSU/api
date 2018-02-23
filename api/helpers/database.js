@@ -159,16 +159,21 @@ function writePiMessage(msg) {
  *
  * @param ipAddress {string} The IP Address to store
  * @param user_agent {string} The user-agent field
+ * @return Promise<any> {Promise<any>}
  */
 function storeIP(ipAddress, user_agent) {
     const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .into('REQ_DATA')
         .setFieldsRows([
-            {req_time: new Date().getTime(), req_ip: ipAddress, req_user_agent: user_agent}
+            {idREQ_DATA: uuidv4(), req_time: new Date().getTime(), req_ip: ipAddress, req_user_agent: user_agent}
         ])
         .toParam();
     query.text = query.text.concat(';');
-    connection.query(query.text, query.values).stream();
+    return new Promise((resolve) => {
+        connection.query(query.text, query.values, () => {
+            resolve();
+        });
+    });
 }
 
 

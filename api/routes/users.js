@@ -13,7 +13,6 @@ router.use((req, res, next) => {
     if (req.headers.idtoken) {
         authenticator.checkAuthentication(req.headers.idtoken)
             .then((decodedToken) => {
-                console.log(decodedToken);
                 res.locals.user = decodedToken;
                 next();
             }).catch((err) => {
@@ -54,6 +53,9 @@ router.get('/', (req, res, next) => {
     }
 });
 
+/**
+ * 
+ */
 router.get('/registration', (req, res, next) => {
    if (res.locals.user) {
        let user = null;

@@ -19,6 +19,18 @@ function elevate(uid, privilege) {
     return admin.auth().setCustomUserClaims(uid, { admin: true, privilege });
 }
 
+/**
+* Retreive the userID base on the email provided
+*	@param email
+*	@return {Promise{admin.auth.UserRecord}}
+*/
+function getUserId(email){
+	return admin.auth().getUserByEmail(email);
+}
 
-module.exports.checkAuthentication = checkAuthentication;
-module.exports.elevate = elevate;
+
+module.exports = {
+    checkAuthentication,
+    elevate,
+    getUserId,
+};

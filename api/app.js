@@ -28,7 +28,6 @@ app.set('port', port);
 const whitelist = /^((https:\/\/)?((.*)\.)?hackpsu.(com|org))$/;
 const corsOptions = {
     origin: (origin, callback) => {
-        // console.log(origin);
         if (whitelist.test(origin)) {
             callback(null, true);
         } else {

@@ -7,7 +7,7 @@ firebase.initializeApp({
     storageBucket: "hackpsu18.appspot.com",
     messagingSenderId: "1002677206617"
 });
-firebase.auth().signInWithEmailAndPassword("admin@email.com", "password")
+firebase.auth().signInWithEmailAndPassword(process.argv[2], process.argv[3])
     .then((user) => {
         user.getIdToken(true)
             .then((idtoken) => {

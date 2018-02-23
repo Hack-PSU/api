@@ -51,7 +51,7 @@ function getPreRegistrations(limit, offset) {
     const mLimit = parseInt(limit);
     const mOffset = parseInt(offset);
     const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .from("PRE_REGISTRATION")
+        .from('PRE_REGISTRATION')
         .limit(mLimit ? limit : null)
         .offset(mOffset ? offset : null)
         .toString().concat(';');
@@ -96,15 +96,12 @@ function setRegistrationSubmitted(uid) {
     const dbname = process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION';
     const query = squel.update({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .table(dbname)
-        .set("submitted", true)
+        .set('submitted', true)
         .where("uid = ?", uid)
         .toParam();
     query.text = query.text.concat(';');
     connection.query(query.text, query.values);
 }
-
-
-
 
 
 /**
@@ -141,7 +138,7 @@ function addRegistration(data) {
  */
 function writePiMessage(msg) {
     const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .into("PI_TEST")
+        .into('PI_TEST')
         .setFieldsRows([
             {time: new Date().getTime(), message: msg}
         ])
@@ -158,6 +155,22 @@ function writePiMessage(msg) {
     });
 }
 
+/**
+ *
+ * @param ipAddress {string} The IP Address to store
+ * @param user_agent {string} The user-agent field
+ */
+function storeIP(ipAddress, user_agent) {
+    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+        .into('REQ_DATA')
+        .setFieldsRows([
+            {req_time: new Date().getTime(), req_ip: ipAddress, req_user_agent: user_agent}
+        ])
+        .toParam();
+    query.text = query.text.concat(';');
+    connection.query(query.text, query.values).stream();
+}
+
 
 module.exports = {
     getRegistrations,
@@ -166,5 +179,6 @@ module.exports = {
     addPreRegistration,
     writePiMessage,
     addRegistration,
-    setRegistrationSubmitted
+    setRegistrationSubmitted,
+    storeIP,
 };

@@ -68,7 +68,10 @@ function generateBadRegistration() {
     }
 }
 
-
+/**
+ *
+ * @return {{firstName: *, lastName: *, email: *, gender: string, shirtSize: string, dietaryRestriction: string, university: string, travelReimbursement: boolean, firstHackathon: boolean, academicYear: string, major: string, phone, ethnicity: string, codingExperience: string, eighteenBeforeEvent: boolean, mlhcoc: boolean, mlhdcp: boolean, uid: string, referral: string, project, expectations, veteran: boolean}}
+ */
 function generateGoodRegistration() {
     return {
         firstName: chance.first(),
@@ -205,6 +208,7 @@ describe('registration tests', () => {
         firebase.auth().signOut();
         done();
     });
+
     describe('failures', () => {
         it ('it should fail due to invalid data options', (done) => {
            chai.request(server)

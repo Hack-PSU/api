@@ -30,7 +30,7 @@ module.exports = {
             // has more than one bit, then we cannot assume it is supposed to be a Boolean.
             if ((field.type === "BIT") && (field.length === 1)) {
 
-                var bytes = field.buffer();
+                let bytes = field.buffer();
 
                 // A Buffer in Node represents a collection of 8-bit unsigned integers.
                 // Therefore, our single "bit field" comes back as the bits '0000 0001',

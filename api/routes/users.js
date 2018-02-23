@@ -54,7 +54,15 @@ router.get('/', (req, res, next) => {
 });
 
 /**
- * 
+ * @api {get} /users/registration Get the registration information for the current user
+ * @apiVersion 0.2.1
+ * @apiName Get user registration information
+ * @apiGroup Users
+ * @apiPermission User
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Object} JSON Object with user's data
  */
 router.get('/registration', (req, res, next) => {
    if (res.locals.user) {

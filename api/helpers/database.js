@@ -20,12 +20,26 @@ function getRegistrations(limit, offset) {
     const mLimit = parseInt(limit);
     const mOffset = parseInt(offset);
     const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .from("REGISTRATION")
+        .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
         .limit(mLimit ? mLimit : null)
         .offset(mOffset ? mOffset : null)
         .toString()
         .concat(';');
     return connection.query(query).stream();
+}
+
+/**
+ *
+ * @param uid {string} The uid of the user to retrieve the registration for
+ * @return {Stream} Returns a continuous stream of data from the database
+ */
+function getRegistration(uid) {
+    const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+        .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
+        .where('uid = ?', uid)
+        .toParam();
+    query.text = query.text.concat(';');
+    return connection.query(query.text, query.values).stream();
 }
 
 /**
@@ -98,6 +112,7 @@ function writePiMessage(msg) {
 
 module.exports = {
     getRegistrations,
+    getRegistration,
     getPreRegistrations,
     addPreRegistration,
     writePiMessage,

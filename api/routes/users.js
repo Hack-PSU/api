@@ -1,6 +1,8 @@
 const express = require('express');
 const authenticator = require("../helpers/auth");
 
+const database = require('../helpers/database');
+
 const router = express.Router();
 
 /************* HELPER FUNCTIONS **************/
@@ -48,8 +50,30 @@ router.get('/', (req, res, next) => {
         const error = new Error();
         error.status = 500;
         error.body = {error: 'Could not retrieve user information'};
-        next(error)
+        next(error);
     }
+});
+
+router.get('/registration', (req, res, next) => {
+   if (res.locals.user) {
+       let user = null;
+       database.getRegistration(res.locals.user.uid)
+           .on('data', (data) => {
+               user = data;
+           }).on('err', (err) => {
+           const error = new Error();
+           error.status = 500;
+           error.body = err.message;
+           next(error);
+       }).on('end', () => {
+          res.status(200).send(user);
+       });
+   } else {
+       const error = new Error();
+       error.status = 500;
+       error.body = {error: 'Could not retrieve user information'};
+       next(error);
+   }
 });
 
 module.exports = router;

@@ -186,9 +186,6 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
 
     req.body.mlhdcp = req.body.mlhdcp && req.body.mlhdcp === 'true';
 
-    req.body.veteran = req.body.veteran && req.body.veteran === 'true'; //TODO: Change to accept no-disclose
-
-
     if (!(req.body && validateRegistration(req.body) && validator.validate(req.body.email) && req.body.eighteenBeforeEvent && req.body.mlhcoc && req.body.mlhdcp)) {
         const error = new Error();
         error.body = {error: 'Reasons for error: Request body must be set, must use valid email, eighteenBeforeEvent mlhcoc and mlhdcp must all be true'};

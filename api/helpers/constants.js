@@ -112,7 +112,7 @@ module.exports = {
                 maxLength: 150
             },
             veteran: {
-                type: 'boolean',
+                "enum": ["true", "false", "no-disclose"],
             },
             eighteenBeforeEvent: {
                 type: 'boolean'

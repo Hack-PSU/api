@@ -23,6 +23,6 @@ module.exports = class RegistrationModel {
         this.referral = data.referral ? data.referral : null;
         this.project = data.projectDesc ? data.projectDesc : null;
         this.expectations = data.expectations ? data.expectations : null;
-        this.veteran = data.veteran;
+        this.veteran = data.veteran ? data.veteran : 'no-disclose';
     }
 };

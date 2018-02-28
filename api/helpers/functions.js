@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 const constants = require('./constants');
-const ses = require('node-ses')
+const ses = require('node-ses');
 
 const emailKey = require("../helpers/constants").emailKey;
 const client = ses.createClient(emailKey);
@@ -21,16 +21,16 @@ module.exports.emailSubstitute = function emailSubstitute(html, name, substituti
 
 /**
  * Makes the POST request to the email server URL
- * @param options Contains the options for the POST request. For schema, refer to function createEmailRequest or the SendInBlue API
+ * @param data Contains the options for the POST request. For schema, refer to function createEmailRequest or the SendInBlue API
  * @return {Promise<any>}
  */
 module.exports.sendEmail = function sendEmail(data) {
   return new Promise((resolve, reject) => {
-    client.sendEmail(data, function (err, data, res) {
+    client.sendEmail(data, function (err) {
       if (err) {
-        reject(error);
+        reject(err);
       }
-      else resolve(res);
+      else resolve(true);
     });
     /*
 
@@ -65,11 +65,11 @@ module.exports.sendEmail = function sendEmail(data) {
 module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject) {
   const data = {
     to: email, 
-    from: 'team@hackpsu.org', 
+    from: 'technology@hackpsu.org',
     subject: subject, 
     message: htmlContent,
     replyTo: 'team@hackpsu.org'
-    }
+    };
     /*
     to: [{ email, name }],
     sender: {

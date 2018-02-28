@@ -9,8 +9,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "2.203.0",
     "firebase-admin": "^5.8.2",
+    "follow-redirects": "1.4.1",
     "mysql": "^2.15.0",
-    "node-cipher": "^6.3.2"
+    "node-cipher": "^6.3.2",
+    "node-msoffice-pdf": "0.0.7",
+    "request": "latest",
+    "squel": "5.12.0",
+    "firebase": "latest"
   }
 }

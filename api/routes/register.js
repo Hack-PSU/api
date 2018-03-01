@@ -187,6 +187,12 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
     req.body.mlhdcp = req.body.mlhdcp && req.body.mlhdcp === 'true';
 
     if (!(req.body && validateRegistration(req.body) && validator.validate(req.body.email) && req.body.eighteenBeforeEvent && req.body.mlhcoc && req.body.mlhdcp)) {
+        console.error('Request body:');
+        console.error(req.body);
+        console.error('Registration validation:');
+        console.error(validateRegistration(req.body));
+        console.error('Email validation:');
+        console.error(validator.validate(req.body.email));
         const error = new Error();
         error.body = {error: 'Reasons for error: Request body must be set, must use valid email, eighteenBeforeEvent mlhcoc and mlhdcp must all be true'};
         error.status = 400;
@@ -216,6 +222,10 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
 
 });
 
+/**
+ *
+ * @param data
+ */
 function validateRegistration(data) {
     const validate = ajv.compile(constants.registeredUserSchema);
     return !!validate(data);

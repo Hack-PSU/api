@@ -17,7 +17,6 @@ module.exports = {
         },
         required: ['email', 'name'],
     },
-    emailServerUrl: 'https://api.sendinblue.com/v3/smtp/email',
     sqlConnection: {
         host     : process.env.RDS_HOSTNAME || 'localhost',
         user     : process.env.RDS_USERNAME || 'user',
@@ -26,6 +25,6 @@ module.exports = {
     },
     emailKey: {
         key: process.env.AWS_ACCESS_KEY_ID,
-        secret: process.env.AWS_SECRET_ACCESS_KEY 
+        secret: process.env.AWS_SECRET_ACCESS_KEY
     }
 };

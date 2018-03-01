@@ -12,11 +12,18 @@ const client = ses.createClient(emailKey);
  * @return {String} HTML string with the words properly substituted
  */
 module.exports.emailSubstitute = function emailSubstitute(html, name, substitutions) {
-  let subHTML = html.replace(/\$name\$/g, name);
+  let subbedHTML = html.replace(/\$name\$/g, name);
+  let result;
   Object.entries(substitutions).forEach((substitution) => {
-    subHTML = subHTML.replace(new RegExp(`\\$${substitution[0]}\\$`, 'g'), substitution[1]);
+    if (substitution[1].length > 0 && substitution[0].length > 0){
+      subbedHTML = subbedHTML.replace(new RegExp(`\\$${substitution[0]}\\$`, 'g'), substitution[1]);
+    }
+    else{
+      const status = false;
+      result = false;
+    }
   });
-  return subHTML;
+  return {subbedHTML, result};
 };
 
 /**
@@ -32,16 +39,6 @@ module.exports.sendEmail = function sendEmail(data) {
       }
       else resolve(true);
     });
-    /*
-
-    request(options, (error, response, body) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(response);
-      }
-    });
-    */
   });
 };
 
@@ -70,25 +67,6 @@ module.exports.createEmailRequest = function createEmailRequest(email, htmlConte
     message: htmlContent,
     replyTo: 'team@hackpsu.org'
     };
-    /*
-    to: [{ email, name }],
-    sender: {
-      email: 'team@hackpsu.org',
-      name: 'HackPSU Team',
-    },
-    subject,
-    htmlContent,
-    replyTo: { email: 'team@hackpsu.org' },
-  };
-  const options = {
-    method: 'POST',
-    url: constants.emailServerUrl,
-    body: data,
-    headers: {
-      'api-key': process.env.SENDINBLUE_API_KEY,
-    },
-    json: true,
-  };*/
   return {
     data,
   };

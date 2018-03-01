@@ -18,32 +18,32 @@ const router = express.Router();
 /**
  * Administrator authentication middleware
  */
-// router.use((req, res, next) => {
-//     if (req.headers.idtoken) {
-//         authenticator.checkAuthentication(req.headers.idtoken)
-//             .then((decodedToken) => {
-//                 if (decodedToken.admin === true) {
-//                     res.locals.privilege = decodedToken.privilege;
-//                     next();
-//                 } else {
-//                     const error = new Error();
-//                     error.status = 401;
-//                     error.body = {error: 'You do not have sufficient permissions for this operation'};
-//                     next(error);
-//                 }
-//             }).catch((err) => {
-//             const error = new Error();
-//             error.status = 401;
-//             error.body = err.message;
-//             next(error);
-//         });
-//     } else {
-//         const error = new Error();
-//         error.status = 401;
-//         error.body = {error: 'ID Token must be provided'};
-//         next(error);
-//     }
-// });
+router.use((req, res, next) => {
+    if (req.headers.idtoken) {
+        authenticator.checkAuthentication(req.headers.idtoken)
+            .then((decodedToken) => {
+                if (decodedToken.admin === true) {
+                  res.locals.privilege = decodedToken.privilege; 
+                  next();
+                } else {
+                  const error = new Error();
+                  error.status = 401;
+                  error.body = {error: 'You do not have sufficient permissions for this operation'};
+                  next(error);
+                }
+            }).catch((err) => {
+            const error = new Error();
+            error.status = 401;
+            error.body = err.message;
+            next(error);
+        });
+    } else {
+        const error = new Error();
+        error.status = 401;
+        error.body = {error: 'ID Token must be provided'};
+        next(error);
+    }
+});
 
 
 /**
@@ -93,22 +93,21 @@ function validateEmails(req, res, next) {
  */
 function verifyACL(level) {
     return function (req, res, next) {
-        next();
-        // if (res.locals.privilege) {
-        //     if (res.locals.privilege >= level) {
-        //         next();
-        //     } else {
-        //         const error = new Error();
-        //         error.status = 401;
-        //         error.body = {error: 'You do not have sufficient permissions for this operation'};
-        //         next(error);
-        //     }
-        // } else {
-        //     const error = new Error();
-        //     error.status = 500;
-        //     error.body = {error: 'Something went wrong while accessing permissions'};
-        //     next(error);
-        // }
+         if (res.locals.privilege) {
+             if (res.locals.privilege >= level) {
+                 next();
+             } else {
+                 const error = new Error();
+                 error.status = 401;
+                 error.body = {error: 'You do not have sufficient permissions for this operation'};
+                 next(error);
+             }
+         } else {
+             const error = new Error();
+             error.status = 500;
+             error.body = {error: 'Something went wrong while accessing permissions'};
+             next(error);
+         }
     };
 }
 
@@ -266,14 +265,22 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
                 promises.push(new Promise((resolve) => {
                     // Substitute HTML with name/emails and send email
                     const subHTML = functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions); // Substitute the substitutables in the html
-                    const request = functions.createEmailRequest(emailObject.email, subHTML, req.body.subject); // Generate the POST request
-                    functions.sendEmail(request.data)
-                        .then(() => {
-                            resolve({'email': request.data.to, 'response': 'success'}); // If succesful, resolve
-                        }).catch((error) => {
-                        res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
-                        resolve(null);
-                    });
+                    if (subHTML.result == false){ // if one of the subtitution field or tag is empty, reject this particular email request
+                      const error = new Error();
+                      error.status = 400;
+                      error.body = {error: 'One more more substitution field or tag for $email$ is empty'.replace('$email$',emailObject.email)};
+                      next(error);
+                    }
+                    else{
+                      const request = functions.createEmailRequest(emailObject.email, subHTML.subbedHTML, req.body.subject); // Generate the POST request
+                      functions.sendEmail(request.data)
+                          .then(() => {
+                              resolve({'email': request.data.to, 'response': 'success'}); // If succesful, resolve
+                          }).catch((error) => {
+                          res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
+                          resolve(null);
+                      });
+                      }
                 }));
             });
             Promise.all(promises).then((resolution) => {

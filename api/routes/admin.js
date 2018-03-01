@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 const constants = require('../helpers/constants');
 const functions = require('../helpers/functions');
+const validator = require('email-validator');
 
 const express = require('express');
 const authenticator = require('../helpers/auth');
@@ -18,6 +19,7 @@ const router = express.Router();
 /**
  * Administrator authentication middleware
  */
+ 
 router.use((req, res, next) => {
     if (req.headers.idtoken) {
         authenticator.checkAuthentication(req.headers.idtoken)
@@ -131,6 +133,20 @@ router.get("/", (req, res, next) => {
  *
  * @apiSuccess {Array} Array of registered hackers
  */
+/**
+ * @api {get} /admin/registered Get registered hackers
+ * @apiVersion 0.2.2
+ * @apiName Registered Hackers
+ * @apiGroup Admin
+ * @apiPermission Team Member
+ *
+ * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of registered hackers
+ */
 router.get('/registered', verifyACL(2), (req, res, next) => {
     if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
         let arr = [];
@@ -148,7 +164,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
     } else {
         const error = new Error();
         error.status = 400;
-        error.body = {"message": "Limit and offset must be integerss"};
+        error.body = {"message": "Limit and offset must be integers"};
         next(error);
     }
 });
@@ -160,6 +176,19 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
  * @apiGroup Admin
  * @apiPermission Team Member
  * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of registered hackers
+ */
+/**
+ * @api {get} /admin/preregistered Get pre-registered hackers
+ * @apiVersion 0.2.2
+ * @apiName Pre-registered Hackers
+ * @apiGroup Admin
+ * @apiPermission Team Member
+ * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
  *
  * @apiUse AuthArgumentRequired
  *
@@ -186,6 +215,39 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
         next(error);
     }
 });
+
+
+/**
+ * @api {get} /admin/userid Get the uid corresponding to an email
+ * @apiVersion 0.2.0
+ * @apiName Get User Id
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiParam {string} email The email to query user id by
+ * @apiSuccess {object} Object {uid, displayName}
+ * @apiUse IllegalArgumentError
+ */
+router.get('/userid',verifyACL(3), (req, res, next) => {
+  if(!(req.query && req.query.email && validator.validate(req.query.email))){
+    const error = new Error();
+    error.status = 400;
+    error.body = {error: "request query must be set and a valid email"};
+    next(error);
+  } else {
+    authenticator.getUserId(req.query.email).then((user) => {
+      res.status(200).send({uid: user.uid, displayName: user.displayName});
+    }).catch((error) => {
+      const err = new Error();
+      console.error(error);
+      err.status = error.status || 500;
+      err.body = error.message;
+      next(err);
+    })
+  }
+});
+
 
 /**
  * @api {post} /admin/makeadmin Elevate a user's privileges

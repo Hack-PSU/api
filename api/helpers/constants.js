@@ -30,7 +30,7 @@ module.exports = {
             // has more than one bit, then we cannot assume it is supposed to be a Boolean.
             if ((field.type === "BIT") && (field.length === 1)) {
 
-                var bytes = field.buffer();
+                let bytes = field.buffer();
 
                 // A Buffer in Node represents a collection of 8-bit unsigned integers.
                 // Therefore, our single "bit field" comes back as the bits '0000 0001',
@@ -112,7 +112,7 @@ module.exports = {
                 maxLength: 150
             },
             veteran: {
-                type: 'boolean',
+                "enum": ["true", "false", "no-disclose"],
             },
             eighteenBeforeEvent: {
                 type: 'boolean'
@@ -137,8 +137,8 @@ module.exports = {
     },
     s3Connection: {
         s3BucketName: 'hackpsus2018-resumes',
-        secretAccessKey: process.env.SECRET_ACCESS_KEY || '4oSXI2ppUhzIpZ17XJlYWiqrZLzMPl+MyDezgsYd', //TODO: Remove Ryan's Access Key
-        accessKeyId: process.env.ACCESS_KEY_ID || 'AKIAJMHIEHWHLXVVOG2Q',
+        secretAccessKey: process.env.SECRET_ACCESS_KEY,
+        accessKeyId: process.env.ACCESS_KEY_ID,
         region: 'us-east-2',
     },
 };

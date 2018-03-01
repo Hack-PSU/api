@@ -133,7 +133,7 @@ module.exports = {
                 type: 'string'
             }
         },
-        required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'phone', 'uid', 'eighteenBeforeEvent', 'mlhcoc', 'mlhdcp']
+        required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'uid', 'eighteenBeforeEvent', 'mlhcoc', 'mlhdcp']
     },
     s3Connection: {
         s3BucketName: 'hackpsus2018-resumes',

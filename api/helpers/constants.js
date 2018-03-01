@@ -19,13 +19,32 @@ module.exports = {
     },
     emailServerUrl: 'https://api.sendinblue.com/v3/smtp/email',
     sqlConnection: {
-        host     : process.env.RDS_HOSTNAME || 'localhost',
-        user     : process.env.RDS_USERNAME || 'user',
-        password : process.env.RDS_PASSWORD || 'secret',
-        database : process.env.RDS_DATABASE || 'my_db',
+        host: process.env.RDS_HOSTNAME || 'localhost',
+        user: process.env.RDS_USERNAME || 'user',
+        password: process.env.RDS_PASSWORD || 'secret',
+        database: process.env.RDS_DATABASE || 'my_db',
+        // ssl: "Amazon RDS",
+        typeCast: function castField(field, useDefaultTypeCasting) {
+
+            // We only want to cast bit fields that have a single-bit in them. If the field
+            // has more than one bit, then we cannot assume it is supposed to be a Boolean.
+            if ((field.type === "BIT") && (field.length === 1)) {
+
+                let bytes = field.buffer();
+
+                // A Buffer in Node represents a collection of 8-bit unsigned integers.
+                // Therefore, our single "bit field" comes back as the bits '0000 0001',
+                // which is equivalent to the number 1.
+                return (bytes[0] === 1);
+
+            }
+
+            return (useDefaultTypeCasting());
+
+        }
     },
     registeredUserSchema: {
-        type:'object',
+        type: 'object',
         properties: {
             firstName: {
                 type: 'string',
@@ -37,14 +56,16 @@ module.exports = {
                 minLength: 1,
                 maxLength: 45,
             },
-            gender: { 
-                "enum":  ['Male','Female','Non-Binary','Prefer not to disclose']
+            gender: {
+                "enum": ['male', 'female', 'non-binary', 'no-disclose']
             },
-            shirtSize:{ 
-                "enum": ['XS','S','M','L','XL','XXL']
+            shirtSize: {
+                "enum": ['XS', 'S', 'M', 'L', 'XL', 'XXL']
             },
             dietaryRestriction: {
-                "enum": ['Vegetarian','Vegan','Kosher','Allergies']  
+                type: "string",
+                minLength: 1,
+                maxLength: 45,
             },
             allergies: {
                 type: 'string',
@@ -53,21 +74,21 @@ module.exports = {
             },
             travelReimbursement: {
                 type: 'boolean'
-            }, 
+            },
             firstHackathon: {
                 type: 'boolean'
             },
             university: {
                 type: 'string',
-                minLength: 1, 
+                minLength: 1,
                 maxLength: 200,
             },
             email: {
                 type: 'string',
-                format: 'email'   
+                format: 'email'
             },
             academicYear: {
-                "enum": ["Freshman", "Sophomore", "Junior", "Senior", "Graduate student", "Graduated within last 12 months"]
+                "enum": ["freshman", "sophomore", "junior", "senior", "graduate", "other"]
             },
             major: {
                 type: 'string',
@@ -75,43 +96,52 @@ module.exports = {
                 maxLength: 100
             },
             phone: {
-                type: 'string', 
+                type: 'string',
                 minLength: 1,
                 maxLength: 50
             },
-            race: {
+            ethnicity: {
                 type: 'string',
                 maxLength: 150
             },
             codingExperience: {
-                "enum": ["None","Beginner", "Intermediate", "Advanced"]
+                "enum": ["none", "beginner", "intermediate", "advanced", 'null']
             },
             uid: {
                 type: 'string',
                 maxLength: 150
             },
+            veteran: {
+                "enum": ["true", "false", "no-disclose"],
+            },
             eighteenBeforeEvent: {
                 type: 'boolean'
-            }, 
-            mlhCOC: {
-                type: 'boolean' 
             },
-            mlhDCP: {
+            mlhcoc: {
+                type: 'boolean'
+            },
+            mlhdcp: {
                 type: 'boolean'
             },
             referral: {
                 type: 'string'
             },
-            project: { 
+            project: {
+                type: 'string'
+            },
+            expectations: {
                 type: 'string'
             }
-
-
-            },
-            required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'phone', 'codingExperience', 'uid', 'eighteenBeforeEvent', 'mlhCOC', 'mlhDCP']
-
-        }
-    };
+        },
+        required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'phone', 'uid', 'eighteenBeforeEvent', 'mlhcoc', 'mlhdcp']
+    },
+    s3Connection: {
+        s3BucketName: 'hackpsus2018-resumes',
+        secretAccessKey: process.env.SECRET_ACCESS_KEY,
+        accessKeyId: process.env.ACCESS_KEY_ID,
+        region: 'us-east-2',
+    },
+};
 
 //     First name
 // Last name

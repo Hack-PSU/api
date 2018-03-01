@@ -13,5 +13,5 @@
 /**
  * @apiDefine AuthArgumentRequired
  *
- * @apiHeader (Login) {String} idtoken The Firebase IdToken
+ * @apiHeader (Headers) {String} idtoken The Firebase IdToken
  */

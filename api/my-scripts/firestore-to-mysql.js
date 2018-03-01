@@ -23,7 +23,7 @@ nodecipher.decrypt({
     console.log('It worked!');
     const config = require('./config.json');
 
-    var connection = mysql.createConnection({
+    let connection = mysql.createConnection({
         host: config.RDS_HOSTNAME,
         user: config.RDS_USERNAME,
         password: config.RDS_PASSWORD,
@@ -38,7 +38,7 @@ nodecipher.decrypt({
         console.log('Connected to database.');
         const db = admin.firestore();
         const preregref = db.collection('pre-registrations');
-        var allEmails = preregref.get()
+        let allEmails = preregref.get()
             .then(snapshot => {
                 snapshot.forEach(doc => {
                     var sql = "INSERT INTO ebdb.PRE_REGISTRATION (id, email) VALUES (?,?)";

@@ -179,6 +179,7 @@ req.body.reimbursementAmount= adjustReimbursementPrice(req.body.reimbursementAmo
 
     	//TODO:
     	//Add to database
+    	database.addTravelReimbursement(req.body);
     	console.log(Number(req.body.reimbursementAmount).toFixed(2));
     	res.status(200).send({response: "Success"});
 

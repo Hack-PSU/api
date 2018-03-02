@@ -132,6 +132,19 @@ function addRegistration(data) {
     });
 }
 
+
+
+/**
+ *
+ * @param data {Object} Data format that matches the travelReimbursementSchema
+ * @return {Promise<any>}
+ */
+function addTravelReimbursement(data){
+    return;
+}
+
+
+
 /**
  *
  * @param msg {String} Message to write

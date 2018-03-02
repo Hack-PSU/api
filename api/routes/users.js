@@ -73,6 +73,7 @@ router.use((req, res, next) => {
         authenticator.checkAuthentication(req.headers.idtoken)
             .then((decodedToken) => {
                 res.locals.user = decodedToken;
+                res.locals.uid = decodedToken.uid;
                 next();
             }).catch((err) => {
             const error = new Error();

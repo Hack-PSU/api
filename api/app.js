@@ -28,7 +28,6 @@ app.set('port', port);
 const whitelist = /^((https:\/\/)?((.*)\.)?hackpsu.(com|org))$/;
 const corsOptions = {
     origin: (origin, callback) => {
-        // console.log(origin);
         if (whitelist.test(origin)) {
             callback(null, true);
         } else {
@@ -36,6 +35,10 @@ const corsOptions = {
         }
     },
 };
+
+app.options('/', (rqe, res, next) => {
+    next();
+});
 
 const index = require('./routes/index');
 const users = require('./routes/users');
@@ -61,9 +64,7 @@ fs.unlinkSync('./config.json');
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
 
-if (process.env.NODE_ENV !== 'test') {
-    app.use(cors(corsOptions));
-}
+app.use(cors(corsOptions));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

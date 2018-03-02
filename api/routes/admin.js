@@ -311,7 +311,7 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  *                        },
  *                        {...},
  *                        ...],
- *                    fromEmail: "Email address send from and reply to"
+ *                    fromEmail: "Email address send from and reply to. *NOTE: email are case sensitive"
  *                    subject: "generic email",
  *                    html: "<html><head><body>.....</body></head></html>"
  *                  }
@@ -337,7 +337,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
                           resolve(null);
                       });
                     }).catch((error) => {
-                      res.locals.failArray.push(Object.assign(emailObject, error));
+                      res.locals.failArray.push(Object.assign(emailObject, error)); // if emai substitution fails, add to fail array for partial HTTP success response
                       resolve(null);
                     });
                 }));

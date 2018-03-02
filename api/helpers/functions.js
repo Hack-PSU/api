@@ -1,6 +1,8 @@
 /* eslint-disable max-len */
 const constants = require('./constants');
 const ses = require('node-ses');
+const Ajv = require('ajv');
+const ajv = new Ajv({allErros: true});
 
 const emailKey = require("../helpers/constants").emailKey;
 const client = ses.createClient(emailKey);
@@ -12,18 +14,23 @@ const client = ses.createClient(emailKey);
  * @return {String} HTML string with the words properly substituted
  */
 module.exports.emailSubstitute = function emailSubstitute(html, name, substitutions) {
-  let subbedHTML = html.replace(/\$name\$/g, name);
-  let result;
-  Object.entries(substitutions).forEach((substitution) => {
-    if (substitution[1].length > 0 && substitution[0].length > 0){
-      subbedHTML = subbedHTML.replace(new RegExp(`\\$${substitution[0]}\\$`, 'g'), substitution[1]);
-    }
-    else{
-      const status = false;
-      result = false;
-    }
-  });
-  return {subbedHTML, result};
+  let promise = new Promise(function(resolve, reject) {
+    let subbedHTML = html.replace(/\$name\$/g, name);
+    Object.entries(substitutions).forEach((substitution) => {
+      if (substitution[1].length > 0 && substitution[0].length > 0){
+        console.log(substitution[0].length,substitution[0],substitution[1]);
+        subbedHTML = subbedHTML.replace(new RegExp(`\\$${substitution[0]}\\$`, 'g'), substitution[1]);
+        resolve(subbedHTML);
+      }
+      else{
+        console.log("failed");
+        const error = new Error();
+        error.body = {error: 'One or more substitution field or tag is empty'};
+        reject(error)
+      }
+    });
+  })
+  return promise;
 };
 
 /**
@@ -59,13 +66,24 @@ module.exports.sendEmail = function sendEmail(data) {
  * @param {String} name The name of the recipient
  * @return {Object} { data, options }
  */
-module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject) {
+module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject, fromEmail) {
+  const validate = ajv.compile(constants.emailObjectSchema);
+  let emailAddress;
+  console.log(fromEmail);
+  if (validate(fromEmail)) {   //not working
+    console.log(fromEmail);
+    emailAddress = fromEmail;
+  }
+  else{
+    console.log("validate email failed");
+    emailAddress = 'team@hackpsu.org';
+  }
   const data = {
     to: email, 
-    from: 'technology@hackpsu.org',
+    from: emailAddress,
     subject: subject, 
     message: htmlContent,
-    replyTo: 'team@hackpsu.org'
+    replyTo: emailAddress
     };
   return {
     data,

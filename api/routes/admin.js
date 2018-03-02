@@ -249,6 +249,7 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  *                        },
  *                        {...},
  *                        ...],
+ *                    fromEmail: "Email address send from and reply to"
  *                    subject: "generic email",
  *                    html: "<html><head><body>.....</body></head></html>"
  *                  }
@@ -264,23 +265,19 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
             res.locals.successArray.forEach((emailObject) => { // For each emailObject
                 promises.push(new Promise((resolve) => {
                     // Substitute HTML with name/emails and send email
-                    const subHTML = functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions); // Substitute the substitutables in the html
-                    if (subHTML.result == false){ // if one of the subtitution field or tag is empty, reject this particular email request
-                      const error = new Error();
-                      error.status = 400;
-                      error.body = {error: 'One more more substitution field or tag for $email$ is empty'.replace('$email$',emailObject.email)};
-                      next(error);
-                    }
-                    else{
-                      const request = functions.createEmailRequest(emailObject.email, subHTML.subbedHTML, req.body.subject); // Generate the POST request
+                    functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions).then(function(subbedHTML) {
+                      const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject,req.body.fromEmail); // Generate the POST request
                       functions.sendEmail(request.data)
-                          .then(() => {
+                         .then(() => {
                               resolve({'email': request.data.to, 'response': 'success'}); // If succesful, resolve
                           }).catch((error) => {
                           res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
                           resolve(null);
                       });
-                      }
+                    }).catch((error) => {
+                      res.locals.failArray.push(Object.assign(emailObject, error));
+                      resolve(null);
+                    });
                 }));
             });
             Promise.all(promises).then((resolution) => {

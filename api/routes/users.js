@@ -3,7 +3,66 @@ const authenticator = require("../helpers/auth");
 
 const database = require('../helpers/database');
 
+const constants = require('../helpers/constants');
+
 const router = express.Router();
+
+const path = require('path');
+
+const Ajv = require('ajv');
+
+const ajv = new Ajv({allErrors: true});
+
+const aws = require('aws-sdk');
+const multer = require('multer');
+const multers3 = require('multer-s3');
+
+
+//TODO: UNCOMMENT THIS CODE
+// aws.config.update({
+//     accessKeyId: constants.s3Connection.accessKeyId,
+//     secretAccessKey: constants.s3Connection.secretAccessKey,
+//     region: constants.s3Connection.region,
+// });
+
+aws.config.update({
+    accessKeyId: 'AKIAJMHIEHWHLXVVOG2Q',
+    secretAccessKey: '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',
+    region: constants.s3Connection.region,
+});
+
+
+const s3 = new aws.S3();
+
+const storage = multers3({
+    s3: s3,
+    bucket: constants.s3Connection.s3TravelReimbursementBucket,
+    acl: 'public-read',
+    serverSideEncryption: 'AES256',
+    metadata: function (req, file, cb) {
+        cb(null, {
+            fieldName: file.fieldname,
+        });
+    },
+    key: function (req, file, cb) {
+        cb(null, generateFileName(req.body.fullName, file));
+    }
+});
+
+function generateFileName(fullName, file) {
+    return fullName + "-receipt-" + file.originalname;
+}
+
+const upload = multer({
+    fileFilter: function (req, file, cb) {
+        if (path.extname(file.originalname) !== '.jpeg' && path.extname(file.originalname) !== '.png' && path.extname(file.originalname) !== '.jpg') {
+            return cb(new Error('Only jpeg, jpg, and png are allowed'));
+        }
+        cb(null, true);
+    },
+    storage: storage,
+    limits: {fileSize: 1024 * 1024 * 5} //limit to 5MB
+});
 
 /************* HELPER FUNCTIONS **************/
 /**
@@ -85,5 +144,69 @@ router.get('/registration', (req, res, next) => {
        next(error);
    }
 });
+
+
+
+
+/*
+ * @api {post} /users/travelReimbursement submit travel reimbursement information
+ * @apiVersion 0.1.1
+ * @apiName Travel Reimbursement
+ * @apiGroup users
+ * @apiUse AuthArgumentRequired
+ * @apiParam {String} fullName first and last names of the user as they would appear on a check.
+ * @apiParam {Number} reimbursementAmount the total amount of money they are requesting, as appears on their receipts
+ * @apiParam {String} mailingAddress the full postal address of the user
+ * @apiParam {enum} groupMembers ["1", "2", "3", "+4"]
+ * @apiParam {FILE} [receipt] The receipt files for this user, users can send up to 5 files all under fieldname receipt. (Max size: 5 MB each)
+ * @apiPermission valid user credentials
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next) => {
+
+ req.body.reimbursementAmount = parseInt(req.body.reimbursementAmount);
+
+req.body.reimbursementAmount= adjustReimbursementPrice(req.body.reimbursementAmount, req.body.groupMembers);
+
+ if (!(req.body && validateReimbursement(req.body))) {
+        const error = new Error();
+        error.body = {error: 'Reasons for error: Request body must be set and pass validation'};
+        error.status = 400;
+        next(error);
+    } else { 
+
+    	//TODO:
+    	//Add to database
+    	console.log(Number(req.body.reimbursementAmount).toFixed(2));
+    	res.status(200).send({response: "Success"});
+
+    }
+
+});
+
+function validateReimbursement(data) {
+    const validate = ajv.compile(constants.travelReimbursementSchema);
+    return !!validate(data);
+}
+
+function adjustReimbursementPrice(price, groupMembers){
+
+		if( (groupMembers == '1' || groupMembers == '2') && price > 50){ 
+			return 50;
+		}
+		else if(groupMembers == '3' && price > 60){
+			return 60;
+		}
+		else if(groupMembers == '+4' && price > 70){
+			return 70; 
+		}
+		else{
+			return price;
+		}
+
+}
+
+
 
 module.exports = router;

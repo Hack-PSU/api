@@ -56,7 +56,6 @@ const upload = multer({
 });
 
 
-
 /** **************** HELPER MIDDLEWARE ************************* */
 
 /**
@@ -100,13 +99,12 @@ function storeIP(req, res, next) {
             .then(() => {
                 next();
             }).catch(() => {
-                next();
+            next();
         })
     } else {
         next();
     }
 }
-
 
 
 /********************* ROUTES ****************************/
@@ -144,100 +142,36 @@ router.post('/pre', (req, res, next) => {
  * @apiVersion 0.1.1
  * @apiName Registration
  * @apiGroup Registration
-<<<<<<< HEAD
- * @apiParam {Object} data: 
+ * @apiParam {Object} data:
  * @apiParamExample {Object} Request-Example: {
 	req.header: {
-		idtoken: user's idtoken
+		idtoken: <user's idtoken>
 	}
 
  	request.body: {
-		data:{ 
-			firstName: {
-                type: 'string',
-                minLength: 1,
-                maxLength: 45,
-            },
-            lastName: {
-                type: 'string',
-                minLength: 1,
-                maxLength: 45,
-            },
-            gender: { 
-                "enum":  ['Male','Female','Non-Binary','Prefer not to disclose']
-            },
-            shirtSize:{ 
-                "enum": ['XS','S','M','L','XL','XXL']
-            },
-            dietaryRestriction: {
-                "enum": ['Vegetarian','Vegan','Kosher','Allergies']  
-            },
-            allergies: {
-                type: 'string',
-                minLength: 1,
-                maxLength: 45,
-            },
-            travelReimbursement: {
-                type: 'boolean'
-            }, 
-            firstHackathon: {
-                type: 'boolean'
-            },
-            university: {
-                type: 'string',
-                minLength: 1, 
-                maxLength: 200,
-            },
-            email: {
-                type: 'string',
-                format: 'email'   
-            },
-            academicYear: {
-                "enum": ["Freshman", "Sophomore", "Junior", "Senior", "Graduate student", "Graduated within last 12 months"]
-            },
-            major: {
-                type: 'string',
-                minLength: 1,
-                maxLength: 100
-            },
-            phone: {
-                type: 'string', 
-                minLength: 1,
-                maxLength: 50
-            },
-            race: {
-                type: 'string',
-                maxLength: 150
-            },
-            codingExperience: {
-                "enum": ["None","Beginner", "Intermediate", "Advanced"]
-            },
-            uid: {
-                type: 'string',
-                maxLength: 150
-            },
-            eighteenBeforeEvent: {
-                type: 'boolean'
-            }, 
-            mlhCOC: {
-                type: 'boolean' 
-            },
-            mlhDCP: {
-                type: 'boolean'
-            },
-            referral: {
-                type: 'string'
-            },
-            project: { 
-                type: 'string'
-            }
-			
-			required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'phone', 'codingExperience', 'uid', 'eighteenBeforeEvent', 'mlhCOC', 'mlhDCP']
-        }, 
-        resume: file(size must be below 10MB)} 
+			firstName: "Matt",
+            lastName: "Stewart",
+            gender: "Male",
+            shirtSize: "L",
+            dietaryRestriction: "Vegetarian",
+            allergies: "Peanuts",
+            travelReimbursement: true,
+            firstHackathon: false,
+            university: "University of hackathon",
+            email: matt@email.com,
+            academicYear: "sophomore",
+            major: "Communication"
+            phone: "1234567890"
+            race: "no-disclose"
+            codingExperience: "advanced"
+            uid: "JH123891JDW98E89J3389",
+            eighteenBeforeEvent: true,
+            mlhCOC: true,
+            mlhDCP: true,
+            referral: "facebook",
+            project: "My project description",
+            resume: https://s3.aws.com/link-to-file
     }
-
-=======
  * @apiUse AuthArgumentRequired
  * @apiParam {String} firstname First name of the user
  * @apiParam {String} lastname Last name of the user
@@ -263,7 +197,6 @@ router.post('/pre', (req, res, next) => {
  * @apiParam {String} project A project description that the user is proud of
  * @apiParam {String} expectations What the user expects to get from the hackathon
  * @apiParam {String} veteran=false Is the user a veteran?
->>>>>>> df5ec18aafa68191551cae7cb85ebb203ed12ca5
  * @apiPermission valid user credentials
  *
  * @apiSuccess {String} Success

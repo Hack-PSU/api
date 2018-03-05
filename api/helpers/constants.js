@@ -17,7 +17,7 @@ module.exports = {
         },
         required: ['email', 'name'],
     },
-    emailServerUrl: 'https://api.sendinblue.com/v3/smtp/email',
+    emailServerUrl: 'https://api.sendinblue.com/v3/smtp/email', //TODO: Remove
     sqlConnection: {
         host: process.env.RDS_HOSTNAME || 'localhost',
         user: process.env.RDS_USERNAME || 'user',
@@ -157,7 +157,7 @@ module.exports = {
                 type: 'string'
             },
             groupMembers: {
-                "enum": ["1", "2", "3", "+4"]
+                "enum": ["1", "2", "3", "4+"]
             },
         },
         required: ['fullName','reimbursementAmount','mailingAddress', 'groupMembers']

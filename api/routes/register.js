@@ -96,7 +96,7 @@ function checkAuthentication(req, res, next) {
  */
 function storeIP(req, res, next) {
     if (process.env.NODE_ENV === 'prod') {
-        database.storeIP(req.ip, req.headers['user-agent'])
+        database.storeIP(req.headers['http_x_forwarded_for'], req.headers['user-agent'])
             .then(() => {
                 next();
             }).catch(() => {

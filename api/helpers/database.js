@@ -165,7 +165,7 @@ function storeIP(ipAddress, user_agent) {
     const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
         .into('REQ_DATA')
         .setFieldsRows([
-            {idREQ_DATA: uuidv4(), req_time: new Date().getTime(), req_ip: ipAddress, req_user_agent: user_agent}
+            {idREQ_DATA: uuidv4(), req_time: new Date().getTime(), req_ip: ipAddress ? ipAddress : "", req_user_agent: user_agent}
         ])
         .toParam();
     query.text = query.text.concat(';');

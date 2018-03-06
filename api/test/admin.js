@@ -317,7 +317,7 @@ describe('test make admin', () => {
   });
 });
 
-describe('test send emails', () => {
+describe.skip('test send emails', () => {
   const listener = null;
 
   /**

@@ -352,11 +352,12 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
                         error: res.locals.failArray,
                     };
                     next(error);
-                }
-                if (res.locals.failArray.length > 0) {
-                    res.status(207).send(res.locals.failArray.concat(resolves)); // Partial success response
                 } else {
-                    res.status(200).send(resolves); // Full success response
+                    if (res.locals.failArray.length > 0) {
+                        res.status(207).send(res.locals.failArray.concat(resolves)); // Partial success response
+                    } else {
+                        res.status(200).send(resolves); // Full success response
+                    }
                 }
             }).catch(err => console.error(err));
         } else {

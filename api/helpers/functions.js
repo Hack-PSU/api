@@ -1,8 +1,7 @@
 /* eslint-disable max-len */
 const constants = require('./constants');
 const ses = require('node-ses');
-const Ajv = require('ajv');
-const ajv = new Ajv({allErros: true});
+const validator = require('email-validator');
 
 const emailKey = require("../helpers/constants").emailKey;
 const client = ses.createClient(emailKey);
@@ -14,23 +13,20 @@ const client = ses.createClient(emailKey);
  * @return {Promise} return a promised data with a subbed version of the html
  */
 module.exports.emailSubstitute = function emailSubstitute(html, name, substitutions) {
-  let promise = new Promise(function(resolve, reject) {
-    let subbedHTML = html.replace(/\$name\$/g, name);
-    Object.entries(substitutions).forEach((substitution) => {
-      if (substitution[1].length > 0 && substitution[0].length > 0){  
-        console.log(substitution[0].length,substitution[0],substitution[1]);
-        subbedHTML = subbedHTML.replace(new RegExp(`\\$${substitution[0]}\\$`, 'g'), substitution[1]);
-      }
-      else{
-        console.log("failed");
-        const error = new Error();
-        error.body = {error: 'One or more substitution keyword or substitution-text is empty'};
-        reject(error)
-      }
-    });
-    resolve(subbedHTML)
-  })
-  return promise;
+    return new Promise(function (resolve, reject) {
+      let subbedHTML = html.replace(/\$name\$/g, name);
+      Object.entries(substitutions).forEach((substitution) => {
+          if (substitution[1].length > 0 && substitution[0].length > 0) {
+              subbedHTML = subbedHTML.replace(new RegExp(`\\$${substitution[0]}\\$`, 'g'), substitution[1]);
+          }
+          else {
+              const error = new Error();
+              error.body = {error: 'One or more substitution keyword or substitution-text is empty'};
+              reject(error)
+          }
+      });
+      resolve(subbedHTML)
+  });
 };
 
 /**
@@ -67,15 +63,7 @@ module.exports.sendEmail = function sendEmail(data) {
  * @return {Object} { data, options }
  */
 module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject, fromEmail) {
-  const validate = ajv.compile(constants.emailSchema);
-  let emailAddress;
-  console.log(fromEmail);
-  if (validate(fromEmail)) {
-    emailAddress = fromEmail;
-  }
-  else{
-    emailAddress = 'team@hackpsu.org';
-  }
+  let emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
   const data = {
     to: email, 
     from: emailAddress,

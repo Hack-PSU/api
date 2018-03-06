@@ -317,7 +317,7 @@ describe('test make admin', () => {
   });
 });
 
-describe.skip('test send emails', () => {
+describe('test send emails', () => {
   const listener = null;
 
   /**
@@ -338,7 +338,7 @@ describe.skip('test send emails', () => {
         },
       });
     }
-    result.subject = chance.md5(new Date().getTime().toString());
+    result.subject = chance.sentence();
     result.html = 'Hello $name$, This is a test email, sent on date: $date$. Your unique key is $key$. Thanks! HackPSU test';
     return result;
   };

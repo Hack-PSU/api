@@ -14,19 +14,19 @@ const client = ses.createClient(emailKey);
  */
 module.exports.emailSubstitute = function emailSubstitute(html, name, substitutions) {
     return new Promise(function (resolve, reject) {
-      let subbedHTML = html.replace(/\$name\$/g, name);
-      Object.entries(substitutions).forEach((substitution) => {
-          if (substitution[1].length > 0 && substitution[0].length > 0) {
-              subbedHTML = subbedHTML.replace(new RegExp(`\\$${substitution[0]}\\$`, 'g'), substitution[1]);
-          }
-          else {
-              const error = new Error();
-              error.body = {error: 'One or more substitution keyword or substitution-text is empty'};
-              reject(error)
-          }
-      });
-      resolve(subbedHTML)
-  });
+        let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
+        Object.entries(substitutions).forEach((substitution) => {
+            if (substitution[1].length > 0 && substitution[0].length > 0) {
+                subbedHTML = subbedHTML.replace(new RegExp(`\\$${substitution[0]}\\$`, 'g'), substitution[1]);
+            }
+            else {
+                const error = new Error();
+                error.body = {error: 'One or more substitution keyword or substitution-text is empty'};
+                reject(error)
+            }
+        });
+        resolve(subbedHTML)
+    });
 };
 
 /**
@@ -35,14 +35,14 @@ module.exports.emailSubstitute = function emailSubstitute(html, name, substituti
  * @return {Promise<any>}
  */
 module.exports.sendEmail = function sendEmail(data) {
-  return new Promise((resolve, reject) => {
-    client.sendEmail(data, function (err) {
-      if (err) {
-        reject(err);
-      }
-      else resolve(true);
+    return new Promise((resolve, reject) => {
+        client.sendEmail(data, function (err) {
+            if (err) {
+                reject(err);
+            }
+            else resolve(true);
+        });
     });
-  });
 };
 
 
@@ -63,15 +63,15 @@ module.exports.sendEmail = function sendEmail(data) {
  * @return {Object} { data, options }
  */
 module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject, fromEmail) {
-  let emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
-  const data = {
-    to: email, 
-    from: emailAddress,
-    subject: subject, 
-    message: htmlContent,
-    replyTo: emailAddress
+    let emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
+    const data = {
+        to: email,
+        from: emailAddress,
+        subject: subject,
+        message: htmlContent,
+        replyTo: emailAddress
     };
-  return {
-    data,
-  };
+    return {
+        data,
+    };
 };

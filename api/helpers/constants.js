@@ -15,7 +15,7 @@ module.exports = {
                 additionalProperties: {type: 'string'},
             },
         },
-        required: ['email', 'name'],
+        required: ['email'],
     },
     emailKey: {
         key: process.env.ACCESS_KEY_ID,

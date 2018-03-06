@@ -19,7 +19,7 @@ const router = express.Router();
 /**
  * Administrator authentication middleware
  */
- 
+
 router.use((req, res, next) => {
     if (req.headers.idtoken) {
         authenticator.checkAuthentication(req.headers.idtoken)
@@ -229,23 +229,23 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
  * @apiSuccess {object} Object {uid, displayName}
  * @apiUse IllegalArgumentError
  */
-router.get('/userid',verifyACL(3), (req, res, next) => {
-  if(!(req.query && req.query.email && validator.validate(req.query.email))){
-    const error = new Error();
-    error.status = 400;
-    error.body = {error: "request query must be set and a valid email"};
-    next(error);
-  } else {
-    authenticator.getUserId(req.query.email).then((user) => {
-      res.status(200).send({uid: user.uid, displayName: user.displayName});
-    }).catch((error) => {
-      const err = new Error();
-      console.error(error);
-      err.status = error.status || 500;
-      err.body = error.message;
-      next(err);
-    })
-  }
+router.get('/userid', verifyACL(3), (req, res, next) => {
+    if (!(req.query && req.query.email && validator.validate(req.query.email))) {
+        const error = new Error();
+        error.status = 400;
+        error.body = {error: "request query must be set and a valid email"};
+        next(error);
+    } else {
+        authenticator.getUserId(req.query.email).then((user) => {
+            res.status(200).send({uid: user.uid, displayName: user.displayName});
+        }).catch((error) => {
+            const err = new Error();
+            console.error(error);
+            err.status = error.status || 500;
+            err.body = error.message;
+            next(err);
+        })
+    }
 });
 
 
@@ -311,6 +311,7 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  *                        },
  *                        {...},
  *                        ...],
+ *                    fromEmail: "Email address send from and reply to. *NOTE: email are case sensitive"
  *                    subject: "generic email",
  *                    html: "<html><head><body>.....</body></head></html>"
  *                  }
@@ -326,13 +327,17 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
             res.locals.successArray.forEach((emailObject) => { // For each emailObject
                 promises.push(new Promise((resolve) => {
                     // Substitute HTML with name/emails and send email
-                    const subHTML = functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions); // Substitute the substitutables in the html
-                    const request = functions.createEmailRequest(emailObject.email, subHTML, req.body.subject, emailObject.name); // Generate the POST request
-                    functions.sendEmail(request.options)
-                        .then((response) => {
-                            resolve(response); // If succesful, resolve
-                        }).catch((error) => {
-                        res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
+                    functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions).then((subbedHTML) => {
+                        const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject, req.body.fromEmail); // Generate the POST request
+                        functions.sendEmail(request.data)
+                            .then(() => {
+                                resolve({'email': request.data.to, 'response': 'success'}); // If successful, resolve
+                            }).catch((error) => {
+                            res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
+                            resolve(null);
+                        });
+                    }).catch((error) => {
+                        res.locals.failArray.push(Object.assign(emailObject, error)); // if email substitution fails, add to fail array for partial HTTP success response
                         resolve(null);
                     });
                 }));

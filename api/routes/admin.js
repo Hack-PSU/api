@@ -19,19 +19,19 @@ const router = express.Router();
 /**
  * Administrator authentication middleware
  */
- 
+
 router.use((req, res, next) => {
     if (req.headers.idtoken) {
         authenticator.checkAuthentication(req.headers.idtoken)
             .then((decodedToken) => {
                 if (decodedToken.admin === true) {
-                  res.locals.privilege = decodedToken.privilege; 
-                  next();
+                    res.locals.privilege = decodedToken.privilege;
+                    next();
                 } else {
-                  const error = new Error();
-                  error.status = 401;
-                  error.body = {error: 'You do not have sufficient permissions for this operation'};
-                  next(error);
+                    const error = new Error();
+                    error.status = 401;
+                    error.body = {error: 'You do not have sufficient permissions for this operation'};
+                    next(error);
                 }
             }).catch((err) => {
             const error = new Error();
@@ -95,21 +95,21 @@ function validateEmails(req, res, next) {
  */
 function verifyACL(level) {
     return function (req, res, next) {
-         if (res.locals.privilege) {
-             if (res.locals.privilege >= level) {
-                 next();
-             } else {
-                 const error = new Error();
-                 error.status = 401;
-                 error.body = {error: 'You do not have sufficient permissions for this operation'};
-                 next(error);
-             }
-         } else {
-             const error = new Error();
-             error.status = 500;
-             error.body = {error: 'Something went wrong while accessing permissions'};
-             next(error);
-         }
+        if (res.locals.privilege) {
+            if (res.locals.privilege >= level) {
+                next();
+            } else {
+                const error = new Error();
+                error.status = 401;
+                error.body = {error: 'You do not have sufficient permissions for this operation'};
+                next(error);
+            }
+        } else {
+            const error = new Error();
+            error.status = 500;
+            error.body = {error: 'Something went wrong while accessing permissions'};
+            next(error);
+        }
     };
 }
 
@@ -229,23 +229,23 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
  * @apiSuccess {object} Object {uid, displayName}
  * @apiUse IllegalArgumentError
  */
-router.get('/userid',verifyACL(3), (req, res, next) => {
-  if(!(req.query && req.query.email && validator.validate(req.query.email))){
-    const error = new Error();
-    error.status = 400;
-    error.body = {error: "request query must be set and a valid email"};
-    next(error);
-  } else {
-    authenticator.getUserId(req.query.email).then((user) => {
-      res.status(200).send({uid: user.uid, displayName: user.displayName});
-    }).catch((error) => {
-      const err = new Error();
-      console.error(error);
-      err.status = error.status || 500;
-      err.body = error.message;
-      next(err);
-    })
-  }
+router.get('/userid', verifyACL(3), (req, res, next) => {
+    if (!(req.query && req.query.email && validator.validate(req.query.email))) {
+        const error = new Error();
+        error.status = 400;
+        error.body = {error: "request query must be set and a valid email"};
+        next(error);
+    } else {
+        authenticator.getUserId(req.query.email).then((user) => {
+            res.status(200).send({uid: user.uid, displayName: user.displayName});
+        }).catch((error) => {
+            const err = new Error();
+            console.error(error);
+            err.status = error.status || 500;
+            err.body = error.message;
+            next(err);
+        })
+    }
 });
 
 
@@ -327,18 +327,18 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
             res.locals.successArray.forEach((emailObject) => { // For each emailObject
                 promises.push(new Promise((resolve) => {
                     // Substitute HTML with name/emails and send email
-                    functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions).then(function(subbedHTML) {
-                      const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject,req.body.fromEmail); // Generate the POST request
-                      functions.sendEmail(request.data)
-                         .then(() => {
-                              resolve({'email': request.data.to, 'response': 'success'}); // If succesful, resolve
-                          }).catch((error) => {
-                          res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
-                          resolve(null);
-                      });
+                    functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions).then((subbedHTML) => {
+                        const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject, req.body.fromEmail); // Generate the POST request
+                        functions.sendEmail(request.data)
+                            .then(() => {
+                                resolve({'email': request.data.to, 'response': 'success'}); // If successful, resolve
+                            }).catch((error) => {
+                            res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
+                            resolve(null);
+                        });
                     }).catch((error) => {
-                      res.locals.failArray.push(Object.assign(emailObject, error)); // if emai substitution fails, add to fail array for partial HTTP success response
-                      resolve(null);
+                        res.locals.failArray.push(Object.assign(emailObject, error)); // if email substitution fails, add to fail array for partial HTTP success response
+                        resolve(null);
                     });
                 }));
             });

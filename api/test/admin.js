@@ -349,7 +349,7 @@ describe('test send emails', () => {
   const buildBadInput = (params) => {
     const result = {};
     result.emails = [];
-    const numEmails = (Math.random() * 20) + 1;
+    const numEmails = (Math.random() * 20) + 5;
     for (let i = 0; i < numEmails; i += 1) {
       result.emails.push({
         email: chance.email(),
@@ -368,7 +368,7 @@ describe('test send emails', () => {
         case 'email':
           result.emails = [];
           for (let i = 0; i < numEmails; i += 1) {
-            if (chance.bool()) {
+            if (chance.bool({likelihood: 25})) {
               result.emails.push({
                 email: chance.email(),
                 name: chance.name(),
@@ -497,9 +497,6 @@ describe('test send emails', () => {
                   .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.be.an('array');
-                    res.body.forEach((response) => {
-                      response.statusCode.should.equal(201);
-                    });
                     done();
                   });
               }).catch(err => done(err));

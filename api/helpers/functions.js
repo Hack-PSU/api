@@ -15,16 +15,16 @@ const client = ses.createClient(emailKey);
 module.exports.emailSubstitute = function emailSubstitute(html, name, substitutions) {
     return new Promise(function (resolve, reject) {
         let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
-        Object.entries(substitutions).forEach((substitution) => {
-            if (substitution[1].length > 0 && substitution[0].length > 0) {
-                subbedHTML = subbedHTML.replace(new RegExp(`\\$${substitution[0]}\\$`, 'g'), substitution[1]);
+        for (let key in substitutions) {
+            if (substitutions[key].length > 0 && key.length > 0) {
+                subbedHTML = subbedHTML.replace(new RegExp(`\\$${key}\\$`, 'g'), substitutions[key]);
             }
             else {
                 const error = new Error();
                 error.body = {error: 'One or more substitution keyword or substitution-text is empty'};
                 reject(error)
             }
-        });
+        }
         resolve(subbedHTML)
     });
 };

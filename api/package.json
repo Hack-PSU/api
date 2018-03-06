@@ -29,6 +29,7 @@
     "multer-s3": "^2.7.0",
     "mysql": "2.15.0",
     "node-cipher": "6.3.2",
+    "node-ses": "^2.1.0",
     "pug": "^2.0.0-rc.4",
     "request": "latest",
     "request-ip": "^2.0.2",

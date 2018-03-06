@@ -25,13 +25,13 @@ router.use((req, res, next) => {
         authenticator.checkAuthentication(req.headers.idtoken)
             .then((decodedToken) => {
                 if (decodedToken.admin === true) {
-                    res.locals.privilege = decodedToken.privilege;
-                    next();
+                  res.locals.privilege = decodedToken.privilege; 
+                  next();
                 } else {
-                    const error = new Error();
-                    error.status = 401;
-                    error.body = {error: 'You do not have sufficient permissions for this operation'};
-                    next(error);
+                  const error = new Error();
+                  error.status = 401;
+                  error.body = {error: 'You do not have sufficient permissions for this operation'};
+                  next(error);
                 }
             }).catch((err) => {
             const error = new Error();
@@ -95,21 +95,21 @@ function validateEmails(req, res, next) {
  */
 function verifyACL(level) {
     return function (req, res, next) {
-        if (res.locals.privilege) {
-            if (res.locals.privilege >= level) {
-                next();
-            } else {
-                const error = new Error();
-                error.status = 401;
-                error.body = {error: 'You do not have sufficient permissions for this operation'};
-                next(error);
-            }
-        } else {
-            const error = new Error();
-            error.status = 500;
-            error.body = {error: 'Something went wrong while accessing permissions'};
-            next(error);
-        }
+         if (res.locals.privilege) {
+             if (res.locals.privilege >= level) {
+                 next();
+             } else {
+                 const error = new Error();
+                 error.status = 401;
+                 error.body = {error: 'You do not have sufficient permissions for this operation'};
+                 next(error);
+             }
+         } else {
+             const error = new Error();
+             error.status = 500;
+             error.body = {error: 'Something went wrong while accessing permissions'};
+             next(error);
+         }
     };
 }
 
@@ -311,6 +311,7 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  *                        },
  *                        {...},
  *                        ...],
+ *                    fromEmail: "Email address send from and reply to. *NOTE: email are case sensitive"
  *                    subject: "generic email",
  *                    html: "<html><head><body>.....</body></head></html>"
  *                  }
@@ -326,14 +327,18 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
             res.locals.successArray.forEach((emailObject) => { // For each emailObject
                 promises.push(new Promise((resolve) => {
                     // Substitute HTML with name/emails and send email
-                    const subHTML = functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions); // Substitute the substitutables in the html
-                    const request = functions.createEmailRequest(emailObject.email, subHTML, req.body.subject, emailObject.name); // Generate the POST request
-                    functions.sendEmail(request.options)
-                        .then((response) => {
-                            resolve(response); // If succesful, resolve
-                        }).catch((error) => {
-                        res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
-                        resolve(null);
+                    functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions).then(function(subbedHTML) {
+                      const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject,req.body.fromEmail); // Generate the POST request
+                      functions.sendEmail(request.data)
+                         .then(() => {
+                              resolve({'email': request.data.to, 'response': 'success'}); // If succesful, resolve
+                          }).catch((error) => {
+                          res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
+                          resolve(null);
+                      });
+                    }).catch((error) => {
+                      res.locals.failArray.push(Object.assign(emailObject, error)); // if emai substitution fails, add to fail array for partial HTTP success response
+                      resolve(null);
                     });
                 }));
             });

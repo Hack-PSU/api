@@ -8,7 +8,8 @@ var file = fs.createWriteStream(filename);
 var request = http.get(file_url, function(response) {
   response.pipe(file);
     response.on('end', () => {
-        if (filename.split('.')[1] === 'doc' || filename.split('.')[1] === 'docx') {
+        const tokens = filename.split('.');
+        if (tokens[tokens.length - 1] === 'doc' || tokens[tokens.length - 1] === 'docx') {
             exec('libreconv '+filename+' -f pdf', (error, stdout, strerr) => {
                 if (error) {
                     console.error(error);

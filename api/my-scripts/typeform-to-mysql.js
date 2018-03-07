@@ -200,7 +200,12 @@ function patchMySql(postObj) {
         dbConnected.then(() => {
             connection.query(query.text, query.values, (err, response) => {
                 if (err) {
-                    reject(err);
+                    if (err.errno === 1062) {
+                        resolve(postObj);
+                        console.log("SQL already has the data. Skipping.");
+                    } else {
+                        reject(err);
+                    }
                 } else {
                     console.log(response);
                     resolve(postObj);
@@ -317,12 +322,12 @@ function downloadFile(url) {
  */
 function parseTypeformResponse(answers) {
     return {
-        email: answers.email_QwRg7UM03uxX,
+        email: answers.email_QwRg7UM03uxX.replace(/\s/g, ''),
         firstname: answers.textfield_eynmIPUXHZc8,
         lastname: answers.textfield_me3toAQqUkwo,
         gender: answers.list_dxdEOTJvOx8T_choice,
-        university: answers.dropdown_G0E5omVm2YwJ,
-        academic_year: answers.list_gkIwLiPgjvXr_choice,
+        university: answers.dropdown_G0E5omVm2YwJ || null,
+        academic_year: answers.list_gkIwLiPgjvXr_choice || null,
         shirt_size: answers.list_Af2rTKG55bjb_choice || null,
         resume: answers.fileupload_GcGHbEVbV5Ok || null,
         eighteenBeforeEvent: answers.yesno_ZAkOzcpuImvJ === '1',
@@ -330,7 +335,7 @@ function parseTypeformResponse(answers) {
         allergies: answers.textarea_XsQhSVLovDTw || null,
         travel_reimbursement: answers.yesno_f6q1nBZ76jC9 === '1',
         first_hackathon: answers.yesno_gQglhK18g9zn === '1',
-        major: answers.textfield_salRIazBSILV,
+        major: answers.textfield_salRIazBSILV || null,
         mlh_coc: answers.terms_yRNVPi1Zf3fj === '1',
         mlh_dcp: answers.terms_yRNVPi1Zf3fj === '1',
         submitted: true

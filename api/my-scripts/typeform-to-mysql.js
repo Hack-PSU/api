@@ -8,6 +8,7 @@ const mysql = require('mysql');
 const AWS = require('aws-sdk');
 const squel = require('squel');
 const firebase = require('firebase');
+var validUrl = require('valid-url');
 
 const emailHTML = fs.readFileSync('email.html', 'utf-8');
 const fbconfig = {
@@ -88,56 +89,64 @@ let dbConnected = new Promise((resolve, reject) => {
 });
 
 getTypeformResponses(options) // Load all typeform data
-    .then((responses) => {
+    .then(async (responses) => {
             for (let i = 0; i < responses.length; i++) { // For all responses
-                let postObj = parseTypeformResponse(responses[i].answers); // Parse it to follow the SQL structure
-                console.log(postObj);
-                let prom = null;
-                if (postObj.resume) {
-                    prom = downloadFile(postObj.resume); // Download the file from the typeform link
-                } else {
-                    prom = new Promise((res) => {
-                        res();
-                    });
-                }
-                prom.then((filename) => { // On complete download
-                    filename = filename.replace(/\n/g, ''); // Strip the newline
-                    console.log(filename);
-                    generateLogin(postObj.email) // Generate a login for the user
-                        .then((result) => {
-                            console.log(result);
-                            postObj.uid = result.uid;
-                            if (filename) {
-                                const params = {
-                                    Bucket: config.AWS_BUCKET,
-                                    ACL: 'public-read',
-                                    ServerSideEncryption: "AES256",
-                                    Key: generateFileName(postObj.uid, postObj.firstname, postObj.lastname),
-                                    Body: fs.createReadStream('./' + filename),
-                                };
-                                S3.upload(params, (err, data) => { //Upload resume to S3
-                                    console.error(err);
-                                    console.log(data);
-                                    fs.unlinkSync('./' + filename);
-                                    console.log("File uploaded");
+                await new Promise((resolve, reject) => {
+                    let postObj = parseTypeformResponse(responses[i].answers); // Parse it to follow the SQL structure
+                    console.log(postObj);
+                    let prom = null;
+                    if (postObj.resume) {
+                        prom = downloadFile(postObj.resume); // Download the file from the typeform link
+                    } else {
+                        prom = new Promise((res) => {
+                            res();
+                        });
+                    }
+                    prom.then((filename) => { // On complete download
+                        if (filename) {
+                            filename = filename.replace(/\n/g, '');// Strip the newline
+                            fs.renameSync(filename, filename.replace(/\s/g, '_'));
+                            console.log(filename);
+                        }
+                        generateLogin(postObj.email) // Generate a login for the user
+                            .then((result) => {
+                                console.log(result);
+                                postObj.uid = result.uid;
+                                if (filename) {
+                                    const params = {
+                                        Bucket: config.AWS_BUCKET,
+                                        ACL: 'public-read',
+                                        ServerSideEncryption: "AES256",
+                                        Key: generateFileName(postObj.uid, postObj.firstname, postObj.lastname),
+                                        Body: fs.createReadStream('./' + filename),
+                                    };
+                                    S3.upload(params, (err, data) => { //Upload resume to S3
+                                        console.error(err);
+                                        console.log(data);
+                                        fs.unlinkSync('./' + filename);
+                                        console.log("File uploaded");
+                                    });
+                                    postObj.resume = 'https://s3.us-east-2.amazonaws.com/hackpsus2018-resumes/'
+                                        + generateFileName(postObj.uid, postObj.firstname, postObj.lastname);
+                                }
+                                patchMySql(postObj) // Add to SQL
+                                    .then((result) => {
+                                        console.log(result);
+                                        sendEmail(result.email, result.firstname) //Send out the email
+                                            .then((result) => {
+                                                console.log(result);
+                                                resolve(result);
+                                            }).catch(err => console.error(err));
+                                    }).catch((error) => {
+                                    console.error("Patch SQL error");
+                                    console.error(error);
+                                    reject(error);
                                 });
-                                postObj.resume = 'https://s3.us-east-2.amazonaws.com/hackpsus2018-resumes/'
-                                    + generateFileName(postObj.uid, postObj.firstname, postObj.lastname);
-                            }
-                            patchMySql(postObj) // Add to SQL
-                                .then((result) => {
-                                    console.log(result);
-                                    sendEmail(result.email, result.firstname) //Send out the email
-                                        .then((result) => {
-                                            console.log(result);
-                                        }).catch(err => console.error(err));
-                                }).catch((error) => {
-                                console.error("Patch SQL error");
-                                console.error(error);
-                            });
-                        }).catch((error) => {
-                        console.error("Firebase auth generate error");
-                        console.error(error);
+                            }).catch((error) => {
+                            console.error("Firebase auth generate error");
+                            console.error(error);
+                            reject(error);
+                        });
                     });
                 });
             }
@@ -207,7 +216,19 @@ function patchMySql(postObj) {
  * @return {Promise<admin.auth.UserRecord>}
  */
 function generateLogin(email) {
-    return admin.auth().createUser({email, password: "password"});
+    return new Promise((resolve, reject) => {
+        admin.auth().createUser({email, password: "password"})
+            .then(resolve)
+            .catch((error) => {
+                if (error.errorInfo.code === 'auth/email-already-exists') {
+                    admin.auth().getUserByEmail(email)
+                        .then(resolve)
+                        .catch(reject);
+                } else {
+                    reject(error);
+                }
+            });
+    });
 }
 
 /**
@@ -217,43 +238,50 @@ function generateLogin(email) {
  * @return {Promise<any>}
  */
 function sendEmail(email, name) {
+    const emails = fs.readFileSync('emails.txt', 'utf-8');
     return new Promise((resolve, reject) => {
-        firebase.auth().signInWithEmailAndPassword("admin@email.com", "password")
-            .then((user) => {
-                console.log(user);
-                user.getIdToken(true)
-                    .then((idtoken) => {
-                        console.log(idtoken);
-                        const options = {
-                            uri: 'https://api.hackpsu.org/v1/admin/email',
-                            method: 'POST',
-                            headers: {
-                                idtoken: idtoken,
-                            },
-                            json: {
-                                emails: [{
-                                    email: email,
-                                    name: name,
-                                    substitutions: {
-                                        url: "https://app.hackpsu.org/forgot?email=" + email,
-                                    }
-                                }],
-                                subject: "Thank you for registering with HackPSU!",
-                                html: emailHTML,
-                            }
-                        };
-                        console.log(options);
-                        request(options, (err, res, body) => {
-                            if (err) {
-                                console.error(err);
-                                reject(err);
-                            }
-                            resolve(body);
-                        });
-                    }).catch((err) => reject(err));
-            }).catch((err) => {
-            reject(err);
-        })
+        if (emails.indexOf(email) !== -1) {
+            resolve();
+        } else {
+            firebase.auth().signInWithEmailAndPassword("admin@email.com", "password")
+                .then((user) => {
+                    console.log(user);
+                    user.getIdToken(true)
+                        .then((idtoken) => {
+                            console.log(idtoken);
+                            const options = {
+                                uri: 'https://api.hackpsu.org/v1/admin/email',
+                                method: 'POST',
+                                headers: {
+                                    idtoken: idtoken,
+                                },
+                                json: {
+                                    emails: [{
+                                        email: email,
+                                        name: name,
+                                        substitutions: {
+                                            url: "https://app.hackpsu.org/forgot?email=" + email,
+                                        }
+                                    }],
+                                    subject: "Thank you for registering with HackPSU!",
+                                    html: emailHTML,
+                                }
+                            };
+                            console.log(options);
+                            request(options, (err, res, body) => {
+                                if (err) {
+                                    console.error(err);
+                                    reject(err);
+                                } else {
+                                    fs.writeFileSync('emails.txt', emails + email+'\n', {encoding: 'utf-8'});
+                                    resolve(body);
+                                }
+                            });
+                        }).catch((err) => reject(err));
+                }).catch((err) => {
+                reject(err);
+            });
+        }
     });
 }
 
@@ -264,17 +292,21 @@ function sendEmail(email, name) {
  */
 function downloadFile(url) {
     return new Promise((resolve, reject) => {
-        exec('node file_download.js ' + url, (err, stdout, stderr) => {
-            if (err) {
-                reject(err);
-            } else {
-                if (stderr) {
-                    reject(stderr);
+        if (!validUrl.isHttpsUri(url)) {
+            reject("Not a valid URL");
+        } else {
+            exec('node file_download.js ' + url, (err, stdout, stderr) => {
+                if (err) {
+                    reject(err);
                 } else {
-                    resolve(stdout);
+                    if (stderr) {
+                        reject(stderr);
+                    } else {
+                        resolve(stdout);
+                    }
                 }
-            }
-        });
+            });
+        }
     });
 }
 

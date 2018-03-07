@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "2.203.0",
+    "firebase": "latest",
     "firebase-admin": "^5.8.2",
     "follow-redirects": "1.4.1",
     "mysql": "^2.15.0",
@@ -17,6 +18,6 @@
     "node-msoffice-pdf": "0.0.7",
     "request": "latest",
     "squel": "5.12.0",
-    "firebase": "latest"
+    "valid-url": "1.0.9"
   }
 }

@@ -1,4 +1,5 @@
 const https = require('https');
+const request = require('request');
 const admin = require('firebase-admin');
 const {exec} = require('child_process');
 const nodecipher = require('node-cipher');
@@ -44,11 +45,35 @@ nodecipher.decryptSync({
     algorithm: 'aes-256-cbc-hmac-sha256'
 });
 const config = require('./config.json');
+process.stdin.resume();//so the program will not close instantly
+
+function exitHandler(options, err) {
+    if (options.cleanup) {
+        fs.unlinkSync('./config.json');
+        console.log('clean');
+    }
+    if (err) console.log(err.stack);
+    if (options.exit) process.exit();
+}
+
+//do something when app is closing
+process.on('exit', exitHandler.bind(null, {cleanup: true}));
+
+//catches ctrl+c event
+process.on('SIGINT', exitHandler.bind(null, {exit: true}));
+
+// catches "kill pid" (for example: nodemon restart)
+process.on('SIGUSR1', exitHandler.bind(null, {exit: true}));
+process.on('SIGUSR2', exitHandler.bind(null, {exit: true}));
+
+//catches uncaught exceptions
+process.on('uncaughtException', exitHandler.bind(null, {exit: true}));
 let connection = mysql.createConnection({
     host: config.RDS_HOSTNAME,
     user: config.RDS_USERNAME,
     password: config.RDS_PASSWORD,
-    port: config.RDS_PORT
+    port: config.RDS_PORT,
+    database: 'ebdb'
 });
 let dbConnected = new Promise((resolve, reject) => {
     connection.connect(function (err) {
@@ -62,23 +87,23 @@ let dbConnected = new Promise((resolve, reject) => {
     });
 });
 
-getTypeformResponses(options)
+getTypeformResponses(options) // Load all typeform data
     .then((responses) => {
-            console.log(responses);
-            for (let i = 0; i < 1; i++) {
-                let postObj = parseTypeformResponse(responses[i].answers);
+            for (let i = 0; i < responses.length; i++) { // For all responses
+                let postObj = parseTypeformResponse(responses[i].answers); // Parse it to follow the SQL structure
                 console.log(postObj);
                 let prom = null;
                 if (postObj.resume) {
-                    prom = downloadFile(postObj.resume);
+                    prom = downloadFile(postObj.resume); // Download the file from the typeform link
                 } else {
                     prom = new Promise((res) => {
                         res();
                     });
                 }
-                prom.then((filename) => {
+                prom.then((filename) => { // On complete download
+                    filename = filename.replace(/\n/g, ''); // Strip the newline
                     console.log(filename);
-                    generateLogin(postObj.email)
+                    generateLogin(postObj.email) // Generate a login for the user
                         .then((result) => {
                             console.log(result);
                             postObj.uid = result.uid;
@@ -88,26 +113,30 @@ getTypeformResponses(options)
                                     ACL: 'public-read',
                                     ServerSideEncryption: "AES256",
                                     Key: generateFileName(postObj.uid, postObj.firstname, postObj.lastname),
-                                    Body: fs.createReadStream(postObj.resume),
+                                    Body: fs.createReadStream('./' + filename),
                                 };
-                                S3.upload(params, (err, data) => {
-                                    console.log(err, data);
-                                    fs.unlinkSync(filename);
+                                S3.upload(params, (err, data) => { //Upload resume to S3
+                                    console.error(err);
+                                    console.log(data);
+                                    fs.unlinkSync('./' + filename);
                                     console.log("File uploaded");
                                 });
                                 postObj.resume = 'https://s3.us-east-2.amazonaws.com/hackpsus2018-resumes/'
-                                    + generateFileName(postObj.uid, postObj.firstName, postObj.lastName);
+                                    + generateFileName(postObj.uid, postObj.firstname, postObj.lastname);
                             }
-                            patchMySql(postObj)
+                            patchMySql(postObj) // Add to SQL
                                 .then((result) => {
                                     console.log(result);
-                                    // module.exports.sendEmail(result.email, result.firstname);
+                                    sendEmail(result.email, result.firstname) //Send out the email
+                                        .then((result) => {
+                                            console.log(result);
+                                        }).catch(err => console.error(err));
                                 }).catch((error) => {
-                                console.log("Patch SQL error");
+                                console.error("Patch SQL error");
                                 console.error(error);
                             });
                         }).catch((error) => {
-                        console.log("Firebase auth generate error");
+                        console.error("Firebase auth generate error");
                         console.error(error);
                     });
                 });
@@ -117,9 +146,9 @@ getTypeformResponses(options)
 );
 
 /**
- *
+ * Gets all responses from the typeform
  * @param options
- * @return {Promise<any>}
+ * @return {Promise<any[]>}
  */
 function getTypeformResponses(options) {
     return new Promise((resolve, reject) => {
@@ -187,7 +216,7 @@ function generateLogin(email) {
  * @param name
  * @return {Promise<any>}
  */
-module.exports = function sendEmail(email, name) {
+function sendEmail(email, name) {
     return new Promise((resolve, reject) => {
         firebase.auth().signInWithEmailAndPassword("admin@email.com", "password")
             .then((user) => {
@@ -196,20 +225,17 @@ module.exports = function sendEmail(email, name) {
                     .then((idtoken) => {
                         console.log(idtoken);
                         const options = {
-                            hostname: 'api.hackpsu.org',
-                            port: 443,
-                            path: '/v1/admin/email',
+                            uri: 'https://api.hackpsu.org/v1/admin/email',
                             method: 'POST',
                             headers: {
-                                'content-type': 'application/json',
                                 idtoken: idtoken,
                             },
-                            body: {
+                            json: {
                                 emails: [{
                                     email: email,
                                     name: name,
                                     substitutions: {
-                                        reset_url: "https://app.hackpsu.org/forgot?email=" + email,
+                                        url: "https://app.hackpsu.org/forgot?email=" + email,
                                     }
                                 }],
                                 subject: "Thank you for registering with HackPSU!",
@@ -217,28 +243,24 @@ module.exports = function sendEmail(email, name) {
                             }
                         };
                         console.log(options);
-                        const req = https.request(options, (res) => {
-                            res.on('data', (d) => {
-                                process.stdout.write(d);
-                            });
-                            res.on('end', () => {
-                                resolve();
-                            })
+                        request(options, (err, res, body) => {
+                            if (err) {
+                                console.error(err);
+                                reject(err);
+                            }
+                            resolve(body);
                         });
-                        req.on('error', (err => {
-                            console.error(err);
-                        }));
-                        req.end();
                     }).catch((err) => reject(err));
             }).catch((err) => {
             reject(err);
         })
     });
-};
+}
 
 /**
  *
  * @param url
+ * @return {Promise<string>} the name of the downloaded file
  */
 function downloadFile(url) {
     return new Promise((resolve, reject) => {
@@ -277,8 +299,9 @@ function parseTypeformResponse(answers) {
         travel_reimbursement: answers.yesno_f6q1nBZ76jC9 === '1',
         first_hackathon: answers.yesno_gQglhK18g9zn === '1',
         major: answers.textfield_salRIazBSILV,
-        mlhcoc: answers.terms_yRNVPi1Zf3fj === '1',
-        mlhdcp: answers.terms_yRNVPi1Zf3fj === '1',
+        mlh_coc: answers.terms_yRNVPi1Zf3fj === '1',
+        mlh_dcp: answers.terms_yRNVPi1Zf3fj === '1',
+        submitted: true
     }
 }
 

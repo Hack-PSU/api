@@ -16,7 +16,7 @@ var request = http.get(file_url, function(response) {
                     fs.unlink(filename);
                     process.exit(1);
                 } else {
-                    process.stdout.write(filename.split('.')[0]+'.pdf')
+                    process.stdout.write(filename.split('.')[0]+'.pdf');
                     fs.unlink(filename);
                     process.exit(0);
                 }

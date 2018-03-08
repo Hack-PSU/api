@@ -17,7 +17,18 @@ const app = express();
  */
 const server = http.createServer(app);
 
-const expressws = require('express-ws')(app, server);
+/**
+ * Socket IO listener
+ */
+const io = require('socket.io').listen(server, {
+    origin: 'http://localhost:*',
+    path: '/v1/live',
+});
+const redisAdapter = require('socket.io-redis');
+io.adapter(redisAdapter({ host: 'redis-17891.c44.us-east-1-2.ec2.cloud.redislabs.com', port: 17891, password: process.env.PKEY_PASS })); //TODO: Update
+require('./helpers/sockets')(io);
+
+require('express-ws')(app, server);
 /**
  * Get port from environment and store in Express.
  */
@@ -45,6 +56,7 @@ const users = require('./routes/users');
 const register = require('./routes/register');
 const admin = require('./routes/admin');
 const pi = require('./routes/pi');
+const live = require('./routes/live');
 
 nodecipher.decryptSync({
     input: 'privatekey.aes',
@@ -88,6 +100,7 @@ app.use('/v1/register', register);
 app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 app.use('/v1/admin', admin);
 app.use('/v1/pi', pi);
+app.use('/v1/live', live);
 
 
 // catch 404 and forward to error handler

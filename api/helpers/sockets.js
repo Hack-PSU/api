@@ -60,7 +60,7 @@ module.exports = (io) => {
     // ss(socket).emit('update', database.getCurrentUpdates());
 
     socket.on('upstream-update', (update) => {
-      if (update.image && update.image.type && update.image.type.match(/image\/.*/g)) {
+      if (update.title && update.image && update.image.type && update.image.type.match(/image\/.*/g)) {
         const listener = (image) => {
           socket.removeListener('image', listener);
           // S3 Parameters
@@ -81,7 +81,7 @@ module.exports = (io) => {
               updates.emit('upload-error', err);
             } else {
               // Add to the database
-              database.addNewUpdate(update.message, data.Location)
+              database.addNewUpdate(update.message, data.Location, update.title)
                 .then((result) => {
                   updates.emit('upload-complete', 'Complete');
                   updates.emit('update', [result]);
@@ -94,7 +94,7 @@ module.exports = (io) => {
         };
         socket.on('image', listener);
       } else {
-        updates.emit('upload-error', new Error('Image file must be provided'));
+        updates.emit('upload-error', new Error('Title and image file must be provided'));
       }
     });
     socket.on('disconnect', () => {

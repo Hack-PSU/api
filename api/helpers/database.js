@@ -1,7 +1,7 @@
 const squel = require('squel');
 const sql = require('mysql');
 const uuidv4 = require('uuid/v4');
-const timeuuid = require('node-time-uuid');
+const Timeuuid = require('node-time-uuid');
 
 const sqlOptions = require('../helpers/constants').sqlConnection;
 
@@ -205,11 +205,12 @@ function getCurrentUpdates() {
  *
  * @param updateText {string}
  * @param updateImage {string}
+ * @param updateTitle
  * @return {Promise<any>}
  */
-function addNewUpdate(updateText, updateImage) {
+function addNewUpdate(updateText, updateImage, updateTitle) {
   const insertObj = {
-    idLIVE_UPDATES: new timeuuid().toString('hex'), update_text: updateText, update_image: updateImage,
+    idLIVE_UPDATES: new Timeuuid().toString('hex'), update_text: updateText, update_image: updateImage, update_title: updateTitle,
   };
   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into('LIVE_UPDATES')

@@ -47,8 +47,8 @@ const io = require('socket.io').listen(server, {
   path: '/v1/live',
   handlePreflightRequest(req, res) {
     const headers = {
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, idtoken',
-      'Access-Control-Allow-Origin': 'http://localhost:4200',
+      'Access-Control-Allow-Headers': 'Content-Type, idtoken',
+      'Access-Control-Allow-Origin': req.headers.origin,
       'Access-Control-Allow-Credentials': true,
     };
     res.writeHead(200, headers);

@@ -72,8 +72,6 @@ module.exports = {
             },
             allergies: {
                 type: 'string',
-                minLength: 1,
-                maxLength: 45,
             },
             travelReimbursement: {
                 type: 'boolean'
@@ -129,7 +127,7 @@ module.exports = {
             referral: {
                 type: 'string'
             },
-            project: {
+            projectDesc: {
                 type: 'string'
             },
             expectations: {

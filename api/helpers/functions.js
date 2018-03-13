@@ -2,8 +2,11 @@
 const constants = require('./constants');
 const ses = require('node-ses');
 const validator = require('email-validator');
+const https = require('https');
 
-const emailKey = require("../helpers/constants").emailKey;
+const emailKey = require('../helpers/constants').emailKey;
+const pushNotifData = require('../helpers/constants').pushNotifKey;
+
 const client = ses.createClient(emailKey);
 /**
  * This function substitutes the provided
@@ -13,20 +16,19 @@ const client = ses.createClient(emailKey);
  * @return {Promise} return a promised data with a subbed version of the html
  */
 module.exports.emailSubstitute = function emailSubstitute(html, name, substitutions) {
-    return new Promise(function (resolve, reject) {
-        let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
-        for (let key in substitutions) {
-            if (substitutions[key].length > 0 && key.length > 0) {
-                subbedHTML = subbedHTML.replace(new RegExp(`\\$${key}\\$`, 'g'), substitutions[key]);
-            }
-            else {
-                const error = new Error();
-                error.body = {error: 'One or more substitution keyword or substitution-text is empty'};
-                reject(error)
-            }
-        }
-        resolve(subbedHTML)
-    });
+  return new Promise(((resolve, reject) => {
+    let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
+    for (const key in substitutions) {
+      if (substitutions[key].length > 0 && key.length > 0) {
+        subbedHTML = subbedHTML.replace(new RegExp(`\\$${key}\\$`, 'g'), substitutions[key]);
+      } else {
+        const error = new Error();
+        error.body = { error: 'One or more substitution keyword or substitution-text is empty' };
+        reject(error);
+      }
+    }
+    resolve(subbedHTML);
+  }));
 };
 
 /**
@@ -35,18 +37,17 @@ module.exports.emailSubstitute = function emailSubstitute(html, name, substituti
  * @return {Promise<any>}
  */
 module.exports.sendEmail = function sendEmail(data) {
-    return new Promise((resolve, reject) => {
-        client.sendEmail(data, function (err) {
-            if (err) {
-                reject(err);
-            }
-            else resolve(true);
-        });
+  return new Promise((resolve, reject) => {
+    client.sendEmail(data, (err) => {
+      if (err) {
+        reject(err);
+      } else resolve(true);
     });
+  });
 };
 
 
-/*`from` - email address from which to send (required)
+/* `from` - email address from which to send (required)
 `subject` - string (required). Must be encoded as UTF-8
 `message` - can be html (required). Must be encoded as UTF-8.
 `altText` - plain text version of message. Must be encoded as UTF-8.
@@ -54,6 +55,7 @@ module.exports.sendEmail = function sendEmail(data) {
 `cc` - email address or array of addresses
 `bcc` - email address or array of addresses
 `replyTo` - email address
+*/
 /**
  * This generates the proper email send POST request format
  * @param {String} email The email ID to send the email to
@@ -63,15 +65,53 @@ module.exports.sendEmail = function sendEmail(data) {
  * @return {Object} { data, options }
  */
 module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject, fromEmail) {
-    let emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
+  const emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
+  const data = {
+    to: email,
+    from: emailAddress,
+    subject,
+    message: htmlContent,
+    replyTo: emailAddress,
+  };
+  return {
+    data,
+  };
+};
+
+
+module.exports.sendNotification = function sendNotification(notificationTitle, notificationBody) {
+  return new Promise((resolve, reject) => {
+    const headers = {
+      'Content-Type': 'application/json; charset=utf-8',
+      Authorization: 'Basic '.concat(pushNotifData.key),
+    };
+
+    const options = {
+      host: 'onesignal.com',
+      port: 443,
+      path: '/api/v1/notifications',
+      method: 'POST',
+      headers,
+    };
+
+    const req = https.request(options, (res) => {
+      res.on('end', () => {
+        resolve();
+      });
+    });
+
+    req.on('error', (e) => {
+      reject(e);
+    });
+
     const data = {
-        to: email,
-        from: emailAddress,
-        subject: subject,
-        message: htmlContent,
-        replyTo: emailAddress
+      app_id: pushNotifData.app_id,
+      contents: { en: notificationBody.toString() },
+      headings: { en: notificationTitle.toString() },
+      urL: 'https://app.hackpsu.org',
     };
-    return {
-        data,
-    };
+
+    req.write(JSON.stringify(data));
+    req.end();
+  });
 };

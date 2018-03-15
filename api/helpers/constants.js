@@ -141,6 +141,30 @@ module.exports = {
         accessKeyId: process.env.ACCESS_KEY_ID,
         region: 'us-east-2',
     },
+    projectRegistrationSchema: {
+        type: 'object',
+        properties:{
+            projectName: {
+                type: 'string'
+            },
+            team: {
+                type: "array",
+                items: {
+                    type: "string",
+                    format: "email",
+                },
+                uniqueItems: true,
+                minItems: 1,
+                maxItems: 5,
+            },
+            categories: {
+                type: 'object',
+                uniqueItems: true
+                // validation handled at runtime
+            }
+        },
+        required:['projectName', 'team','categories']
+    }
 };
 
 //     First name

@@ -8,6 +8,8 @@ const Readable = require('stream').Readable;
 const constants = require('./constants');
 const database = require('../helpers/database');
 
+const sendNotification = require('../helpers/functions').sendNotification;
+
 aws.config.update({
   accessKeyId: constants.s3Connection.accessKeyId,
   secretAccessKey: constants.s3Connection.secretAccessKey,
@@ -83,6 +85,10 @@ module.exports = (io) => {
               // Add to the database
               database.addNewUpdate(update.message, data.Location, update.title)
                 .then((result) => {
+                  if (update.push_notification) {
+                    sendNotification(update.title, update.message)
+                      .catch(err1 => console.error(err1));
+                  }
                   updates.emit('upload-complete', 'Complete');
                   updates.emit('update', [result]);
                 }).catch(errUpload => updates.emit('upload-error', errUpload));

@@ -3,12 +3,12 @@
 const admin = require('firebase-admin');
 const aws = require('aws-sdk');
 const base64 = require('base64-stream');
-const Readable = require('stream').Readable;
+const { Readable } = require('stream');
 
 const constants = require('./constants');
 const database = require('../helpers/database');
 
-const sendNotification = require('../helpers/functions').sendNotification;
+const { sendNotification } = require('../helpers/functions');
 
 aws.config.update({
   accessKeyId: constants.s3Connection.accessKeyId,
@@ -50,18 +50,35 @@ module.exports = (io) => {
 
 
   /** ********************** LIVE UPDATE NAMESPACE ******************* */
-  updates.on('connection', (socket) => {
-    console.log('Client connected');
 
+  /**
+   * On a new connection, the database will be queried and sent to the new connection
+   */
+  updates.on('connection', (socket) => {
     database.getCurrentUpdates()
       .then((currentUpdates) => {
         socket.emit('update', currentUpdates);
       }).catch((err) => {
         socket.emit('error', err);
       });
-    // ss(socket).emit('update', database.getCurrentUpdates());
 
+    /**
+     * @api {websocket} /live/update Get live updates
+     * @apiVersion 0.2.2
+     * @apiName Publish live update
+     * @apiGroup Admin
+     * @apiPermission Team Member
+     *
+     * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+     * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+     *
+     * @apiUse AuthArgumentRequired
+     *
+     * @apiSuccess {Array} Array of registered hackers
+     */
     socket.on('upstream-update', (update) => {
+      // TODO: Check for admin permission
+
       if (update.title && update.image && update.image.type && update.image.type.match(/image\/.*/g)) {
         const listener = (image) => {
           socket.removeListener('image', listener);
@@ -103,11 +120,13 @@ module.exports = (io) => {
         updates.emit('upload-error', new Error('Title and image file must be provided'));
       }
     });
+
+    /**
+     *
+     */
     socket.on('disconnect', () => {
-      console.log('Client disconnected');
     });
-  })
-  ;
+  });
 
   /** ******************** CALENDAR EVENTS NAMESPACE ****************** */
   const events = io.of('/events');

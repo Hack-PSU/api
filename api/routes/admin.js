@@ -21,30 +21,30 @@ const router = express.Router();
  */
 
 router.use((req, res, next) => {
-    if (req.headers.idtoken) {
-        authenticator.checkAuthentication(req.headers.idtoken)
-            .then((decodedToken) => {
-                if (decodedToken.admin === true) {
-                    res.locals.privilege = decodedToken.privilege;
-                    next();
-                } else {
-                    const error = new Error();
-                    error.status = 401;
-                    error.body = {error: 'You do not have sufficient permissions for this operation'};
-                    next(error);
-                }
-            }).catch((err) => {
-            const error = new Error();
-            error.status = 401;
-            error.body = err.message;
-            next(error);
-        });
-    } else {
-        const error = new Error();
-        error.status = 401;
-        error.body = {error: 'ID Token must be provided'};
-        next(error);
-    }
+  if (req.headers.idtoken) {
+    authenticator.checkAuthentication(req.headers.idtoken)
+      .then((decodedToken) => {
+        if (decodedToken.admin === true) {
+          res.locals.privilege = decodedToken.privilege;
+          next();
+        } else {
+          const error = new Error();
+          error.status = 401;
+          error.body = {error: 'You do not have sufficient permissions for this operation'};
+          next(error);
+        }
+      }).catch((err) => {
+      const error = new Error();
+      error.status = 401;
+      error.body = err.message;
+      next(error);
+    });
+  } else {
+    const error = new Error();
+    error.status = 401;
+    error.body = {error: 'ID Token must be provided'};
+    next(error);
+  }
 });
 
 
@@ -57,35 +57,35 @@ router.use((req, res, next) => {
  * @param next
  */
 function validateEmails(req, res, next) {
-    if (req.body && req.body.emails && Array.isArray(req.body.emails)) {
-        if (req.body.html && typeof req.body.html === 'string') {
-            // Run validation
-            const validate = ajv.compile(constants.emailObjectSchema);
-            const successArray = [];
-            const failArray = [];
-            req.body.emails.map((emailObject) => {
-                if (validate(emailObject)) {
-                    successArray.push(emailObject);
-                } else {
-                    failArray.push(Object.assign(emailObject, {error: ajv.errorsText(validate.errors)}));
-                }
-                return true;
-            });
-            res.locals.successArray = successArray;
-            res.locals.failArray = failArray;
-            next();
+  if (req.body && req.body.emails && Array.isArray(req.body.emails)) {
+    if (req.body.html && typeof req.body.html === 'string') {
+      // Run validation
+      const validate = ajv.compile(constants.emailObjectSchema);
+      const successArray = [];
+      const failArray = [];
+      req.body.emails.map((emailObject) => {
+        if (validate(emailObject)) {
+          successArray.push(emailObject);
         } else {
-            const error = new Error();
-            error.status = 400;
-            error.body = {error: 'Email subject must be provided'};
-            next(error);
+          failArray.push(Object.assign(emailObject, {error: ajv.errorsText(validate.errors)}));
         }
+        return true;
+      });
+      res.locals.successArray = successArray;
+      res.locals.failArray = failArray;
+      next();
     } else {
-        const error = new Error();
-        error.status = 400;
-        error.body = {error: 'Emails must be provided as an array'};
-        next(error);
+      const error = new Error();
+      error.status = 400;
+      error.body = {error: 'Email subject must be provided'};
+      next(error);
     }
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = {error: 'Emails must be provided as an array'};
+    next(error);
+  }
 }
 
 /**
@@ -94,30 +94,30 @@ function validateEmails(req, res, next) {
  * @return {Function}
  */
 function verifyACL(level) {
-    return function (req, res, next) {
-        if (res.locals.privilege) {
-            if (res.locals.privilege >= level) {
-                next();
-            } else {
-                const error = new Error();
-                error.status = 401;
-                error.body = {error: 'You do not have sufficient permissions for this operation'};
-                next(error);
-            }
-        } else {
-            const error = new Error();
-            error.status = 500;
-            error.body = {error: 'Something went wrong while accessing permissions'};
-            next(error);
-        }
-    };
+  return function (req, res, next) {
+    if (res.locals.privilege) {
+      if (res.locals.privilege >= level) {
+        next();
+      } else {
+        const error = new Error();
+        error.status = 401;
+        error.body = {error: 'You do not have sufficient permissions for this operation'};
+        next(error);
+      }
+    } else {
+      const error = new Error();
+      error.status = 500;
+      error.body = {error: 'Something went wrong while accessing permissions'};
+      next(error);
+    }
+  };
 }
 
 
 /** ********************** ROUTES ******************************** */
 
 router.get("/", (req, res, next) => {
-    res.status(200).send({"response": "authorized"});
+  res.status(200).send({"response": "authorized"});
 });
 
 /**
@@ -148,25 +148,34 @@ router.get("/", (req, res, next) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
-    if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
-        let arr = [];
-        database.getRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
-            .on('data', (document) => {
-                arr.push(document);
-            }).on('err', (err) => {
-            const error = new Error();
-            error.status = 500;
-            error.body = err.message;
-            next(error);
-        }).on('end', () => {
-            res.status(200).send(arr);
+  if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
+    let arr = [];
+    database.getRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
+      .on('data', (document) => {
+        arr.push(document);
+      }).on('err', (err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    }).on('end', () => {
+      Promise.all(arr.map((value) => {
+        return new Promise((resolve, reject) => {
+          authenticator.getUserData(value.uid)
+            .then((user) => {
+              value.sign_up_time = user.metadata.creationTime;
+              resolve(value);
+            }).catch(err => reject(err));
         })
-    } else {
-        const error = new Error();
-        error.status = 400;
-        error.body = {"message": "Limit and offset must be integers"};
-        next(error);
-    }
+      })).then(result => res.status(200).send(result))
+        .catch(err => res.status(207).send(arr));
+    })
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = {"message": "Limit and offset must be integers"};
+    next(error);
+  }
 });
 
 /**
@@ -195,25 +204,25 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/preregistered', verifyACL(2), (req, res, next) => {
-    if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
-        let arr = [];
-        database.getPreRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
-            .on('data', (document) => {
-                arr.push(document);
-            }).on('err', (err) => {
-            const error = new Error();
-            error.status = 500;
-            error.body = err.message;
-            next(error);
-        }).on('end', () => {
-            res.status(200).send(arr);
-        })
-    } else {
-        const error = new Error();
-        error.status = 400;
-        error.body = {"message": "Limit must be an integer"};
-        next(error);
-    }
+  if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
+    let arr = [];
+    database.getPreRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
+      .on('data', (document) => {
+        arr.push(document);
+      }).on('err', (err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    }).on('end', () => {
+      res.status(200).send(arr);
+    })
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = {"message": "Limit must be an integer"};
+    next(error);
+  }
 });
 
 
@@ -230,22 +239,22 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.get('/userid', verifyACL(3), (req, res, next) => {
-    if (!(req.query && req.query.email && validator.validate(req.query.email))) {
-        const error = new Error();
-        error.status = 400;
-        error.body = {error: "request query must be set and a valid email"};
-        next(error);
-    } else {
-        authenticator.getUserId(req.query.email).then((user) => {
-            res.status(200).send({uid: user.uid, displayName: user.displayName});
-        }).catch((error) => {
-            const err = new Error();
-            console.error(error);
-            err.status = error.status || 500;
-            err.body = error.message;
-            next(err);
-        })
-    }
+  if (!(req.query && req.query.email && validator.validate(req.query.email))) {
+    const error = new Error();
+    error.status = 400;
+    error.body = {error: "request query must be set and a valid email"};
+    next(error);
+  } else {
+    authenticator.getUserId(req.query.email).then((user) => {
+      res.status(200).send({uid: user.uid, displayName: user.displayName});
+    }).catch((error) => {
+      const err = new Error();
+      console.error(error);
+      err.status = error.status || 500;
+      err.body = error.message;
+      next(err);
+    })
+  }
 });
 
 
@@ -264,23 +273,23 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.post('/makeadmin', verifyACL(3), (req, res, next) => {
-    if (req.body && req.body.uid) {
-        authenticator.elevate(req.body.uid, req.body.privilege ? req.body.privilege : 1)
-            .then(() => {
-                res.status(200).send('Success');
-            })
-            .catch((err) => {
-                const error = new Error();
-                error.status = 500;
-                error.body = err.message;
-                next(error);
-            });
-    } else {
+  if (req.body && req.body.uid) {
+    authenticator.elevate(req.body.uid, req.body.privilege ? req.body.privilege : 1)
+      .then(() => {
+        res.status(200).send('Success');
+      })
+      .catch((err) => {
         const error = new Error();
-        error.status = 400;
-        error.body = {error: 'UID must be provided'};
+        error.status = 500;
+        error.body = err.message;
         next(error);
-    }
+      });
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = {error: 'UID must be provided'};
+    next(error);
+  }
 });
 
 
@@ -319,62 +328,62 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  * @apiSuccess (207) {Object[]} Partial-Success An array of success responses as well as failure objects
  */
 router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
-    if (res.locals.successArray && res.locals.successArray.length > 0) {
-        if (req.body.subject && typeof req.body.subject === 'string') {
-            const promises = [];
-            // All valid input
-            // Send all the emails
-            res.locals.successArray.forEach((emailObject) => { // For each emailObject
-                promises.push(new Promise((resolve) => {
-                    // Substitute HTML with name/emails and send email
-                    functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions).then((subbedHTML) => {
-                        const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject, req.body.fromEmail); // Generate the POST request
-                        functions.sendEmail(request.data)
-                            .then(() => {
-                                resolve({'email': request.data.to, 'response': 'success'}); // If successful, resolve
-                            }).catch((error) => {
-                            res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
-                            resolve(null);
-                        });
-                    }).catch((error) => {
-                        res.locals.failArray.push(Object.assign(emailObject, error)); // if email substitution fails, add to fail array for partial HTTP success response
-                        resolve(null);
-                    });
-                }));
+  if (res.locals.successArray && res.locals.successArray.length > 0) {
+    if (req.body.subject && typeof req.body.subject === 'string') {
+      const promises = [];
+      // All valid input
+      // Send all the emails
+      res.locals.successArray.forEach((emailObject) => { // For each emailObject
+        promises.push(new Promise((resolve) => {
+          // Substitute HTML with name/emails and send email
+          functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions).then((subbedHTML) => {
+            const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject, req.body.fromEmail); // Generate the POST request
+            functions.sendEmail(request.data)
+              .then(() => {
+                resolve({'email': request.data.to, 'response': 'success'}); // If successful, resolve
+              }).catch((error) => {
+              res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
+              resolve(null);
             });
-            Promise.all(promises).then((resolution) => {
-                const resolves = resolution.filter(result => result !== null);
-                if (resolves.length === 0) {
-                    const error = new Error();
-                    error.status = 500;
-                    error.body = {
-                        text: 'Emails could not be sent',
-                        error: res.locals.failArray,
-                    };
-                    next(error);
-                } else {
-                    if (res.locals.failArray.length > 0) {
-                        res.status(207).send(res.locals.failArray.concat(resolves)); // Partial success response
-                    } else {
-                        res.status(200).send(resolves); // Full success response
-                    }
-                }
-            }).catch(err => console.error(err));
-        } else {
-            const error = new Error();
-            error.status = 400;
-            error.body = {error: 'Email subject must be provided'};
-            next(error);
-        }
-    } else {
-        const error = new Error();
-        error.status = 400;
-        error.body = {
-            text: 'All provided emails had illegal format',
+          }).catch((error) => {
+            res.locals.failArray.push(Object.assign(emailObject, error)); // if email substitution fails, add to fail array for partial HTTP success response
+            resolve(null);
+          });
+        }));
+      });
+      Promise.all(promises).then((resolution) => {
+        const resolves = resolution.filter(result => result !== null);
+        if (resolves.length === 0) {
+          const error = new Error();
+          error.status = 500;
+          error.body = {
+            text: 'Emails could not be sent',
             error: res.locals.failArray,
-        };
-        next(error);
+          };
+          next(error);
+        } else {
+          if (res.locals.failArray.length > 0) {
+            res.status(207).send(res.locals.failArray.concat(resolves)); // Partial success response
+          } else {
+            res.status(200).send(resolves); // Full success response
+          }
+        }
+      }).catch(err => console.error(err));
+    } else {
+      const error = new Error();
+      error.status = 400;
+      error.body = {error: 'Email subject must be provided'};
+      next(error);
     }
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = {
+      text: 'All provided emails had illegal format',
+      error: res.locals.failArray,
+    };
+    next(error);
+  }
 });
 
 

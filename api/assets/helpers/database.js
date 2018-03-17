@@ -3,7 +3,8 @@ const sql = require('mysql');
 const uuidv4 = require('uuid/v4');
 const Timeuuid = require('node-time-uuid');
 
-const sqlOptions = require('../helpers/constants').sqlConnection;
+const sqlOptions = require('./constants').sqlConnection;
+const EventModel = require('../models/EventModel');
 
 const connection = sql.createConnection(sqlOptions);
 
@@ -19,8 +20,8 @@ connection.connect((err) => {
  * @return {Stream} Returns a continuous stream of data from the database
  */
 function getRegistrations(limit, offset) {
-  const mLimit = parseInt(limit);
-  const mOffset = parseInt(offset);
+  const mLimit = parseInt(limit, 10);
+  const mOffset = parseInt(offset, 10);
   const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
     .limit(mLimit || null)
@@ -210,7 +211,7 @@ function getCurrentUpdates() {
  */
 function addNewUpdate(updateText, updateImage, updateTitle) {
   const insertObj = {
-    idLIVE_UPDATES: new Timeuuid().toString('hex'), update_text: updateText, update_image: updateImage, update_title: updateTitle,
+    uid: new Timeuuid().toString('hex'), update_text: updateText, update_image: updateImage, update_title: updateTitle,
   };
   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into('LIVE_UPDATES')
@@ -222,6 +223,33 @@ function addNewUpdate(updateText, updateImage, updateTitle) {
         reject(err);
       } else {
         resolve(insertObj);
+      }
+    });
+  });
+}
+
+function createEvent(a) {
+  a(); // TODO:Fill in
+}
+
+/**
+ * @return {Promise<EventModel>} Stream of event data
+ */
+function getCurrentEvents() {
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from('EVENTS', 'e')
+    .field('e.*')
+    .field('l.location_name',)
+    .order('event_start_time', true)
+    .join('LOCATIONS', 'l', 'event_location=l.uid')
+    .toString()
+    .concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response);
       }
     });
   });
@@ -239,4 +267,6 @@ module.exports = {
   storeIP,
   getCurrentUpdates,
   addNewUpdate,
+  createEvent,
+  getCurrentEvents
 };

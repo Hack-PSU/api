@@ -3,8 +3,8 @@ const express = require('express');
 
 const router = express.Router();
 const validator = require('email-validator');
-const authenticator = require('../helpers/auth');
-const constants = require('../helpers/constants');
+const authenticator = require('../assets/helpers/auth');
+const constants = require('../assets/helpers/constants');
 const Ajv = require('ajv');
 const path = require('path');
 
@@ -13,8 +13,8 @@ const ajv = new Ajv({ allErrors: true });
 const aws = require('aws-sdk');
 const multer = require('multer');
 const multers3 = require('multer-s3');
-const database = require('../helpers/database');
-const RegistrationModel = require('../helpers/RegistrationModel');
+const database = require('../assets/helpers/database');
+const RegistrationModel = require('../assets/models/RegistrationModel');
 
 aws.config.update({
   accessKeyId: constants.s3Connection.accessKeyId,

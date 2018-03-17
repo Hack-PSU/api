@@ -6,7 +6,7 @@ const firebase = require("firebase");
 const Chance = require('chance');
 const chance = new Chance(123);
 
-const sqlOptions = require('../helpers/constants').sqlConnection;
+const sqlOptions = require('../assets/helpers/constants').sqlConnection;
 const connection = sql.createConnection(sqlOptions);
 
 connection.connect((err) => {

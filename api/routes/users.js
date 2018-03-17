@@ -1,7 +1,7 @@
 const express = require('express');
-const authenticator = require("../helpers/auth");
+const authenticator = require("../assets/helpers/auth");
 
-const database = require('../helpers/database');
+const database = require('../assets/helpers/database');
 
 const router = express.Router();
 

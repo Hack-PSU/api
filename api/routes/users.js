@@ -86,4 +86,91 @@ router.get('/registration', (req, res, next) => {
    }
 });
 
+/**
+ * @api {get} /users/project Get the project details and table assignment for the current user
+ * @apiVersion 0.2.1
+ * @apiName Get user project data
+ * @apiGroup Users
+ * @apiPermission User
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Object} JSON Object with user's table assignment data
+ */
+router.get('/project', (req, res, next) => {
+   if (res.locals.user) {
+       let uid = authenticator.getUserId(req.email);
+
+       database.getProjectInfo(uid)
+           .on('data', (data) => {
+              uid=data;
+           }).on('err', (err) =>{
+               const error = new Error();
+               error.status=500;
+               error.body=err.message;
+               next(error);
+       }).on('end', () => {
+           res.status(200).send(table);
+       })
+   }
+});
+
+/**
+ * @api {post} /users/project Post the project details to get the table assignment
+ * @apiVersion 0.2.1
+ * @apiName Post user project data
+ * @apiGroup Users
+ * @apiPermission User
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Object} JSON Object with user's project data
+ */
+router.get('/project', (req, res, next) => {
+    if (res.locals.user) {
+        // for member in team
+        let uid = authenticator.getUserId(req.email);
+        database.setProjectInfo(req)
+            .on('data', (data) => {
+                uid=data;
+            }).on('err', (err) =>{
+            const error = new Error();
+            error.status=500;
+            error.body=err.message;
+            next(error);
+        }).on('end', () => {
+            res.status(200).send(table);
+        })
+    }
+});
+
+/**
+ * @api {patch} /users/project Update project details
+ * @apiVersion 0.2.1
+ * @apiName Patch project data
+ * @apiGroup Users
+ * @apiPermission User
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess null 204 response indicates success
+ */
+router.patch('/project', (req, res, next) => {
+    if (res.locals.user) {
+        let uid = authenticator.getUserId(req.email);
+        let table = null;
+        database.updateProjectInfo(req.email)
+            .on('data', (data) => {
+                uid=data;
+            }).on('err', (err) =>{
+            const error = new Error();
+            error.status=500;
+            error.body=err.message;
+            next(error);
+        }).on('end', () => {
+            res.status(204).send(table);
+        })
+    }
+});
+
 module.exports = router;

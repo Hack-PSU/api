@@ -176,6 +176,74 @@ function storeIP(ipAddress, user_agent) {
     });
 }
 
+/**
+ * @param uid
+ *
+ * @return Object {Object} with field 'found' to indicate success.
+ */
+function getProjectInfo(userID) {
+    // 1) Query PROJECT_TEAM to get projectID (no project id, return {found: false}
+    // 2) Join with PROJECT_LIST
+    let query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+        .from(process.env.NODE_ENV === 'test' ? 'PROJECT_TEAM_TEST' : 'PROJECT_TEAM')
+        .where('userID = ?', userID)
+        .join(process.env.NODE_ENV === 'test' ? 'PROJECT_LIST_TEST' : 'PROJECT_LIST')
+        .toParam();
+    query.text = query.text.concat(';');
+    let projectID=null;
+    let info=Object();
+    connection.query(query).stream()
+        .on('data',(data)=>{
+            if(data !== null){
+                // record found
+                info.found=true;
+                info.projectName=data.projectName;
+                info.tableNumber=data.tableNumber;
+                projectID=data.projectID
+            } else {
+                // no records found
+                info.found=false;
+            }
+
+        })
+        .on('err',(err)=>{
+
+        });
+    // get team info
+    let query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+        .from(process.env.NODE_ENV === 'test' ? 'PROJECT_TEAM_TEST' : 'PROJECT_TEAM')
+        .where('projectID = ?', projectID)
+        .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
+        .toParam();
+    query.text.concat(';');
+    connection.query(query).stream()
+        .on('data',(data)=>{
+            info.members=[];
+            // for person in data
+            //     info.members.push(person.name OR person.email)
+            // info.category=data.category;
+        })
+        .on('err',(err)=>{
+
+        });
+    // return ['found', 'projectName', ['members':['email','name'], 'tableNumber']
+}
+
+/**
+ *
+ * @param data {projectName:projectName, categories:{categoryName: 0/1 }, members:[]}
+ */
+function updateProjectInfo(data){
+
+}
+
+/**
+ *
+ * @param data {projectName:projectName, categories:{categoryName: 0/1 }, members:[]}
+ */
+function setProjectInfo(data){
+
+}
 
 module.exports = {
     getRegistrations,
@@ -186,4 +254,7 @@ module.exports = {
     addRegistration,
     setRegistrationSubmitted,
     storeIP,
+    getProjectInfo,
+    updateProjectInfo,
+    setProjectInfo,
 };

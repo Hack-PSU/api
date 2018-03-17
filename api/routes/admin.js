@@ -1,11 +1,11 @@
 /* eslint-disable max-len */
-const constants = require('../helpers/constants');
-const functions = require('../helpers/functions');
+const constants = require('../assets/helpers/constants');
+const functions = require('../assets/helpers/functions');
 const validator = require('email-validator');
 
 const express = require('express');
-const authenticator = require('../helpers/auth');
-const database = require('../helpers/database');
+const authenticator = require('../assets/helpers/auth');
+const database = require('../assets/helpers/database');
 const Ajv = require('ajv');
 
 const ajv = new Ajv({ allErrors: true });
@@ -148,9 +148,9 @@ router.get('/', (req, res, next) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
-  if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
+  if ((!req.query.limit || parseInt(req.query.limit, 10)) && (!req.query.offset || parseInt(req.query.offset, 10))) {
     const arr = [];
-    database.getRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
+    database.getRegistrations(parseInt(req.query.limit, 10), parseInt(req.query.offset, 10))
       .on('data', (document) => {
         arr.push(document);
       }).on('err', (err) => {

@@ -143,7 +143,7 @@ module.exports = {
   pushNotifKey: {
     key: process.env.ONESIGNAL_API_KEY || '',
     app_id: process.env.ONESIGNAL_APP_ID || '',
-  }
+  },
 };
 
 //     First name

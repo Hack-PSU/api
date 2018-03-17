@@ -1,11 +1,9 @@
 /* eslint-disable max-len */
-const constants = require('./constants');
 const ses = require('node-ses');
 const validator = require('email-validator');
-const https = require('https');
+const request = require('request');
 
-const emailKey = require('../helpers/constants').emailKey;
-const pushNotifData = require('../helpers/constants').pushNotifKey;
+const { emailKey, pushNotifKey } = require('./constants');
 
 const client = ses.createClient(emailKey);
 /**
@@ -61,7 +59,7 @@ module.exports.sendEmail = function sendEmail(data) {
  * @param {String} email The email ID to send the email to
  * @param {String} htmlContent HTML to be included in the email
  * @param {String} subject The subject of the email
- * @param {String} name The name of the recipient
+ * @param {String} fromEmail
  * @return {Object} { data, options }
  */
 module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject, fromEmail) {
@@ -78,40 +76,44 @@ module.exports.createEmailRequest = function createEmailRequest(email, htmlConte
   };
 };
 
-
-module.exports.sendNotification = function sendNotification(notificationTitle, notificationBody) {
+/**
+ *
+ * @param notificationTitle
+ * @param notificationBody
+ * @return {Promise<any>}
+ */
+function sendNotification(notificationTitle, notificationBody) {
   return new Promise((resolve, reject) => {
     const headers = {
       'Content-Type': 'application/json; charset=utf-8',
-      Authorization: 'Basic '.concat(pushNotifData.key),
+      Authorization: 'Basic '.concat(pushNotifKey.key),
+    };
+
+    const data = {
+      app_id: pushNotifKey.app_id,
+      contents: { en: notificationBody.toString() },
+      headings: { en: notificationTitle.toString() },
+      included_segments: ['All'],
+      url: 'https://app.hackpsu.org',
     };
 
     const options = {
-      host: 'onesignal.com',
-      port: 443,
-      path: '/api/v1/notifications',
+      uri: 'https://onesignal.com/api/v1/notifications',
       method: 'POST',
       headers,
+      json: data,
     };
 
-    const req = https.request(options, (res) => {
-      res.on('end', () => {
-        resolve();
-      });
+    request(options, (err, response, body) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(body);
+      }
     });
-
-    req.on('error', (e) => {
-      reject(e);
-    });
-
-    const data = {
-      app_id: pushNotifData.app_id,
-      contents: { en: notificationBody.toString() },
-      headings: { en: notificationTitle.toString() },
-      urL: 'https://app.hackpsu.org',
-    };
-
-    req.write(JSON.stringify(data));
-    req.end();
   });
+}
+
+module.exports = {
+  sendNotification,
 };

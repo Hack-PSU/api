@@ -132,6 +132,31 @@ function addRegistration(data) {
     });
 }
 
+
+/**
+ *
+ * @param data {TravelReimbursementModel} Data format that matches the travelReimbursementSchema
+ * @return {Promise<any>}
+ */
+function addTravelReimbursement(data) {
+    return new Promise((resolve, reject) => {
+        const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+            .into(process.env.NODE_ENV === 'test' ? 'TRAVEL_REIMBURSEMENT_TEST' : 'TRAVEL_REIMBURSEMENTS')
+            .setFieldsRows([
+                data
+            ]).toParam();
+        query.text = query.text.concat(';');
+        connection.query(query.text, query.values, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
+
 /**
  *
  * @param msg {String} Message to write
@@ -186,4 +211,5 @@ module.exports = {
     addRegistration,
     setRegistrationSubmitted,
     storeIP,
+    addTravelReimbursement,
 };

@@ -138,9 +138,30 @@ module.exports = {
     },
     s3Connection: {
         s3BucketName: 'hackpsus2018-resumes',
+        s3TravelReimbursementBucket: 'hackpsus2018-travel-reimbursement-receipts',
         secretAccessKey: process.env.SECRET_ACCESS_KEY,
         accessKeyId: process.env.ACCESS_KEY_ID,
         region: 'us-east-2',
+    },
+    travelReimbursementSchema: {
+        type: 'object',
+        properties: { 
+            fullName: {
+                type: 'string',
+                minLength: 1,
+                maxLength: 100
+            },
+            reimbursementAmount: {
+                type: 'number'
+            },
+            mailingAddress: {
+                type: 'string'
+            },
+            groupMembers: {
+                "enum": ["1", "2", "3", "4+"]
+            },
+        },
+        required: ['fullName','reimbursementAmount','mailingAddress', 'groupMembers']
     },
 };
 

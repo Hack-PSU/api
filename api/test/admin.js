@@ -98,7 +98,9 @@ describe('test get registered hackers', () => {
               .set('content-type', 'application/json')
               .set('idtoken', idToken)
               .end((err, res) => {
-                res.should.have.status(200);
+                console.log(res.status);
+                console.log(res.body);
+                res.status.should.satisfy(num => num === 200 || num === 207);
                 res.body.should.be.a('array');
                 done();
               });

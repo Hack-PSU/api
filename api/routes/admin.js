@@ -163,12 +163,14 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
         return new Promise((resolve, reject) => {
           authenticator.getUserData(value.uid)
             .then((user) => {
-              value.sign_up_time = user.metadata.creationTime;
+              value.sign_up_time = new Date(user.metadata.creationTime).getTime();
               resolve(value);
             }).catch(err => reject(err));
         })
       })).then(result => res.status(200).send(result))
-        .catch(err => res.status(207).send(arr));
+        .catch((err) => {
+          res.status(207).send(arr);
+        });
     })
   } else {
     const error = new Error();

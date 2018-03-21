@@ -16,8 +16,6 @@ const app = express();
  * Create HTTP server.
  */
 const server = http.createServer(app);
-
-const expressws = require('express-ws')(app, server);
 /**
  * Get port from environment and store in Express.
  */

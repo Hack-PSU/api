@@ -6,26 +6,28 @@ const sqlOptions = require('../helpers/constants').sqlConnection;
 const connection = sql.createConnection(sqlOptions);
 
 connection.connect((err) => {
-    if (err) {
-        console.error(err.stack);
-    }
+  if (err) {
+    console.error(err.stack);
+  }
 });
 
 /**
  * @param limit {Number} Limit the number of rows to retrieve
  * @param offset {Number} Offset from start to retrieve at
+ * @param opts {Object} opts.fields = fields to select
  * @return {Stream} Returns a continuous stream of data from the database
  */
-function getRegistrations(limit, offset) {
-    const mLimit = parseInt(limit);
-    const mOffset = parseInt(offset);
-    const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
-        .limit(mLimit ? mLimit : null)
-        .offset(mOffset ? mOffset : null)
-        .toString()
-        .concat(';');
-    return connection.query(query).stream();
+function getRegistrations(limit, offset, opts) {
+  const mLimit = parseInt(limit);
+  const mOffset = parseInt(offset);
+  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
+    .fields(opts && opts.fields || null)
+    .limit(mLimit ? mLimit : null)
+    .offset(mOffset ? mOffset : null)
+    .toString()
+    .concat(';');
+  return connection.query(query).stream();
 }
 
 /**
@@ -34,12 +36,12 @@ function getRegistrations(limit, offset) {
  * @return {Stream} Returns a continuous stream of data from the database
  */
 function getRegistration(uid) {
-    const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
-        .where('uid = ?', uid)
-        .toParam();
-    query.text = query.text.concat(';');
-    return connection.query(query.text, query.values).stream();
+  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
+    .where('uid = ?', uid)
+    .toParam();
+  query.text = query.text.concat(';');
+  return connection.query(query.text, query.values).stream();
 }
 
 /**
@@ -48,14 +50,14 @@ function getRegistration(uid) {
  * @return {Stream} Returns a continuous stream of data from the database
  */
 function getPreRegistrations(limit, offset) {
-    const mLimit = parseInt(limit);
-    const mOffset = parseInt(offset);
-    const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .from('PRE_REGISTRATION')
-        .limit(mLimit ? limit : null)
-        .offset(mOffset ? offset : null)
-        .toString().concat(';');
-    return connection.query(query).stream();
+  const mLimit = parseInt(limit);
+  const mOffset = parseInt(offset);
+  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .from('PRE_REGISTRATION')
+    .limit(mLimit ? limit : null)
+    .offset(mOffset ? offset : null)
+    .toString().concat(';');
+  return connection.query(query).stream();
 }
 
 /**
@@ -64,27 +66,27 @@ function getPreRegistrations(limit, offset) {
  * @return {Promise<any>}
  */
 function addPreRegistration(email) {
-    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .into(process.env.NODE_ENV === 'test' ? 'PRE_REGISTRATION_TEST' : 'PRE_REGISTRATION')
-        .setFieldsRows([
-            {id: uuidv4().replace(/-/g, ""), email: email},
-        ])
-        .toParam();
-    query.text = query.text.concat(';');
-    return new Promise((resolve, reject) => {
-        connection.query(query.text, query.values, (err, result) => {
-            if (err && err.errno === 1062) {
-                const error = new Error();
-                error.message = "Email already provided";
-                error.status = 400;
-                reject(error);
-            } else if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
+  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .into(process.env.NODE_ENV === 'test' ? 'PRE_REGISTRATION_TEST' : 'PRE_REGISTRATION')
+    .setFieldsRows([
+      {id: uuidv4().replace(/-/g, ""), email: email},
+    ])
+    .toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err, result) => {
+      if (err && err.errno === 1062) {
+        const error = new Error();
+        error.message = "Email already provided";
+        error.status = 400;
+        reject(error);
+      } else if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
     });
+  });
 }
 
 
@@ -93,14 +95,14 @@ function addPreRegistration(email) {
  * @param uid {string} UID of the user to set registration submission status
  */
 function setRegistrationSubmitted(uid) {
-    const dbname = process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION';
-    const query = squel.update({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .table(dbname)
-        .set('submitted', true)
-        .where("uid = ?", uid)
-        .toParam();
-    query.text = query.text.concat(';');
-    connection.query(query.text, query.values);
+  const dbname = process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION';
+  const query = squel.update({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .table(dbname)
+    .set('submitted', true)
+    .where("uid = ?", uid)
+    .toParam();
+  query.text = query.text.concat(';');
+  connection.query(query.text, query.values);
 }
 
 
@@ -110,26 +112,26 @@ function setRegistrationSubmitted(uid) {
  * @return {Promise<any>}
  */
 function addRegistration(data) {
-    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .into(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
-        .setFieldsRows([
-            data
-        ]).toParam();
-    query.text = query.text.concat(';');
-    return new Promise((resolve, reject) => {
-        connection.query(query.text, query.values, (err, result) => {
-            if (err && err.errno === 1062) {
-                const error = new Error();
-                error.message = "User already registered";
-                error.status = 400;
-                reject(error);
-            } else if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
+  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .into(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
+    .setFieldsRows([
+      data
+    ]).toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err, result) => {
+      if (err && err.errno === 1062) {
+        const error = new Error();
+        error.message = "User already registered";
+        error.status = 400;
+        reject(error);
+      } else if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
     });
+  });
 }
 
 
@@ -162,22 +164,22 @@ function addTravelReimbursement(data) {
  * @param msg {String} Message to write
  */
 function writePiMessage(msg) {
-    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .into('PI_TEST')
-        .setFieldsRows([
-            {time: new Date().getTime(), message: msg}
-        ])
-        .toParam();
-    query.text = query.text.concat(';');
-    return new Promise((resolve, reject) => {
-        connection.query(query.text, query.values, (err) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(msg);
-            }
-        });
+  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .into('PI_TEST')
+    .setFieldsRows([
+      {time: new Date().getTime(), message: msg}
+    ])
+    .toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(msg);
+      }
     });
+  });
 }
 
 /**
@@ -187,29 +189,81 @@ function writePiMessage(msg) {
  * @return Promise<any> {Promise<any>}
  */
 function storeIP(ipAddress, user_agent) {
-    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .into('REQ_DATA')
-        .setFieldsRows([
-            {idREQ_DATA: uuidv4(), req_time: new Date().getTime(), req_ip: ipAddress ? ipAddress : "", req_user_agent: user_agent}
-        ])
-        .toParam();
-    query.text = query.text.concat(';');
-    return new Promise((resolve) => {
-        connection.query(query.text, query.values, () => {
-            resolve();
-        });
+  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .into('REQ_DATA')
+    .setFieldsRows([
+      {
+        idREQ_DATA: uuidv4(),
+        req_time: new Date().getTime(),
+        req_ip: ipAddress ? ipAddress : "",
+        req_user_agent: user_agent
+      }
+    ])
+    .toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve) => {
+    connection.query(query.text, query.values, () => {
+      resolve();
     });
+  });
+}
+
+/**
+ *
+ * @param rfidAssignments {Array}
+ * @return {Promise<any>}
+ */
+function addRfidAssignments(rfidAssignments) {
+  return new Promise((resolve, reject) => {
+    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+      .into(process.env.NODE_ENV === 'test' ? 'RFID_ASSIGNMENT_TEST' : 'RFID_ASSIGNMENT')
+      .setFieldsRows(rfidAssignments)
+      .toParam();
+    query.text = query.text.concat(';');
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject (err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param rfidScans {Array}
+ * @return {Promise<any>}
+ */
+function addRfidScans(rfidScans) {
+  return new Promise((resolve, reject) => {
+    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+      .into(process.env.NODE_ENV === 'test' ? 'SCANS_TEST' : 'SCANS')
+      .setFieldsRows(rfidScans)
+      .toParam();
+    query.text = query.text.concat(';');
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject (err);
+      } else {
+        resolve();
+      }
+    });
+  });
 }
 
 
+
 module.exports = {
-    getRegistrations,
-    getRegistration,
-    getPreRegistrations,
-    addPreRegistration,
-    writePiMessage,
-    addRegistration,
-    setRegistrationSubmitted,
-    storeIP,
+  getRegistrations,
+  getRegistration,
+  getPreRegistrations,
+  addPreRegistration,
+  writePiMessage,
+  addRegistration,
+  addRfidAssignments,
+  addRfidScans,
+  setRegistrationSubmitted,
+  storeIP,
     addTravelReimbursement,
 };

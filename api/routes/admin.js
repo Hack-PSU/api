@@ -3,6 +3,7 @@ const constants = require('../helpers/constants');
 const functions = require('../helpers/functions');
 const validator = require('email-validator');
 
+const admin = require('firebase-admin');
 const express = require('express');
 const authenticator = require('../helpers/auth');
 const database = require('../helpers/database');
@@ -152,6 +153,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
         let arr = [];
         database.getRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
             .on('data', (document) => {
+                
                 arr.push(document);
             }).on('err', (err) => {
             const error = new Error();
@@ -247,6 +249,8 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
         })
     }
 });
+
+
 
 
 /**

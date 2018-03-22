@@ -1,0 +1,7 @@
+3 endpoint on server redis 
+send me user with information name, pin, diet, tshirt,
+post to server, with pin or identifier, associate user with rfid tag id
+send rfid tag, timestamp, scanlocation
+
+Note to do
+blockchai n event 3-31-2018 handle scan for that event and send to test from redis to database

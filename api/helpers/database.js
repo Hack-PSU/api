@@ -133,6 +133,78 @@ function addRegistration(data) {
 }
 
 /**
+*
+* @param uid {string} UID of the user to set the RSVP status
+*
+*/
+function setRSVP(uid, RSVPstatus){
+	const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
+	const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+		.into(dbname)
+		.setFieldRows([isRSVP: uid, rsvp_time: newDate().getTime(), rsvp_status: RSVPstatus])
+		.toParam();
+	query.text = query.text,concat(';');
+	return new Promise((resolve, reject) => {
+		connection.query(query.text, query.values, (err) => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve();
+			}
+		});
+	});
+}
+	
+/**
+*
+* @param uid {string} UID of the user to get the RSVP status
+*
+**/
+//fix
+function getRSVP(uid){
+	const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
+	const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+		.from(dbname)
+		.field('isRSVP')
+		.where("idRSVP = ?", uid)
+		.toString()
+		.concat(';');
+  return new Promise((resolve, reject) => {
+  	connection.query(query, (err, response) => {
+  		if (err) {
+  			reject(err);
+  		} else {
+  			resolve(response);
+  		}
+  	})
+  })
+}
+
+/**
+ *
+ * @param uid {string} get email associated with the uid
+ *
+**/
+function getEmail(uid){
+	const dbname = process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION';
+	const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+		.from(dbname)
+		.field('email')
+		.where("uid = ?",uid)
+		.toString()
+		.concat(';');
+	return new Promise((resolve, reject) => {
+		connection.query(query, (err, reponse) => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(response);
+			}
+		})
+	})
+}
+
+/**
  *
  * @param msg {String} Message to write
  */

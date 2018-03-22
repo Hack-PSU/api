@@ -1,6 +1,6 @@
 const express = require('express');
 const authenticator = require("../helpers/auth");
-
+const constants = require("../helpers/constant");
 const database = require('../helpers/database');
 
 const router = express.Router();
@@ -85,5 +85,69 @@ router.get('/registration', (req, res, next) => {
        next(error);
    }
 });
+
+
+/**
+ * @api {get} /users/RSVP confirm the RSVP status for the current user and send a email containing their pin
+ * @apiVersion 0.1.1
+ * @apiName RSVP
+ *
+ * @apiGroup Users
+ * @apiPermission User
+ * 
+ * @apiParam {Boolean} A value to indiciate if the user decide to rsvp
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess sends a email with user's pin
+ * @apiUse IllegalArgumentError
+ */
+ route.post('/rsvp', (req, res, next) => {
+  if (req.body && (req.body.rsvp != null)){
+    if (res.locals.user){
+      database.setRSVP(res.locals.users.uid,req.body.rsvp)
+      .then(() => {
+        if (req.body.rsvp === true){
+          database.getRegistration(res.locals.users.uid)
+          .on('data', (data) => {..
+            let email = data.email;
+            let name = data.firstname + data.lastname;
+            let pin = data.pin;
+            let promise = new Promise((resolve) => {
+              functions.emailSubstitute(constans.RSVPEmailHtml.text, name,[{NAME: name, PIN: pin}]).then((subbedHTML) => {
+                const request = functions.createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, "");
+                functions.sendEmail(request.data)
+                  .then(() => {
+                    resolve({'email': request.data.to, 'html': request.data.htmlContent, 'response': 'success'});
+                  }).catch((err) => {
+                    const error = new Error();
+                    error.status = 500;
+                    error.body = err.message;
+                    next(error);
+                  })
+              })
+            })
+          })
+        }
+      })
+      .catch((err) => {
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+       })
+    } else{
+        const error = new Error();
+        error.status = 400
+        error.body = {error: 'Could not identify user'};
+        next(error);
+      } 
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = {error: 'RSVP value must be included'};
+    next(error);
+  }
+}
+  
 
 module.exports = router;

@@ -26,6 +26,7 @@ router.use((req, res, next) => {
       .then((decodedToken) => {
         if (decodedToken.admin === true) {
           res.locals.privilege = decodedToken.privilege;
+          res.locals.user = decodedToken;
           next();
         } else {
           const error = new Error();
@@ -342,7 +343,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
             const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject, req.body.fromEmail); // Generate the POST request
             functions.sendEmail(request.data)
               .then(() => {
-                resolve({'email': request.data.to, 'response': 'success'}); // If successful, resolve
+                resolve({ email: request.data.to, response: 'success', name: emailObject.name}); // If successful, resolve
               }).catch((error) => {
               res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
               resolve(null);
@@ -365,6 +366,25 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
           next(error);
         } else {
           if (res.locals.failArray.length > 0) {
+            database.addEmailsHistory(resolves.map((resolution) => {
+              return {
+                sender: res.locals.user.uid,
+                recipient: resolution.email,
+                email_content: req.body.html,
+                subject: req.body.subject,
+                recipient_name: resolution.name,
+                time: new Date().getTime(),
+              }
+            }), res.locals.failArray ? res.locals.failArray.map((errorEmail) => {
+              return {
+                sender: res.locals.user.uid,
+                recipient: errorEmail.email || null,
+                email_content: req.body.html || null,
+                subject: req.body.subject || null,
+                recipient_name: errorEmail.name || null,
+                time: new Date().getTime(),
+              }
+            }) : null).catch(err => console.error(err));
             res.status(207).send(res.locals.failArray.concat(resolves)); // Partial success response
           } else {
             res.status(200).send(resolves); // Full success response

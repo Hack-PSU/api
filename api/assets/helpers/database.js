@@ -187,7 +187,7 @@ function storeIP(ipAddress, userAgent) {
  */
 function getCurrentUpdates() {
   let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .from('LIVE_UPDATES')
+    .from(process.env.NODE_ENV === 'test' ? 'LIVE_UPDATES_TEST' : 'LIVE_UPDATES')
     .order('idLIVE_UPDATES')
     .toString();
   query = query.concat(';');
@@ -214,7 +214,7 @@ function addNewUpdate(updateText, updateImage, updateTitle) {
     uid: new Timeuuid().toString('hex'), update_text: updateText, update_image: updateImage, update_title: updateTitle,
   };
   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .into('LIVE_UPDATES')
+    .into(process.env.NODE_ENV === 'test' ? 'LIVE_UPDATES_TEST' : 'LIVE_UPDATES')
     .setFieldsRows([insertObj]).toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
@@ -228,10 +228,6 @@ function addNewUpdate(updateText, updateImage, updateTitle) {
   });
 }
 
-function createEvent(a) {
-  a(); // TODO:Fill in
-}
-
 /**
  * @return {Promise<EventModel>} Stream of event data
  */
@@ -239,11 +235,118 @@ function getCurrentEvents() {
   const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from('EVENTS', 'e')
     .field('e.*')
-    .field('l.location_name',)
+    .field('l.location_name')
     .order('event_start_time', true)
     .join('LOCATIONS', 'l', 'event_location=l.uid')
     .toString()
     .concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response);
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param {EventModel} event
+ * @return {Promise<any>}
+ */
+function createEvent(event) {
+  const ev = new EventModel(event);
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .into(process.env.NODE_ENV === 'test' ? 'EVENTS_TEST' : 'EVENTS')
+    .setFieldsRows([
+      ev,
+    ]).toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param uid
+ * @param event
+ * @return {Promise<any>}
+ */
+function updateEvent(uid, event) {
+  event.uid = null;
+  const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .table(process.env.NODE_ENV === 'test' ? 'EVENTS_TEST' : 'EVENTS')
+    .setFields(event)
+    .where('uid = ?', uid)
+    .toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response);
+      }
+    });
+  });
+}
+
+/**
+ * @return {Stream} Returns all the locations
+ */
+function getAllLocations() {
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from('LOCATIONS')
+    .toString();
+  query = query.concat(';');
+  return connection.query(query).stream();
+}
+
+/**
+ *
+ * @param locationName
+ * @return {Promise<any>}
+ */
+function addNewLocation(locationName) {
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .into('LOCATIONS')
+    .set('uid', uuidv4().replace(/-/g, ''))
+    .set('location_name', locationName)
+    .toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param uid
+ * @param name
+ * @return {Promise<any>}
+ */
+function updateLocation(uid, name) {
+  const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .table('LOCATIONS')
+    .set('name', name)
+    .where('uid = ?', uid)
+    .toParam();
+  query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
     connection.query(query, (err, response) => {
       if (err) {
@@ -268,5 +371,9 @@ module.exports = {
   getCurrentUpdates,
   addNewUpdate,
   createEvent,
-  getCurrentEvents
+  updateEvent,
+  getCurrentEvents,
+  getAllLocations,
+  addNewLocation,
+  updateLocation,
 };

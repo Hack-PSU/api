@@ -61,7 +61,7 @@ io.adapter(redisAdapter({
   port: 17891,
   password: process.env.PKEY_PASS,
 })); // TODO: Update
-require('./assets/helpers/sockets')(io);
+require('./routes/sockets')(io);
 
 require('express-ws')(app, server);
 /**

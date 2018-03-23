@@ -131,3 +131,70 @@ describe('get registration', () => {
         done();
     });
 });
+
+
+//no idtoken
+//non existant user
+//rsvp success
+describe('rsvp user', () => {
+    let checkin = true;
+    before((done) => {
+        loginRegular()
+            .then((user) => {
+                user.getIdToken(true)
+                    .then((decodedIdToken) => {
+                        idToken = decodedIdToken;
+                        chai.request(server)
+                            .post('/v1/register')
+                            .set('idToken', idToken)
+                            .type('form')
+                            .end((err, res) => {
+                                done;
+                            });
+                    }).catch(err => done(err));
+            }).catch(err => done(err));
+    })
+
+    describe('failure', () => {
+        it ('it should respond with an unauthorized message', (done) => {
+            chai.request(server)
+                .post('/v1/users/rsvp')
+                .end((err,res) => {
+                    res.should.have.status(401);
+                    should.equal(err.response.body.error, 'ID Token must be provided');
+                    done();
+            });
+        });
+    });
+
+    describe('failure', () => {
+        it('it should respond with a missing value message', (done) => {
+            chai.request(server)
+                .post('/v1/users/rsvp')
+                .set('idToken',idToken)
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    should.equal(err.response.body.error, 'RSVP value must be included');
+            });
+        });
+    });
+
+    describe('success', () => {
+        it('it should send send an email containing their pin', (done) => {
+            chai.request(server)
+                .post('/v1/users/rsvp')
+                .set('idToken',idToken)
+                .set('rsvp', checkin)
+                .end((err, res) => {
+                    should.equal(err, null);
+                    res.should.have.status(200);
+                    done();
+                })
+        })
+    })
+
+    after((done) => {
+        firebase.auth().signOut();
+        done;
+    })
+})

@@ -1,7 +1,7 @@
 const express = require('express');
 const functions = require("../helpers/functions");
 const authenticator = require("../helpers/auth");
-const constants = require("../helpers/constant");
+const constants = require("../helpers/constants");
 const database = require('../helpers/database');
 
 const router = express.Router();

@@ -179,6 +179,24 @@ function getRSVP(uid) {
 }
 
 /**
+ * @param limit {Number} Limit the number of rows to retrieve
+ * @param offset {Number} Offset from start to retrieve at
+ * @return {Stream} Returns a continuous stream of data of people who RSVP
+ */
+function getRSVPList(limit, offset) {
+  const mLimit = parseInt(limit);
+  const mOffset = parseInt(offset);
+  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .from('RSVP')
+    .where('rsvp_status = ?', true)
+    .limit(mLimit ? limit : null)
+    .offset(mOffset ? offset : null)
+    .toString().concat(';');
+  return connection.query(query).stream();
+}
+
+
+/**
  *
  * @param uid {string} get email associated with the uid
  *

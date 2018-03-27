@@ -96,63 +96,74 @@ router.get('/registration', (req, res, next) => {
  * @apiGroup Users
  * @apiPermission User
  *
- * @apiParam {Boolean} A value to indicate if the user decide to rsvp
+ * @apiParam {String} A value to indicate if the user decide to rsvp ['true', 'false']
  *
  * @apiUse AuthArgumentRequired
  * @apiSuccess sends a email with user's pin
  * @apiUse IllegalArgumentError
  */
 router.post('/rsvp', (req, res, next) => {
-  if (req.body && (req.body.rsvp !== null)) {
+  if (req.body && (typeof req.body.rsvp !== 'undefined')) {
     if (res.locals.user) {
-      database.setRSVP(res.locals.user.uid, req.body.rsvp)
+      database.setRSVP(res.locals.user.uid, req.body.rsvp === 'true')
         .then(() => {
-          if (req.body.rsvp === true) {
+          if (req.body.rsvp === 'true') {
+            let user = null;
             database.getRegistration(res.locals.user.uid)
               .on('data', (data) => {
-                let email = data.email;
-                let name = data.firstname + data.lastname;
-                let pin = data.pin;
-                functions.emailSubstitute(constants.RSVPEmailHtml.text, name, [{
-                  name: name,
-                  pin: parseInt(pin, 10).toString(14),
-                }])
-                  .then((subbedHTML) => {
-                    const request = functions.createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, "");
-                    functions.sendEmail(request.data)
-                      .then(() => {
-                        res.status(200).send({message: 'success', pin: parseInt(pin, 10).toString(14)});
-                        // resolve({'email': request.data.to, 'html': request.data.htmlContent, 'response': 'success'});
-                      })
-                      .catch((err) => { // Send Email error
-                        const error = new Error();
-                        error.status = 500;
-                        error.body = err.message;
-                        next(error);
-                      });
-                  }).catch((err) => { // Email Substitute error
-                  const error = new Error();
-                  error.status = 500;
-                  error.body = err.message;
-                  next(error);
-                });
-              }).on('err', (err) => {
+                user = data;
+              }).on('err', (err) => { // Database registration retrieval
               const error = new Error();
               error.status = 500;
               error.body = err.message;
+              console.error(error);
               next(error);
-            });
+            }).on('end', () => {
+              let email = user.email;
+              let name = user.firstname + user.lastname;
+              let pin = user.pin;
+              functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
+                name: name,
+                pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
+              })
+                .then((subbedHTML) => {
+                  const request = functions.createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, "");
+                  functions.sendEmail(request.data)
+                    .then(() => {
+                      res.status(200).send({message: 'success', pin: parseInt(pin, 10).toString(14).padStart(3, '0')});
+                      // resolve({'email': request.data.to, 'html': request.data.htmlContent, 'response': 'success'});
+                    })
+                    .catch((err) => { // Send Email error
+                      const error = new Error();
+                      error.status = 500;
+                      error.body = err.message;
+                      console.error(error);
+                      next(error);
+                    });
+                }).catch((err) => { // Email Substitute error
+                const error = new Error();
+                error.status = 500;
+                error.body = err.message;
+                console.error(error);
+                next(error);
+              });
+            })
+          } // End if
+          else {
+            res.status(200).send({message: 'success'});
           }
-        }).catch((err) => {
+        }).catch((err) => { // Set RSVP error
         const error = new Error();
         error.status = 500;
         error.body = err.message;
+        console.error(error);
         next(error);
       });
     } else {
       const error = new Error();
       error.status = 400;
       error.body = {error: 'Could not identify user'};
+      console.error(error);
       next(error);
     }
   } else {
@@ -161,8 +172,7 @@ router.post('/rsvp', (req, res, next) => {
     error.body = {error: 'RSVP value must be included'};
     next(error);
   }
-})
-;
+});
 
 
 /**

@@ -135,18 +135,20 @@ function addRegistration(data) {
 /**
  *
  * @param uid {string} UID of the user to set the RSVP status
- * @param RSVPstatus
+ * @param RSVPstatus {Boolean}
  */
 function setRSVP(uid, RSVPstatus) {
   const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
   const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
     .into(dbname)
-    .setFieldRows([{isRSVP: uid, rsvp_time: newDate().getTime(), rsvp_status: RSVPstatus}])
+    .setFieldsRows([{user_id: uid, rsvp_time: new Date().getTime(), rsvp_status: RSVPstatus}])
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
     connection.query(query.text, query.values, (err) => {
-      if (err) {
+      if (err && err.errno === 1062) {
+        resolve('Already RSVPed');
+      } else if (err) {
         reject(err);
       } else {
         resolve();

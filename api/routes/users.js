@@ -165,4 +165,35 @@ router.post('/rsvp', (req, res, next) => {
 ;
 
 
+/**
+ * @api {get} /users/rsvp_status confirm the RSVP status for the current user and send a email containing their pin
+ * @apiVersion 0.3.1
+ * @apiName get RSVP status
+ *
+ * @apiGroup Users
+ * @apiPermission User
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Object} Containing the rsvp status based on the uid
+ * @apiUse IllegalArgumentError
+ */
+router.get('/rsvp_status', (req, res, next) => {
+  if (res.local.user) {
+    dataBase.getRSVP(res.local.user.uid)
+      .then((RSVP_status) => {
+        res.status(200).send({status: RSVP_status});
+      }).catch((err) => {
+        const error = new Error();
+        error.status = error.status || 500;
+        error.body = error.message;
+        next(error);
+      })
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = {error: 'Could not identify user'}
+    next(error);
+  }
+})
+
 module.exports = router;

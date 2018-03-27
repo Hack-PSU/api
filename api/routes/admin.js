@@ -250,6 +250,41 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
     }
 });
 
+/**
+ * @api {get} /admin/rsvp_list Get list of people who rsvp
+ * @apiVersion 0.1.0
+ * @apiName Retrive RSVP list
+ * @apiGroup Admin
+ * @apiPermission Exef
+
+ * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of hackers who RSVP
+ */
+router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
+    if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
+        let arr = [];
+        database.getRSVPList(parseInt(req.query.limit),parseInt(req.query.offset))
+            .on('data', (document) => {
+                arr.push(document);
+            }).on('error', (err) => {
+                const error = new Error();
+                error.status = 500;
+                error.body = err.message;
+                next(error);
+            }).on('end', () => {
+                res.status(200).send(arr);
+            })
+    } else {
+        const error = new Error();
+        error.status = 400;
+        error.body = {"message": "Limit or offset must be an integer"};
+        next(error);
+    }
+});
 
 
 

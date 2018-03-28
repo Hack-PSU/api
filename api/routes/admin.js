@@ -284,15 +284,14 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/userid Get the uid corresponding to an email
- * @apiVersion 0.2.0
- * @apiName Get User Id
+ * @api {get} /admin/getlocationlist Get the list of existing location from the database
+ * @apiVersion 0.1.0
+ * @apiName Get Location List
  * @apiGroup Admin
  * @apiPermission Exec
  *
  * @apiUse AuthArgumentRequired
- * @apiSuccess {object} Object {uid, location_name}
- * @apiUse IllegalArgumentError
+ * @apiSuccess {Array} Array containing all locations in the database
  */
 route.get('/getlocationlist', verifyACL(3), (req, res, next) => {
     let arr = [];
@@ -307,7 +306,7 @@ route.get('/getlocationlist', verifyACL(3), (req, res, next) => {
         }).on('end', () =>{
             res.status(200).send(arr);
         });
-})
+});
 
 /**
  * @api {post} /admin/email Send communication email to recipients

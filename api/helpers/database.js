@@ -213,6 +213,7 @@ function removeLocation(uid, name) {
 		})
 	})
 }
+
 /**
  *
  * @param msg {String} Message to write
@@ -263,6 +264,10 @@ module.exports = {
     getRegistration,
     getPreRegistrations,
     addPreRegistration,
+    getAllLocations,
+    addNewLocation,
+    removeLocation,
+    updateLocation,
     writePiMessage,
     addRegistration,
     setRegistrationSubmitted,

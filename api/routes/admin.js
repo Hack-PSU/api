@@ -309,6 +309,101 @@ route.get('/getlocationlist', verifyACL(3), (req, res, next) => {
 });
 
 /**
+ * @api {post} /admin/createlocation Insert a new location in to the database
+ * @apiVersion 0.1.0
+ * @apiName Create Location
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
+ * @apiUse AuthArgumentRequired
+ * @apisuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+route.post('createlocation', verifyACL(3), (req, res, next) => {
+    if(req.body && req.body.locationName && (req.body.locationName.length > 0)) {
+        database.addNewLocation(req.body.locationName).
+            then(() => {
+                res.status(200).send('Success');
+            }).catch((err) => {
+                const error = new Error();
+                error.status = 500;
+                error.body = err.message;
+                next(error);
+            });
+    } else {
+        const error = new Error();
+        error.status = 400;
+        error.body = "Require a name for the location"
+        next(error);
+    }
+})
+
+/**
+ * @api {post} /admin/updatelocation Update name of the location associated with the uid in the database
+ * @apiVersion 0.1.0
+ * @apiName Update Location
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiParam {String} uid - the uuidv4 that is having the name of the location associated with this id changed
+ * @apiParam {String} newLocationName - the new name that is being updated with the name associated with the uid
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+route.post('updatelocation', verifyACL(3), (req, res, next) => {
+    if(req.body && req.body.uid && req.body.newLocationName && (req.body.locationName.length > 0) && (req.body.uid.length > 0)) {
+        database.updateLocation(req.body.uid, req.body.newLocationName)
+            .then(() => {
+                res.status(200).send('Success');
+            }).catch((err) => {
+                const error = new Error();
+                error.status = 500;
+                error.body = err.message;
+                next(error);
+            });
+    } else {
+        const error = new Error();
+        error.status = 400;
+        error.body = "Require the uid and/or aname for the location";
+        next(error);
+    }
+});
+
+/**
+ * @api {post} /admin/removelocation Remove the location associated with the uid from the database
+ * @apiVersion 0.1.0
+ * @apiName Remove Location
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiParam {String} uid - the uuidv4 of the location that is being selected for removal
+ * @apiParam {String} newLocationName - the name of the locatoin that is being removed
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+ route.post('removelocation', verifyACL(3), (req, res, next) => {
+    if(req.body && req.body.uid && req.body.newLocationName && (req.body.locationName.length > 0) && (req.body.uid.length > 0)) {
+        database.removeLocation(req.body.uid, req.body.newLocationName)
+            .then(() => {
+                res.status(200).send('Success');
+            }).catch(err) => {
+                const error = new Error();
+                error.status = 500;
+                error.body = err.message;
+                next(error);
+            }
+    } else {
+        const error = new Error();
+        error.status = 400;
+        error.body = "Require the uid and/or aname for the location";
+        next(error);
+    }
+});
+
+/**
  * @api {post} /admin/email Send communication email to recipients
  * @apiVersion 0.1.1
  * @apiName Send communication emails

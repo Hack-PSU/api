@@ -283,6 +283,31 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
     }
 });
 
+/**
+ * @api {get} /admin/userid Get the uid corresponding to an email
+ * @apiVersion 0.2.0
+ * @apiName Get User Id
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {object} Object {uid, location_name}
+ * @apiUse IllegalArgumentError
+ */
+route.get('/getlocationlist', verifyACL(3), (req, res, next) => {
+    let arr = [];
+    database.getAllLocations().
+        on('data', (document) => {
+            arr.push(document);
+        }).on('err', (err) => {
+            const error = new Error();
+            error.status = 500;
+            error.body = err.message;
+            next(error);
+        }).on('end', () =>{
+            res.status(200).send(arr);
+        });
+})
 
 /**
  * @api {post} /admin/email Send communication email to recipients

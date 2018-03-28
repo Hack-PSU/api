@@ -90,7 +90,7 @@ router.get('/registration', (req, res, next) => {
 
 /**
  * @api {post} /users/RSVP confirm the RSVP status for the current user and send a email containing their pin
- * @apiVersion 0.3.1
+ * @apiVersion 0.1.1
  * @apiName Set RSVP
  *
  * @apiGroup Users
@@ -177,7 +177,7 @@ router.post('/rsvp', (req, res, next) => {
 
 /**
  * @api {get} /users/rsvp_status confirm the RSVP status for the current user and send a email containing their pin
- * @apiVersion 0.3.1
+ * @apiVersion 0.1.1
  * @apiName get RSVP status
  *
  * @apiGroup Users

@@ -283,5 +283,6 @@ module.exports = {
   storeIP,
   getRSVP,
   setRSVP,
+  getRSVPList,
   getEmail,
 };

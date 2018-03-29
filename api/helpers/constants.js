@@ -47,6 +47,11 @@ module.exports = {
 
     }
   },
+  RSVPEmailHtml: {
+      fromEmail: "team@hackpsu.org",
+      subject: "HackPSU RSVP Confirmation",
+      text: "Hi $name$<br><br><br>your pin is: $pin$<br><br>HackPSU team" // TODO: Change
+  },
   registeredUserSchema: {
     type: 'object',
     properties: {

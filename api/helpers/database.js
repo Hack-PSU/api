@@ -166,7 +166,7 @@ function getRSVP(uid) {
   const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
   const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
     .from(dbname)
-    .where("idRSVP = ?", uid)
+    .where("user_id = ?", uid)
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
@@ -174,7 +174,7 @@ function getRSVP(uid) {
       if (err) {
         reject(err);
       } else {
-        resolve(response);
+        resolve(response[0]);
       }
     })
   })
@@ -189,7 +189,7 @@ function getRSVPList(limit, offset) {
   const mLimit = parseInt(limit);
   const mOffset = parseInt(offset);
   const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-    .from('RSVP')
+    .from(process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP')
     .where('rsvp_status = ?', true)
     .limit(mLimit ? limit : null)
     .offset(mOffset ? offset : null)

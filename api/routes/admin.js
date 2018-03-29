@@ -3,6 +3,7 @@ const constants = require('../helpers/constants');
 const functions = require('../helpers/functions');
 const validator = require('email-validator');
 
+const admin = require('firebase-admin');
 const express = require('express');
 const authenticator = require('../helpers/auth');
 const database = require('../helpers/database');
@@ -26,6 +27,7 @@ router.use((req, res, next) => {
       .then((decodedToken) => {
         if (decodedToken.admin === true) {
           res.locals.privilege = decodedToken.privilege;
+          res.locals.user = decodedToken;
           next();
         } else {
           const error = new Error();
@@ -259,6 +261,43 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
   }
 });
 
+/**
+ * @api {get} /admin/rsvp_list Get list of people who rsvp
+ * @apiVersion 0.1.0
+ * @apiName Retrive RSVP list
+ * @apiGroup Admin
+ * @apiPermission Exef
+
+ * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of hackers who RSVP
+ */
+router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
+    if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
+        let arr = [];
+        database.getRSVPList(parseInt(req.query.limit),parseInt(req.query.offset))
+            .on('data', (document) => {
+                arr.push(document);
+            }).on('error', (err) => {
+                const error = new Error();
+                error.status = 500;
+                error.body = err.message;
+                next(error);
+            }).on('end', () => {
+                res.status(200).send(arr);
+            })
+    } else {
+        const error = new Error();
+        error.status = 400;
+        error.body = {"message": "Limit or offset must be an integer"};
+        next(error);
+    }
+});
+
+
 
 /**
  * @api {post} /admin/makeadmin Elevate a user's privileges
@@ -294,6 +333,127 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
   }
 });
 
+/**
+ * @api {get} /admin/location_list Get the list of existing location from the database
+ * @apiVersion 0.2.3
+ * @apiName Get Location List
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Array containing all locations in the database
+ */
+router.get('/location_list', verifyACL(3), (req, res, next) => {
+  let arr = [];
+  database.getAllLocations().on('data', (document) => {
+    arr.push(document);
+  }).on('err', (err) => {
+    const error = new Error();
+    error.status = 500;
+    error.body = err.message;
+    next(error);
+  }).on('end', () => {
+    res.status(200).send(arr);
+  });
+});
+
+/**
+ * @api {post} /admin/create_location Insert a new location in to the database
+ * @apiVersion 0.2.3
+ * @apiName Create Location
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
+ * @apiUse AuthArgumentRequired
+ * @apisuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post('/create_location', verifyACL(3), (req, res, next) => {
+  if (req.body && req.body.locationName && (req.body.locationName.length > 0)) {
+    database.addNewLocation(req.body.locationName).then(() => {
+      res.status(200).send({ status: 'Success' });
+    }).catch((err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = "Require a name for the location";
+    next(error);
+  }
+});
+
+/**
+ * @api {post} /admin/update_location Update name of the location associated with the uid in the database
+ * @apiVersion 0.2.3
+ * @apiName Update Location
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
+ * @apiParam {String} newLocationName - the new name that is being updated with the name associated with the uid
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post('/update_location', verifyACL(3), (req, res, next) => {
+  if (
+    req.body &&
+    req.body.uid &&
+    req.body.newLocationName &&
+    req.body.newLocationName.length > 0 &&
+    (req.body.uid.length > 0)) {
+    database.updateLocation(req.body.uid, req.body.newLocationName)
+      .then(() => {
+        res.status(200).send('Success');
+      }).catch((err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = "Require the uid and/or name for the location";
+    next(error);
+  }
+});
+
+/**
+ * @api {post} /admin/remove_location Remove the location associated with the uid from the database
+ * @apiVersion 0.2.3
+ * @apiName Remove Location
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiParam {String} uid - the uid of the location that is being selected for removal
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post('/remove_location', verifyACL(3), (req, res, next) => {
+  if (req.body && req.body.uid && (req.body.uid.length > 0)) {
+    database.removeLocation(req.body.uid)
+      .then(() => {
+        res.status(200).send({ status: 'Success' });
+      }).catch((err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = "Require the uid for the location";
+    next(error);
+  }
+});
 
 /**
  * @api {post} /admin/email Send communication email to recipients
@@ -342,7 +502,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
             const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject, req.body.fromEmail); // Generate the POST request
             functions.sendEmail(request.data)
               .then(() => {
-                resolve({'email': request.data.to, 'response': 'success'}); // If successful, resolve
+                resolve({ email: request.data.to, response: 'success', name: emailObject.name}); // If successful, resolve
               }).catch((error) => {
               res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
               resolve(null);
@@ -365,6 +525,25 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
           next(error);
         } else {
           if (res.locals.failArray.length > 0) {
+            database.addEmailsHistory(resolves.map((resolution) => {
+              return {
+                sender: res.locals.user.uid,
+                recipient: resolution.email,
+                email_content: req.body.html,
+                subject: req.body.subject,
+                recipient_name: resolution.name,
+                time: new Date().getTime(),
+              }
+            }), res.locals.failArray ? res.locals.failArray.map((errorEmail) => {
+              return {
+                sender: res.locals.user.uid,
+                recipient: errorEmail.email || null,
+                email_content: req.body.html || null,
+                subject: req.body.subject || null,
+                recipient_name: errorEmail.name || null,
+                time: new Date().getTime(),
+              }
+            }) : null).catch(err => console.error(err));
             res.status(207).send(res.locals.failArray.concat(resolves)); // Partial success response
           } else {
             res.status(200).send(resolves); // Full success response

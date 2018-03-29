@@ -333,6 +333,127 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
   }
 });
 
+/**
+ * @api {get} /admin/location_list Get the list of existing location from the database
+ * @apiVersion 0.2.3
+ * @apiName Get Location List
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Array containing all locations in the database
+ */
+router.get('/location_list', verifyACL(3), (req, res, next) => {
+  let arr = [];
+  database.getAllLocations().on('data', (document) => {
+    arr.push(document);
+  }).on('err', (err) => {
+    const error = new Error();
+    error.status = 500;
+    error.body = err.message;
+    next(error);
+  }).on('end', () => {
+    res.status(200).send(arr);
+  });
+});
+
+/**
+ * @api {post} /admin/create_location Insert a new location in to the database
+ * @apiVersion 0.2.3
+ * @apiName Create Location
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
+ * @apiUse AuthArgumentRequired
+ * @apisuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post('/create_location', verifyACL(3), (req, res, next) => {
+  if (req.body && req.body.locationName && (req.body.locationName.length > 0)) {
+    database.addNewLocation(req.body.locationName).then(() => {
+      res.status(200).send({ status: 'Success' });
+    }).catch((err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = "Require a name for the location";
+    next(error);
+  }
+});
+
+/**
+ * @api {post} /admin/update_location Update name of the location associated with the uid in the database
+ * @apiVersion 0.2.3
+ * @apiName Update Location
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
+ * @apiParam {String} newLocationName - the new name that is being updated with the name associated with the uid
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post('/update_location', verifyACL(3), (req, res, next) => {
+  if (
+    req.body &&
+    req.body.uid &&
+    req.body.newLocationName &&
+    req.body.newLocationName.length > 0 &&
+    (req.body.uid.length > 0)) {
+    database.updateLocation(req.body.uid, req.body.newLocationName)
+      .then(() => {
+        res.status(200).send('Success');
+      }).catch((err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = "Require the uid and/or name for the location";
+    next(error);
+  }
+});
+
+/**
+ * @api {post} /admin/remove_location Remove the location associated with the uid from the database
+ * @apiVersion 0.2.3
+ * @apiName Remove Location
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiParam {String} uid - the uid of the location that is being selected for removal
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post('/remove_location', verifyACL(3), (req, res, next) => {
+  if (req.body && req.body.uid && (req.body.uid.length > 0)) {
+    database.removeLocation(req.body.uid)
+      .then(() => {
+        res.status(200).send({ status: 'Success' });
+      }).catch((err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = "Require the uid for the location";
+    next(error);
+  }
+});
 
 /**
  * @api {post} /admin/email Send communication email to recipients

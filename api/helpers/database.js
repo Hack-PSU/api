@@ -14,13 +14,15 @@ connection.connect((err) => {
 /**
  * @param limit {Number} Limit the number of rows to retrieve
  * @param offset {Number} Offset from start to retrieve at
+ * @param opts {Object} opts.fields = fields to select
  * @return {Stream} Returns a continuous stream of data from the database
  */
-function getRegistrations(limit, offset) {
+function getRegistrations(limit, offset, opts) {
   const mLimit = parseInt(limit);
   const mOffset = parseInt(offset);
   const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
     .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
+    .fields(opts && opts.fields || null)
     .limit(mLimit ? mLimit : null)
     .offset(mOffset ? mOffset : null)
     .toString()
@@ -219,8 +221,33 @@ function getEmail(uid) {
         resolve(response);
       }
     })
-  })
+  });
 }
+
+
+/**
+ *
+ * @param data {TravelReimbursementModel} Data format that matches the travelReimbursementSchema
+ * @return {Promise<any>}
+ */
+function addTravelReimbursement(data) {
+  return new Promise((resolve, reject) => {
+    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+      .into(process.env.NODE_ENV === 'test' ? 'TRAVEL_REIMBURSEMENT_TEST' : 'TRAVEL_REIMBURSEMENTS')
+      .setFieldsRows([
+        data
+      ]).toParam();
+    query.text = query.text.concat(';');
+    connection.query(query.text, query.values, (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+}
+
 
 /**
  *
@@ -271,6 +298,82 @@ function storeIP(ipAddress, user_agent) {
   });
 }
 
+/**
+ *
+ * @param rfidAssignments {Array}
+ * @return {Promise<any>}
+ */
+function addRfidAssignments(rfidAssignments) {
+  return new Promise((resolve, reject) => {
+    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+      .into(process.env.NODE_ENV === 'test' ? 'RFID_ASSIGNMENT_TEST' : 'RFID_ASSIGNMENT')
+      .setFieldsRows(rfidAssignments)
+      .toParam();
+    query.text = query.text.concat(';');
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param rfidScans {Array}
+ * @return {Promise<any>}
+ */
+function addRfidScans(rfidScans) {
+  return new Promise((resolve, reject) => {
+    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+      .into(process.env.NODE_ENV === 'test' ? 'SCANS_TEST' : 'SCANS')
+      .setFieldsRows(rfidScans)
+      .toParam();
+    query.text = query.text.concat(';');
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param successes
+ * @param fails
+ * @return {Promise<any>}
+ */
+function addEmailsHistory(successes, fails) {
+  const mSuccesses = successes.map((s) => {
+    s.status = '200';
+    return s;
+  });
+  if (fails) {
+    fails.forEach((f) => {
+      f.status = '207';
+      mSuccesses.push(f);
+    });
+  }
+  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .into(process.env.NODE_ENV === 'test' ? 'EMAIL_HISTORY_TEST' : 'EMAIL_HISTORY')
+    .setFieldsRows(mSuccesses)
+    .toParam();
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 
 module.exports = {
   getRegistrations,
@@ -279,10 +382,14 @@ module.exports = {
   addPreRegistration,
   writePiMessage,
   addRegistration,
-  setRegistrationSubmitted,
-  storeIP,
   getRSVP,
   setRSVP,
   getRSVPList,
   getEmail,
+  addRfidAssignments,
+  addRfidScans,
+  setRegistrationSubmitted,
+  storeIP,
+  addTravelReimbursement,
+  addEmailsHistory,
 };

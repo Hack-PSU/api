@@ -3,6 +3,7 @@ const constants = require('../helpers/constants');
 const functions = require('../helpers/functions');
 const validator = require('email-validator');
 
+const admin = require('firebase-admin');
 const express = require('express');
 const authenticator = require('../helpers/auth');
 const database = require('../helpers/database');
@@ -26,6 +27,7 @@ router.use((req, res, next) => {
       .then((decodedToken) => {
         if (decodedToken.admin === true) {
           res.locals.privilege = decodedToken.privilege;
+          res.locals.user = decodedToken;
           next();
         } else {
           const error = new Error();
@@ -159,7 +161,18 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
       error.body = err.message;
       next(error);
     }).on('end', () => {
-      res.status(200).send(arr);
+      Promise.all(arr.map((value) => {
+        return new Promise((resolve, reject) => {
+          authenticator.getUserData(value.uid)
+            .then((user) => {
+              value.sign_up_time = new Date(user.metadata.creationTime).getTime();
+              resolve(value);
+            }).catch(err => reject(err));
+        })
+      })).then(result => res.status(200).send(result))
+        .catch((err) => {
+          res.status(207).send(arr);
+        });
     })
   } else {
     const error = new Error();
@@ -247,6 +260,43 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
     })
   }
 });
+
+/**
+ * @api {get} /admin/rsvp_list Get list of people who rsvp
+ * @apiVersion 0.1.0
+ * @apiName Retrive RSVP list
+ * @apiGroup Admin
+ * @apiPermission Exef
+
+ * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of hackers who RSVP
+ */
+router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
+    if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
+        let arr = [];
+        database.getRSVPList(parseInt(req.query.limit),parseInt(req.query.offset))
+            .on('data', (document) => {
+                arr.push(document);
+            }).on('error', (err) => {
+                const error = new Error();
+                error.status = 500;
+                error.body = err.message;
+                next(error);
+            }).on('end', () => {
+                res.status(200).send(arr);
+            })
+    } else {
+        const error = new Error();
+        error.status = 400;
+        error.body = {"message": "Limit or offset must be an integer"};
+        next(error);
+    }
+});
+
 
 
 /**
@@ -452,7 +502,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
             const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject, req.body.fromEmail); // Generate the POST request
             functions.sendEmail(request.data)
               .then(() => {
-                resolve({'email': request.data.to, 'response': 'success'}); // If successful, resolve
+                resolve({ email: request.data.to, response: 'success', name: emailObject.name}); // If successful, resolve
               }).catch((error) => {
               res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
               resolve(null);
@@ -475,6 +525,25 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
           next(error);
         } else {
           if (res.locals.failArray.length > 0) {
+            database.addEmailsHistory(resolves.map((resolution) => {
+              return {
+                sender: res.locals.user.uid,
+                recipient: resolution.email,
+                email_content: req.body.html,
+                subject: req.body.subject,
+                recipient_name: resolution.name,
+                time: new Date().getTime(),
+              }
+            }), res.locals.failArray ? res.locals.failArray.map((errorEmail) => {
+              return {
+                sender: res.locals.user.uid,
+                recipient: errorEmail.email || null,
+                email_content: req.body.html || null,
+                subject: req.body.subject || null,
+                recipient_name: errorEmail.name || null,
+                time: new Date().getTime(),
+              }
+            }) : null).catch(err => console.error(err));
             res.status(207).send(res.locals.failArray.concat(resolves)); // Partial success response
           } else {
             res.status(200).send(resolves); // Full success response

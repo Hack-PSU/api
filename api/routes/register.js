@@ -56,7 +56,6 @@ const upload = multer({
 });
 
 
-
 /** **************** HELPER MIDDLEWARE ************************* */
 
 /**
@@ -100,7 +99,7 @@ function storeIP(req, res, next) {
             .then(() => {
                 next();
             }).catch(() => {
-                next();
+            next();
         })
     } else {
         next();
@@ -143,6 +142,36 @@ router.post('/pre', (req, res, next) => {
  * @apiVersion 0.1.1
  * @apiName Registration
  * @apiGroup Registration
+ * @apiParam {Object} data:
+ * @apiParamExample {Object} Request-Example: {
+	req.header: {
+		idtoken: <user's idtoken>
+	}
+
+ 	request.body: {
+			firstName: "Matt",
+            lastName: "Stewart",
+            gender: "Male",
+            shirtSize: "L",
+            dietaryRestriction: "Vegetarian",
+            allergies: "Peanuts",
+            travelReimbursement: true,
+            firstHackathon: false,
+            university: "University of hackathon",
+            email: matt@email.com,
+            academicYear: "sophomore",
+            major: "Communication"
+            phone: "1234567890"
+            race: "no-disclose"
+            codingExperience: "advanced"
+            uid: "JH123891JDW98E89J3389",
+            eighteenBeforeEvent: true,
+            mlhCOC: true,
+            mlhDCP: true,
+            referral: "facebook",
+            project: "My project description",
+            resume: https://s3.aws.com/link-to-file
+    }
  * @apiUse AuthArgumentRequired
  * @apiParam {String} firstname First name of the user
  * @apiParam {String} lastname Last name of the user

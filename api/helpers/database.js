@@ -193,18 +193,16 @@ function updateLocation(uid, name) {
 /**
  *
  * @param uid
- * @param name
  * @return {Promise<any>}
  */
-function removeLocation(uid, name) {
+function removeLocation(uid) {
 	const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
 		.table('LOCATIONS')
 		.where('uid = ?', uid)
-		.where('name = ?', name)
 		.toParam();
 	query.text = query.text.concat(';');
 	return new Promise((resolve, reject) => {
-		connection.query(query, (err, response) => {
+		connection.query(query, (err) => {
 			if(err) {
 				reject(err);
 			} else {

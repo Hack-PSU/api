@@ -172,7 +172,7 @@ router.post('/rsvp', (req, res, next) => {
               next(error);
             }).on('end', () => {
               let email = user.email;
-              let name = user.firstname + user.lastname;
+              let name = user.firstname;
               let pin = user.pin;
               functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
                 name: name,
@@ -259,7 +259,7 @@ router.get('/rsvp', (req, res, next) => {
 });
 
 
-/*
+/**
  * @api {post} /users/travelReimbursement submit travel reimbursement information
  * @apiVersion 0.2.2
  * @apiName Travel Reimbursement

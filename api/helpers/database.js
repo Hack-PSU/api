@@ -250,6 +250,86 @@ function addTravelReimbursement(data) {
 
 
 /**
+ * @return {Stream} Returns all the locations
+ */
+function getAllLocations() {
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from('LOCATIONS')
+    .toString();
+  query = query.concat(';');
+  return connection.query(query).stream();
+}
+
+/**
+ *
+ * @param locationName
+ * @return {Promise<any>}
+ */
+function addNewLocation(locationName) {
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .into('LOCATIONS')
+    .set('uid', uuidv4().replace(/-/g, ''))
+    .set('location_name', locationName)
+    .toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param uid
+ * @param name
+ * @return {Promise<any>}
+ */
+function updateLocation(uid, name) {
+  const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .table('LOCATIONS')
+    .set('name', name)
+    .where('uid = ?', uid)
+    .toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response);
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param uid
+ * @return {Promise<any>}
+ */
+function removeLocation(uid) {
+	const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+		.table('LOCATIONS')
+		.where('uid = ?', uid)
+		.toParam();
+	query.text = query.text.concat(';');
+	return new Promise((resolve, reject) => {
+		connection.query(query, (err) => {
+			if(err) {
+				reject(err);
+			} else {
+				resolve();
+			}
+		})
+	})
+}
+
+/**
  *
  * @param msg {String} Message to write
  */
@@ -380,6 +460,10 @@ module.exports = {
   getRegistration,
   getPreRegistrations,
   addPreRegistration,
+  getAllLocations,
+    addNewLocation,
+    removeLocation,
+    updateLocation,
   writePiMessage,
   addRegistration,
   getRSVP,

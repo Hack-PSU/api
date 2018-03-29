@@ -134,6 +134,96 @@ function addRegistration(data) {
   });
 }
 
+/**
+ *
+ * @param uid {string} UID of the user to set the RSVP status
+ * @param RSVPstatus {Boolean}
+ */
+function setRSVP(uid, RSVPstatus) {
+  const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
+  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .into(dbname)
+    .setFieldsRows([{user_id: uid, rsvp_time: new Date().getTime(), rsvp_status: RSVPstatus}])
+    .toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err) => {
+      if (err && err.errno === 1062) {
+        resolve('Already RSVPed');
+      } else if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param uid {string} UID of the user to get the RSVP status
+ * @return {Promise<any>}
+ */
+function getRSVP(uid) {
+  const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
+  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .from(dbname)
+    .where("user_id = ?", uid)
+    .toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response[0]);
+      }
+    })
+  })
+}
+
+/**
+ * @param limit {Number} Limit the number of rows to retrieve
+ * @param offset {Number} Offset from start to retrieve at
+ * @return {Stream} Returns a continuous stream of data of people who RSVP
+ */
+function getRSVPList(limit, offset) {
+  const mLimit = parseInt(limit);
+  const mOffset = parseInt(offset);
+  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .from(process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP')
+    .where('rsvp_status = ?', true)
+    .limit(mLimit ? limit : null)
+    .offset(mOffset ? offset : null)
+    .toString().concat(';');
+  return connection.query(query).stream();
+}
+
+
+/**
+ *
+ * @param uid {string} get email associated with the uid
+ *
+ **/
+function getEmail(uid) {
+  const dbname = process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION';
+  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    .from(dbname)
+    .field('email')
+    .where("uid = ?", uid)
+    .toString()
+    .concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response);
+      }
+    })
+  });
+}
+
 
 /**
  *
@@ -292,6 +382,10 @@ module.exports = {
   addPreRegistration,
   writePiMessage,
   addRegistration,
+  getRSVP,
+  setRSVP,
+  getRSVPList,
+  getEmail,
   addRfidAssignments,
   addRfidScans,
   setRegistrationSubmitted,

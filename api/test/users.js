@@ -148,6 +148,7 @@ describe('rsvp user', () => {
             let generatedRegistration = generateGoodRegistration();
             generatedRegistration.email = 'test@email.com';
             generatedRegistration.uid = user.uid;
+            generatedRegistration.pin = 78;
             chai.request(server)
               .post('/v1/register')
               .set('idtoken', idToken)

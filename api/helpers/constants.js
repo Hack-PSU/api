@@ -159,7 +159,7 @@ module.exports = {
             type: 'number',
           }
         },
-        required: ['rfid', 'uid', 'time'],
+        required: ['rfid_uid', 'user_uid', 'time'],
       }
   },
   rfidScansSchema: {
@@ -179,7 +179,7 @@ module.exports = {
             type: 'number',
           }
         },
-        required: ['rfid', 'uid', 'scan_time'],
+        required: ['rfid_uid', 'scan_location', 'scan_time'],
       }
   },
     s3Connection: {

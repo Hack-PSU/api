@@ -422,6 +422,22 @@ function addRfidScans(rfidScans) {
   });
 }
 
+function clearTestAssignments(){
+	return new Promise((resolve, reject) => {
+    const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+      .from('RFID_ASSIGNMENTS_TEST')
+	  .where('rfid_uid is not null')
+    query.text = query.text.concat(';');
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 /**
  *
  * @param successes

@@ -122,7 +122,7 @@ router.post('/scans', (req, res, next) => {
   const validate = ajv.compile(rfidScansSchema);
   if (req.body && req.body.scans && validate(req.body.scans)) {
     // LEGAL
-    database.addRfidAssignments(req.body.scans)
+    database.addRfidScans(req.body.scans)
       .then(() => {
         res.status(200).send({message: "success"});
       }).catch((err) => {

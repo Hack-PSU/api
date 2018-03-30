@@ -21,7 +21,7 @@ module.exports = {
     key: process.env.ACCESS_KEY_ID,
     secret: process.env.SECRET_ACCESS_KEY
   },
-  rediskey: process.env.REDIS_API_KEY || '',
+  rediskey: process.env.REDIS_API_KEY || 'rediskey',
   sqlConnection: {
     host: process.env.RDS_HOSTNAME || 'localhost',
     user: process.env.RDS_USERNAME || 'user',
@@ -159,7 +159,7 @@ module.exports = {
             type: 'number',
           }
         },
-        required: ['rfid', 'uid', 'number'],
+        required: ['rfid', 'uid', 'time'],
       }
   },
   rfidScansSchema: {
@@ -179,7 +179,7 @@ module.exports = {
             type: 'number',
           }
         },
-        required: ['rfid', 'uid', 'number'],
+        required: ['rfid', 'uid', 'scan_time'],
       }
   },
     s3Connection: {
@@ -191,7 +191,7 @@ module.exports = {
     },
     travelReimbursementSchema: {
         type: 'object',
-        properties: { 
+        properties: {
             fullName: {
                 type: 'string',
                 minLength: 1,
@@ -247,5 +247,3 @@ module.exports = {
 // *New questions*
 // Where did you hear about hackPSU?
 // What is a project you're proud of?
-
-

@@ -386,7 +386,7 @@ function storeIP(ipAddress, user_agent) {
 function addRfidAssignments(rfidAssignments) {
   return new Promise((resolve, reject) => {
     const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-      .into(process.env.NODE_ENV === 'test' ? 'RFID_ASSIGNMENTS_TEST' : 'RFID_ASSIGNMENTS')
+      .into(process.env.NODE_ENV === 'test' ? 'RFID_ASSIGNMENTS_TEST' : 'RFID_ASSIGNMENT')
       .setFieldsRows(rfidAssignments)
       .toParam();
     query.text = query.text.concat(';');

@@ -172,8 +172,8 @@ router.post('/rsvp', (req, res, next) => {
               next(error);
             }).on('end', () => {
               let email = user.email;
-              let name = user.firstname + user.lastname;
-              let pin = user.pin;
+              let name = user.firstname;
+              let pin = user.pin || 78;
               functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
                 name: name,
                 pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
@@ -259,7 +259,7 @@ router.get('/rsvp', (req, res, next) => {
 });
 
 
-/*
+/**
  * @api {post} /users/travelReimbursement submit travel reimbursement information
  * @apiVersion 0.2.2
  * @apiName Travel Reimbursement
@@ -344,6 +344,26 @@ function adjustReimbursementPrice(price, groupMembers) {
         return price;
     }
 }
+
+String.prototype.padStart = String.prototype.padStart ? String.prototype.padStart : function(targetLength, padString) {
+  targetLength = Math.floor(targetLength) || 0;
+  if(targetLength < this.length) return String(this);
+
+  padString = padString ? String(padString) : " ";
+
+  var pad = "";
+  var len = targetLength - this.length;
+  var i = 0;
+  while(pad.length < len) {
+    if(!padString[i]) {
+      i = 0;
+    }
+    pad += padString[i];
+    i++;
+  }
+
+  return pad + String(this).slice(0);
+};
 
 
 module.exports = router;

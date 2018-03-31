@@ -315,16 +315,24 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
  */
 router.post('/makeadmin', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.uid) {
-    authenticator.elevate(req.body.uid, req.body.privilege ? req.body.privilege : 1)
-      .then(() => {
-        res.status(200).send('Success');
-      })
-      .catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
+    const privilege = (req.body.privilege && parseInt(req.body.privilege)) || 1;
+    if ((res.locals.privilege < 4) && privilege < res.locals.privilege) { // If not tech-exec and attempting to reduce permissions
+      const error = new Error();
+      error.status = 400;
+      error.body = { message: 'You cannot reduce privileges' };
+      next(error);
+    } else {
+      authenticator.elevate(req.body.uid, privilege)
+        .then(() => {
+          res.status(200).send('Success');
+        })
+        .catch((err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        });
+    }
   } else {
     const error = new Error();
     error.status = 400;

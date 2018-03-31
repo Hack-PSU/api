@@ -167,8 +167,11 @@ function setRSVP(uid, RSVPstatus) {
 function getRSVP(uid) {
   const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
   const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-    .from(dbname)
-    .where("user_id = ?", uid)
+    .from(dbname, "rsvp")
+    .field('r.pin')
+    .field('rsvp.*')
+    .where("rsvp.user_id = ?", uid)
+    .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST': 'REGISTRATION', 'r', 'r.uid=rsvp.user_id')
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {

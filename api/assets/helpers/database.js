@@ -188,7 +188,7 @@ function storeIP(ipAddress, userAgent) {
 function getCurrentUpdates() {
   let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(process.env.NODE_ENV === 'test' ? 'LIVE_UPDATES_TEST' : 'LIVE_UPDATES')
-    .order('idLIVE_UPDATES')
+    .order('uid')
     .toString();
   query = query.concat(';');
   return new Promise((resolve, reject) => {
@@ -232,8 +232,9 @@ function addNewUpdate(updateText, updateImage, updateTitle) {
  * @return {Promise<EventModel>} Stream of event data
  */
 function getCurrentEvents() {
+  const tblname = process.env.NODE_ENV === 'test' ? 'EVENTS_TEST' : 'EVENTS';
   const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .from('EVENTS', 'e')
+    .from(tblname, 'e')
     .field('e.*')
     .field('l.location_name')
     .order('event_start_time', true)

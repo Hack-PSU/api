@@ -136,6 +136,18 @@ function addRegistration(data) {
 
 /**
  *
+ * @return {Stream} Return all attending hackers
+ */
+function getAttendanceList() {
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from('ATTENDANCE')
+    .toString();
+  query = query.concat(';');
+  return connection.query(query).stream();
+}
+
+/**
+ *
  * @param uid {string} UID of the user to set the RSVP status
  * @param RSVPstatus {Boolean}
  */
@@ -321,6 +333,40 @@ function removeLocation(uid) {
 	return new Promise((resolve, reject) => {
 		connection.query(query, (err) => {
 			if(err) {
+				reject(err);
+			} else {
+				resolve();
+			}
+		})
+	})
+}
+
+/**
+ * 
+ * @return {Stream} Return the list of all class in the database
+ */
+function getExtraCreditClassList(){
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+  	.from('EXTRA_CREDIT_CLASSES')
+  	.toString();
+  query = query.concat(';');
+  return connection.query(query).stream();
+}
+
+/**
+ * 
+ * @param uid - id of the hacker
+ * @param cid - id of the class
+ */
+function assignExtraCredit(uid, cid){
+	let query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+		.into(process.env.NODE_ENV === 'test' ? 'EXTRA_CREDIT_ASSIGNMENT_TEST' : 'EXTRA_CREDIT_ASSIGNMENT')
+		.setFieldsRows([{class_uid: cid, user_uid: uid}])
+		.toParam();
+	query.text = query.text.concat(';');
+	return new Promise((resolve, reject) => {
+		connection.query(query.text, query.values, (err) => {
+			if (err) {
 				reject(err);
 			} else {
 				resolve();

@@ -266,7 +266,7 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
  * @apiVersion 0.1.0
  * @apiName Retrive RSVP list
  * @apiGroup Admin
- * @apiPermission Exef
+ * @apiPermission Exec
 
  * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
  * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
@@ -297,6 +297,30 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
     }
 });
 
+/**
+ * @api {get} /admin/get_attendance_list retrive the list of people who attended
+ * @apiVersion 0.1.0
+ * @apiName Retrive Attendance List
+ * @apiGroup Admin
+ * @apiAdmin Exec
+ * 
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Array of hackers who attended
+ */
+router.get('/get_atttendance_list', verifyACL(3), (req, res, next) => {
+  let arr = [];
+  database.getAttendanceList()
+  .on('data', (document) => {
+    arr.push(document);
+  }).on('err', (err) => {
+    const error = new Error();
+    error.status = 500;
+    error.body = err.message;
+    next(error);
+  }).on('end', () => {
+    res.status(200).send(arr);
+  });
+});
 
 
 /**
@@ -451,6 +475,63 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
     const error = new Error();
     error.status = 400;
     error.body = "Require the uid for the location";
+    next(error);
+  }
+});
+
+/** 
+ * @api {get} /admin/get_extra_credit_list Retrive the list of class that are providing extra credit
+ * @apiName Get Extra Credit Class List
+ *
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Array containing the list of class offering extra credit
+ */
+router.get('get_extra_credit_list', verifyACL(3), (req, res, next) => {
+  let arr = []
+  database.getExtraCreditClassList()
+    .on('data', (document) => {
+      arr.push(document);
+    }).on('error', (err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    }).on('end', () => {
+      res.status(200).send(arr);
+    });
+});
+
+/**
+ * @api {post} /admin/assign_extra_credit setting user with the class they are receiving extra credit
+ * @apiName Assign Extra Credit
+ * @apiGroup Admin
+ * @apiPermission Exec
+ * 
+ * @apiParam {String} uid - the id associated with the student
+ * @apiParam {String} cid - the id associated with the class 
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgument
+ */
+router.post('assign_extra_credit', verifyACL(3), (req, res, next) => {
+  if (res.body && res.body.uid && res.body.cid && parseInt(res.body.uid) && parseInt(res.body.cid)) {
+    database.assignExtraCredit(res.body.uid, res.body.cid)
+      .then(() => {
+        res.status(200).send({ status: 'Success'});
+      }).catch((err) => {
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
+  }
+  else{
+    const error = new Error();
+    error.status = 400;
+    error.body = "Need a proper id for the class or the hacker (int)";
     next(error);
   }
 });

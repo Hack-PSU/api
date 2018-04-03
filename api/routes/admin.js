@@ -281,7 +281,7 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
         database.getRSVPList(parseInt(req.query.limit),parseInt(req.query.offset))
             .on('data', (document) => {
                 arr.push(document);
-            }).on('error', (err) => {
+            }).on('err', (err) => {
                 const error = new Error();
                 error.status = 500;
                 error.body = err.message;
@@ -494,7 +494,7 @@ router.get('get_extra_credit_list', verifyACL(3), (req, res, next) => {
   database.getExtraCreditClassList()
     .on('data', (document) => {
       arr.push(document);
-    }).on('error', (err) => {
+    }).on('err', (err) => {
       const error = new Error();
       error.status = 500;
       error.body = err.message;

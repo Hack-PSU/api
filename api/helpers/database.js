@@ -167,8 +167,11 @@ function setRSVP(uid, RSVPstatus) {
 function getRSVP(uid) {
   const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
   const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-    .from(dbname)
-    .where("user_id = ?", uid)
+    .from(dbname, "rsvp")
+    .field('r.pin')
+    .field('rsvp.*')
+    .where("rsvp.user_id = ?", uid)
+    .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST': 'REGISTRATION', 'r', 'r.uid=rsvp.user_id')
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
@@ -191,10 +194,16 @@ function getRSVPList(limit, offset) {
   const mLimit = parseInt(limit);
   const mOffset = parseInt(offset);
   const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-    .from(process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP')
-    .where('rsvp_status = ?', true)
+    .from(process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP', 'rsvp')
+    .field('rsvp.*')
+    .field('r.firstname')
+    .field('r.lastname')
+    .field('r.email')
+    .field('r.pin')
+    .where('rsvp.rsvp_status = ?', true)
     .limit(mLimit ? limit : null)
     .offset(mOffset ? offset : null)
+    .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION', 'r', 'r.uid=rsvp.user_id')
     .toString().concat(';');
   return connection.query(query).stream();
 }
@@ -292,12 +301,12 @@ function addNewLocation(locationName) {
 function updateLocation(uid, name) {
   const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .table('LOCATIONS')
-    .set('name', name)
+    .set('location_name', name)
     .where('uid = ?', uid)
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
-    connection.query(query, (err, response) => {
+    connection.query(query.text, query.values, (err, response) => {
       if (err) {
         reject(err);
       } else {
@@ -314,12 +323,12 @@ function updateLocation(uid, name) {
  */
 function removeLocation(uid) {
 	const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-		.table('LOCATIONS')
+    .from('LOCATIONS')
 		.where('uid = ?', uid)
 		.toParam();
 	query.text = query.text.concat(';');
 	return new Promise((resolve, reject) => {
-		connection.query(query, (err) => {
+		connection.query(query.text, query.values, (err) => {
 			if(err) {
 				reject(err);
 			} else {
@@ -386,7 +395,7 @@ function storeIP(ipAddress, user_agent) {
 function addRfidAssignments(rfidAssignments) {
   return new Promise((resolve, reject) => {
     const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-      .into(process.env.NODE_ENV === 'test' ? 'RFID_ASSIGNMENT_TEST' : 'RFID_ASSIGNMENT')
+      .into(process.env.NODE_ENV === 'test' ? 'RFID_ASSIGNMENTS_TEST' : 'RFID_ASSIGNMENTS')
       .setFieldsRows(rfidAssignments)
       .toParam();
     query.text = query.text.concat(';');
@@ -411,6 +420,22 @@ function addRfidScans(rfidScans) {
       .into(process.env.NODE_ENV === 'test' ? 'SCANS_TEST' : 'SCANS')
       .setFieldsRows(rfidScans)
       .toParam();
+    query.text = query.text.concat(';');
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+function clearTestAssignments(){
+	return new Promise((resolve, reject) => {
+    const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+      .from('RFID_ASSIGNMENTS_TEST')
+	  .where('rfid_uid is not null')
     query.text = query.text.concat(';');
     connection.query(query.text, query.values, (err) => {
       if (err) {

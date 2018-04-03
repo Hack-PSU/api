@@ -315,16 +315,24 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
  */
 router.post('/makeadmin', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.uid) {
-    authenticator.elevate(req.body.uid, req.body.privilege ? req.body.privilege : 1)
-      .then(() => {
-        res.status(200).send('Success');
-      })
-      .catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
+    const privilege = (req.body.privilege && parseInt(req.body.privilege)) || 1;
+    if ((res.locals.privilege < 4) && privilege < res.locals.privilege) { // If not tech-exec and attempting to reduce permissions
+      const error = new Error();
+      error.status = 400;
+      error.body = { message: 'You cannot reduce privileges' };
+      next(error);
+    } else {
+      authenticator.elevate(req.body.uid, privilege)
+        .then(() => {
+          res.status(200).send('Success');
+        })
+        .catch((err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        });
+    }
   } else {
     const error = new Error();
     error.status = 400;
@@ -395,7 +403,7 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
  * @apiPermission Exec
  *
  * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
- * @apiParam {String} newLocationName - the new name that is being updated with the name associated with the uid
+ * @apiParam {String} name - the new name that is being updated with the name associated with the uid
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
@@ -404,10 +412,10 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
   if (
     req.body &&
     req.body.uid &&
-    req.body.newLocationName &&
-    req.body.newLocationName.length > 0 &&
+    req.body.name &&
+    req.body.name.length > 0 &&
     (req.body.uid.length > 0)) {
-    database.updateLocation(req.body.uid, req.body.newLocationName)
+    database.updateLocation(req.body.uid, req.body.name)
       .then(() => {
         res.status(200).send('Success');
       }).catch((err) => {

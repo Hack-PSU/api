@@ -302,7 +302,7 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
  * @apiVersion 0.3.2
  * @apiName Retrieve Attendance List
  * @apiGroup Admin
- * @apiAdmin Exec
+ * @apiPermission Exec
  * 
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array of hackers who attended
@@ -398,7 +398,7 @@ router.get('/location_list', verifyACL(3), (req, res, next) => {
  *
  * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
  * @apiUse AuthArgumentRequired
- * @apisuccess {String} Success
+ * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
 router.post('/create_location', verifyACL(3), (req, res, next) => {
@@ -524,7 +524,7 @@ router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
  * @apiParam {String} cid - the id associated with the class 
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
- * @apiUse IllegalArgument
+ * @apiUse IllegalArgumentError
  */
 router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.uid && req.body.cid && parseInt(req.body.cid)) {

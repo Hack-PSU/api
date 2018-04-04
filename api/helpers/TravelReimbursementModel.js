@@ -5,7 +5,8 @@ module.exports = class TravelReimbursementModel {
         this.reimbursement_amount = data.reimbursementAmount;
         this.mailing_address = data.mailingAddress;
         this.group_members = data.groupMembers;
+        this.user_id = data.uid;
         this.receipt_uris = data.receiptURIs;
-        this.uid = new uuid();
+        this.uid = uuid();
     }
 };

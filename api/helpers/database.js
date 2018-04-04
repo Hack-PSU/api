@@ -289,7 +289,6 @@ function getAllLocations() {
 function addNewLocation(locationName) {
   const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
     .into('LOCATIONS')
-    .set('uid', uuidv4().replace(/-/g, ''))
     .set('location_name', locationName)
     .toParam();
   query.text = query.text.concat(';');

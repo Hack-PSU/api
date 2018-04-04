@@ -298,16 +298,16 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/get_attendance_list retrive the list of people who attended
- * @apiVersion 0.1.0
- * @apiName Retrive Attendance List
+ * @api {get} /admin/get_attendance_list retrieve the list of people who attended
+ * @apiVersion 0.3.2
+ * @apiName Retrieve Attendance List
  * @apiGroup Admin
  * @apiAdmin Exec
  * 
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array of hackers who attended
  */
-router.get('/get_atttendance_list', verifyACL(3), (req, res, next) => {
+router.get('/attendance_list', verifyACL(3), (req, res, next) => {
   let arr = [];
   database.getAttendanceList()
   .on('data', (document) => {
@@ -480,8 +480,9 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
 });
 
 /** 
- * @api {get} /admin/get_extra_credit_list Retrive the list of class that are providing extra credit
+ * @api {get} /admin/extra_credit_list Retrieve the list of class that are providing extra credit
  * @apiName Get Extra Credit Class List
+ * @apiVersion 0.3.2
  *
  * @apiGroup Admin
  * @apiPermission Exec
@@ -489,7 +490,7 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array containing the list of class offering extra credit
  */
-router.get('extra_credit_list', verifyACL(3), (req, res, next) => {
+router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
   let arr = [];
   database.getExtraCreditClassList()
     .on('data', (document) => {
@@ -507,6 +508,7 @@ router.get('extra_credit_list', verifyACL(3), (req, res, next) => {
 /**
  * @api {post} /admin/assign_extra_credit setting user with the class they are receiving extra credit
  * @apiName Assign Extra Credit
+ * @apiVersion 0.3.2
  * @apiGroup Admin
  * @apiPermission Exec
  * 
@@ -516,9 +518,9 @@ router.get('extra_credit_list', verifyACL(3), (req, res, next) => {
  * @apiSuccess {String} Success
  * @apiUse IllegalArgument
  */
-router.post('assign_extra_credit', verifyACL(3), (req, res, next) => {
-  if (res.body && res.body.uid && res.body.cid && parseInt(res.body.uid) && parseInt(res.body.cid)) {
-    database.assignExtraCredit(res.body.uid, res.body.cid)
+router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
+  if (req.body && req.body.uid && req.body.cid && parseInt(req.body.cid)) {
+    database.assignExtraCredit(req.body.uid, req.body.cid)
       .then(() => {
         res.status(200).send({ status: 'Success'});
       }).catch((err) => {

@@ -46,7 +46,10 @@ const storage = multers3({
 const upload = multer({
     fileFilter: function (req, file, cb) {
         if (path.extname(file.originalname) !== '.pdf') {
-            return cb(new Error('Only pdfs are allowed'));
+            const error = new Error();
+            error.status = 400;
+            error.body = 'Only pdfs are allowed';
+            return cb(error);
         }
 
         cb(null, true);

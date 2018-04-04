@@ -489,8 +489,8 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array containing the list of class offering extra credit
  */
-router.get('get_extra_credit_list', verifyACL(3), (req, res, next) => {
-  let arr = []
+router.get('extra_credit_list', verifyACL(3), (req, res, next) => {
+  let arr = [];
   database.getExtraCreditClassList()
     .on('data', (document) => {
       arr.push(document);

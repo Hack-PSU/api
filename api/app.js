@@ -38,6 +38,7 @@ const app = express();
  * Create HTTP server.
  */
 const server = http.createServer(app);
+<<<<<<< HEAD
 
 /**
  * Socket IO listener
@@ -64,6 +65,11 @@ io.adapter(redisAdapter({
 require('./routes/sockets')(io);
 
 require('express-ws')(app, server);
+||||||| merged common ancestors
+
+const expressws = require('express-ws')(app, server);
+=======
+>>>>>>> dev
 /**
  * Get port from environment and store in Express.
  */
@@ -122,8 +128,18 @@ if (process.env.NODE_ENV !== 'test') {
   // use morgan to log at command line
   app.use(logger('combined')); // 'combined' outputs the Apache style LOGs
 }
+<<<<<<< HEAD
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+||||||| merged common ancestors
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
+=======
+app.use(bodyParser.json({
+  limit: '10mb',
+}));
+app.use(bodyParser.urlencoded({extended: false}));
+>>>>>>> dev
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 

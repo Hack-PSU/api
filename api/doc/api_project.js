@@ -1,1 +1,19 @@
-define({  "name": "HackPSU RESTful Web API",  "version": "0.2.1",  "description": "RESTFul API for all HackPSU connections",  "url": "https://api.hackpsu.org/v1",  "header": {    "title": "HackPSU RESTful Web API",    "file": "header.md"  },  "sampleUrl": false,  "defaultVersion": "0.0.0",  "apidoc": "0.3.0",  "generator": {    "name": "apidoc",    "time": "2018-03-22T01:57:55.336Z",    "url": "http://apidocjs.com",    "version": "0.17.6"  }});
+define({
+  "name": "HackPSU RESTful Web API",
+  "version": "0.2.1",
+  "description": "RESTFul API for all HackPSU connections",
+  "url": "https://api.hackpsu.org/v1",
+  "header": {
+    "title": "HackPSU RESTful Web API",
+    "file": "header.md"
+  },
+  "sampleUrl": false,
+  "defaultVersion": "0.0.0",
+  "apidoc": "0.3.0",
+  "generator": {
+    "name": "apidoc",
+    "time": "2018-04-04T14:20:41.600Z",
+    "url": "http://apidocjs.com",
+    "version": "0.17.6"
+  }
+});

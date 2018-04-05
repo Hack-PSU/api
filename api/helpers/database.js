@@ -25,6 +25,7 @@ function getRegistrations(limit, offset) {
         .offset(mOffset ? mOffset : null)
         .toString()
         .concat(';');
+    squel.str("");
     return connection.query(query).stream();
 }
 
@@ -190,59 +191,40 @@ function getProjectInfo(userID) {
         .join(process.env.NODE_ENV === 'test' ? 'PROJECT_LIST_TEST' : 'PROJECT_LIST')
         .toParam();
     query.text = query.text.concat(';');
-    let projectID=null;
-    let info=Object();
-    connection.query(query).stream()
-        .on('data',(data)=>{
-            if(data !== null){
-                // record found
-                info.found=true;
-                info.projectName=data.projectName;
-                info.tableNumber=data.tableNumber;
-                projectID=data.projectID
-            } else {
-                // no records found
-                info.found=false;
-            }
+    return connection.query(query).stream();
+}
 
-        })
-        .on('err',(err)=>{
 
-        });
-    // get team info
-    let query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-        .from(process.env.NODE_ENV === 'test' ? 'PROJECT_TEAM_TEST' : 'PROJECT_TEAM')
-        .where('projectID = ?', projectID)
-        .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
+/**
+ *
+ * @param data {projectName: string}
+ */
+function storeProjectInfo(data){
+    let query = squel.insert()
+        .into(process.env.NODE_ENV === 'test' ? "PROJECT_LIST": "PROJECT_LIST_TEST")
+        .setFieldsRows([
+            {projectID: uuidv4(), projectName: data.projectName}
+        ])
         .toParam();
-    query.text.concat(';');
-    connection.query(query).stream()
-        .on('data',(data)=>{
-            info.members=[];
-            // for person in data
-            //     info.members.push(person.name OR person.email)
-            // info.category=data.category;
-        })
-        .on('err',(err)=>{
-
+    query.text = query.text.concat(';');
+    return new Promise((resolve) => {
+        connection.query(query.text, query.values, () => {
+            resolve();
         });
-    // return ['found', 'projectName', ['members':['email','name'], 'tableNumber']
+    });
 }
 
-/**
- *
- * @param data {projectName:projectName, categories:{categoryName: 0/1 }, members:[]}
- */
-function updateProjectInfo(data){
-
-}
-
-/**
- *
- * @param data {projectName:projectName, categories:{categoryName: 0/1 }, members:[]}
- */
-function setProjectInfo(data){
-
+function storeProjectMembers(data){
+    let prepped = "function(?)";
+    let list = [];
+    for(let person in data.members){
+        list.append({userID:person, projectID: data.projectID})
+    }
+    let query = squel.insert()
+        .into(process.env.NODE_ENV === 'test' ? "PROJECT_TEAM": "PROJECT_TEAM_TEST")
+        .setFieldsRows(list)
+        .toParam();
+    query.text=query.text.concat(';');
 }
 
 module.exports = {
@@ -254,7 +236,7 @@ module.exports = {
     addRegistration,
     setRegistrationSubmitted,
     storeIP,
+    storeProjectMembers,
     getProjectInfo,
-    updateProjectInfo,
-    setProjectInfo,
+    storeProjectInfo
 };

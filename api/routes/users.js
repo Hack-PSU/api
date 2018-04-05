@@ -99,19 +99,24 @@ router.get('/registration', (req, res, next) => {
  */
 router.get('/project', (req, res, next) => {
    if (res.locals.user) {
-       let uid = authenticator.getUserId(req.email);
-
+       req.uid=authenticator.getUserId(req.email);
+       let info;
        database.getProjectInfo(uid)
            .on('data', (data) => {
-              uid=data;
+              info=data;
            }).on('err', (err) =>{
                const error = new Error();
                error.status=500;
                error.body=err.message;
                next(error);
        }).on('end', () => {
-           res.status(200).send(table);
-       })
+           res.status(200).send(info);
+       });
+   } else {
+       const error = new Error();
+       error.status = 500;
+       error.body = {error: 'Could not retrieve user information'};
+       next(error);
    }
 });
 
@@ -126,51 +131,33 @@ router.get('/project', (req, res, next) => {
  *
  * @apiSuccess {Object} JSON Object with user's project data
  */
-router.get('/project', (req, res, next) => {
+router.post('/project', (req, res, next) => {
+    /*
+    1) insert project
+    2) insert members
+    3) insert project categories
+    4) get project id
+     */
     if (res.locals.user) {
-        // for member in team
-        let uid = authenticator.getUserId(req.email);
-        database.setProjectInfo(req)
-            .on('data', (data) => {
-                uid=data;
-            }).on('err', (err) =>{
-            const error = new Error();
-            error.status=500;
-            error.body=err.message;
-            next(error);
-        }).on('end', () => {
-            res.status(200).send(table);
-        })
+        database.storeProjectInfo(req.locals.projectName)
+            .on('data',(data)=>{
+                database.storeProjectInfo(req.locals.members)
+                    .on('data',(data) =>{
+
+                    })
+            })
+            .on('err', (err) =>{
+                const error = new Error();
+                error.status=500;
+                error.body=err.message;
+                next(error);
+            });
+        database.storeProjectMembers(req.locals.members)
+            .on('err', (err) => {
+
+            });
     }
 });
 
-/**
- * @api {patch} /users/project Update project details
- * @apiVersion 0.2.1
- * @apiName Patch project data
- * @apiGroup Users
- * @apiPermission User
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess null 204 response indicates success
- */
-router.patch('/project', (req, res, next) => {
-    if (res.locals.user) {
-        let uid = authenticator.getUserId(req.email);
-        let table = null;
-        database.updateProjectInfo(req.email)
-            .on('data', (data) => {
-                uid=data;
-            }).on('err', (err) =>{
-            const error = new Error();
-            error.status=500;
-            error.body=err.message;
-            next(error);
-        }).on('end', () => {
-            res.status(204).send(table);
-        })
-    }
-});
 
 module.exports = router;

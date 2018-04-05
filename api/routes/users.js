@@ -10,23 +10,23 @@ const router = express.Router();
  * User authentication middleware
  */
 router.use((req, res, next) => {
-    if (req.headers.idtoken) {
-        authenticator.checkAuthentication(req.headers.idtoken)
-            .then((decodedToken) => {
-                res.locals.user = decodedToken;
-                next();
-            }).catch((err) => {
-            const error = new Error();
-            error.status = 401;
-            error.body = err.message;
-            next(error);
-        });
-    } else {
-        const error = new Error();
-        error.status = 401;
-        error.body = {error: 'ID Token must be provided'};
-        next(error);
-    }
+  if (req.headers.idtoken) {
+    authenticator.checkAuthentication(req.headers.idtoken)
+      .then((decodedToken) => {
+        res.locals.user = decodedToken;
+        next();
+      }).catch((err) => {
+      const error = new Error();
+      error.status = 401;
+      error.body = err.message;
+      next(error);
+    });
+  } else {
+    const error = new Error();
+    error.status = 401;
+    error.body = {error: 'ID Token must be provided'};
+    next(error);
+  }
 });
 
 
@@ -43,14 +43,14 @@ router.use((req, res, next) => {
  * @apiSuccess {Object} JSON Object with user's data
  */
 router.get('/', (req, res, next) => {
-    if (res.locals.user) {
-        res.status(200).send({admin: res.locals.user.admin, privilege: res.locals.user.privilege});
-    } else {
-        const error = new Error();
-        error.status = 500;
-        error.body = {error: 'Could not retrieve user information'};
-        next(error);
-    }
+  if (res.locals.user) {
+    res.status(200).send({admin: res.locals.user.admin, privilege: res.locals.user.privilege});
+  } else {
+    const error = new Error();
+    error.status = 500;
+    error.body = {error: 'Could not retrieve user information'};
+    next(error);
+  }
 });
 
 /**
@@ -65,25 +65,25 @@ router.get('/', (req, res, next) => {
  * @apiSuccess {Object} JSON Object with user's data
  */
 router.get('/registration', (req, res, next) => {
-   if (res.locals.user) {
-       let user = null;
-       database.getRegistration(res.locals.user.uid)
-           .on('data', (data) => {
-               user = data;
-           }).on('err', (err) => {
-           const error = new Error();
-           error.status = 500;
-           error.body = err.message;
-           next(error);
-       }).on('end', () => {
-          res.status(200).send(user);
-       });
-   } else {
-       const error = new Error();
-       error.status = 500;
-       error.body = {error: 'Could not retrieve user information'};
-       next(error);
-   }
+  if (res.locals.user) {
+    let user = null;
+    database.getRegistration(res.locals.user.uid)
+      .on('data', (data) => {
+        user = data;
+      }).on('err', (err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    }).on('end', () => {
+      res.status(200).send(user);
+    });
+  } else {
+    const error = new Error();
+    error.status = 500;
+    error.body = {error: 'Could not retrieve user information'};
+    next(error);
+  }
 });
 
 /**
@@ -98,26 +98,25 @@ router.get('/registration', (req, res, next) => {
  * @apiSuccess {Object} JSON Object with user's table assignment data
  */
 router.get('/project', (req, res, next) => {
-   if (res.locals.user) {
-       req.uid=authenticator.getUserId(req.email);
-       let info;
-       database.getProjectInfo(uid)
-           .on('data', (data) => {
-              info=data;
-           }).on('err', (err) =>{
-               const error = new Error();
-               error.status=500;
-               error.body=err.message;
-               next(error);
-       }).on('end', () => {
-           res.status(200).send(info);
-       });
-   } else {
-       const error = new Error();
-       error.status = 500;
-       error.body = {error: 'Could not retrieve user information'};
-       next(error);
-   }
+  if (res.locals.user) {
+    let info = null;
+    database.getProjectInfo(res.locals.user.uid)
+      .on('data', (data) => {
+        info = data;
+      }).on('err', (err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    }).on('end', () => {
+      res.status(200).send(info);
+    });
+  } else {
+    const error = new Error();
+    error.status = 500;
+    error.body = {error: 'Could not retrieve user information'};
+    next(error);
+  }
 });
 
 /**
@@ -126,37 +125,45 @@ router.get('/project', (req, res, next) => {
  * @apiName Post user project data
  * @apiGroup Users
  * @apiPermission User
+ * // TODO: Add route params with @apiParam
  *
  * @apiUse AuthArgumentRequired
  *
  * @apiSuccess {Object} JSON Object with user's project data
  */
 router.post('/project', (req, res, next) => {
-    /*
-    1) insert project
-    2) insert members
-    3) insert project categories
-    4) get project id
-     */
-    if (res.locals.user) {
-        database.storeProjectInfo(req.locals.projectName)
-            .on('data',(data)=>{
-                database.storeProjectInfo(req.locals.members)
-                    .on('data',(data) =>{
+  /*
+  1) insert project
+  2) insert members
+  3) insert project categories
+  4) get project id
+   */
+  if (res.locals.user) {
+    database.storeProjectInfo(req.body.projectName)// TODO: send all project info at once, unless it is across different tables
+      .then((data) => {
+        // TODO: Deal with the response from the db
+        // This callback is only triggered on a successful db call
+        database.storeProjectMembers(req.body.members)
+          .on('err', (err) => {
 
-                    })
-            })
-            .on('err', (err) =>{
-                const error = new Error();
-                error.status=500;
-                error.body=err.message;
-                next(error);
-            });
-        database.storeProjectMembers(req.locals.members)
-            .on('err', (err) => {
-
-            });
-    }
+          });
+      })
+      .catch((err) => {
+        // TODO: Handle all errors here
+      })
+      // .on('data', (data) => {
+      //   database.storeProjectInfo(req.body.members)
+      //     .on('data', (data) => {
+      //
+      //     })
+      // })
+      // .on('err', (err) => {
+      //   const error = new Error();
+      //   error.status = 500;
+      //   error.body = err.message;
+      //   next(error);
+      // });
+  }
 });
 
 

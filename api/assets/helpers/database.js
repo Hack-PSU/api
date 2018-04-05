@@ -17,6 +17,7 @@ connection.connect((err) => {
 /**
  * @param limit {Number} Limit the number of rows to retrieve
  * @param offset {Number} Offset from start to retrieve at
+ * @param opts
  * @return {Stream} Returns a continuous stream of data from the database
  */
 function getRegistrations(limit, offset, opts) {
@@ -24,9 +25,9 @@ function getRegistrations(limit, offset, opts) {
   const mOffset = parseInt(offset, 10);
   const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
-    .fields(opts && opts.fields || null)
-    .limit(mLimit ? mLimit : null)
-    .offset(mOffset ? mOffset : null)
+    .fields((opts && opts.fields) || null)
+    .limit(mLimit || null)
+    .offset(mOffset || null)
     .toString()
     .concat(';');
   return connection.query(query).stream();
@@ -142,7 +143,7 @@ function addRegistration(data) {
  * @return {Stream} Return all attending hackers
  */
 function getAttendanceList() {
-  let query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from('ATTENDANCE')
     .toString();
   query = query.concat(';');
@@ -156,9 +157,9 @@ function getAttendanceList() {
  */
 function setRSVP(uid, RSVPstatus) {
   const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into(dbname)
-    .setFieldsRows([{user_id: uid, rsvp_time: new Date().getTime(), rsvp_status: RSVPstatus}])
+    .setFieldsRows([{ user_id: uid, rsvp_time: new Date().getTime(), rsvp_status: RSVPstatus }])
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
@@ -181,12 +182,12 @@ function setRSVP(uid, RSVPstatus) {
  */
 function getRSVP(uid) {
   const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
-  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-    .from(dbname, "rsvp")
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from(dbname, 'rsvp')
     .field('r.pin')
     .field('rsvp.*')
-    .where("rsvp.user_id = ?", uid)
-    .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST': 'REGISTRATION', 'r', 'r.uid=rsvp.user_id')
+    .where('rsvp.user_id = ?', uid)
+    .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION', 'r', 'r.uid=rsvp.user_id')
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
@@ -196,8 +197,8 @@ function getRSVP(uid) {
       } else {
         resolve(response[0]);
       }
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -206,9 +207,9 @@ function getRSVP(uid) {
  * @return {Stream} Returns a continuous stream of data of people who RSVP
  */
 function getRSVPList(limit, offset) {
-  const mLimit = parseInt(limit);
-  const mOffset = parseInt(offset);
-  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const mLimit = parseInt(limit, 10);
+  const mOffset = parseInt(offset, 10);
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP', 'rsvp')
     .field('rsvp.*')
     .field('r.firstname')
@@ -219,7 +220,8 @@ function getRSVPList(limit, offset) {
     .limit(mLimit ? limit : null)
     .offset(mOffset ? offset : null)
     .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION', 'r', 'r.uid=rsvp.user_id')
-    .toString().concat(';');
+    .toString()
+    .concat(';');
   return connection.query(query).stream();
 }
 
@@ -228,13 +230,13 @@ function getRSVPList(limit, offset) {
  *
  * @param uid {string} get email associated with the uid
  *
- **/
+ * */
 function getEmail(uid) {
   const dbname = process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION';
-  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(dbname)
     .field('email')
-    .where("uid = ?", uid)
+    .where('uid = ?', uid)
     .toString()
     .concat(';');
   return new Promise((resolve, reject) => {
@@ -244,7 +246,7 @@ function getEmail(uid) {
       } else {
         resolve(response);
       }
-    })
+    });
   });
 }
 
@@ -256,10 +258,10 @@ function getEmail(uid) {
  */
 function addTravelReimbursement(data) {
   return new Promise((resolve, reject) => {
-    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .into(process.env.NODE_ENV === 'test' ? 'TRAVEL_REIMBURSEMENT_TEST' : 'TRAVEL_REIMBURSEMENTS')
       .setFieldsRows([
-        data
+        data,
       ]).toParam();
     query.text = query.text.concat(';');
     connection.query(query.text, query.values, (err, result) => {
@@ -277,7 +279,7 @@ function addTravelReimbursement(data) {
  * @return {Stream} Returns all the locations
  */
 function getAllLocations() {
-  let query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from('LOCATIONS')
     .toString();
   query = query.concat(';');
@@ -290,7 +292,7 @@ function getAllLocations() {
  * @return {Promise<any>}
  */
 function addNewLocation(locationName) {
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into('LOCATIONS')
     .set('location_name', locationName)
     .toParam();
@@ -313,7 +315,7 @@ function addNewLocation(locationName) {
  * @return {Promise<any>}
  */
 function updateLocation(uid, name) {
-  const query = squel.update({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .table('LOCATIONS')
     .set('location_name', name)
     .where('uid = ?', uid)
@@ -336,7 +338,7 @@ function updateLocation(uid, name) {
  * @return {Promise<any>}
  */
 function removeLocation(uid) {
-  const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .table('LOCATIONS')
     .where('uid = ?', uid)
     .toParam();
@@ -348,8 +350,8 @@ function removeLocation(uid) {
       } else {
         resolve();
       }
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -357,7 +359,7 @@ function removeLocation(uid) {
  * @return {Stream} Return the list of all class in the database
  */
 function getExtraCreditClassList() {
-  let query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from('EXTRA_CREDIT_CLASSES')
     .toString();
   query = query.concat(';');
@@ -370,9 +372,9 @@ function getExtraCreditClassList() {
  * @param cid - id of the class
  */
 function assignExtraCredit(uid, cid) {
-  let query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into(process.env.NODE_ENV === 'test' ? 'EXTRA_CREDIT_ASSIGNMENT_TEST' : 'EXTRA_CREDIT_ASSIGNMENT')
-    .setFieldsRows([{class_uid: cid, user_uid: uid}])
+    .setFieldsRows([{ class_uid: cid, user_uid: uid }])
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
@@ -382,8 +384,8 @@ function assignExtraCredit(uid, cid) {
       } else {
         resolve();
       }
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -391,10 +393,10 @@ function assignExtraCredit(uid, cid) {
  * @param msg {String} Message to write
  */
 function writePiMessage(msg) {
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into('PI_TEST')
     .setFieldsRows([
-      {time: new Date().getTime(), message: msg}
+      { time: new Date().getTime(), message: msg },
     ])
     .toParam();
   query.text = query.text.concat(';');
@@ -416,15 +418,15 @@ function writePiMessage(msg) {
  * @return Promise<any> {Promise<any>}
  */
 function storeIP(ipAddress, user_agent) {
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into('REQ_DATA')
     .setFieldsRows([
       {
         idREQ_DATA: uuidv4(),
         req_time: new Date().getTime(),
-        req_ip: ipAddress ? ipAddress : "",
-        req_user_agent: user_agent
-      }
+        req_ip: ipAddress || '',
+        req_user_agent: user_agent,
+      },
     ])
     .toParam();
   query.text = query.text.concat(';');
@@ -442,7 +444,7 @@ function storeIP(ipAddress, user_agent) {
  */
 function addRfidAssignments(rfidAssignments) {
   return new Promise((resolve, reject) => {
-    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .into(process.env.NODE_ENV === 'test' ? 'RFID_ASSIGNMENTS_TEST' : 'RFID_ASSIGNMENTS')
       .setFieldsRows(rfidAssignments)
       .toParam();
@@ -464,7 +466,7 @@ function addRfidAssignments(rfidAssignments) {
  */
 function addRfidScans(rfidScans) {
   return new Promise((resolve, reject) => {
-    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .into(process.env.NODE_ENV === 'test' ? 'SCANS_TEST' : 'SCANS')
       .setFieldsRows(rfidScans)
       .toParam();
@@ -479,11 +481,11 @@ function addRfidScans(rfidScans) {
   });
 }
 
-function clearTestAssignments(){
-	return new Promise((resolve, reject) => {
-    const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+function clearTestAssignments() {
+  return new Promise((resolve, reject) => {
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from('RFID_ASSIGNMENTS_TEST')
-	  .where('rfid_uid is not null')
+      .where('rfid_uid is not null');
     query.text = query.text.concat(';');
     connection.query(query.text, query.values, (err) => {
       if (err) {
@@ -512,7 +514,7 @@ function addEmailsHistory(successes, fails) {
       mSuccesses.push(f);
     });
   }
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into(process.env.NODE_ENV === 'test' ? 'EMAIL_HISTORY_TEST' : 'EMAIL_HISTORY')
     .setFieldsRows(mSuccesses)
     .toParam();
@@ -531,20 +533,20 @@ function addEmailsHistory(successes, fails) {
  * @return {Promise} Returns all the data from the database
  */
 function getCurrentUpdates() {
-    let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(process.env.NODE_ENV === 'test' ? 'LIVE_UPDATES_TEST' : 'LIVE_UPDATES')
     .order('uid')
     .toString();
-    query = query.concat(';');
-    return new Promise((resolve, reject) => {
-                       connection.query(query, (err, data) => {
-                                        if (err) {
-                                        reject(err);
-                                        } else {
-                                        resolve(data);
-                                        }
-                                        });
-                       });
+  query = query.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
 }
 
 /**
@@ -555,30 +557,30 @@ function getCurrentUpdates() {
  * @return {Promise<any>}
  */
 function addNewUpdate(updateText, updateImage, updateTitle) {
-    const insertObj = {
+  const insertObj = {
     uid: new Timeuuid().toString('hex'), update_text: updateText, update_image: updateImage, update_title: updateTitle,
-    };
-    const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+  };
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into(process.env.NODE_ENV === 'test' ? 'LIVE_UPDATES_TEST' : 'LIVE_UPDATES')
     .setFieldsRows([insertObj]).toParam();
-    query.text = query.text.concat(';');
-    return new Promise((resolve, reject) => {
-                       connection.query(query.text, query.values, (err) => {
-                                        if (err) {
-                                        reject(err);
-                                        } else {
-                                        resolve(insertObj);
-                                        }
-                                        });
-                       });
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(insertObj);
+      }
+    });
+  });
 }
 
 /**
  * @return {Promise<EventModel>} Stream of event data
  */
 function getCurrentEvents() {
-    const tblname = process.env.NODE_ENV === 'test' ? 'EVENTS_TEST' : 'EVENTS';
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+  const tblname = process.env.NODE_ENV === 'test' ? 'EVENTS_TEST' : 'EVENTS';
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(tblname, 'e')
     .field('e.*')
     .field('l.location_name')
@@ -586,15 +588,15 @@ function getCurrentEvents() {
     .join('LOCATIONS', 'l', 'event_location=l.uid')
     .toString()
     .concat(';');
-    return new Promise((resolve, reject) => {
-                       connection.query(query, (err, response) => {
-                                        if (err) {
-                                        reject(err);
-                                        } else {
-                                        resolve(response);
-                                        }
-                                        });
-                       });
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response);
+      }
+    });
+  });
 }
 
 /**
@@ -603,22 +605,22 @@ function getCurrentEvents() {
  * @return {Promise<any>}
  */
 function createEvent(event) {
-    const ev = new EventModel(event);
-    const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+  const ev = new EventModel(event);
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into(process.env.NODE_ENV === 'test' ? 'EVENTS_TEST' : 'EVENTS')
     .setFieldsRows([
-                    ev,
-                    ]).toParam();
-    query.text = query.text.concat(';');
-    return new Promise((resolve, reject) => {
-                       connection.query(query.text, query.values, (err) => {
-                                        if (err) {
-                                        reject(err);
-                                        } else {
-                                        resolve();
-                                        }
-                                        });
-                       });
+      ev,
+    ]).toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
 }
 
 /**
@@ -628,24 +630,23 @@ function createEvent(event) {
  * @return {Promise<any>}
  */
 function updateEvent(uid, event) {
-    event.uid = null;
-    const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+  event.uid = null;
+  const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .table(process.env.NODE_ENV === 'test' ? 'EVENTS_TEST' : 'EVENTS')
     .setFields(event)
     .where('uid = ?', uid)
     .toParam();
-    query.text = query.text.concat(';');
-    return new Promise((resolve, reject) => {
-                       connection.query(query, (err, response) => {
-                                        if (err) {
-                                        reject(err);
-                                        } else {
-                                        resolve(response);
-                                        }
-                                        });
-                       });
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response);
+      }
+    });
+  });
 }
-
 
 
 module.exports = {
@@ -677,7 +678,4 @@ module.exports = {
   createEvent,
   updateEvent,
   getCurrentEvents,
-  getAllLocations,
-  addNewLocation,
-  updateLocation,
 };

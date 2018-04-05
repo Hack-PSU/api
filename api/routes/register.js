@@ -23,6 +23,7 @@ aws.config.update({
 });
 
 const s3 = new aws.S3();
+
 /** ****************** HELPER FUNCTIONS ********************** */
 
 /**
@@ -64,13 +65,13 @@ const storage = multers3({
 
 
 const upload = multer({
-    fileFilter: function (req, file, cb) {
-        if (path.extname(file.originalname) !== '.pdf') {
-            const error = new Error();
-            error.status = 400;
-            error.body = 'Only pdfs are allowed';
-            return cb(error);
-        }
+  fileFilter(req, file, cb) {
+    if (path.extname(file.originalname) !== '.pdf') {
+      const error = new Error();
+      error.status = 400;
+      error.body = 'Only pdfs are allowed';
+      return cb(error);
+    }
 
     cb(null, true);
   },
@@ -114,14 +115,9 @@ function checkAuthentication(req, res, next) {
  * @param next
  */
 function storeIP(req, res, next) {
-    if (process.env.NODE_ENV === 'prod') {
-        database.storeIP(req.headers['http_x_forwarded_for'], req.headers['user-agent'])
-            .then(() => {
-                next();
-            }).catch(() => {
-            next();
-        })
-    } else {
+  if (process.env.NODE_ENV === 'prod') {
+    database.storeIP(req.headers.http_x_forwarded_for, req.headers['user-agent'])
+      .then(() => {
         next();
       }).catch(() => {
         next();

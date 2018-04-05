@@ -82,7 +82,7 @@ module.exports.createEmailRequest = function createEmailRequest(email, htmlConte
  * @param notificationBody
  * @return {Promise<any>}
  */
-function sendNotification(notificationTitle, notificationBody) {
+module.exports.sendNotification = function sendNotification(notificationTitle, notificationBody) {
   return new Promise((resolve, reject) => {
     const headers = {
       'Content-Type': 'application/json; charset=utf-8',
@@ -113,7 +113,3 @@ function sendNotification(notificationTitle, notificationBody) {
     });
   });
 }
-
-module.exports = {
-  sendNotification,
-};

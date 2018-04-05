@@ -1,11 +1,12 @@
+/* eslint-disable consistent-return,no-use-before-define,no-param-reassign */
 const express = require('express');
-const functions = require('../assets/helpers/functions');
 const aws = require('aws-sdk');
 const multer = require('multer');
 const multers3 = require('multer-s3');
 const path = require('path');
 const Ajv = require('ajv');
 
+const functions = require('../assets/helpers/functions');
 const authenticator = require('../assets/helpers/auth');
 const database = require('../assets/helpers/database');
 const constants = require('../assets/helpers/constants');
@@ -57,6 +58,56 @@ const upload = multer({
 });
 
 /** *********** HELPER FUNCTIONS ************* */
+
+/**
+ *
+ * @param data
+ */
+function validateReimbursement(data) {
+  const validate = ajv.compile(constants.travelReimbursementSchema);
+  const result = !!validate(data);
+  console.error(validate.errors);
+  return result;
+}
+
+/**
+ *
+ * @param price {Number}
+ * @param groupMembers {String}
+ */
+function adjustReimbursementPrice(price, groupMembers) {
+  if ((groupMembers === '1' || groupMembers === '2') && price > 50) {
+    return 50;
+  } else if (groupMembers === '3' && price > 60) {
+    return 60;
+  } else if (groupMembers === '4+' && price > 70) {
+    return 70;
+  }
+
+  return price;
+}
+
+String.prototype.padStart = String.prototype.padStart ? String.prototype.padStart : function (targetLength, padString) {
+  targetLength = Math.floor(targetLength) || 0;
+  if (targetLength < this.length) return String(this);
+
+  padString = padString ? String(padString) : ' ';
+
+  let pad = '';
+  const len = targetLength - this.length;
+  let i = 0;
+  while (pad.length < len) {
+    if (!padString[i]) {
+      i = 0;
+    }
+    pad += padString[i];
+    i++;
+  }
+
+  return pad + String(this).slice(0);
+};
+
+/** *********** HELPER MIDDLEWARE ***************** */
 /**
  * User authentication middleware
  */
@@ -140,7 +191,7 @@ router.get('/registration', (req, res, next) => {
 
 
 /**
- * @api {post} /users/RSVP confirm the RSVP status for the current user and send a email containing their pin
+ * @api {post} /users/rsvp confirm the RSVP status for the current user and send a email containing their pin
  * @apiVersion 0.1.1
  * @apiName Set RSVP
  *
@@ -170,7 +221,7 @@ router.post('/rsvp', (req, res, next) => {
                 console.error(error);
                 next(error);
               }).on('end', () => {
-                const email = user.email;
+                const { email } = user;
                 const name = user.firstname;
                 const pin = user.pin || 78;
                 functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
@@ -308,54 +359,6 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
     next(error);
   }
 });
-
-/**
- *
- * @param data
- */
-function validateReimbursement(data) {
-  const validate = ajv.compile(constants.travelReimbursementSchema);
-  const result = !!validate(data);
-  console.log(validate.errors);
-  return result;
-}
-
-/**
- *
- * @param price {Number}
- * @param groupMembers {String}
- */
-function adjustReimbursementPrice(price, groupMembers) {
-  if ((groupMembers === '1' || groupMembers === '2') && price > 50) {
-    return 50;
-  } else if (groupMembers === '3' && price > 60) {
-    return 60;
-  } else if (groupMembers === '4+' && price > 70) {
-    return 70;
-  }
-
-  return price;
-}
-
-String.prototype.padStart = String.prototype.padStart ? String.prototype.padStart : function (targetLength, padString) {
-  targetLength = Math.floor(targetLength) || 0;
-  if (targetLength < this.length) return String(this);
-
-  padString = padString ? String(padString) : ' ';
-
-  let pad = '';
-  const len = targetLength - this.length;
-  let i = 0;
-  while (pad.length < len) {
-    if (!padString[i]) {
-      i = 0;
-    }
-    pad += padString[i];
-    i++;
-  }
-
-  return pad + String(this).slice(0);
-};
 
 
 module.exports = router;

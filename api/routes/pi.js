@@ -1,30 +1,30 @@
 const express = require('express');
-const router = express.Router();
-const database = require('../assets/helpers/database');
 const Ajv = require('ajv');
 
-
-const {rediskey, rfidAssignmentSchema, rfidScansSchema} = require('../assets/helpers/constants');
-
-const ajv = new Ajv({allErrors: true});
 const router = express.Router();
-/*************** HELPER FUNCTIONS ***************/
+const database = require('../assets/helpers/database');
 
 
-/*************** HELPER MIDDLEWARE **************/
+const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/helpers/constants');
+
+const ajv = new Ajv({ allErrors: true });
+/** ************* HELPER FUNCTIONS ************** */
+
+
+/** ************* HELPER MIDDLEWARE ************* */
 router.use((req, res, next) => {
   if (req.headers.apikey && req.headers.apikey === rediskey) {
     next();
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = {message: 'Illegal access. Please check the credentials'};
+    error.body = { message: 'Illegal access. Please check the credentials' };
     next(error);
   }
 });
 
 
-/*************** ROUTES *************************/
+/** ************* ROUTES ************************ */
 
 /**
  * @api {get} /pi/registrations Get all the registration data for the pi
@@ -39,8 +39,8 @@ router.use((req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.get('/registrations', (req, res, next) => {
-  let arr = [];
-  database.getRegistrations(null, null, {fields: ['uid', 'pin', 'firstname', 'lastname', 'shirt_size', 'dietary_restriction']})
+  const arr = [];
+  database.getRegistrations(null, null, { fields: ['uid', 'pin', 'firstname', 'lastname', 'shirt_size', 'dietary_restriction'] })
     .on('data', document => arr.push(document))
     .on('err', (err) => {
       const error = new Error();
@@ -81,17 +81,17 @@ router.post('/assignment', (req, res, next) => {
     // LEGAL
     database.addRfidAssignments(req.body.assignments)
       .then(() => {
-        res.status(200).send({message: "success"});
+        res.status(200).send({ message: 'success' });
       }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = {message: 'Assignments must be provided as a valid Json Array'};
+    error.body = { message: 'Assignments must be provided as a valid Json Array' };
     next(error);
   }
 });
@@ -125,17 +125,17 @@ router.post('/scans', (req, res, next) => {
     // LEGAL
     database.addRfidScans(req.body.scans)
       .then(() => {
-        res.status(200).send({message: "success"});
+        res.status(200).send({ message: 'success' });
       }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = {message: 'Assignments must be provided as a valid Json Array'};
+    error.body = { message: 'Assignments must be provided as a valid Json Array' };
     next(error);
   }
 });

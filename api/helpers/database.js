@@ -455,8 +455,6 @@ function getProjectInfo(uid) {
     .toParam();
   query.text = query.text.concat(';');
   return connection.query(query.text, query.values).stream();
-    });
-  });
 }
 
 /**
@@ -624,6 +622,7 @@ module.exports = {
   setRSVP,
   getRSVPList,
   getEmail,
+  clearTestAssignments,
   getExtraCreditClassList,
   assignExtraCredit,
   addRfidAssignments,

@@ -139,14 +139,11 @@ router.post('/project', (req, res, next) => {
   4) get project id
    */
   if (res.locals.user) {
-    database.storeProjectInfo(req.body.projectName)// TODO: send all project info at once, unless it is across different tables
+    database.storeProjectInfo(req.body)
       .then((data) => {
         // TODO: Deal with the response from the db
         // This callback is only triggered on a successful db call
-        database.storeProjectMembers(req.body.members)
-          .on('err', (err) => {
 
-          });
       })
       .catch((err) => {
         // TODO: Handle all errors here

@@ -16,8 +16,6 @@ const app = express();
  * Create HTTP server.
  */
 const server = http.createServer(app);
-
-const expressws = require('express-ws')(app, server);
 /**
  * Get port from environment and store in Express.
  */
@@ -77,7 +75,9 @@ if (process.env.NODE_ENV !== 'test') {
     // use morgan to log at command line
     app.use(logger('combined')); // 'combined' outputs the Apache style LOGs
 }
-app.use(bodyParser.json());
+app.use(bodyParser.json({
+  limit: '10mb',
+}));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));

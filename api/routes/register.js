@@ -46,7 +46,10 @@ const storage = multers3({
 const upload = multer({
     fileFilter: function (req, file, cb) {
         if (path.extname(file.originalname) !== '.pdf') {
-            return cb(new Error('Only pdfs are allowed'));
+            const error = new Error();
+            error.status = 400;
+            error.body = 'Only pdfs are allowed';
+            return cb(error);
         }
 
         cb(null, true);
@@ -54,7 +57,6 @@ const upload = multer({
     storage: storage,
     limits: {fileSize: 1024 * 1024 * 10} //limit to 10MB
 });
-
 
 
 /** **************** HELPER MIDDLEWARE ************************* */
@@ -96,11 +98,11 @@ function checkAuthentication(req, res, next) {
  */
 function storeIP(req, res, next) {
     if (process.env.NODE_ENV === 'prod') {
-        database.storeIP(req.ip, req.headers['user-agent'])
+        database.storeIP(req.headers['http_x_forwarded_for'], req.headers['user-agent'])
             .then(() => {
                 next();
             }).catch(() => {
-                next();
+            next();
         })
     } else {
         next();
@@ -143,6 +145,36 @@ router.post('/pre', (req, res, next) => {
  * @apiVersion 0.1.1
  * @apiName Registration
  * @apiGroup Registration
+ * @apiParam {Object} data:
+ * @apiParamExample {Object} Request-Example: {
+	req.header: {
+		idtoken: <user's idtoken>
+	}
+
+ 	request.body: {
+			firstName: "Matt",
+            lastName: "Stewart",
+            gender: "Male",
+            shirtSize: "L",
+            dietaryRestriction: "Vegetarian",
+            allergies: "Peanuts",
+            travelReimbursement: true,
+            firstHackathon: false,
+            university: "University of hackathon",
+            email: matt@email.com,
+            academicYear: "sophomore",
+            major: "Communication"
+            phone: "1234567890"
+            race: "no-disclose"
+            codingExperience: "advanced"
+            uid: "JH123891JDW98E89J3389",
+            eighteenBeforeEvent: true,
+            mlhCOC: true,
+            mlhDCP: true,
+            referral: "facebook",
+            project: "My project description",
+            resume: https://s3.aws.com/link-to-file
+    }
  * @apiUse AuthArgumentRequired
  * @apiParam {String} firstname First name of the user
  * @apiParam {String} lastname Last name of the user

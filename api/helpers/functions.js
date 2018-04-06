@@ -1,39 +1,59 @@
 /* eslint-disable max-len */
-const request = require('request');
 const constants = require('./constants');
+const ses = require('node-ses');
+const validator = require('email-validator');
 
+const emailKey = require("../helpers/constants").emailKey;
+const client = ses.createClient(emailKey);
 /**
  * This function substitutes the provided
  * @param {String} html A string of HTML text that forms the body of the email. All substitutables must be formatted as $substitutable$. The HTML MUST contain the $NAME$ substitutable.
  * @param {String} name The name of the recipient
  * @param {Object} [substitutions] A map of strings with the following format { keyword-to-substitute: string-to-substitute-with, ... }; Example: { date: "09-23-2000" }
- * @return {String} HTML string with the words properly substituted
+ * @return {Promise} return a promised data with a subbed version of the html
  */
 module.exports.emailSubstitute = function emailSubstitute(html, name, substitutions) {
-  let subHTML = html.replace(/\$name\$/g, name);
-  Object.entries(substitutions).forEach((substitution) => {
-    subHTML = subHTML.replace(new RegExp(`\\$${substitution[0]}\\$`, 'g'), substitution[1]);
-  });
-  return subHTML;
+    return new Promise(function (resolve, reject) {
+        let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
+        for (let key in substitutions) {
+            if (substitutions[key].length > 0 && key.length > 0) {
+                subbedHTML = subbedHTML.replace(new RegExp(`\\$${key}\\$`, 'g'), substitutions[key]);
+            }
+            else {
+                const error = new Error();
+                error.body = {error: 'One or more substitution keyword or substitution-text is empty'};
+                reject(error)
+            }
+        }
+        resolve(subbedHTML)
+    });
 };
 
 /**
  * Makes the POST request to the email server URL
- * @param options Contains the options for the POST request. For schema, refer to function createEmailRequest or the SendInBlue API
+ * @param data Contains the options for the POST request. For schema, refer to function createEmailRequest or the SendInBlue API
  * @return {Promise<any>}
  */
-module.exports.sendEmail = function sendEmail(options) {
-  return new Promise((resolve, reject) => {
-    request(options, (error, response, body) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(response);
-      }
+module.exports.sendEmail = function sendEmail(data) {
+    return new Promise((resolve, reject) => {
+        client.sendEmail(data, function (err) {
+            if (err) {
+                reject(err);
+            }
+            else resolve(true);
+        });
     });
-  });
 };
 
+
+/*`from` - email address from which to send (required)
+`subject` - string (required). Must be encoded as UTF-8
+`message` - can be html (required). Must be encoded as UTF-8.
+`altText` - plain text version of message. Must be encoded as UTF-8.
+`to` - email address or array of addresses
+`cc` - email address or array of addresses
+`bcc` - email address or array of addresses
+`replyTo` - email address
 /**
  * This generates the proper email send POST request format
  * @param {String} email The email ID to send the email to
@@ -42,28 +62,16 @@ module.exports.sendEmail = function sendEmail(options) {
  * @param {String} name The name of the recipient
  * @return {Object} { data, options }
  */
-module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject, name) {
-  const data = {
-    to: [{ email, name }],
-    sender: {
-      email: 'team@hackpsu.org',
-      name: 'HackPSU Team',
-    },
-    subject,
-    htmlContent,
-    replyTo: { email: 'team@hackpsu.org' },
-  };
-  const options = {
-    method: 'POST',
-    url: constants.emailServerUrl,
-    body: data,
-    headers: {
-      'api-key': process.env.SENDINBLUE_API_KEY,
-    },
-    json: true,
-  };
-  return {
-    data,
-    options,
-  };
+module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject, fromEmail) {
+    let emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
+    const data = {
+        to: email,
+        from: emailAddress,
+        subject: subject,
+        message: htmlContent,
+        replyTo: emailAddress
+    };
+    return {
+        data,
+    };
 };

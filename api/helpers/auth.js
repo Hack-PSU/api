@@ -28,9 +28,19 @@ function getUserId(email){
 	return admin.auth().getUserByEmail(email);
 }
 
+/**
+ *
+ * @param uid
+ * @return {Promise<admin.auth.UserRecord>}
+ */
+function getUserData(uid) {
+    return admin.auth().getUser(uid);
+}
+
 
 module.exports = {
     checkAuthentication,
     elevate,
     getUserId,
+  getUserData,
 };

@@ -110,43 +110,17 @@ module.exports = (io) => {
         .then((decodedToken) => {
           if (decodedToken.admin && parseInt(decodedToken.privilege, 10) >= 2) {
             const mUpdate = new UpdateModel(update);
-            if (mUpdate.title && mUpdate.image && mUpdate.image.type && mUpdate.image.type.match(/image\/.*/g)) {
-              const listener = (image) => {
-                socket.removeListener('image', listener);
-                // S3 Parameters
-                const params = {
-                  ACL: 'public-read',
-                  Body: parseFile(image),
-                  Key: mUpdate.image.name,
-                  Bucket: 'live-updates-s2018',
-                  ServerSideEncryption: 'AES256',
-                };
-
-                // S3 concurrency
-                const uploadRequest = s3.upload(params, {
-                  partSize: 10 * 1024 * 1024, queueSize: 4,
-                }, (err, data) => {
-                  if (err) {
-                    console.error(err);
-                    updates.emit('upload-error', err);
-                  } else {
-                    // Add to the database
-                    database.addNewUpdate(mUpdate.message, data.Location, mUpdate.title)
-                      .then((result) => {
-                        if (update.push_notification) {
-                          sendNotification(update.title, update.message)
-                            .catch(err1 => console.error(err1));
-                        }
-                        socket.emit('upload-complete', 'Complete');
-                        updates.emit('update', [result]);
-                      }).catch(errUpload => updates.emit('upload-error', errUpload));
+            if (mUpdate.title) {
+              // Add to the database
+              database.addNewUpdate(mUpdate.message, '', mUpdate.title)
+                .then((result) => {
+                  if (update.push_notification) {
+                    sendNotification(update.title, update.message)
+                      .catch(err1 => console.error(err1));
                   }
-                });
-                uploadRequest.on('httpUploadProgress', (progress) => {
-                  socket.emit('upload-progress', { uploaded: progress.loaded, total: progress.total });
-                });
-              };
-              socket.on('image', listener);
+                  socket.emit('upload-complete', 'Complete');
+                  updates.emit('update', [result]);
+                }).catch(errUpload => updates.emit('upload-error', errUpload));
             } else {
               socket.emit('upload-error', new Error('Title and image file must be provided'));
             }

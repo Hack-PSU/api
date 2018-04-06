@@ -193,7 +193,7 @@ module.exports = (io) => {
      *
      * @apiParam {string} event_location UID of the location that the event takes place at
      * @apiParam {number} event_start_time The epoch start time of the event
-     * @apiParam {number} event_end The epoch end time of the event
+     * @apiParam {number} event_end_time The epoch end time of the event
      * @apiParam {string} event_title Title of the event
      * @apiParam {string} event_description Description of the event
      * @apiParam {enum} event_type The type of event. Possible types are: 'food', 'workshop', 'activity'
@@ -208,7 +208,10 @@ module.exports = (io) => {
           if (decodedToken.admin && parseInt(decodedToken.privilege, 10) >= 2) {
             const event = new EventModel(message);
             database.createEvent(event)
-              .then(() => events.emit('event', event))
+              .then((response) => {
+                events.emit('event', Object.assign(event, response));
+                events.emit('event-updated', Object.assign(event, response));
+              })
               .catch(err => socket.emit('error', err));
           } else {
             events.emit('error', new Error('Insufficient permissions'));

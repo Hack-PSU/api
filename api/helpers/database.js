@@ -177,6 +177,27 @@ function storeIP(ipAddress, user_agent) {
     });
 }
 
+function storeProjectInfo(data){
+    let team = data.members.join(",");
+    let category = data.categories.join(",");
+    const query = "call assignTeam(?, ?, ?);\n";
+    connection.query(query,[data.projectName, team, category])
+        .on('data',(data)=>{
+            let table_query ="call assignTable(?,?,?)";
+            connection.query(query, [data, Math.min(data.categories)]);
+        })
+        .on('err',(err)=>{
+
+        });
+        // Project Name, tam, category
+
+        // projectID, categoryID
+    return new Promise((resolve) => {
+        connection.query(query.text, query.values, () => {
+            resolve();
+        });
+    });
+}
 /**
  * @param uid
  *
@@ -189,57 +210,82 @@ function getProjectInfo(uid) {
         .from(process.env.NODE_ENV === 'test' ? 'PROJECT_TEAM_TEST' : 'PROJECT_TEAM', 'pt')
         .where('userID = ?', uid)
         .join(process.env.NODE_ENV === 'test' ? 'PROJECT_LIST_TEST' : 'PROJECT_LIST', 'pl', 'pt.projectID=pl.projectID')
-        .toParam();
-    query.text = query.text.concat(';');
-    return connection.query(query).stream();
-}
 
-
-/**
- *
- * @param data {string}
- */
-function storeProjectInfo(data){
-    const query = squel.insert()
-        .into(process.env.NODE_ENV === 'test' ? "PROJECT_LIST": "PROJECT_LIST_TEST")
-        .setFieldsRows([
-            {projectID: uuidv4(), projectName: data.projectName} // TODO: Add other fields if they exist
-        ])
         .toParam();
-    query.text = query.text.concat(';');
-    return new Promise((resolve) => {
-        connection.query(query.text, query.values, (err) => {
-            if (err) {
-                reject(err);
-            } else {
-              resolve(data);
-            }
+    query_project.text=query_project.test.concat(';');
+    connection.query(query_project)
+        .on('data',(data)=>{
+            let query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+                .from(process.env.NODE_ENV === 'test' ? 'PROJECT_LIST_TEST' : 'PROJECT_LIST', "pl")
+                .where('projectID = ?', data)
+                .join(process.env.NODE_ENV === 'test' ? 'TABLE_ASSIGNMENTS_TEST' : 'TABLE_ASSIGNMENTS','ta','ta.projectID = pl.projectID')
+                .join('CATEGORY_LIST', 'cl', 'cl.categoryID = ')
+                .toParam();
+            query.text = query.text.concat(';');
+            return connection.query(query).stream();
+        })
+        .on('err',(err)=>{
+            reject(err);
         });
-    });
 }
-
-function storeProjectMembers(data){
-    let prepped = "function(?)"; // TODO: Update this
-    let list = [];
-    for(let person in data.members){ // TODO: For in loops dont work well on arrays. Either use a for (let i = 0; i < ...; i++) or more recommended
-                                    // use the data.members.forEach((data) => {//do stuff here}) loop mechanism
-        list.append({userID:person, projectID: data.projectID}) // TODO: Where is `person` coming from? dereference from data?
-    }
-    const query = squel.insert()
-        .into(process.env.NODE_ENV === 'test' ? "PROJECT_TEAM": "PROJECT_TEAM_TEST")
-        .setFieldsRows(list)
-        .toParam();
-    query.text = query.text.concat(';');
-    return new Promise((resolve, reject) => {
-       connection.query(query.text, query.values, (err, response) => {
-           if (err) {
-               reject(err);
-           } else {
-               resolve(response); // TODO decide what to return
-           }
-       })
-    });
-}
+//
+// function storeProjectMembers(data){
+//     let prepped = "call assignTeam(@projectName, @teamMemberList, @categoriesList, @projectID_out)"; // TODO: Update this
+//     let list = [];
+//     data.members.forEach(function(member){
+//         list.append({projectID: data.projectID, userID: member})
+//     });
+//
+//     return new Promise((resolve, reject) => {
+//        connection.query(prepped, list, (err, response) => {
+//            if (err) {
+//                reject(err);
+//            } else {
+//                resolve(response); // TODO decide what to return
+//            }
+//        });
+//     });
+// }
+//
+// function storeProjectCategories(data){
+//     let list = [];
+//     data.category.forEach(function(category){
+//         list.push({projectID: data.projectID, categoryID: category})
+//     });
+//     let query = squel.insert()
+//         .into(process.env.NODE_ENV === 'test' ? "PROJECT_CATEGORIES_TEST": "PROJECT_CATEGORIES")
+//         .setFieldsRows(list)
+//         .toParam();
+//     query.text = query.text.concat(';');
+//     return new Promise((resolve) => {
+//         connection.query(query.text, query.values, () => {
+//             resolve();
+//         });
+//     });
+// }
+//
+// function storeProjectMembers(data){
+//     let prepped = "function(?)"; // TODO: Update this
+//     let list = [];
+//     for(let person in data.members){ // TODO: For in loops dont work well on arrays. Either use a for (let i = 0; i < ...; i++) or more recommended
+//                                     // use the data.members.forEach((data) => {//do stuff here}) loop mechanism
+//         list.append({userID:person, projectID: data.projectID}) // TODO: Where is `person` coming from? dereference from data?
+//     }
+//     const query = squel.insert()
+//         .into(process.env.NODE_ENV === 'test' ? "PROJECT_TEAM": "PROJECT_TEAM_TEST")
+//         .setFieldsRows(list)
+//         .toParam();
+//     query.text = query.text.concat(';');
+//     return new Promise((resolve, reject) => {
+//        connection.query(query.text, query.values, (err, response) => {
+//            if (err) {
+//                reject(err);
+//            } else {
+//                resolve(response); // TODO decide what to return
+//            }
+//        })
+//     });
+// }
 
 module.exports = {
     getRegistrations,
@@ -250,7 +296,9 @@ module.exports = {
     addRegistration,
     setRegistrationSubmitted,
     storeIP,
-    storeProjectMembers,
+    // storeProjectMembers,
     getProjectInfo,
-    storeProjectInfo
+    // storeProjectCategories,
+    storeProjectInfo,
+    // getCategoryInfo
 };

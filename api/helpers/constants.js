@@ -23,6 +23,7 @@ module.exports = {
         user: process.env.RDS_USERNAME || 'user',
         password: process.env.RDS_PASSWORD || 'secret',
         database: process.env.RDS_DATABASE || 'my_db',
+      multipleStatements: true,
         // ssl: "Amazon RDS",
         typeCast: function castField(field, useDefaultTypeCasting) {
 
@@ -151,14 +152,14 @@ module.exports = {
                 type: "array",
                 items: {
                     type: "string",
-                    pattern: "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
+                  format: 'email',
                 },
                 uniqueItems: true,
                 minItems: 1,
                 maxItems: 5,
             },
             categories: {
-                type: 'object',
+                type: 'array',
                 uniqueItems: true
                 // validation handled at runtime
             }

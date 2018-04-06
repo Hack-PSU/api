@@ -32,15 +32,15 @@ router.use((req, res, next) => {
         } else {
           const error = new Error();
           error.status = 401;
-          error.body = {error: 'You do not have sufficient permissions for this operation'};
+          error.body = { error: 'You do not have sufficient permissions for this operation' };
           next(error);
         }
       }).catch((err) => {
-      const error = new Error();
-      error.status = 401;
-      error.body = err.message;
-      next(error);
-    });
+        const error = new Error();
+        error.status = 401;
+        error.body = err.message;
+        next(error);
+      });
   } else {
     const error = new Error();
     error.status = 401;
@@ -161,19 +161,16 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
         error.body = err.message;
         next(error);
       }).on('end', () => {
-            Promise.all(arr.map((value) => {
-                                return new Promise((resolve, reject) => {
-                                                   authenticator.getUserData(value.uid)
-                                                   .then((user) => {
-                                                         value.sign_up_time = new Date(user.metadata.creationTime).getTime();
-                                                         resolve(value);
-                                                         }).catch(err => reject(err));
-                                                   })
-                                })).then(result => res.status(200).send(result))
-            .catch((err) => {
-                   res.status(207).send(arr);
-                   });
-
+        Promise.all(arr.map(value => new Promise((resolve, reject) => {
+          authenticator.getUserData(value.uid)
+            .then((user) => {
+              value.sign_up_time = new Date(user.metadata.creationTime).getTime();
+              resolve(value);
+            }).catch(err => reject(err));
+        }))).then(result => res.status(200).send(result))
+          .catch((err) => {
+            res.status(207).send(arr);
+          });
       });
   } else {
     const error = new Error();
@@ -258,7 +255,7 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
       err.status = error.status || 500;
       err.body = error.message;
       next(err);
-    })
+    });
   }
 });
 
@@ -277,25 +274,25 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array of hackers who RSVP
  */
 router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
-    if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
-        let arr = [];
-        database.getRSVPList(parseInt(req.query.limit),parseInt(req.query.offset))
-            .on('data', (document) => {
-                arr.push(document);
-            }).on('err', (err) => {
-                const error = new Error();
-                error.status = 500;
-                error.body = err.message;
-                next(error);
-            }).on('end', () => {
-                res.status(200).send(arr);
-            })
-    } else {
+  if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
+    const arr = [];
+    database.getRSVPList(parseInt(req.query.limit), parseInt(req.query.offset))
+      .on('data', (document) => {
+        arr.push(document);
+      }).on('err', (err) => {
         const error = new Error();
-        error.status = 400;
-        error.body = {"message": "Limit or offset must be an integer"};
+        error.status = 500;
+        error.body = err.message;
         next(error);
-    }
+      }).on('end', () => {
+        res.status(200).send(arr);
+      });
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = { message: 'Limit or offset must be an integer' };
+    next(error);
+  }
 });
 
 /**
@@ -304,23 +301,23 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
  * @apiName Retrieve Attendance List
  * @apiGroup Admin
  * @apiPermission Exec
- * 
+ *
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array of hackers who attended
  */
 router.get('/attendance_list', verifyACL(3), (req, res, next) => {
-  let arr = [];
+  const arr = [];
   database.getAttendanceList()
-  .on('data', (document) => {
-    arr.push(document);
-  }).on('err', (err) => {
-    const error = new Error();
-    error.status = 500;
-    error.body = err.message;
-    next(error);
-  }).on('end', () => {
-    res.status(200).send(arr);
-  });
+    .on('data', (document) => {
+      arr.push(document);
+    }).on('err', (err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    }).on('end', () => {
+      res.status(200).send(arr);
+    });
 });
 
 
@@ -377,7 +374,7 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array containing all locations in the database
  */
 router.get('/location_list', verifyACL(3), (req, res, next) => {
-  let arr = [];
+  const arr = [];
   database.getAllLocations().on('data', (document) => {
     arr.push(document);
   }).on('err', (err) => {
@@ -415,7 +412,7 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = "Require a name for the location";
+    error.body = 'Require a name for the location';
     next(error);
   }
 });
@@ -444,15 +441,15 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
       .then(() => {
         res.status(200).send('Success');
       }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = "Require the uid and/or name for the location";
+    error.body = 'Require the uid and/or name for the location';
     next(error);
   }
 });
@@ -475,20 +472,20 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = "Require the uid for the location";
+    error.body = 'Require the uid for the location';
     next(error);
   }
 });
 
-/** 
+/**
  * @api {get} /admin/extra_credit_list Retrieve the list of class that are providing extra credit
  * @apiName Get Extra Credit Class List
  * @apiVersion 0.3.2
@@ -500,7 +497,7 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array containing the list of class offering extra credit
  */
 router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
-  let arr = [];
+  const arr = [];
   database.getExtraCreditClassList()
     .on('data', (document) => {
       arr.push(document);
@@ -520,9 +517,9 @@ router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
  * @apiVersion 0.3.2
  * @apiGroup Admin
  * @apiPermission Exec
- * 
+ *
  * @apiParam {String} uid - the id associated with the student
- * @apiParam {String} cid - the id associated with the class 
+ * @apiParam {String} cid - the id associated with the class
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
@@ -531,18 +528,17 @@ router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.uid && req.body.cid && parseInt(req.body.cid)) {
     database.assignExtraCredit(req.body.uid, req.body.cid)
       .then(() => {
-        res.status(200).send({ status: 'Success'});
+        res.status(200).send({ status: 'Success' });
       }).catch((err) => {
         const error = new Error();
         error.status = 500;
         error.body = err.message;
         next(error);
       });
-  }
-  else{
+  } else {
     const error = new Error();
     error.status = 400;
-    error.body = "Need a proper id for the class or the hacker (int)";
+    error.body = 'Need a proper id for the class or the hacker (int)';
     next(error);
   }
 });
@@ -594,11 +590,11 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
             const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject, req.body.fromEmail); // Generate the POST request
             functions.sendEmail(request.data)
               .then(() => {
-                resolve({ email: request.data.to, response: 'success', name: emailObject.name}); // If successful, resolve
+                resolve({ email: request.data.to, response: 'success', name: emailObject.name }); // If successful, resolve
               }).catch((error) => {
-              res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
-              resolve(null);
-            });
+                res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
+                resolve(null);
+              });
           }).catch((error) => {
             res.locals.failArray.push(Object.assign(emailObject, error)); // if email substitution fails, add to fail array for partial HTTP success response
             resolve(null);
@@ -615,31 +611,25 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
             error: res.locals.failArray,
           };
           next(error);
+        } else if (res.locals.failArray.length > 0) {
+          database.addEmailsHistory(resolves.map(resolution => ({
+            sender: res.locals.user.uid,
+            recipient: resolution.email,
+            email_content: req.body.html,
+            subject: req.body.subject,
+            recipient_name: resolution.name,
+            time: new Date().getTime(),
+          })), res.locals.failArray ? res.locals.failArray.map(errorEmail => ({
+            sender: res.locals.user.uid,
+            recipient: errorEmail.email || null,
+            email_content: req.body.html || null,
+            subject: req.body.subject || null,
+            recipient_name: errorEmail.name || null,
+            time: new Date().getTime(),
+          })) : null).catch(err => console.error(err));
+          res.status(207).send(res.locals.failArray.concat(resolves)); // Partial success response
         } else {
-          if (res.locals.failArray.length > 0) {
-            database.addEmailsHistory(resolves.map((resolution) => {
-              return {
-                sender: res.locals.user.uid,
-                recipient: resolution.email,
-                email_content: req.body.html,
-                subject: req.body.subject,
-                recipient_name: resolution.name,
-                time: new Date().getTime(),
-              }
-            }), res.locals.failArray ? res.locals.failArray.map((errorEmail) => {
-              return {
-                sender: res.locals.user.uid,
-                recipient: errorEmail.email || null,
-                email_content: req.body.html || null,
-                subject: req.body.subject || null,
-                recipient_name: errorEmail.name || null,
-                time: new Date().getTime(),
-              }
-            }) : null).catch(err => console.error(err));
-            res.status(207).send(res.locals.failArray.concat(resolves)); // Partial success response
-          } else {
-            res.status(200).send(resolves); // Full success response
-          }
+          res.status(200).send(resolves); // Full success response
         }
       }).catch(err => console.error(err));
     } else {

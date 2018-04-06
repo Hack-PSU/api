@@ -612,12 +612,14 @@ function createEvent(event) {
       ev,
     ]).toParam();
   query.text = query.text.concat(';');
+  query.text.concat('SELECT location_name FROM LOCATIONS WHERE uid=?;');
+  query.values.push(ev.event_location);
   return new Promise((resolve, reject) => {
-    connection.query(query.text, query.values, (err) => {
+    connection.query(query.text, query.values, (err, response) => {
       if (err) {
         reject(err);
       } else {
-        resolve();
+        resolve(response[0]);
       }
     });
   });
@@ -646,6 +648,18 @@ function updateEvent(uid, event) {
       }
     });
   });
+}
+
+/**
+ * @return {Promise<EventModel>} Stream of categories data
+ */
+function getCategoryInfo() {
+  const query = squel.select()
+    .from('CATEGORY_LIST')
+    .toParam();
+  query.text = query.text.concat(';');
+
+  return connection.query(query).stream();
 }
 
 
@@ -678,4 +692,5 @@ module.exports = {
   createEvent,
   updateEvent,
   getCurrentEvents,
+  getCategoryInfo,
 };

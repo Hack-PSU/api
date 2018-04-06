@@ -360,5 +360,32 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
   }
 });
 
+/**
+ * @api {get} /user/event_categories Get all the event categories
+ * @apiName Get Event Categories
+ * @apiVersion 0.3.2
+ * @apiGroup User
+ * @apiPermission Authenticated
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Categories
+ */
+router.get('/event_categories', (req, res, next) => {
+  const r = [];
+  database.getCategoryInfo()
+    .on('data', (data) => {
+      r.push(data);
+    })
+    .on('err', () => {
+      const error = new Error();
+      error.status = 500;
+      error.body = { error: 'Could not retrieve category information' };
+      next(error);
+    })
+    .on('end', () => {
+      res.status(200).send(r);
+    });
+});
+
 
 module.exports = router;

@@ -731,10 +731,10 @@ function updateEvent(uid, event) {
  * @return {Promise<EventModel>} Stream of categories data
  */
 function getCategoryInfo() {
-  const query = squel.select()
+  let query = squel.select()
     .from('CATEGORY_LIST')
-    .toParam();
-  query.text = query.text.concat(';');
+    .toString();
+  query = query.concat(';');
 
   return connection.query(query).stream();
 }

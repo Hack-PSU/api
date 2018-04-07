@@ -346,7 +346,7 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
     } else {
       authenticator.elevate(req.body.uid, privilege)
         .then(() => {
-          res.status(200).send('Success');
+          res.status(200).send({ status: 'Success' });
         })
         .catch((err) => {
           const error = new Error();
@@ -439,7 +439,7 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
     (req.body.uid.length > 0)) {
     database.updateLocation(req.body.uid, req.body.name)
       .then(() => {
-        res.status(200).send('Success');
+        res.status(200).send({ status: 'Success' });
       }).catch((err) => {
         const error = new Error();
         error.status = 500;

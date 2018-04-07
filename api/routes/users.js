@@ -1,21 +1,22 @@
+/* eslint-disable consistent-return,no-use-before-define,no-param-reassign */
 const express = require('express');
-const functions = require("../helpers/functions");
 const aws = require('aws-sdk');
 const multer = require('multer');
 const multers3 = require('multer-s3');
 const path = require('path');
 const Ajv = require('ajv');
 
-const authenticator = require("../helpers/auth");
-const database = require('../helpers/database');
-const {projectRegistrationSchema} = require('../helpers/constants');
-const constants = require('../helpers/constants');
-const TravelReimbursementModel = require('../helpers/TravelReimbursementModel');
+const functions = require('../assets/helpers/functions');
+const authenticator = require('../assets/helpers/auth');
+const database = require('../assets/helpers/database');
+const constants = require('../assets/helpers/constants');
+const TravelReimbursementModel = require('../assets/models/TravelReimbursementModel');
+const {projectRegistrationSchema} = require('../assets/helpers/constants');
 
 const router = express.Router();
 
 
-const ajv = new Ajv({allErrors: true});
+const ajv = new Ajv({ allErrors: true });
 
 
 aws.config.update({
@@ -28,33 +29,33 @@ aws.config.update({
 const s3 = new aws.S3();
 
 const storage = multers3({
-  s3: s3,
+  s3,
   bucket: constants.s3Connection.s3TravelReimbursementBucket,
   acl: 'public-read',
   serverSideEncryption: 'AES256',
-  metadata: function (req, file, cb) {
+  metadata(req, file, cb) {
     cb(null, {
       fieldName: file.fieldname,
     });
   },
-  key: function (req, file, cb) {
+  key(req, file, cb) {
     cb(null, generateFileName(req.body.fullName, file));
-  }
+  },
 });
 
 function generateFileName(fullName, file) {
-  return fullName + "-receipt-" + file.originalname;
+  return `${fullName}-receipt-${file.originalname}`;
 }
 
 const upload = multer({
-  fileFilter: function (req, file, cb) {
+  fileFilter(req, file, cb) {
     if (path.extname(file.originalname) !== '.jpeg' && path.extname(file.originalname) !== '.png' && path.extname(file.originalname) !== '.jpg') {
       return cb(new Error('Only jpeg, jpg, and png are allowed'));
     }
     cb(null, true);
   },
-  storage: storage,
-  limits: {fileSize: 1024 * 1024 * 5} //limit to 5MB
+  storage,
+  limits: { fileSize: 1024 * 1024 * 5 }, // limit to 5MB
 });
 
 /************* HELPER FUNCTIONS **************/
@@ -69,6 +70,55 @@ function validateProjectRegistration(project) {
 }
 
 /**
+ *
+ * @param data
+ */
+function validateReimbursement(data) {
+  const validate = ajv.compile(constants.travelReimbursementSchema);
+  const result = !!validate(data);
+  console.error(validate.errors);
+  return result;
+}
+
+/**
+ *
+ * @param price {Number}
+ * @param groupMembers {String}
+ */
+function adjustReimbursementPrice(price, groupMembers) {
+  if ((groupMembers === '1' || groupMembers === '2') && price > 50) {
+    return 50;
+  } else if (groupMembers === '3' && price > 60) {
+    return 60;
+  } else if (groupMembers === '4+' && price > 70) {
+    return 70;
+  }
+
+  return price;
+}
+
+String.prototype.padStart = String.prototype.padStart ? String.prototype.padStart : function (targetLength, padString) {
+  targetLength = Math.floor(targetLength) || 0;
+  if (targetLength < this.length) return String(this);
+
+  padString = padString ? String(padString) : ' ';
+
+  let pad = '';
+  const len = targetLength - this.length;
+  let i = 0;
+  while (pad.length < len) {
+    if (!padString[i]) {
+      i = 0;
+    }
+    pad += padString[i];
+    i++;
+  }
+
+  return pad + String(this).slice(0);
+};
+
+/** *********** HELPER MIDDLEWARE ***************** */
+/**
  * User authentication middleware
  */
 router.use((req, res, next) => {
@@ -79,21 +129,21 @@ router.use((req, res, next) => {
         res.locals.uid = decodedToken.uid;
         next();
       }).catch((err) => {
-      const error = new Error();
-      error.status = 401;
-      error.body = err.message;
-      next(error);
-    });
+        const error = new Error();
+        error.status = 401;
+        error.body = err.message;
+        next(error);
+      });
   } else {
     const error = new Error();
     error.status = 401;
-    error.body = {error: 'ID Token must be provided'};
+    error.body = { error: 'ID Token must be provided' };
     next(error);
   }
 });
 
 
-/************* ROUTING MIDDLEWARE ************/
+/** *********** ROUTING MIDDLEWARE *********** */
 /**
  * @api {get} /users Get the privilege information for the current user
  * @apiVersion 0.1.2
@@ -107,11 +157,11 @@ router.use((req, res, next) => {
  */
 router.get('/', (req, res, next) => {
   if (res.locals.user) {
-    res.status(200).send({admin: res.locals.user.admin, privilege: res.locals.user.privilege});
+    res.status(200).send({ admin: res.locals.user.admin, privilege: res.locals.user.privilege });
   } else {
     const error = new Error();
     error.status = 500;
-    error.body = {error: 'Could not retrieve user information'};
+    error.body = { error: 'Could not retrieve user information' };
     next(error);
   }
 });
@@ -134,17 +184,17 @@ router.get('/registration', (req, res, next) => {
       .on('data', (data) => {
         user = data;
       }).on('err', (err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    }).on('end', () => {
-      res.status(200).send(user);
-    });
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      }).on('end', () => {
+        res.status(200).send(user);
+      });
   } else {
     const error = new Error();
     error.status = 500;
-    error.body = {error: 'Could not retrieve user information'};
+    error.body = { error: 'Could not retrieve user information' };
     next(error);
   }
 });
@@ -199,7 +249,7 @@ router.get('/project', (req, res, next) => {
   }
 });
 /**
- * @api {post} /users/RSVP confirm the RSVP status for the current user and send a email containing their pin
+ * @api {post} /users/rsvp confirm the RSVP status for the current user and send a email containing their pin
  * @apiVersion 0.1.1
  * @apiName Set RSVP
  *
@@ -223,63 +273,63 @@ router.post('/rsvp', (req, res, next) => {
               .on('data', (data) => {
                 user = data;
               }).on('err', (err) => { // Database registration retrieval
-              const error = new Error();
-              error.status = 500;
-              error.body = err.message;
-              console.error(error);
-              next(error);
-            }).on('end', () => {
-              let email = user.email;
-              let name = user.firstname;
-              let pin = user.pin || 78;
-              functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
-                name: name,
-                pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
-              })
-                .then((subbedHTML) => {
-                  const request = functions.createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, "");
-                  functions.sendEmail(request.data)
-                    .then(() => {
-                      res.status(200).send({message: 'success', pin: parseInt(pin, 10).toString(14).padStart(3, '0')});
-                      // resolve({'email': request.data.to, 'html': request.data.htmlContent, 'response': 'success'});
-                    })
-                    .catch((err) => { // Send Email error
-                      const error = new Error();
-                      error.status = 500;
-                      error.body = err.message;
-                      console.error(error);
-                      next(error);
-                    });
-                }).catch((err) => { // Email Substitute error
                 const error = new Error();
                 error.status = 500;
                 error.body = err.message;
                 console.error(error);
                 next(error);
+              }).on('end', () => {
+                const { email } = user;
+                const name = user.firstname;
+                const pin = user.pin || 78;
+                functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
+                  name,
+                  pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
+                })
+                  .then((subbedHTML) => {
+                    const request = functions.createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, '');
+                    functions.sendEmail(request.data)
+                      .then(() => {
+                        res.status(200).send({ message: 'success', pin: parseInt(pin, 10).toString(14).padStart(3, '0') });
+                      // resolve({'email': request.data.to, 'html': request.data.htmlContent, 'response': 'success'});
+                      })
+                      .catch((err) => { // Send Email error
+                        const error = new Error();
+                        error.status = 500;
+                        error.body = err.message;
+                        console.error(error);
+                        next(error);
+                      });
+                  }).catch((err) => { // Email Substitute error
+                    const error = new Error();
+                    error.status = 500;
+                    error.body = err.message;
+                    console.error(error);
+                    next(error);
+                  });
               });
-            })
           } // End if
           else {
-            res.status(200).send({message: 'success'});
+            res.status(200).send({ message: 'success' });
           }
         }).catch((err) => { // Set RSVP error
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        console.error(error);
-        next(error);
-      });
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          console.error(error);
+          next(error);
+        });
     } else {
       const error = new Error();
       error.status = 400;
-      error.body = {error: 'Could not identify user'};
+      error.body = { error: 'Could not identify user' };
       console.error(error);
       next(error);
     }
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = {error: 'RSVP value must be included'};
+    error.body = { error: 'RSVP value must be included' };
     next(error);
   }
 });
@@ -301,17 +351,17 @@ router.get('/rsvp', (req, res, next) => {
   if (res.locals.user) {
     database.getRSVP(res.locals.user.uid)
       .then((RSVP_status) => {
-        res.status(200).send(RSVP_status || {rsvp_status: false});
+        res.status(200).send(RSVP_status || { rsvp_status: false });
       }).catch((err) => {
-      const error = new Error();
-      error.status = err.status || 500;
-      error.body = error.message;
-      next(error);
-    })
+        const error = new Error();
+        error.status = err.status || 500;
+        error.body = error.message;
+        next(error);
+      });
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = {error: 'Could not identify user'};
+    error.body = { error: 'Could not identify user' };
     next(error);
   }
 });
@@ -337,35 +387,32 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
     req.body.reimbursementAmount = parseInt(req.body.reimbursementAmount);
     if (!(req.body && validateReimbursement(req.body))) {
       const error = new Error();
-      error.body = {error: 'Request body must be set and be valid'};
+      error.body = { error: 'Request body must be set and be valid' };
       error.status = 400;
       next(error);
     } else {
       req.body.reimbursementAmount = adjustReimbursementPrice(req.body.reimbursementAmount, req.body.groupMembers);
-      req.body.receiptURIs = req.files.map((file) => {
-        return 'https://s3.'
-          + constants.s3Connection.region
-          + '.amazonaws.com/'
-          + constants.s3Connection.s3TravelReimbursementBucket
-          + '/'
-          + file.key;
-      }).join(',');
+      req.body.receiptURIs = req.files.map(file => `https://s3.${
+        constants.s3Connection.region
+      }.amazonaws.com/${
+        constants.s3Connection.s3TravelReimbursementBucket
+      }/${
+        file.key}`).join(',');
       database.addTravelReimbursement(new TravelReimbursementModel(Object.assign(req.body, { uid: res.locals.user.uid })))
         .then((result) => {
-          res.status(200).send(
-            {
-              result: "Travel reimbursement request submitted. Final amount: $"
-              + req.body.reimbursementAmount +
-              ". This amount is based on the number of people in your party."
-            });
+          res.status(200).send({
+            result: `Travel reimbursement request submitted. Final amount: $${
+              req.body.reimbursementAmount
+            }. This amount is based on the number of people in your party.`,
+          });
         }).catch((error) => {
-        error.status = 500;
-        next(error);
-      });
+          error.status = 500;
+          next(error);
+        });
     }
   } else {
     const error = new Error();
-    error.body = {error: 'Reimbursement amount must be a number'};
+    error.body = { error: 'Reimbursement amount must be a number' };
     error.status = 400;
     next(error);
   }
@@ -458,55 +505,31 @@ router.post('/project', (req, res, next) => {
   }
 });
 /**
+ * @api {get} /user/event_categories Get all the event categories
+ * @apiName Get Event Categories
+ * @apiVersion 0.3.2
+ * @apiGroup User
+ * @apiPermission Authenticated
  *
- * @param data
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Categories
  */
-function validateReimbursement(data) {
-  const validate = ajv.compile(constants.travelReimbursementSchema);
-  const result = !!validate(data);
-  console.log(validate.errors);
-  return result;
-}
-
-/**
- *
- * @param price {Number}
- * @param groupMembers {String}
- */
-function adjustReimbursementPrice(price, groupMembers) {
-  if ((groupMembers === '1' || groupMembers === '2') && price > 50) {
-    return 50;
-  }
-  else if (groupMembers === '3' && price > 60) {
-    return 60;
-  }
-  else if (groupMembers === '4+' && price > 70) {
-    return 70;
-  }
-  else {
-    return price;
-  }
-}
-
-String.prototype.padStart = String.prototype.padStart ? String.prototype.padStart : function (targetLength, padString) {
-  targetLength = Math.floor(targetLength) || 0;
-  if (targetLength < this.length) return String(this);
-
-  padString = padString ? String(padString) : " ";
-
-  var pad = "";
-  var len = targetLength - this.length;
-  var i = 0;
-  while (pad.length < len) {
-    if (!padString[i]) {
-      i = 0;
-    }
-    pad += padString[i];
-    i++;
-  }
-
-  return pad + String(this).slice(0);
-};
+router.get('/event_categories', (req, res, next) => {
+  const r = [];
+  database.getCategoryInfo()
+    .on('data', (data) => {
+      r.push(data);
+    })
+    .on('err', () => {
+      const error = new Error();
+      error.status = 500;
+      error.body = { error: 'Could not retrieve category information' };
+      next(error);
+    })
+    .on('end', () => {
+      res.status(200).send(r);
+    });
+});
 
 
 module.exports = router;

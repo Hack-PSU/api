@@ -12,14 +12,14 @@ module.exports = {
       },
       substitutions: {
         type: 'object',
-        additionalProperties: {type: 'string'},
+        additionalProperties: { type: 'string' },
       },
     },
     required: ['email'],
   },
   emailKey: {
     key: process.env.ACCESS_KEY_ID,
-    secret: process.env.SECRET_ACCESS_KEY
+    secret: process.env.SECRET_ACCESS_KEY,
   },
   rediskey: process.env.REDIS_API_KEY || 'rediskey',
   sqlConnection: {
@@ -30,28 +30,24 @@ module.exports = {
     multipleStatements: true,
     // ssl: "Amazon RDS",
     typeCast: function castField(field, useDefaultTypeCasting) {
-
       // We only want to cast bit fields that have a single-bit in them. If the field
       // has more than one bit, then we cannot assume it is supposed to be a Boolean.
-      if ((field.type === "BIT") && (field.length === 1)) {
-
-        let bytes = field.buffer();
+      if ((field.type === 'BIT') && (field.length === 1)) {
+        const bytes = field.buffer();
 
         // A Buffer in Node represents a collection of 8-bit unsigned integers.
         // Therefore, our single "bit field" comes back as the bits '0000 0001',
         // which is equivalent to the number 1.
         return (bytes[0] === 1);
-
       }
 
       return (useDefaultTypeCasting());
-
-    }
+    },
   },
   RSVPEmailHtml: {
-      fromEmail: "team@hackpsu.org",
-      subject: "HackPSU RSVP Confirmation",
-      text: `<!doctype html>
+    fromEmail: 'team@hackpsu.org',
+    subject: 'HackPSU RSVP Confirmation',
+    text: `<!doctype html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 	<head>
 		<!-- NAME: FOLLOW UP -->
@@ -1384,7 +1380,7 @@ You can <a href="*|UPDATE_PROFILE|*">update your preferences</a> or <a href="*|U
         </center>
     </body>
 </html>
-`
+`,
   },
   registeredUserSchema: {
     type: 'object',
@@ -1400,13 +1396,13 @@ You can <a href="*|UPDATE_PROFILE|*">update your preferences</a> or <a href="*|U
         maxLength: 45,
       },
       gender: {
-        "enum": ['male', 'female', 'non-binary', 'no-disclose']
+        enum: ['male', 'female', 'non-binary', 'no-disclose'],
       },
       shirtSize: {
-        "enum": ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+        enum: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
       },
       dietaryRestriction: {
-        type: "string",
+        type: 'string',
         minLength: 1,
         maxLength: 45,
       },
@@ -1414,10 +1410,10 @@ You can <a href="*|UPDATE_PROFILE|*">update your preferences</a> or <a href="*|U
         type: 'string',
       },
       travelReimbursement: {
-        type: 'boolean'
+        type: 'boolean',
       },
       firstHackathon: {
-        type: 'boolean'
+        type: 'boolean',
       },
       university: {
         type: 'string',
@@ -1426,147 +1422,149 @@ You can <a href="*|UPDATE_PROFILE|*">update your preferences</a> or <a href="*|U
       },
       email: {
         type: 'string',
-        format: 'email'
+        format: 'email',
       },
       academicYear: {
-        "enum": ["freshman", "sophomore", "junior", "senior", "graduate", "other"]
+        enum: ['freshman', 'sophomore', 'junior', 'senior', 'graduate', 'other'],
       },
       major: {
         type: 'string',
         minLength: 1,
-        maxLength: 100
+        maxLength: 100,
       },
       phone: {
         type: 'string',
         minLength: 1,
-        maxLength: 50
+        maxLength: 50,
       },
       ethnicity: {
         type: 'string',
-        maxLength: 150
+        maxLength: 150,
       },
       codingExperience: {
-        "enum": ["none", "beginner", "intermediate", "advanced", 'null']
+        enum: ['none', 'beginner', 'intermediate', 'advanced', 'null'],
       },
       uid: {
         type: 'string',
-        maxLength: 150
+        maxLength: 150,
       },
       veteran: {
-        "enum": ["true", "false", "no-disclose"],
+        enum: ['true', 'false', 'no-disclose'],
       },
       eighteenBeforeEvent: {
-        type: 'boolean'
+        type: 'boolean',
       },
       mlhcoc: {
-        type: 'boolean'
+        type: 'boolean',
       },
       mlhdcp: {
-        type: 'boolean'
+        type: 'boolean',
       },
       referral: {
-        type: 'string'
+        type: 'string',
       },
       projectDesc: {
-        type: 'string'
+        type: 'string',
       },
       expectations: {
-        type: 'string'
-      }
+        type: 'string',
+      },
     },
-    required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'uid', 'eighteenBeforeEvent', 'mlhcoc', 'mlhdcp']
+    required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'uid', 'eighteenBeforeEvent', 'mlhcoc', 'mlhdcp'],
   },
   rfidAssignmentSchema: {
     type: 'array',
     minItems: 1,
-    items:
-      {
-        type: "object",
-        properties: {
-          rfid: {
-            type: "string",
-          },
-          uid: {
-            type: "string",
-          },
-          time: {
-            type: 'number',
-          }
+    items: {
+      type: 'object',
+      properties: {
+        rfid: {
+          type: 'string',
         },
-        required: ['rfid_uid', 'user_uid', 'time'],
-      }
+        uid: {
+          type: 'string',
+        },
+        time: {
+          type: 'number',
+        },
+      },
+      required: ['rfid_uid', 'user_uid', 'time'],
+    },
+  },
+  pushNotifKey: {
+    key: process.env.ONESIGNAL_API_KEY || '',
+    app_id: process.env.ONESIGNAL_APP_ID || '',
   },
   rfidScansSchema: {
     type: 'array',
     minItems: 1,
-    items:
-      {
-        type: "object",
-        properties: {
-          rfid_uid: {
-            type: "string",
-          },
-          scan_location: {
-            type: "string",
-          },
-          scan_time: {
-            type: 'number',
-          }
+    items: {
+      type: 'object',
+      properties: {
+        rfid_uid: {
+          type: 'string',
         },
-        required: ['rfid_uid', 'scan_location', 'scan_time'],
-      }
+        scan_location: {
+          type: 'string',
+        },
+        scan_time: {
+          type: 'number',
+        },
+      },
+      required: ['rfid_uid', 'scan_location', 'scan_time'],
+    },
   },
-    s3Connection: {
-        s3BucketName: 'hackpsus2018-resumes',
-        s3TravelReimbursementBucket: 'hackpsus2018-travel-reimbursement-receipts',
-        secretAccessKey: process.env.SECRET_ACCESS_KEY,
-        accessKeyId: process.env.ACCESS_KEY_ID,
-        region: 'us-east-2',
+  s3Connection: {
+    s3BucketName: 'hackpsus2018-resumes',
+    s3TravelReimbursementBucket: 'hackpsus2018-travel-reimbursement-receipts',
+    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    accessKeyId: process.env.ACCESS_KEY_ID,
+    region: 'us-east-2',
+  },
+  travelReimbursementSchema: {
+    type: 'object',
+    properties: {
+      fullName: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 100,
+      },
+      reimbursementAmount: {
+        type: 'number',
+      },
+      mailingAddress: {
+        type: 'string',
+      },
+      groupMembers: {
+        enum: ['1', '2', '3', '4+'],
+      },
+      required: ['fullName', 'reimbursementAmount', 'mailingAddress', 'groupMembers'],
     },
-    travelReimbursementSchema: {
-        type: 'object',
-        properties: {
-            fullName: {
-                type: 'string',
-                minLength: 1,
-                maxLength: 100
-            },
-            reimbursementAmount: {
-                type: 'number'
-            },
-            mailingAddress: {
-                type: 'string'
-            },
-            groupMembers: {
-                "enum": ["1", "2", "3", "4+"]
-            },
+  },
+  projectRegistrationSchema: {
+    type: 'object',
+    properties: {
+      projectName: {
+        type: 'string',
+      },
+      team: {
+        type: 'array',
+        items: {
+          type: 'string',
+          format: 'email',
         },
-        required: ['fullName','reimbursementAmount','mailingAddress', 'groupMembers']
+        uniqueItems: true,
+        minItems: 1,
+        maxItems: 5,
+      },
+      categories: {
+        type: 'array',
+        uniqueItems: true,
+        // validation handled at runtime
+      },
     },
-    projectRegistrationSchema: {
-        type: 'object',
-        properties:{
-            projectName: {
-                type: 'string'
-            },
-            team: {
-                type: "array",
-                items: {
-                    type: "string",
-                  format: 'email',
-                },
-                uniqueItems: true,
-                minItems: 1,
-                maxItems: 5,
-            },
-            categories: {
-                type: 'array',
-                uniqueItems: true
-                // validation handled at runtime
-            }
-        },
-        required:['projectName', 'team','categories']
-    }
+    required: ['projectName', 'team', 'categories'],
+  },
 };
 
 //     First name
@@ -1605,3 +1603,4 @@ You can <a href="*|UPDATE_PROFILE|*">update your preferences</a> or <a href="*|U
 // *New questions*
 // Where did you hear about hackPSU?
 // What is a project you're proud of?
+

@@ -4,7 +4,7 @@ const admin = require('firebase-admin');
 const squel = require('squel');
 const uuidv4 = require('uuid/v4');
 const sql = require('mysql');
-const sqlOptions = require('../helpers/constants').sqlConnection;
+const sqlOptions = require('../assets/helpers/constants').sqlConnection;
 const connection = sql.createConnection(sqlOptions);
 connection.connect((err) => {
   if (err) {

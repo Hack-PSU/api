@@ -1,8 +1,11 @@
 const squel = require('squel');
 const sql = require('mysql');
 const uuidv4 = require('uuid/v4');
+const Timeuuid = require('node-time-uuid');
 
-const sqlOptions = require('../helpers/constants').sqlConnection;
+const sqlOptions = require('./constants').sqlConnection;
+const EventModel = require('../models/EventModel');
+
 const connection = sql.createConnection(sqlOptions);
 
 connection.connect((err) => {
@@ -14,17 +17,17 @@ connection.connect((err) => {
 /**
  * @param limit {Number} Limit the number of rows to retrieve
  * @param offset {Number} Offset from start to retrieve at
- * @param opts {Object} opts.fields = fields to select
+ * @param opts
  * @return {Stream} Returns a continuous stream of data from the database
  */
 function getRegistrations(limit, offset, opts) {
-  const mLimit = parseInt(limit);
-  const mOffset = parseInt(offset);
-  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const mLimit = parseInt(limit, 10);
+  const mOffset = parseInt(offset, 10);
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
-    .fields(opts && opts.fields || null)
-    .limit(mLimit ? mLimit : null)
-    .offset(mOffset ? mOffset : null)
+    .fields((opts && opts.fields) || null)
+    .limit(mLimit || null)
+    .offset(mOffset || null)
     .toString()
     .concat(';');
   return connection.query(query).stream();
@@ -36,7 +39,7 @@ function getRegistrations(limit, offset, opts) {
  * @return {Stream} Returns a continuous stream of data from the database
  */
 function getRegistration(uid) {
-  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
     .where('uid = ?', uid)
     .toParam();
@@ -50,13 +53,14 @@ function getRegistration(uid) {
  * @return {Stream} Returns a continuous stream of data from the database
  */
 function getPreRegistrations(limit, offset) {
-  const mLimit = parseInt(limit);
-  const mOffset = parseInt(offset);
-  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const mLimit = parseInt(limit, 10);
+  const mOffset = parseInt(offset, 10);
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from('PRE_REGISTRATION')
     .limit(mLimit ? limit : null)
     .offset(mOffset ? offset : null)
-    .toString().concat(';');
+    .toString()
+    .concat(';');
   return connection.query(query).stream();
 }
 
@@ -66,10 +70,10 @@ function getPreRegistrations(limit, offset) {
  * @return {Promise<any>}
  */
 function addPreRegistration(email) {
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into(process.env.NODE_ENV === 'test' ? 'PRE_REGISTRATION_TEST' : 'PRE_REGISTRATION')
     .setFieldsRows([
-      {id: uuidv4().replace(/-/g, ""), email: email},
+      { id: uuidv4().replace(/-/g, ''), email },
     ])
     .toParam();
   query.text = query.text.concat(';');
@@ -77,7 +81,7 @@ function addPreRegistration(email) {
     connection.query(query.text, query.values, (err, result) => {
       if (err && err.errno === 1062) {
         const error = new Error();
-        error.message = "Email already provided";
+        error.message = 'Email already provided';
         error.status = 400;
         reject(error);
       } else if (err) {
@@ -96,10 +100,10 @@ function addPreRegistration(email) {
  */
 function setRegistrationSubmitted(uid) {
   const dbname = process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION';
-  const query = squel.update({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .table(dbname)
     .set('submitted', true)
-    .where("uid = ?", uid)
+    .where('uid = ?', uid)
     .toParam();
   query.text = query.text.concat(';');
   connection.query(query.text, query.values);
@@ -112,17 +116,17 @@ function setRegistrationSubmitted(uid) {
  * @return {Promise<any>}
  */
 function addRegistration(data) {
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION')
     .setFieldsRows([
-      data
+      data,
     ]).toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
     connection.query(query.text, query.values, (err, result) => {
       if (err && err.errno === 1062) {
         const error = new Error();
-        error.message = "User already registered";
+        error.message = 'User already registered';
         error.status = 400;
         reject(error);
       } else if (err) {
@@ -139,7 +143,7 @@ function addRegistration(data) {
  * @return {Stream} Return all attending hackers
  */
 function getAttendanceList() {
-  let query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from('ATTENDANCE')
     .toString();
   query = query.concat(';');
@@ -153,9 +157,9 @@ function getAttendanceList() {
  */
 function setRSVP(uid, RSVPstatus) {
   const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into(dbname)
-    .setFieldsRows([{user_id: uid, rsvp_time: new Date().getTime(), rsvp_status: RSVPstatus}])
+    .setFieldsRows([{ user_id: uid, rsvp_time: new Date().getTime(), rsvp_status: RSVPstatus }])
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
@@ -178,12 +182,12 @@ function setRSVP(uid, RSVPstatus) {
  */
 function getRSVP(uid) {
   const dbname = process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP';
-  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-    .from(dbname, "rsvp")
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from(dbname, 'rsvp')
     .field('r.pin')
     .field('rsvp.*')
-    .where("rsvp.user_id = ?", uid)
-    .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST': 'REGISTRATION', 'r', 'r.uid=rsvp.user_id')
+    .where('rsvp.user_id = ?', uid)
+    .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION', 'r', 'r.uid=rsvp.user_id')
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
@@ -193,8 +197,8 @@ function getRSVP(uid) {
       } else {
         resolve(response[0]);
       }
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -203,9 +207,9 @@ function getRSVP(uid) {
  * @return {Stream} Returns a continuous stream of data of people who RSVP
  */
 function getRSVPList(limit, offset) {
-  const mLimit = parseInt(limit);
-  const mOffset = parseInt(offset);
-  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const mLimit = parseInt(limit, 10);
+  const mOffset = parseInt(offset, 10);
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(process.env.NODE_ENV === 'test' ? 'RSVP_TEST' : 'RSVP', 'rsvp')
     .field('rsvp.*')
     .field('r.firstname')
@@ -216,7 +220,8 @@ function getRSVPList(limit, offset) {
     .limit(mLimit ? limit : null)
     .offset(mOffset ? offset : null)
     .join(process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION', 'r', 'r.uid=rsvp.user_id')
-    .toString().concat(';');
+    .toString()
+    .concat(';');
   return connection.query(query).stream();
 }
 
@@ -225,13 +230,13 @@ function getRSVPList(limit, offset) {
  *
  * @param uid {string} get email associated with the uid
  *
- **/
+ * */
 function getEmail(uid) {
   const dbname = process.env.NODE_ENV === 'test' ? 'REGISTRATION_TEST' : 'REGISTRATION';
-  const query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(dbname)
     .field('email')
-    .where("uid = ?", uid)
+    .where('uid = ?', uid)
     .toString()
     .concat(';');
   return new Promise((resolve, reject) => {
@@ -241,7 +246,7 @@ function getEmail(uid) {
       } else {
         resolve(response);
       }
-    })
+    });
   });
 }
 
@@ -253,10 +258,10 @@ function getEmail(uid) {
  */
 function addTravelReimbursement(data) {
   return new Promise((resolve, reject) => {
-    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .into(process.env.NODE_ENV === 'test' ? 'TRAVEL_REIMBURSEMENT_TEST' : 'TRAVEL_REIMBURSEMENTS')
       .setFieldsRows([
-        data
+        data,
       ]).toParam();
     query.text = query.text.concat(';');
     connection.query(query.text, query.values, (err, result) => {
@@ -274,7 +279,7 @@ function addTravelReimbursement(data) {
  * @return {Stream} Returns all the locations
  */
 function getAllLocations() {
-  let query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from('LOCATIONS')
     .toString();
   query = query.concat(';');
@@ -287,7 +292,7 @@ function getAllLocations() {
  * @return {Promise<any>}
  */
 function addNewLocation(locationName) {
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into('LOCATIONS')
     .set('location_name', locationName)
     .toParam();
@@ -310,7 +315,7 @@ function addNewLocation(locationName) {
  * @return {Promise<any>}
  */
 function updateLocation(uid, name) {
-  const query = squel.update({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .table('LOCATIONS')
     .set('location_name', name)
     .where('uid = ?', uid)
@@ -333,7 +338,7 @@ function updateLocation(uid, name) {
  * @return {Promise<any>}
  */
 function removeLocation(uid) {
-  const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .table('LOCATIONS')
     .where('uid = ?', uid)
     .toParam();
@@ -345,8 +350,8 @@ function removeLocation(uid) {
       } else {
         resolve();
       }
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -354,7 +359,7 @@ function removeLocation(uid) {
  * @return {Stream} Return the list of all class in the database
  */
 function getExtraCreditClassList() {
-  let query = squel.select({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from('EXTRA_CREDIT_CLASSES')
     .toString();
   query = query.concat(';');
@@ -367,9 +372,9 @@ function getExtraCreditClassList() {
  * @param cid - id of the class
  */
 function assignExtraCredit(uid, cid) {
-  let query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into(process.env.NODE_ENV === 'test' ? 'EXTRA_CREDIT_ASSIGNMENT_TEST' : 'EXTRA_CREDIT_ASSIGNMENT')
-    .setFieldsRows([{class_uid: cid, user_uid: uid}])
+    .setFieldsRows([{ class_uid: cid, user_uid: uid }])
     .toParam();
   query.text = query.text.concat(';');
   return new Promise((resolve, reject) => {
@@ -379,8 +384,8 @@ function assignExtraCredit(uid, cid) {
       } else {
         resolve();
       }
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -388,10 +393,10 @@ function assignExtraCredit(uid, cid) {
  * @param msg {String} Message to write
  */
 function writePiMessage(msg) {
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into('PI_TEST')
     .setFieldsRows([
-      {time: new Date().getTime(), message: msg}
+      { time: new Date().getTime(), message: msg },
     ])
     .toParam();
   query.text = query.text.concat(';');
@@ -413,15 +418,15 @@ function writePiMessage(msg) {
  * @return Promise<any> {Promise<any>}
  */
 function storeIP(ipAddress, user_agent) {
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into('REQ_DATA')
     .setFieldsRows([
       {
         idREQ_DATA: uuidv4(),
         req_time: new Date().getTime(),
-        req_ip: ipAddress ? ipAddress : "",
-        req_user_agent: user_agent
-      }
+        req_ip: ipAddress || '',
+        req_user_agent: user_agent,
+      },
     ])
     .toParam();
   query.text = query.text.concat(';');
@@ -433,13 +438,37 @@ function storeIP(ipAddress, user_agent) {
 }
 
 /**
+ * @param uid
+ *
+ * @return Object {Object} with field 'found' to indicate success.
+ */
+function getProjectInfo(uid) {
+  // 1) Query PROJECT_TEAM to get projectID (no project id, return {found: false}
+  // 2) Join with PROJECT_LIST
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from(process.env.NODE_ENV === 'test' ? 'PROJECT_TEAM_TEST' : 'PROJECT_TEAM', 'pt')
+    .field('pl.projectName')
+    .field('pt.*')
+    .field('ta.tableNumber')
+    .field('cl.*')
+    .where('userID = ?', uid)
+    .join(process.env.NODE_ENV === 'test' ? 'PROJECT_LIST_TEST' : 'PROJECT_LIST', 'pl', 'pt.projectID=pl.projectID')
+    .join(process.env.NODE_ENV === 'test' ? 'TABLE_ASSIGNMENTS_TEST' : 'TABLE_ASSIGNMENTS', 'ta', 'ta.projectID = pl.projectID')
+    .join(process.env.NODE_ENV === 'test' ? 'PROJECT_CATEGORIES_TEST' : 'PROJECT_CATEGORIES', 'pc', 'pc.projectID = pt.projectID')
+    .join('CATEGORY_LIST', 'cl', 'cl.categoryID = pc.categoryID ')
+    .toParam();
+  query.text = query.text.concat(';');
+  return connection.query(query.text, query.values).stream();
+}
+
+/**
  *
  * @param rfidAssignments {Array}
  * @return {Promise<any>}
  */
 function addRfidAssignments(rfidAssignments) {
   return new Promise((resolve, reject) => {
-    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .into(process.env.NODE_ENV === 'test' ? 'RFID_ASSIGNMENTS_TEST' : 'RFID_ASSIGNMENTS')
       .setFieldsRows(rfidAssignments)
       .toParam();
@@ -461,7 +490,7 @@ function addRfidAssignments(rfidAssignments) {
  */
 function addRfidScans(rfidScans) {
   return new Promise((resolve, reject) => {
-    const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+    const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .into(process.env.NODE_ENV === 'test' ? 'SCANS_TEST' : 'SCANS')
       .setFieldsRows(rfidScans)
       .toParam();
@@ -476,11 +505,11 @@ function addRfidScans(rfidScans) {
   });
 }
 
-function clearTestAssignments(){
-	return new Promise((resolve, reject) => {
-    const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+function clearTestAssignments() {
+  return new Promise((resolve, reject) => {
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from('RFID_ASSIGNMENTS_TEST')
-	  .where('rfid_uid is not null')
+      .where('rfid_uid is not null');
     query.text = query.text.concat(';');
     connection.query(query.text, query.values, (err) => {
       if (err) {
@@ -509,7 +538,7 @@ function addEmailsHistory(successes, fails) {
       mSuccesses.push(f);
     });
   }
-  const query = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into(process.env.NODE_ENV === 'test' ? 'EMAIL_HISTORY_TEST' : 'EMAIL_HISTORY')
     .setFieldsRows(mSuccesses)
     .toParam();
@@ -524,12 +553,201 @@ function addEmailsHistory(successes, fails) {
   });
 }
 
+/**
+ * @return {Promise} Returns all the data from the database
+ */
+function getCurrentUpdates() {
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from(process.env.NODE_ENV === 'test' ? 'LIVE_UPDATES_TEST' : 'LIVE_UPDATES')
+    .order('uid')
+    .toString();
+  query = query.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+/**
+ *
+ * @param projectName Name of project
+ * @param teamMemberList Array of team member UIDs
+ * @param categoriesList Array of Category IDs
+ * @return {Promise<any>}
+ */
+function storeProjectInfo(projectName, teamMemberList, categoriesList) {
+  if (process.env.NODE_ENV === 'test') {
+    console.log(projectName);
+    console.log(teamMemberList);
+    console.log(categoriesList);
+  }
+  let prepped = 'CALL ';
+  prepped = prepped.concat(process.env.NODE_ENV === 'test' ? 'assignTeam_test' : 'assignTeam');
+  prepped = prepped.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;');
+  const list = [projectName, teamMemberList.join(','), categoriesList.join(',')];
+  return new Promise((resolve, reject) => {
+    connection.query(prepped, list, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response[1]); // Returns Project ID
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param projectID
+ * @param categoriesList
+ * @return {Promise<any>}
+ */
+function assignTable(projectID, categoriesList) {
+  if (process.env.NODE_ENV === 'test') {
+    console.log(projectID);
+    console.log(categoriesList);
+  }
+  let prepped = 'CALL ';
+  prepped = prepped.concat(process.env.NODE_ENV === 'test' ? 'assignTable_test' : 'assignTable')
+    .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
+  const list = [projectID, Math.min(...categoriesList.map(c => parseInt(c, 10)))];
+  return new Promise((resolve, reject) => {
+    connection.query(prepped, list, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response[1]); // Returns Table number
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param updateText {string}
+ * @param updateImage {string}
+ * @param updateTitle
+ * @return {Promise<any>}
+ */
+function addNewUpdate(updateText, updateImage, updateTitle) {
+  const insertObj = {
+    uid: new Timeuuid().toString('hex'), update_text: updateText, update_image: updateImage, update_title: updateTitle,
+  };
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .into(process.env.NODE_ENV === 'test' ? 'LIVE_UPDATES_TEST' : 'LIVE_UPDATES')
+    .setFieldsRows([insertObj]).toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(insertObj);
+      }
+    });
+  });
+}
+
+/**
+ * @return {Promise<EventModel>} Stream of event data
+ */
+function getCurrentEvents() {
+  const tblname = process.env.NODE_ENV === 'test' ? 'EVENTS_TEST' : 'EVENTS';
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from(tblname, 'e')
+    .field('e.*')
+    .field('l.location_name')
+    .order('event_start_time', true)
+    .join('LOCATIONS', 'l', 'event_location=l.uid')
+    .toString()
+    .concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response);
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param {EventModel} event
+ * @return {Promise<any>}
+ */
+function createEvent(event) {
+  const ev = new EventModel(event);
+  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .into(process.env.NODE_ENV === 'test' ? 'EVENTS_TEST' : 'EVENTS')
+    .setFieldsRows([
+      ev,
+    ]).toParam();
+  query.text = query.text.concat(';');
+  query.text.concat('SELECT location_name FROM LOCATIONS WHERE uid=?;');
+  query.values.push(ev.event_location);
+  return new Promise((resolve, reject) => {
+    connection.query(query.text, query.values, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response[0]);
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param uid
+ * @param event
+ * @return {Promise<any>}
+ */
+function updateEvent(uid, event) {
+  event.uid = null;
+  const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .table(process.env.NODE_ENV === 'test' ? 'EVENTS_TEST' : 'EVENTS')
+    .setFields(event)
+    .where('uid = ?', uid)
+    .toParam();
+  query.text = query.text.concat(';');
+  return new Promise((resolve, reject) => {
+    connection.query(query, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response);
+      }
+    });
+  });
+}
+
+/**
+ * @return {Promise<EventModel>} Stream of categories data
+ */
+function getCategoryInfo() {
+  let query = squel.select()
+    .from('CATEGORY_LIST')
+    .toString();
+  query = query.concat(';');
+
+  return connection.query(query).stream();
+}
+
 
 module.exports = {
   getRegistrations,
   getRegistration,
   getPreRegistrations,
   addPreRegistration,
+  getProjectInfo,
+  storeProjectInfo,
+  assignTable,
   getAllLocations,
   addNewLocation,
   removeLocation,
@@ -541,6 +759,7 @@ module.exports = {
   setRSVP,
   getRSVPList,
   getEmail,
+  clearTestAssignments,
   getExtraCreditClassList,
   assignExtraCredit,
   addRfidAssignments,
@@ -549,4 +768,10 @@ module.exports = {
   storeIP,
   addTravelReimbursement,
   addEmailsHistory,
+  getCurrentUpdates,
+  addNewUpdate,
+  createEvent,
+  updateEvent,
+  getCurrentEvents,
+  getCategoryInfo,
 };

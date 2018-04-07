@@ -149,7 +149,7 @@ router.post('/pre', (req, res, next) => {
   } else {
     database.addPreRegistration(req.body.email)
       .then(() => {
-        res.status(200).send('Success');
+        res.status(200).send({ status: 'Success' });
       }).catch((err) => {
         err.status = err.status || 500;
         next(err);

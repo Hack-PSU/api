@@ -438,6 +438,30 @@ function storeIP(ipAddress, user_agent) {
 }
 
 /**
+ * @param uid
+ *
+ * @return Object {Object} with field 'found' to indicate success.
+ */
+function getProjectInfo(uid) {
+  // 1) Query PROJECT_TEAM to get projectID (no project id, return {found: false}
+  // 2) Join with PROJECT_LIST
+  const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from(process.env.NODE_ENV === 'test' ? 'PROJECT_TEAM_TEST' : 'PROJECT_TEAM', 'pt')
+    .field('pl.projectName')
+    .field('pt.*')
+    .field('ta.tableNumber')
+    .field('cl.*')
+    .where('userID = ?', uid)
+    .join(process.env.NODE_ENV === 'test' ? 'PROJECT_LIST_TEST' : 'PROJECT_LIST', 'pl', 'pt.projectID=pl.projectID')
+    .join(process.env.NODE_ENV === 'test' ? 'TABLE_ASSIGNMENTS_TEST' : 'TABLE_ASSIGNMENTS', 'ta', 'ta.projectID = pl.projectID')
+    .join(process.env.NODE_ENV === 'test' ? 'PROJECT_CATEGORIES_TEST' : 'PROJECT_CATEGORIES', 'pc', 'pc.projectID = pt.projectID')
+    .join('CATEGORY_LIST', 'cl', 'cl.categoryID = pc.categoryID ')
+    .toParam();
+  query.text = query.text.concat(';');
+  return connection.query(query.text, query.values).stream();
+}
+
+/**
  *
  * @param rfidAssignments {Array}
  * @return {Promise<any>}
@@ -544,6 +568,59 @@ function getCurrentUpdates() {
         reject(err);
       } else {
         resolve(data);
+      }
+    });
+  });
+}
+/**
+ *
+ * @param projectName Name of project
+ * @param teamMemberList Array of team member UIDs
+ * @param categoriesList Array of Category IDs
+ * @return {Promise<any>}
+ */
+function storeProjectInfo(projectName, teamMemberList, categoriesList) {
+  if (process.env.NODE_ENV === 'test') {
+    console.log(projectName);
+    console.log(teamMemberList);
+    console.log(categoriesList);
+  }
+  let prepped = 'CALL ';
+  prepped = prepped.concat(process.env.NODE_ENV === 'test' ? 'assignTeam_test' : 'assignTeam');
+  prepped = prepped.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;');
+  const list = [projectName, teamMemberList.join(','), categoriesList.join(',')];
+  return new Promise((resolve, reject) => {
+    connection.query(prepped, list, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response[1]); // Returns Project ID
+      }
+    });
+  });
+}
+
+/**
+ *
+ * @param projectID
+ * @param categoriesList
+ * @return {Promise<any>}
+ */
+function assignTable(projectID, categoriesList) {
+  if (process.env.NODE_ENV === 'test') {
+    console.log(projectID);
+    console.log(categoriesList);
+  }
+  let prepped = 'CALL ';
+  prepped = prepped.concat(process.env.NODE_ENV === 'test' ? 'assignTable_test' : 'assignTable')
+    .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
+  const list = [projectID, Math.min(...categoriesList.map(c => parseInt(c, 10)))];
+  return new Promise((resolve, reject) => {
+    connection.query(prepped, list, (err, response) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response[1]); // Returns Table number
       }
     });
   });
@@ -668,6 +745,9 @@ module.exports = {
   getRegistration,
   getPreRegistrations,
   addPreRegistration,
+  getProjectInfo,
+  storeProjectInfo,
+  assignTable,
   getAllLocations,
   addNewLocation,
   removeLocation,
@@ -679,6 +759,7 @@ module.exports = {
   setRSVP,
   getRSVPList,
   getEmail,
+  clearTestAssignments,
   getExtraCreditClassList,
   assignExtraCredit,
   addRfidAssignments,

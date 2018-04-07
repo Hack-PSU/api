@@ -22,7 +22,7 @@ function elevate(uid, privilege) {
 /**
 * Retreive the userID base on the email provided
 *	@param email
-*	@return {Promise<admin.auth.UserRecord>}
+*	@return Promise{admin.auth.UserRecord}
 */
 function getUserId(email) {
   return admin.auth().getUserByEmail(email);

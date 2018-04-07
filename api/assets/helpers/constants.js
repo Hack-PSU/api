@@ -27,6 +27,7 @@ module.exports = {
     user: process.env.RDS_USERNAME || 'user',
     password: process.env.RDS_PASSWORD || 'secret',
     database: process.env.RDS_DATABASE || 'my_db',
+    multipleStatements: true,
     // ssl: "Amazon RDS",
     typeCast: function castField(field, useDefaultTypeCasting) {
       // We only want to cast bit fields that have a single-bit in them. If the field
@@ -1539,9 +1540,32 @@ You can <a href="*|UPDATE_PROFILE|*">update your preferences</a> or <a href="*|U
       groupMembers: {
         enum: ['1', '2', '3', '4+'],
       },
-    },
     required: ['fullName', 'reimbursementAmount', 'mailingAddress', 'groupMembers'],
-  },
+    },
+    projectRegistrationSchema: {
+        type: 'object',
+        properties:{
+            projectName: {
+                type: 'string'
+            },
+            team: {
+                type: "array",
+                items: {
+                    type: "string",
+                  format: 'email',
+                },
+                uniqueItems: true,
+                minItems: 1,
+                maxItems: 5,
+            },
+            categories: {
+                type: 'array',
+                uniqueItems: true
+                // validation handled at runtime
+            }
+        },
+        required:['projectName', 'team','categories']
+    }
 };
 
 //     First name

@@ -1475,22 +1475,21 @@ You can <a href="*|UPDATE_PROFILE|*">update your preferences</a> or <a href="*|U
   rfidAssignmentSchema: {
     type: 'array',
     minItems: 1,
-    items:
-      {
-        type: 'object',
-        properties: {
-          rfid: {
-            type: 'string',
-          },
-          uid: {
-            type: 'string',
-          },
-          time: {
-            type: 'number',
-          },
+    items: {
+      type: 'object',
+      properties: {
+        rfid: {
+          type: 'string',
         },
-        required: ['rfid_uid', 'user_uid', 'time'],
+        uid: {
+          type: 'string',
+        },
+        time: {
+          type: 'number',
+        },
       },
+      required: ['rfid_uid', 'user_uid', 'time'],
+    },
   },
   pushNotifKey: {
     key: process.env.ONESIGNAL_API_KEY || '',
@@ -1499,22 +1498,21 @@ You can <a href="*|UPDATE_PROFILE|*">update your preferences</a> or <a href="*|U
   rfidScansSchema: {
     type: 'array',
     minItems: 1,
-    items:
-      {
-        type: 'object',
-        properties: {
-          rfid_uid: {
-            type: 'string',
-          },
-          scan_location: {
-            type: 'string',
-          },
-          scan_time: {
-            type: 'number',
-          },
+    items: {
+      type: 'object',
+      properties: {
+        rfid_uid: {
+          type: 'string',
         },
-        required: ['rfid_uid', 'scan_location', 'scan_time'],
+        scan_location: {
+          type: 'string',
+        },
+        scan_time: {
+          type: 'number',
+        },
       },
+      required: ['rfid_uid', 'scan_location', 'scan_time'],
+    },
   },
   s3Connection: {
     s3BucketName: 'hackpsus2018-resumes',
@@ -1540,32 +1538,33 @@ You can <a href="*|UPDATE_PROFILE|*">update your preferences</a> or <a href="*|U
       groupMembers: {
         enum: ['1', '2', '3', '4+'],
       },
-    required: ['fullName', 'reimbursementAmount', 'mailingAddress', 'groupMembers'],
+      required: ['fullName', 'reimbursementAmount', 'mailingAddress', 'groupMembers'],
     },
-    projectRegistrationSchema: {
-        type: 'object',
-        properties:{
-            projectName: {
-                type: 'string'
-            },
-            team: {
-                type: "array",
-                items: {
-                    type: "string",
-                  format: 'email',
-                },
-                uniqueItems: true,
-                minItems: 1,
-                maxItems: 5,
-            },
-            categories: {
-                type: 'array',
-                uniqueItems: true
-                // validation handled at runtime
-            }
+  },
+  projectRegistrationSchema: {
+    type: 'object',
+    properties: {
+      projectName: {
+        type: 'string',
+      },
+      team: {
+        type: 'array',
+        items: {
+          type: 'string',
+          format: 'email',
         },
-        required:['projectName', 'team','categories']
-    }
+        uniqueItems: true,
+        minItems: 1,
+        maxItems: 5,
+      },
+      categories: {
+        type: 'array',
+        uniqueItems: true,
+        // validation handled at runtime
+      },
+    },
+    required: ['projectName', 'team', 'categories'],
+  },
 };
 
 //     First name

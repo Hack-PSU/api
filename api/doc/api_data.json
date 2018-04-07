@@ -1,1663 +1,1 @@
-[
-  {
-    "type": "post",
-    "url": "/admin/makeadmin",
-    "title": "Elevate a user's privileges",
-    "version": "0.1.1",
-    "name": "Elevate_user",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Exec"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "uid",
-            "description": "<p>The UID of the user to elevate privileges</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "privilege",
-            "description": "<p>[Default = 1] The privilege level to set to {1: Volunteer, 2: Team Member, 3: Exec, 4: Tech-Exec}</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "Success",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "get",
-    "url": "/admin/extra_credit_list",
-    "title": "Retrieve the list of class that are providing extra credit",
-    "name": "Get_Extra_Credit_Class_List",
-    "version": "0.3.2",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Exec"
-      }
-    ],
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Array",
-            "optional": false,
-            "field": "Array",
-            "description": "<p>containing the list of class offering extra credit</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "get",
-    "url": "/admin/location_list",
-    "title": "Get the list of existing location from the database",
-    "version": "0.2.3",
-    "name": "Get_Location_List",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Exec"
-      }
-    ],
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Array",
-            "optional": false,
-            "field": "Array",
-            "description": "<p>containing all locations in the database</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "get",
-    "url": "/admin/userid",
-    "title": "Get the uid corresponding to an email",
-    "version": "0.2.0",
-    "name": "Get_User_Id",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Exec"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "string",
-            "optional": false,
-            "field": "email",
-            "description": "<p>The email to query user id by</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "object",
-            "optional": false,
-            "field": "Object",
-            "description": "<p>{uid, displayName}</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "get",
-    "url": "/admin/preregistered",
-    "title": "Get pre-registered hackers",
-    "version": "0.2.2",
-    "name": "Pre_registered_Hackers",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Team Member"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "limit",
-            "defaultValue": "Math.inf",
-            "description": "<p>Limit to a certain number of responses</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "offset",
-            "defaultValue": "0",
-            "description": "<p>The offset to start retrieving users from. Useful for pagination</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Array",
-            "optional": false,
-            "field": "Array",
-            "description": "<p>of registered hackers</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "get",
-    "url": "/admin/preregistered",
-    "title": "Get pre-registered hackers",
-    "version": "0.1.1",
-    "name": "Pre_registered_Hackers",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Team Member"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "limit",
-            "defaultValue": "Math.inf",
-            "description": "<p>Limit to a certain number of responses</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Array",
-            "optional": false,
-            "field": "Array",
-            "description": "<p>of registered hackers</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "get",
-    "url": "/admin/registered",
-    "title": "Get registered hackers",
-    "version": "0.2.2",
-    "name": "Registered_Hackers",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Team Member"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "limit",
-            "defaultValue": "Math.inf",
-            "description": "<p>Limit to a certain number of responses</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "offset",
-            "defaultValue": "0",
-            "description": "<p>The offset to start retrieving users from. Useful for pagination</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Array",
-            "optional": false,
-            "field": "Array",
-            "description": "<p>of registered hackers</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "get",
-    "url": "/admin/registered",
-    "title": "Get registered hackers",
-    "version": "0.1.1",
-    "name": "Registered_Hackers",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Team Member"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "limit",
-            "defaultValue": "Math.inf",
-            "description": "<p>Limit to a certain number of responses</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Array",
-            "optional": false,
-            "field": "Array",
-            "description": "<p>of registered hackers</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "post",
-    "url": "/admin/remove_location",
-    "title": "Remove the location associated with the uid from the database",
-    "version": "0.2.3",
-    "name": "Remove_Location",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Exec"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "uid",
-            "description": "<ul> <li>the uid of the location that is being selected for removal</li> </ul>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "Success",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "get",
-    "url": "/admin/get_attendance_list",
-    "title": "retrieve the list of people who attended",
-    "version": "0.3.2",
-    "name": "Retrieve_Attendance_List",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Exec"
-      }
-    ],
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Array",
-            "optional": false,
-            "field": "Array",
-            "description": "<p>of hackers who attended</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "get",
-    "url": "/admin/rsvp_list",
-    "title": "Get list of people who rsvp",
-    "version": "0.1.0",
-    "name": "Retrive_RSVP_list",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Exec"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "limit",
-            "defaultValue": "Math.inf",
-            "description": "<p>Limit to a certain number of responses</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "offset",
-            "defaultValue": "0",
-            "description": "<p>The offset to start retrieving users from. Useful for pagination</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Array",
-            "optional": false,
-            "field": "Array",
-            "description": "<p>of hackers who RSVP</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "post",
-    "url": "/admin/email",
-    "title": "Send communication email to recipients",
-    "version": "0.1.1",
-    "name": "Send_communication_emails",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Exec"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Object[]",
-            "optional": false,
-            "field": "emails",
-            "description": "<p>An array of objects with the following schema { email: <email>, name: <name of person>, substitutions: {...} } Substitutions is a map { keyword: substitute-text }</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "subject",
-            "description": "<p>The subject of the email to send</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "html",
-            "description": "<p>The HTML/text email to send. Make sure that all words that need to be substituted have matching substitutes in each object in the emails array</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Request-Example:",
-          "content": "{\n  emails: [{\n      email: abc@email.com,\n      name: Name,\n      substitutions: {\n        date: '29-03-2014',\n        language: 'english',\n        ...,\n        }\n      },\n      {...},\n      ...],\n  fromEmail: \"Email address send from and reply to. *NOTE: email are case sensitive\"\n  subject: \"generic email\",\n  html: \"<html><head><body>.....</body></head></html>\"\n}",
-          "type": "Object"
-        }
-      ]
-    },
-    "success": {
-      "fields": {
-        "200": [
-          {
-            "group": "200",
-            "type": "Object[]",
-            "optional": false,
-            "field": "Responses",
-            "description": "<p>All responses from the emails sent</p>"
-          }
-        ],
-        "207": [
-          {
-            "group": "207",
-            "type": "Object[]",
-            "optional": false,
-            "field": "Partial-Success",
-            "description": "<p>An array of success responses as well as failure objects</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "post",
-    "url": "/admin/update_location",
-    "title": "Update name of the location associated with the uid in the database",
-    "version": "0.2.3",
-    "name": "Update_Location",
-    "group": "Admin",
-    "permission": [
-      {
-        "name": "Exec"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "uid",
-            "description": "<ul> <li>the uid that is having the name of the location associated with this id changed</li> </ul>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "name",
-            "description": "<ul> <li>the new name that is being updated with the name associated with the uid</li> </ul>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "Success",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "filename": "routes/admin.js",
-    "groupTitle": "Admin",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "post",
-    "url": "/pi/assignment",
-    "title": "Assign RFID tags ID to users",
-    "version": "0.3.0",
-    "name": "Assign_an_RFID_to_a_user",
-    "group": "Pi",
-    "permission": [
-      {
-        "name": "API Key Validation"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Array",
-            "optional": false,
-            "field": "assignments",
-            "description": "<p>An array of RFID tags to User uid assignments</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Request-Example:",
-          "content": "[\n {\n  \"rfid\": \"1vyv2boy1v3b4oi12-1234lhb1234b\",\n  \"uid\": \"nbG7b87NB87nB7n98Y7\",\n  \"time\": 1239712938120\n},\n{ ... }\n]",
-          "type": "json"
-        }
-      ]
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "Success",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "filename": "routes/pi.js",
-    "groupTitle": "Pi",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "apikey",
-            "description": "<p>The Api Key</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "get",
-    "url": "/pi/registrations",
-    "title": "Get all the registration data for the pi",
-    "version": "0.3.0",
-    "name": "Get_registration_data_for_pi",
-    "group": "Pi",
-    "permission": [
-      {
-        "name": "API Key validation"
-      }
-    ],
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Array",
-            "optional": false,
-            "field": "Contains",
-            "description": "<p>all data required by the pi</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/pi.js",
-    "groupTitle": "Pi",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "apikey",
-            "description": "<p>The Api Key</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "post",
-    "url": "/pi/scans",
-    "title": "Upload scans from the event",
-    "version": "0.3.0",
-    "name": "Submit_scans_from_the_event",
-    "group": "Pi",
-    "permission": [
-      {
-        "name": "API Key Validation"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Array",
-            "optional": false,
-            "field": "scans",
-            "description": "<p>An array of scan objects</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Request-Example:",
-          "content": "[\n {\n  \"rfid_uid\": \"1vyv2boy1v3b4oi12-1234lhb1234b\",\n  \"scan_location\": \"nbG7b87NB87nB7n98Y7\",\n  \"scan_time\": 1239712938120\n},\n{ ... }\n]",
-          "type": "json"
-        }
-      ]
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "Success",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "filename": "routes/pi.js",
-    "groupTitle": "Pi",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "apikey",
-            "description": "<p>The Api Key</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "post",
-    "url": "/register/pre",
-    "title": "Pre-register for HackPSU",
-    "version": "0.1.1",
-    "name": "Pre_Registration",
-    "group": "Registration",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "email",
-            "description": "<p>The email ID to register with</p>"
-          }
-        ]
-      }
-    },
-    "permission": [
-      {
-        "name": "None"
-      }
-    ],
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "Success",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "filename": "routes/register.js",
-    "groupTitle": "Registration",
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "post",
-    "url": "/register/",
-    "title": "Register for HackPSU",
-    "version": "0.1.1",
-    "name": "Registration",
-    "group": "Registration",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Object",
-            "optional": false,
-            "field": "data:",
-            "description": ""
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "firstname",
-            "description": "<p>First name of the user</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "lastname",
-            "description": "<p>Last name of the user</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "gender",
-            "description": "<p>Gender of the user</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "enum",
-            "optional": false,
-            "field": "shirt_size",
-            "description": "<p>[XS, S, M, L, XL, XXL]</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": true,
-            "field": "dietary_restriction",
-            "description": "<p>The dietary restictions for the user</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": true,
-            "field": "allergies",
-            "description": "<p>Any allergies the user might have</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "boolean",
-            "optional": false,
-            "field": "travelReimbursement",
-            "defaultValue": "false",
-            "description": ""
-          },
-          {
-            "group": "Parameter",
-            "type": "boolean",
-            "optional": false,
-            "field": "firstHackathon",
-            "defaultValue": "false",
-            "description": "<p>Is this the user's first hackathon</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "university",
-            "description": "<p>The university that the user attends</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "email",
-            "description": "<p>The user's school email</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "academicYear",
-            "description": "<p>The user's current year in school</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "major",
-            "description": "<p>Intended or current major</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "phone",
-            "description": "<p>The user's phone number (For MLH)</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "FILE",
-            "optional": true,
-            "field": "resume",
-            "description": "<p>The resume file for the user (Max size: 10 MB)</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": true,
-            "field": "ethnicity",
-            "description": "<p>The user's ethnicity</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "codingExperience",
-            "description": "<p>The coding experience that the user has</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "uid",
-            "description": "<p>The UID from their Firebase account</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "boolean",
-            "optional": false,
-            "field": "eighteenBeforeEvent",
-            "defaultValue": "true",
-            "description": "<p>Will the person be eighteen before the event</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "boolean",
-            "optional": false,
-            "field": "mlhcoc",
-            "defaultValue": "true",
-            "description": "<p>Does the user agree to the mlhcoc?</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "boolean",
-            "optional": false,
-            "field": "mlhdcp",
-            "defaultValue": "true",
-            "description": "<p>Does the user agree to the mlh dcp?</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "referral",
-            "description": "<p>Where did the user hear about the Hackathon?</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "project",
-            "description": "<p>A project description that the user is proud of</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "expectations",
-            "description": "<p>What the user expects to get from the hackathon</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "veteran",
-            "defaultValue": "false",
-            "description": "<p>Is the user a veteran?</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Request-Example: {",
-          "content": "\treq.header: {\n\t\tidtoken: <user's idtoken>\n\t}\n\n \trequest.body: {\n\t\t\tfirstName: \"Matt\",\n            lastName: \"Stewart\",\n            gender: \"Male\",\n            shirtSize: \"L\",\n            dietaryRestriction: \"Vegetarian\",\n            allergies: \"Peanuts\",\n            travelReimbursement: true,\n            firstHackathon: false,\n            university: \"University of hackathon\",\n            email: matt@email.com,\n            academicYear: \"sophomore\",\n            major: \"Communication\"\n            phone: \"1234567890\"\n            race: \"no-disclose\"\n            codingExperience: \"advanced\"\n            uid: \"JH123891JDW98E89J3389\",\n            eighteenBeforeEvent: true,\n            mlhCOC: true,\n            mlhDCP: true,\n            referral: \"facebook\",\n            project: \"My project description\",\n            resume: https://s3.aws.com/link-to-file\n    }",
-          "type": "Object"
-        }
-      ]
-    },
-    "permission": [
-      {
-        "name": "valid user credentials"
-      }
-    ],
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "Success",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "filename": "routes/register.js",
-    "groupTitle": "Registration",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "get",
-    "url": "/users",
-    "title": "Get the privilege information for the current user",
-    "version": "0.1.2",
-    "name": "Get_user_privilege_information",
-    "group": "Users",
-    "permission": [
-      {
-        "name": "User"
-      }
-    ],
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Object",
-            "optional": false,
-            "field": "JSON",
-            "description": "<p>Object with user's data</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/users.js",
-    "groupTitle": "Users",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "get",
-    "url": "/users/registration",
-    "title": "Get the registration information for the current user",
-    "version": "0.2.1",
-    "name": "Get_user_registration_information",
-    "group": "Users",
-    "permission": [
-      {
-        "name": "User"
-      }
-    ],
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Object",
-            "optional": false,
-            "field": "JSON",
-            "description": "<p>Object with user's data</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/users.js",
-    "groupTitle": "Users",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "post",
-    "url": "/users/RSVP",
-    "title": "confirm the RSVP status for the current user and send a email containing their pin",
-    "version": "0.1.1",
-    "name": "Set_RSVP",
-    "group": "Users",
-    "permission": [
-      {
-        "name": "User"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "A",
-            "description": "<p>value to indicate if the user decide to rsvp ['true', 'false']</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "optional": false,
-            "field": "sends",
-            "description": "<p>a email with user's pin</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/users.js",
-    "groupTitle": "Users",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "get",
-    "url": "/users/rsvp",
-    "title": "Get the RSVP status for a user",
-    "version": "0.1.1",
-    "name": "get_RSVP_status",
-    "group": "Users",
-    "permission": [
-      {
-        "name": "User"
-      }
-    ],
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Object",
-            "optional": false,
-            "field": "Containing",
-            "description": "<p>the rsvp status based on the uid</p>"
-          }
-        ]
-      }
-    },
-    "filename": "routes/users.js",
-    "groupTitle": "Users",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "post",
-    "url": "/users/travelReimbursement",
-    "title": "submit travel reimbursement information",
-    "version": "0.2.2",
-    "name": "Travel_Reimbursement",
-    "group": "users",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "fullName",
-            "description": "<p>first and last names of the user as they would appear on a check.</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "reimbursementAmount",
-            "description": "<p>the total amount of money they are requesting, as appears on their receipts</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "mailingAddress",
-            "description": "<p>the full postal address of the user</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "enum",
-            "optional": false,
-            "field": "groupMembers",
-            "description": "<p>[&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4+&quot;]</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "FILE",
-            "optional": true,
-            "field": "receipt",
-            "description": "<p>The receipt files for this user, users can send up to 5 files all under fieldname receipt. (Max size: 5 MB each)</p>"
-          }
-        ]
-      }
-    },
-    "permission": [
-      {
-        "name": "valid user credentials"
-      }
-    ],
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "Success",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "filename": "routes/users.js",
-    "groupTitle": "users",
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "String",
-            "optional": false,
-            "field": "idtoken",
-            "description": "<p>The Firebase IdToken</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "IllegalArgument",
-            "description": "<p>The passed argument was not found or illegal</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  }
-]
+[  {    "type": "post",    "url": "/admin/assign_extra_credit",    "title": "setting user with the class they are receiving extra credit",    "name": "Assign_Extra_Credit",    "version": "0.3.2",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "uid",            "description": "<ul> <li>the id associated with the student</li> </ul>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "cid",            "description": "<ul> <li>the id associated with the class</li> </ul>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "String",            "optional": false,            "field": "Success",            "description": ""          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "post",    "url": "/admin/create_location",    "title": "Insert a new location in to the database",    "version": "0.2.3",    "name": "Create_Location",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "locationName",            "description": "<ul> <li>the name of the new location that is to be inserted into the database</li> </ul>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "String",            "optional": false,            "field": "Success",            "description": ""          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "post",    "url": "/admin/makeadmin",    "title": "Elevate a user's privileges",    "version": "0.1.1",    "name": "Elevate_user",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "uid",            "description": "<p>The UID of the user to elevate privileges</p>"          },          {            "group": "Parameter",            "type": "Number",            "optional": false,            "field": "privilege",            "description": "<p>[Default = 1] The privilege level to set to {1: Volunteer, 2: Team Member, 3: Exec, 4: Tech-Exec}</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "String",            "optional": false,            "field": "Success",            "description": ""          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "get",    "url": "/admin/extra_credit_list",    "title": "Retrieve the list of class that are providing extra credit",    "name": "Get_Extra_Credit_Class_List",    "version": "0.3.2",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Array",            "description": "<p>containing the list of class offering extra credit</p>"          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "get",    "url": "/admin/location_list",    "title": "Get the list of existing location from the database",    "version": "0.2.3",    "name": "Get_Location_List",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Array",            "description": "<p>containing all locations in the database</p>"          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "get",    "url": "/admin/userid",    "title": "Get the uid corresponding to an email",    "version": "0.2.0",    "name": "Get_User_Id",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "string",            "optional": false,            "field": "email",            "description": "<p>The email to query user id by</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "object",            "optional": false,            "field": "Object",            "description": "<p>{uid, displayName}</p>"          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "get",    "url": "/admin/preregistered",    "title": "Get pre-registered hackers",    "version": "0.2.2",    "name": "Pre_registered_Hackers",    "group": "Admin",    "permission": [      {        "name": "Team Member"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "Number",            "optional": false,            "field": "limit",            "defaultValue": "Math.inf",            "description": "<p>Limit to a certain number of responses</p>"          },          {            "group": "Parameter",            "type": "Number",            "optional": false,            "field": "offset",            "defaultValue": "0",            "description": "<p>The offset to start retrieving users from. Useful for pagination</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Array",            "description": "<p>of registered hackers</p>"          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "get",    "url": "/admin/preregistered",    "title": "Get pre-registered hackers",    "version": "0.1.1",    "name": "Pre_registered_Hackers",    "group": "Admin",    "permission": [      {        "name": "Team Member"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "Number",            "optional": false,            "field": "limit",            "defaultValue": "Math.inf",            "description": "<p>Limit to a certain number of responses</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Array",            "description": "<p>of registered hackers</p>"          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "get",    "url": "/admin/registered",    "title": "Get registered hackers",    "version": "0.2.2",    "name": "Registered_Hackers",    "group": "Admin",    "permission": [      {        "name": "Team Member"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "Number",            "optional": false,            "field": "limit",            "defaultValue": "Math.inf",            "description": "<p>Limit to a certain number of responses</p>"          },          {            "group": "Parameter",            "type": "Number",            "optional": false,            "field": "offset",            "defaultValue": "0",            "description": "<p>The offset to start retrieving users from. Useful for pagination</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Array",            "description": "<p>of registered hackers</p>"          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "get",    "url": "/admin/registered",    "title": "Get registered hackers",    "version": "0.1.1",    "name": "Registered_Hackers",    "group": "Admin",    "permission": [      {        "name": "Team Member"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "Number",            "optional": false,            "field": "limit",            "defaultValue": "Math.inf",            "description": "<p>Limit to a certain number of responses</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Array",            "description": "<p>of registered hackers</p>"          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "post",    "url": "/admin/remove_location",    "title": "Remove the location associated with the uid from the database",    "version": "0.2.3",    "name": "Remove_Location",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "uid",            "description": "<ul> <li>the uid of the location that is being selected for removal</li> </ul>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "String",            "optional": false,            "field": "Success",            "description": ""          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "get",    "url": "/admin/get_attendance_list",    "title": "retrieve the list of people who attended",    "version": "0.3.2",    "name": "Retrieve_Attendance_List",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Array",            "description": "<p>of hackers who attended</p>"          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "get",    "url": "/admin/rsvp_list",    "title": "Get list of people who rsvp",    "version": "0.1.0",    "name": "Retrive_RSVP_list",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "Number",            "optional": false,            "field": "limit",            "defaultValue": "Math.inf",            "description": "<p>Limit to a certain number of responses</p>"          },          {            "group": "Parameter",            "type": "Number",            "optional": false,            "field": "offset",            "defaultValue": "0",            "description": "<p>The offset to start retrieving users from. Useful for pagination</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Array",            "description": "<p>of hackers who RSVP</p>"          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "post",    "url": "/admin/email",    "title": "Send communication email to recipients",    "version": "0.1.1",    "name": "Send_communication_emails",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "Object[]",            "optional": false,            "field": "emails",            "description": "<p>An array of objects with the following schema { email: <email>, name: <name of person>, substitutions: {...} } Substitutions is a map { keyword: substitute-text }</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "subject",            "description": "<p>The subject of the email to send</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "html",            "description": "<p>The HTML/text email to send. Make sure that all words that need to be substituted have matching substitutes in each object in the emails array</p>"          }        ]      },      "examples": [        {          "title": "Request-Example:",          "content": "{\n  emails: [{\n      email: abc@email.com,\n      name: Name,\n      substitutions: {\n        date: '29-03-2014',\n        language: 'english',\n        ...,\n        }\n      },\n      {...},\n      ...],\n  fromEmail: \"Email address send from and reply to. *NOTE: email are case sensitive\"\n  subject: \"generic email\",\n  html: \"<html><head><body>.....</body></head></html>\"\n}",          "type": "Object"        }      ]    },    "success": {      "fields": {        "200": [          {            "group": "200",            "type": "Object[]",            "optional": false,            "field": "Responses",            "description": "<p>All responses from the emails sent</p>"          }        ],        "207": [          {            "group": "207",            "type": "Object[]",            "optional": false,            "field": "Partial-Success",            "description": "<p>An array of success responses as well as failure objects</p>"          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "post",    "url": "/admin/update_location",    "title": "Update name of the location associated with the uid in the database",    "version": "0.2.3",    "name": "Update_Location",    "group": "Admin",    "permission": [      {        "name": "Exec"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "uid",            "description": "<ul> <li>the uid that is having the name of the location associated with this id changed</li> </ul>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "name",            "description": "<ul> <li>the new name that is being updated with the name associated with the uid</li> </ul>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "String",            "optional": false,            "field": "Success",            "description": ""          }        ]      }    },    "filename": "routes/admin.js",    "groupTitle": "Admin",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "post",    "url": "/pi/assignment",    "title": "Assign RFID tags ID to users",    "version": "0.3.0",    "name": "Assign_an_RFID_to_a_user",    "group": "Pi",    "permission": [      {        "name": "API Key Validation"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "Array",            "optional": false,            "field": "assignments",            "description": "<p>An array of RFID tags to User uid assignments</p>"          }        ]      },      "examples": [        {          "title": "Request-Example:",          "content": "[\n {\n  \"rfid\": \"1vyv2boy1v3b4oi12-1234lhb1234b\",\n  \"uid\": \"nbG7b87NB87nB7n98Y7\",\n  \"time\": 1239712938120\n},\n{ ... }\n]",          "type": "json"        }      ]    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "String",            "optional": false,            "field": "Success",            "description": ""          }        ]      }    },    "filename": "routes/pi.js",    "groupTitle": "Pi",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "apikey",            "description": "<p>The Api Key</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "get",    "url": "/pi/registrations",    "title": "Get all the registration data for the pi",    "version": "0.3.0",    "name": "Get_registration_data_for_pi",    "group": "Pi",    "permission": [      {        "name": "API Key validation"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Contains",            "description": "<p>all data required by the pi</p>"          }        ]      }    },    "filename": "routes/pi.js",    "groupTitle": "Pi",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "apikey",            "description": "<p>The Api Key</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "post",    "url": "/pi/scans",    "title": "Upload scans from the event",    "version": "0.3.0",    "name": "Submit_scans_from_the_event",    "group": "Pi",    "permission": [      {        "name": "API Key Validation"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "Array",            "optional": false,            "field": "scans",            "description": "<p>An array of scan objects</p>"          }        ]      },      "examples": [        {          "title": "Request-Example:",          "content": "[\n {\n  \"rfid_uid\": \"1vyv2boy1v3b4oi12-1234lhb1234b\",\n  \"scan_location\": \"nbG7b87NB87nB7n98Y7\",\n  \"scan_time\": 1239712938120\n},\n{ ... }\n]",          "type": "json"        }      ]    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "String",            "optional": false,            "field": "Success",            "description": ""          }        ]      }    },    "filename": "routes/pi.js",    "groupTitle": "Pi",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "apikey",            "description": "<p>The Api Key</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "post",    "url": "/register/pre",    "title": "Pre-register for HackPSU",    "version": "0.1.1",    "name": "Pre_Registration",    "group": "Registration",    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "email",            "description": "<p>The email ID to register with</p>"          }        ]      }    },    "permission": [      {        "name": "None"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "String",            "optional": false,            "field": "Success",            "description": ""          }        ]      }    },    "filename": "routes/register.js",    "groupTitle": "Registration",    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "post",    "url": "/register/",    "title": "Register for HackPSU",    "version": "0.1.1",    "name": "Registration",    "group": "Registration",    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "Object",            "optional": false,            "field": "data:",            "description": ""          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "firstname",            "description": "<p>First name of the user</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "lastname",            "description": "<p>Last name of the user</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "gender",            "description": "<p>Gender of the user</p>"          },          {            "group": "Parameter",            "type": "enum",            "optional": false,            "field": "shirt_size",            "description": "<p>[XS, S, M, L, XL, XXL]</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": true,            "field": "dietary_restriction",            "description": "<p>The dietary restictions for the user</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": true,            "field": "allergies",            "description": "<p>Any allergies the user might have</p>"          },          {            "group": "Parameter",            "type": "boolean",            "optional": false,            "field": "travelReimbursement",            "defaultValue": "false",            "description": ""          },          {            "group": "Parameter",            "type": "boolean",            "optional": false,            "field": "firstHackathon",            "defaultValue": "false",            "description": "<p>Is this the user's first hackathon</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "university",            "description": "<p>The university that the user attends</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "email",            "description": "<p>The user's school email</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "academicYear",            "description": "<p>The user's current year in school</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "major",            "description": "<p>Intended or current major</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "phone",            "description": "<p>The user's phone number (For MLH)</p>"          },          {            "group": "Parameter",            "type": "FILE",            "optional": true,            "field": "resume",            "description": "<p>The resume file for the user (Max size: 10 MB)</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": true,            "field": "ethnicity",            "description": "<p>The user's ethnicity</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "codingExperience",            "description": "<p>The coding experience that the user has</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "uid",            "description": "<p>The UID from their Firebase account</p>"          },          {            "group": "Parameter",            "type": "boolean",            "optional": false,            "field": "eighteenBeforeEvent",            "defaultValue": "true",            "description": "<p>Will the person be eighteen before the event</p>"          },          {            "group": "Parameter",            "type": "boolean",            "optional": false,            "field": "mlhcoc",            "defaultValue": "true",            "description": "<p>Does the user agree to the mlhcoc?</p>"          },          {            "group": "Parameter",            "type": "boolean",            "optional": false,            "field": "mlhdcp",            "defaultValue": "true",            "description": "<p>Does the user agree to the mlh dcp?</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "referral",            "description": "<p>Where did the user hear about the Hackathon?</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "project",            "description": "<p>A project description that the user is proud of</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "expectations",            "description": "<p>What the user expects to get from the hackathon</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "veteran",            "defaultValue": "false",            "description": "<p>Is the user a veteran?</p>"          }        ]      },      "examples": [        {          "title": "Request-Example: {",          "content": "\treq.header: {\n\t\tidtoken: <user's idtoken>\n\t}\n\n \trequest.body: {\n\t\t\tfirstName: \"Matt\",\n            lastName: \"Stewart\",\n            gender: \"Male\",\n            shirtSize: \"L\",\n            dietaryRestriction: \"Vegetarian\",\n            allergies: \"Peanuts\",\n            travelReimbursement: true,\n            firstHackathon: false,\n            university: \"University of hackathon\",\n            email: matt@email.com,\n            academicYear: \"sophomore\",\n            major: \"Communication\"\n            phone: \"1234567890\"\n            race: \"no-disclose\"\n            codingExperience: \"advanced\"\n            uid: \"JH123891JDW98E89J3389\",\n            eighteenBeforeEvent: true,\n            mlhCOC: true,\n            mlhDCP: true,\n            referral: \"facebook\",\n            project: \"My project description\",\n            resume: https://s3.aws.com/link-to-file\n    }",          "type": "Object"        }      ]    },    "permission": [      {        "name": "valid user credentials"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "String",            "optional": false,            "field": "Success",            "description": ""          }        ]      }    },    "filename": "routes/register.js",    "groupTitle": "Registration",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "get",    "url": "/user/event_categories",    "title": "Get all the event categories",    "name": "Get_Event_Categories",    "version": "0.3.2",    "group": "User",    "permission": [      {        "name": "Authenticated"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Categories",            "description": ""          }        ]      }    },    "filename": "routes/users.js",    "groupTitle": "User",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "get",    "url": "/users",    "title": "Get the privilege information for the current user",    "version": "0.1.2",    "name": "Get_user_privilege_information",    "group": "Users",    "permission": [      {        "name": "User"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Object",            "optional": false,            "field": "JSON",            "description": "<p>Object with user's data</p>"          }        ]      }    },    "filename": "routes/users.js",    "groupTitle": "Users",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "get",    "url": "/users/project",    "title": "Get the project details and table assignment for the current user",    "version": "0.4.0",    "name": "Get_user_project_data",    "group": "Users",    "permission": [      {        "name": "User"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Object",            "optional": false,            "field": "JSON",            "description": "<p>Object with user's table assignment data</p>"          }        ]      }    },    "filename": "routes/users.js",    "groupTitle": "Users",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "get",    "url": "/users/registration",    "title": "Get the registration information for the current user",    "version": "0.2.1",    "name": "Get_user_registration_information",    "group": "Users",    "permission": [      {        "name": "User"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Object",            "optional": false,            "field": "JSON",            "description": "<p>Object with user's data</p>"          }        ]      }    },    "filename": "routes/users.js",    "groupTitle": "Users",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "post",    "url": "/users/project",    "title": "Post the project details to get the table assignment",    "version": "0.4.0",    "name": "Post_user_project_data",    "group": "Users",    "permission": [      {        "name": "User"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "projectName",            "description": "<p>Name of the project</p>"          },          {            "group": "Parameter",            "type": "Array",            "optional": false,            "field": "team",            "description": "<p>Array of team emails</p>"          },          {            "group": "Parameter",            "type": "Array",            "optional": false,            "field": "categories",            "description": "<p>Array of category IDs the project is submitting for</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Object",            "optional": false,            "field": "JSON",            "description": "<p>Object with user's project ID</p>"          }        ]      }    },    "filename": "routes/users.js",    "groupTitle": "Users",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "post",    "url": "/users/rsvp",    "title": "confirm the RSVP status for the current user and send a email containing their pin",    "version": "0.1.1",    "name": "Set_RSVP",    "group": "Users",    "permission": [      {        "name": "User"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "A",            "description": "<p>value to indicate if the user decide to rsvp ['true', 'false']</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "optional": false,            "field": "sends",            "description": "<p>a email with user's pin</p>"          }        ]      }    },    "filename": "routes/users.js",    "groupTitle": "Users",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "get",    "url": "/users/rsvp",    "title": "Get the RSVP status for a user",    "version": "0.1.1",    "name": "get_RSVP_status",    "group": "Users",    "permission": [      {        "name": "User"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Object",            "optional": false,            "field": "Containing",            "description": "<p>the rsvp status based on the uid</p>"          }        ]      }    },    "filename": "routes/users.js",    "groupTitle": "Users",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  },  {    "type": "socket.io",    "url": "/live/updates/:upstream-event",    "title": "Create new event",    "version": "0.3.1",    "name": "Create_new_event",    "group": "Websocket",    "permission": [      {        "name": "Team Member"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "string",            "optional": false,            "field": "event_location",            "description": "<p>UID of the location that the event takes place at</p>"          },          {            "group": "Parameter",            "type": "number",            "optional": false,            "field": "event_start_time",            "description": "<p>The epoch start time of the event</p>"          },          {            "group": "Parameter",            "type": "number",            "optional": false,            "field": "event_end_time",            "description": "<p>The epoch end time of the event</p>"          },          {            "group": "Parameter",            "type": "string",            "optional": false,            "field": "event_title",            "description": "<p>Title of the event</p>"          },          {            "group": "Parameter",            "type": "string",            "optional": false,            "field": "event_description",            "description": "<p>Description of the event</p>"          },          {            "group": "Parameter",            "type": "enum",            "optional": false,            "field": "event_type",            "description": "<p>The type of event. Possible types are: 'food', 'workshop', 'activity'</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Event",            "optional": false,            "field": "broadcasted",            "description": "<p>on socket room 'event'</p>"          }        ]      }    },    "filename": "routes/sockets.js",    "groupTitle": "Websocket",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "socket.io",    "url": "/live/events/:connection",    "title": "Get calendar events",    "version": "0.3.1",    "name": "Get_calendar_events",    "group": "Websocket",    "permission": [      {        "name": "Hacker"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Array",            "description": "<p>of calendar events</p>"          }        ]      }    },    "filename": "routes/sockets.js",    "groupTitle": "Websocket",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "socket.io",    "url": "/live/updates/:connection",    "title": "Get live updates",    "version": "0.3.1",    "name": "Get_live_updates",    "group": "Websocket",    "permission": [      {        "name": "Hacker"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Array",            "optional": false,            "field": "Array",            "description": "<p>of live updates</p>"          }        ]      }    },    "filename": "routes/sockets.js",    "groupTitle": "Websocket",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "socket.io",    "url": "/live/updates/:upstream-update",    "title": "Publish live update",    "version": "0.3.1",    "name": "Publish_live_update",    "group": "Websocket",    "permission": [      {        "name": "Team Member"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "string",            "optional": false,            "field": "title",            "description": "<p>The title of the update</p>"          },          {            "group": "Parameter",            "type": "File",            "optional": false,            "field": "image",            "description": "<p>The image to include with the update</p>"          },          {            "group": "Parameter",            "type": "string",            "optional": false,            "field": "message",            "description": "<p>The message to send with the update</p>"          },          {            "group": "Parameter",            "type": "boolean",            "optional": false,            "field": "push_notification",            "description": "<p>true if the live update should also be pushed to user devices</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Update",            "optional": false,            "field": "broadcasted",            "description": "<p>on socket room 'update'</p>"          }        ]      }    },    "filename": "routes/sockets.js",    "groupTitle": "Websocket",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "socket.io",    "url": "/live/updates/:update-event",    "title": "Update event",    "version": "0.3.1",    "name": "Update_event",    "group": "Websocket",    "permission": [      {        "name": "Team Member"      }    ],    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "string",            "optional": false,            "field": "uid",            "description": "<p>UID of the event to update</p>"          },          {            "group": "Parameter",            "type": "string",            "optional": false,            "field": "event_location",            "description": "<p>UID of the location that the event takes place at</p>"          },          {            "group": "Parameter",            "type": "number",            "optional": false,            "field": "event_start_time",            "description": "<p>The epoch start time of the event</p>"          },          {            "group": "Parameter",            "type": "number",            "optional": false,            "field": "event_end",            "description": "<p>The epoch end time of the event</p>"          },          {            "group": "Parameter",            "type": "string",            "optional": false,            "field": "event_title",            "description": "<p>Title of the event</p>"          },          {            "group": "Parameter",            "type": "string",            "optional": false,            "field": "event_description",            "description": "<p>Description of the event</p>"          },          {            "group": "Parameter",            "type": "enum",            "optional": false,            "field": "event_type",            "description": "<p>The type of event. Possible types are: 'food', 'workshop', 'activity'</p>"          }        ]      }    },    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "Event",            "optional": false,            "field": "broadcasted",            "description": "<p>on socket room 'event-updated'</p>"          }        ]      }    },    "filename": "routes/sockets.js",    "groupTitle": "Websocket",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    }  },  {    "type": "post",    "url": "/users/travelReimbursement",    "title": "submit travel reimbursement information",    "version": "0.2.2",    "name": "Travel_Reimbursement",    "group": "users",    "parameter": {      "fields": {        "Parameter": [          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "fullName",            "description": "<p>first and last names of the user as they would appear on a check.</p>"          },          {            "group": "Parameter",            "type": "Number",            "optional": false,            "field": "reimbursementAmount",            "description": "<p>the total amount of money they are requesting, as appears on their receipts</p>"          },          {            "group": "Parameter",            "type": "String",            "optional": false,            "field": "mailingAddress",            "description": "<p>the full postal address of the user</p>"          },          {            "group": "Parameter",            "type": "enum",            "optional": false,            "field": "groupMembers",            "description": "<p>[&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4+&quot;]</p>"          },          {            "group": "Parameter",            "type": "FILE",            "optional": true,            "field": "receipt",            "description": "<p>The receipt files for this user, users can send up to 5 files all under fieldname receipt. (Max size: 5 MB each)</p>"          }        ]      }    },    "permission": [      {        "name": "valid user credentials"      }    ],    "success": {      "fields": {        "Success 200": [          {            "group": "Success 200",            "type": "String",            "optional": false,            "field": "Success",            "description": ""          }        ]      }    },    "filename": "routes/users.js",    "groupTitle": "users",    "header": {      "fields": {        "Headers": [          {            "group": "Headers",            "type": "String",            "optional": false,            "field": "idtoken",            "description": "<p>The Firebase IdToken</p>"          }        ]      }    },    "error": {      "fields": {        "Error 4xx": [          {            "group": "Error 4xx",            "optional": false,            "field": "IllegalArgument",            "description": "<p>The passed argument was not found or illegal</p>"          }        ]      },      "examples": [        {          "title": "Error-Response:",          "content": "HTTP/1.1 400 IllegalArgument\n{\n  \"error\": \"The passed argument was illegal\"\n}",          "type": "json"        }      ]    }  }]

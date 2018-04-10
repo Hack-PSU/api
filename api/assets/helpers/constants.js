@@ -1536,7 +1536,7 @@ You can <a href="*|UPDATE_PROFILE|*">update your preferences</a> or <a href="*|U
         type: 'string',
       },
       groupMembers: {
-        enum: ['1', '2', '3', '4+'],
+        'enum': ['1', '2', '3', '4+'],
       },
       required: ['fullName', 'reimbursementAmount', 'mailingAddress', 'groupMembers'],
     },

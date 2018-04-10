@@ -86,11 +86,13 @@ function validateReimbursement(data) {
  * @param groupMembers {String}
  */
 function adjustReimbursementPrice(price, groupMembers) {
-  if ((groupMembers === '1' || groupMembers === '2') && price > 50) {
+  if ((groupMembers === '1' || groupMembers === '0') && price > 50) {
     return 50;
-  } else if (groupMembers === '3' && price > 60) {
+  } else if (groupMembers === '2' && price > 60) {
     return 60;
-  } else if (groupMembers === '4+' && price > 70) {
+  } else if (groupMembers === '3' && price > 70) {
+    return 70;
+  } else if (price > 70) {
     return 70;
   }
 

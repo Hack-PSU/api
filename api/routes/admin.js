@@ -9,7 +9,7 @@ const authenticator = require('../assets/helpers/auth');
 const database = require('../assets/helpers/database');
 const Ajv = require('ajv');
 
-const ajv = new Ajv({ allErrors: true });
+const ajv = new Ajv({allErrors: true});
 
 
 const router = express.Router();
@@ -32,19 +32,19 @@ router.use((req, res, next) => {
         } else {
           const error = new Error();
           error.status = 401;
-          error.body = { error: 'You do not have sufficient permissions for this operation' };
+          error.body = {error: 'You do not have sufficient permissions for this operation'};
           next(error);
         }
       }).catch((err) => {
-        const error = new Error();
-        error.status = 401;
-        error.body = err.message;
-        next(error);
-      });
+      const error = new Error();
+      error.status = 401;
+      error.body = err.message;
+      next(error);
+    });
   } else {
     const error = new Error();
     error.status = 401;
-    error.body = { error: 'ID Token must be provided' };
+    error.body = {error: 'ID Token must be provided'};
     next(error);
   }
 });
@@ -69,7 +69,7 @@ function validateEmails(req, res, next) {
         if (validate(emailObject)) {
           successArray.push(emailObject);
         } else {
-          failArray.push(Object.assign(emailObject, { error: ajv.errorsText(validate.errors) }));
+          failArray.push(Object.assign(emailObject, {error: ajv.errorsText(validate.errors)}));
         }
         return true;
       });
@@ -79,13 +79,13 @@ function validateEmails(req, res, next) {
     } else {
       const error = new Error();
       error.status = 400;
-      error.body = { error: 'Email subject must be provided' };
+      error.body = {error: 'Email subject must be provided'};
       next(error);
     }
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = { error: 'Emails must be provided as an array' };
+    error.body = {error: 'Emails must be provided as an array'};
     next(error);
   }
 }
@@ -103,13 +103,13 @@ function verifyACL(level) {
       } else {
         const error = new Error();
         error.status = 401;
-        error.body = { error: 'You do not have sufficient permissions for this operation' };
+        error.body = {error: 'You do not have sufficient permissions for this operation'};
         next(error);
       }
     } else {
       const error = new Error();
       error.status = 500;
-      error.body = { error: 'Something went wrong while accessing permissions' };
+      error.body = {error: 'Something went wrong while accessing permissions'};
       next(error);
     }
   };
@@ -119,7 +119,7 @@ function verifyACL(level) {
 /** ********************** ROUTES ******************************** */
 
 router.get('/', (req, res, next) => {
-  res.status(200).send({ response: 'authorized' });
+  res.status(200).send({response: 'authorized'});
 });
 
 /**
@@ -156,26 +156,26 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
       .on('data', (document) => {
         arr.push(document);
       }).on('err', (err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      }).on('end', () => {
-        Promise.all(arr.map(value => new Promise((resolve, reject) => {
-          authenticator.getUserData(value.uid)
-            .then((user) => {
-              value.sign_up_time = new Date(user.metadata.creationTime).getTime();
-              resolve(value);
-            }).catch(err => reject(err));
-        }))).then(result => res.status(200).send(result))
-          .catch((err) => {
-            res.status(207).send(arr);
-          });
-      });
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    }).on('end', () => {
+      Promise.all(arr.map(value => new Promise((resolve, reject) => {
+        authenticator.getUserData(value.uid)
+          .then((user) => {
+            value.sign_up_time = new Date(user.metadata.creationTime).getTime();
+            resolve(value);
+          }).catch(err => reject(err));
+      }))).then(result => res.status(200).send(result))
+        .catch((err) => {
+          res.status(207).send(arr);
+        });
+    });
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = { message: 'Limit and offset must be integers' };
+    error.body = {message: 'Limit and offset must be integers'};
     next(error);
   }
 });
@@ -212,17 +212,17 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
       .on('data', (document) => {
         arr.push(document);
       }).on('err', (err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      }).on('end', () => {
-        res.status(200).send(arr);
-      });
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    }).on('end', () => {
+      res.status(200).send(arr);
+    });
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = { message: 'Limit must be an integer' };
+    error.body = {message: 'Limit must be an integer'};
     next(error);
   }
 });
@@ -244,11 +244,11 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
   if (!(req.query && req.query.email && validator.validate(req.query.email))) {
     const error = new Error();
     error.status = 400;
-    error.body = { error: 'request query must be set and a valid email' };
+    error.body = {error: 'request query must be set and a valid email'};
     next(error);
   } else {
     authenticator.getUserId(req.query.email).then((user) => {
-      res.status(200).send({ uid: user.uid, displayName: user.displayName });
+      res.status(200).send({uid: user.uid, displayName: user.displayName});
     }).catch((error) => {
       const err = new Error();
       console.error(error);
@@ -280,17 +280,17 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
       .on('data', (document) => {
         arr.push(document);
       }).on('err', (err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      }).on('end', () => {
-        res.status(200).send(arr);
-      });
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    }).on('end', () => {
+      res.status(200).send(arr);
+    });
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = { message: 'Limit or offset must be an integer' };
+    error.body = {message: 'Limit or offset must be an integer'};
     next(error);
   }
 });
@@ -305,21 +305,55 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array of hackers who attended
  */
-router.get('/attendance_list', verifyACL(3), (req, res, next) => {
+router.get('/attendance_list', verifyACL(2), (req, res, next) => {
   const arr = [];
   database.getAttendanceList()
     .on('data', (document) => {
       arr.push(document);
     }).on('err', (err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    }).on('end', () => {
-      res.status(200).send(arr);
-    });
+    const error = new Error();
+    error.status = 500;
+    error.body = err.message;
+    next(error);
+  }).on('end', () => {
+    res.status(200).send(arr);
+  });
 });
 
+/**
+ * @api {get} /admin/rsvp_attendance retrieve the list of people who attended
+ * @apiVersion 0.3.2
+ * @apiName Retrieve Attendance List based on RSVPs
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Array of hackers who attended
+ */
+// TODO: remove this route on open source version
+router.get('/rsvp_attendance', verifyACL(2), (req, res, next) => {
+  const arr = [];
+  database.getAttendanceHackedRsvpSpringMess()
+    .on('data', (document) => {
+      arr.push(document);
+    }).on('err', (err) => {
+    const error = new Error();
+    error.status = 500;
+    error.body = err.message;
+    next(error);
+  }).on('end', () => {
+    Promise.all(arr.map(value => new Promise((resolve, reject) => {
+      authenticator.getUserData(value.uid)
+        .then((user) => {
+          value.sign_up_time = new Date(user.metadata.creationTime).getTime();
+          resolve(value);
+        }).catch(err => reject(err));
+    }))).then(result => res.status(200).send(result))
+      .catch((err) => {
+        res.status(207).send(arr);
+      });
+  });
+});
 
 /**
  * @api {post} /admin/makeadmin Elevate a user's privileges
@@ -341,12 +375,12 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
     if ((res.locals.privilege < 4) && privilege < res.locals.privilege) { // If not tech-exec and attempting to reduce permissions
       const error = new Error();
       error.status = 400;
-      error.body = { message: 'You cannot reduce privileges' };
+      error.body = {message: 'You cannot reduce privileges'};
       next(error);
     } else {
       authenticator.elevate(req.body.uid, privilege)
         .then(() => {
-          res.status(200).send({ status: 'Success' });
+          res.status(200).send({status: 'Success'});
         })
         .catch((err) => {
           const error = new Error();
@@ -358,7 +392,7 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = { error: 'UID must be provided' };
+    error.body = {error: 'UID must be provided'};
     next(error);
   }
 });
@@ -402,7 +436,7 @@ router.get('/location_list', verifyACL(3), (req, res, next) => {
 router.post('/create_location', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.locationName && (req.body.locationName.length > 0)) {
     database.addNewLocation(req.body.locationName).then(() => {
-      res.status(200).send({ status: 'Success' });
+      res.status(200).send({status: 'Success'});
     }).catch((err) => {
       const error = new Error();
       error.status = 500;
@@ -439,13 +473,13 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
     (req.body.uid.length > 0)) {
     database.updateLocation(req.body.uid, req.body.name)
       .then(() => {
-        res.status(200).send({ status: 'Success' });
+        res.status(200).send({status: 'Success'});
       }).catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
   } else {
     const error = new Error();
     error.status = 400;
@@ -470,13 +504,13 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.uid && (req.body.uid.length > 0)) {
     database.removeLocation(req.body.uid)
       .then(() => {
-        res.status(200).send({ status: 'Success' });
+        res.status(200).send({status: 'Success'});
       }).catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
   } else {
     const error = new Error();
     error.status = 400;
@@ -502,13 +536,13 @@ router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
     .on('data', (document) => {
       arr.push(document);
     }).on('err', (err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    }).on('end', () => {
-      res.status(200).send(arr);
-    });
+    const error = new Error();
+    error.status = 500;
+    error.body = err.message;
+    next(error);
+  }).on('end', () => {
+    res.status(200).send(arr);
+  });
 });
 
 /**
@@ -528,13 +562,13 @@ router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.uid && req.body.cid && parseInt(req.body.cid)) {
     database.assignExtraCredit(req.body.uid, req.body.cid)
       .then(() => {
-        res.status(200).send({ status: 'Success' });
+        res.status(200).send({status: 'Success'});
       }).catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
   } else {
     const error = new Error();
     error.status = 400;
@@ -590,11 +624,11 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
             const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject, req.body.fromEmail); // Generate the POST request
             functions.sendEmail(request.data)
               .then(() => {
-                resolve({ email: request.data.to, response: 'success', name: emailObject.name }); // If successful, resolve
+                resolve({email: request.data.to, response: 'success', name: emailObject.name}); // If successful, resolve
               }).catch((error) => {
-                res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
-                resolve(null);
-              });
+              res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
+              resolve(null);
+            });
           }).catch((error) => {
             res.locals.failArray.push(Object.assign(emailObject, error)); // if email substitution fails, add to fail array for partial HTTP success response
             resolve(null);
@@ -635,7 +669,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
     } else {
       const error = new Error();
       error.status = 400;
-      error.body = { error: 'Email subject must be provided' };
+      error.body = {error: 'Email subject must be provided'};
       next(error);
     }
   } else {

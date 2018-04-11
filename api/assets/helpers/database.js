@@ -150,6 +150,19 @@ function getAttendanceList() {
   return connection.query(query).stream();
 }
 
+
+function getAttendanceHackedRsvpSpringMess() { // TODO: Remove from Open source version
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .field('s.*')
+    .field('r.*')
+    .from('RSVP', 's')
+    .join('REGISTRATION', 'r', 'r.uid = s.user_id')
+    .where('s.rsvp_status = 1')
+    .toString();
+  query = query.concat(';');
+  return connection.query(query).stream();
+}
+
 /**
  *
  * @param uid {string} UID of the user to set the RSVP status
@@ -753,6 +766,7 @@ module.exports = {
   removeLocation,
   updateLocation,
   getAttendanceList,
+  getAttendanceHackedRsvpSpringMess,
   writePiMessage,
   addRegistration,
   getRSVP,

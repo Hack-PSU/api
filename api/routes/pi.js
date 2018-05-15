@@ -2,7 +2,7 @@ const express = require('express');
 const Ajv = require('ajv');
 
 const router = express.Router();
-const database = require('../assets/helpers/database');
+const database = require('../assets/helpers/database/database');
 
 
 const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/helpers/constants');

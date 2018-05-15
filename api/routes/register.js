@@ -13,7 +13,7 @@ const ajv = new Ajv({ allErrors: true });
 const aws = require('aws-sdk');
 const multer = require('multer');
 const multers3 = require('multer-s3');
-const database = require('../assets/helpers/database');
+const database = require('../assets/helpers/database/database');
 const RegistrationModel = require('../assets/models/RegistrationModel');
 
 aws.config.update({

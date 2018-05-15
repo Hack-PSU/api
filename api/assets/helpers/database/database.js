@@ -3,8 +3,8 @@ const sql = require('mysql');
 const uuidv4 = require('uuid/v4');
 const Timeuuid = require('node-time-uuid');
 
-const sqlOptions = require('./constants').sqlConnection;
-const EventModel = require('../models/EventModel');
+const sqlOptions = require('../constants').sqlConnection;
+const EventModel = require('../../models/Event');
 
 const connection = sql.createConnection(sqlOptions);
 

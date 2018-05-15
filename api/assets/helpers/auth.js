@@ -5,7 +5,7 @@ const admin = require('firebase-admin');
  * @param idToken
  * @return {Promise<admin.auth.DecodedIdToken>}
  */
-function checkAuthentication(idToken) {
+export function checkAuthentication(idToken) {
   return admin.auth().verifyIdToken(idToken);
 }
 
@@ -15,16 +15,16 @@ function checkAuthentication(idToken) {
  * @param privilege
  * @return {Promise<any>}
  */
-function elevate(uid, privilege) {
+export function elevate(uid, privilege) {
   return admin.auth().setCustomUserClaims(uid, { admin: true, privilege });
 }
 
 /**
-* Retreive the userID base on the email provided
-*	@param email
-*	@return Promise{admin.auth.UserRecord}
-*/
-function getUserId(email) {
+ * Retreive the userID base on the email provided
+ *  @param email
+ *  @return Promise{admin.auth.UserRecord}
+ */
+export function getUserId(email) {
   return admin.auth().getUserByEmail(email);
 }
 
@@ -33,14 +33,6 @@ function getUserId(email) {
  * @param uid
  * @return {Promise<admin.auth.UserRecord>}
  */
-function getUserData(uid) {
+export function getUserData(uid) {
   return admin.auth().getUser(uid);
 }
-
-
-module.exports = {
-  checkAuthentication,
-  elevate,
-  getUserId,
-  getUserData,
-};

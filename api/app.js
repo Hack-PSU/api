@@ -38,6 +38,8 @@ const app = express();
  * Create HTTP server.
  */
 const server = http.createServer(app);
+
+// TODO: Decide if we need this
 /**
  * Socket IO listener
  */
@@ -88,7 +90,7 @@ const index = require('./routes/index');
 const users = require('./routes/users');
 const register = require('./routes/register');
 const admin = require('./routes/admin');
-const pi = require('./routes/pi');
+const pi = require('./routes/pi'); // Deprecated
 const live = require('./routes/live');
 
 nodecipher.decryptSync({
@@ -132,7 +134,7 @@ app.use('/v1/users', users);
 app.use('/v1/register', register);
 app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 app.use('/v1/admin', admin);
-app.use('/v1/pi', pi);
+app.use('/v1/pi', pi); // Deprecated
 app.use('/v1/live', live);
 
 

@@ -13,7 +13,7 @@ const client = ses.createClient(emailKey);
  * @param {Object} [substitutions] A map of strings with the following format { keyword-to-substitute: string-to-substitute-with, ... }; Example: { date: "09-23-2000" }
  * @return {Promise} return a promised data with a subbed version of the html
  */
-module.exports.emailSubstitute = function emailSubstitute(html, name, substitutions) {
+export function emailSubstitute(html, name, substitutions) {
   return new Promise(((resolve, reject) => {
     let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
     for (const key in substitutions) {
@@ -27,14 +27,14 @@ module.exports.emailSubstitute = function emailSubstitute(html, name, substituti
     }
     resolve(subbedHTML);
   }));
-};
+}
 
 /**
  * Makes the POST request to the email server URL
  * @param data Contains the options for the POST request. For schema, refer to function createEmailRequest or the SendInBlue API
  * @return {Promise<any>}
  */
-module.exports.sendEmail = function sendEmail(data) {
+export function sendEmail(data) {
   return new Promise((resolve, reject) => {
     client.sendEmail(data, (err) => {
       if (err) {
@@ -42,7 +42,7 @@ module.exports.sendEmail = function sendEmail(data) {
       } else resolve(true);
     });
   });
-};
+}
 
 
 /* `from` - email address from which to send (required)
@@ -62,7 +62,7 @@ module.exports.sendEmail = function sendEmail(data) {
  * @param {String} fromEmail
  * @return {Object} { data, options }
  */
-module.exports.createEmailRequest = function createEmailRequest(email, htmlContent, subject, fromEmail) {
+export function createEmailRequest(email, htmlContent, subject, fromEmail) {
   const emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
   const data = {
     to: email,
@@ -74,7 +74,7 @@ module.exports.createEmailRequest = function createEmailRequest(email, htmlConte
   return {
     data,
   };
-};
+}
 
 /**
  *
@@ -82,7 +82,7 @@ module.exports.createEmailRequest = function createEmailRequest(email, htmlConte
  * @param notificationBody
  * @return {Promise<any>}
  */
-module.exports.sendNotification = function sendNotification(notificationTitle, notificationBody) {
+export function sendNotification(notificationTitle, notificationBody) {
   return new Promise((resolve, reject) => {
     const headers = {
       'Content-Type': 'application/json; charset=utf-8',

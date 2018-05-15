@@ -4,11 +4,11 @@ const base64 = require('base64-stream');
 const { Readable } = require('stream');
 
 const constants = require('../assets/helpers/constants');
-const database = require('../assets/helpers/database');
+const database = require('../assets/helpers/database/database');
 const authenticator = require('../assets/helpers/auth');
 
 const UpdateModel = require('../assets/models/UpdateModel');
-const EventModel = require('../assets/models/EventModel');
+const EventModel = require('../assets/models/Event');
 
 const { sendNotification } = require('../assets/helpers/functions');
 

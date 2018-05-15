@@ -8,7 +8,7 @@ const Ajv = require('ajv');
 
 const functions = require('../assets/helpers/functions');
 const authenticator = require('../assets/helpers/auth');
-const database = require('../assets/helpers/database');
+const database = require('../assets/helpers/database/database');
 const constants = require('../assets/helpers/constants');
 const TravelReimbursementModel = require('../assets/models/TravelReimbursementModel');
 const {projectRegistrationSchema} = require('../assets/helpers/constants');

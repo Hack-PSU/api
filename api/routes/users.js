@@ -1,4 +1,4 @@
-/* eslint-disable consistent-return,no-use-before-define,no-param-reassign */
+/* eslint-disable consistent-return,no-use-before-define,no-param-reassign,max-len */
 const express = require('express');
 const aws = require('aws-sdk');
 const multer = require('multer');
@@ -10,8 +10,12 @@ const functions = require('../assets/helpers/functions');
 const authenticator = require('../assets/helpers/auth');
 const database = require('../assets/helpers/database/database');
 const constants = require('../assets/helpers/constants');
-const TravelReimbursementModel = require('../assets/models/TravelReimbursement');
-const {projectRegistrationSchema} = require('../assets/helpers/constants');
+const TravelReimbursement = require('../assets/models/TravelReimbursement');
+const { projectRegistrationSchema, travelReimbursementSchema } = require('../assets/helpers/schemas');
+const Registration = require('../assets/models/Registration');
+const Project = require('../assets/models/Project');
+const RSVP = require('../assets/models/RSVP');
+const Category = require('../assets/models/Category');
 
 const router = express.Router();
 
@@ -58,7 +62,7 @@ const upload = multer({
   limits: { fileSize: 1024 * 1024 * 5 }, // limit to 5MB
 });
 
-/************* HELPER FUNCTIONS **************/
+/** *********** HELPER FUNCTIONS ************* */
 
 function validateProjectRegistration(project) {
   const validate = ajv.compile(projectRegistrationSchema);
@@ -74,7 +78,7 @@ function validateProjectRegistration(project) {
  * @param data
  */
 function validateReimbursement(data) {
-  const validate = ajv.compile(constants.travelReimbursementSchema);
+  const validate = ajv.compile(travelReimbursementSchema);
   const result = !!validate(data);
   console.error(validate.errors);
   return result;
@@ -99,25 +103,27 @@ function adjustReimbursementPrice(price, groupMembers) {
   return price;
 }
 
-String.prototype.padStart = String.prototype.padStart ? String.prototype.padStart : function (targetLength, padString) {
-  targetLength = Math.floor(targetLength) || 0;
-  if (targetLength < this.length) return String(this);
+String.prototype.padStart = String.prototype.padStart ?
+  String.prototype.padStart :
+  function (targetLength, padString) {
+    targetLength = Math.floor(targetLength) || 0;
+    if (targetLength < this.length) return String(this);
 
-  padString = padString ? String(padString) : ' ';
+    padString = padString ? String(padString) : ' ';
 
-  let pad = '';
-  const len = targetLength - this.length;
-  let i = 0;
-  while (pad.length < len) {
-    if (!padString[i]) {
-      i = 0;
+    let pad = '';
+    const len = targetLength - this.length;
+    let i = 0;
+    while (pad.length < len) {
+      if (!padString[i]) {
+        i = 0;
+      }
+      pad += padString[i];
+      i++;
     }
-    pad += padString[i];
-    i++;
-  }
 
-  return pad + String(this).slice(0);
-};
+    return pad + String(this).slice(0);
+  };
 
 /** *********** HELPER MIDDLEWARE ***************** */
 /**
@@ -181,17 +187,19 @@ router.get('/', (req, res, next) => {
  */
 router.get('/registration', (req, res, next) => {
   if (res.locals.user) {
-    let user = null;
-    database.getRegistration(res.locals.user.uid)
-      .on('data', (data) => {
-        user = data;
-      }).on('err', (err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      }).on('end', () => {
-        res.status(200).send(user);
+    new Registration({ uid: res.locals.users.uid })
+      .get()
+      .then((stream) => {
+        stream
+          .pipe(res)
+          .on('err', (err) => {
+            const error = new Error();
+            error.status = 500;
+            error.body = err.message;
+            next(error);
+          }).on('end', () => {
+            res.status(200).send();
+          });
       });
   } else {
     const error = new Error();
@@ -214,40 +222,41 @@ router.get('/registration', (req, res, next) => {
  */
 router.get('/project', (req, res, next) => {
   if (res.locals.user) {
-    let info = [];
-    database.getProjectInfo(res.locals.user.uid)
-      .on('data', (data) => {
-        // Due to stream nature, data may be partial array or full array of responses
-        info.push(data);
-      }).on('err', (err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    }).on('end', () => {
-      // Reduce the large number of responses that differ by
-      // category name and id into a json array internally instead
-      const rJSON = info.reduce((accumulator, currentVal) => {
-        Object.keys(currentVal).forEach((k) => {
-          if (k !== 'categoryName' && k !== 'categoryID') { // If the field is going to be the same
-            accumulator[k] = currentVal[k];
-          } else { // Else accumulate it in an array
-            if (accumulator[k]) {
-              accumulator[k].push(currentVal[k]);
-            } else {
-              accumulator[k] = [currentVal[k]];
-            }
-          }
-        });
-        return accumulator;
-      }, {});
-      res.status(200).send(rJSON);
-    });
+    const info = [];
+    Project.getByUser(res.locals.user.uid, req.uow)
+      .then((stream) => {
+        stream
+          .on('data', (data) => {
+            // Due to stream nature, data may be partial array or full array of responses
+            info.push(data);
+          }).on('err', (err) => {
+            const error = new Error();
+            error.status = 500;
+            error.body = err.message;
+            next(error);
+          }).on('end', () => {
+          // Reduce the large number of responses that differ by
+          // category name and id into a json array internally instead
+            const rJSON = info.reduce((accumulator, currentVal) => {
+              Object.keys(currentVal).forEach((k) => {
+                if (k !== 'categoryName' && k !== 'categoryID') { // If the field is going to be the same
+                  accumulator[k] = currentVal[k];
+                } else if (accumulator[k]) { // Else accumulate it in an array
+                  accumulator[k].push(currentVal[k]);
+                } else {
+                  accumulator[k] = [currentVal[k]];
+                }
+              });
+              return accumulator;
+            }, {});
+            res.status(200).send(rJSON);
+          });
+      });
   } else {
     const error = new Error();
     error.status = 500;
-    error.body = {error: 'Could not retrieve user information'};
- next(error);
+    error.body = { error: 'Could not retrieve user information' };
+    next(error);
   }
 });
 /**
@@ -271,47 +280,52 @@ router.post('/rsvp', (req, res, next) => {
         .then(() => {
           if (req.body.rsvp === 'true') {
             let user = null;
-            database.getRegistration(res.locals.user.uid)
-              .on('data', (data) => {
-                user = data;
-              }).on('err', (err) => { // Database registration retrieval
-                const error = new Error();
-                error.status = 500;
-                error.body = err.message;
-                console.error(error);
-                next(error);
-              }).on('end', () => {
-                const { email } = user;
-                const name = user.firstname;
-                const pin = user.pin || 78;
-                functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
-                  name,
-                  pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
-                })
-                  .then((subbedHTML) => {
-                    const request = functions.createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, '');
-                    functions.sendEmail(request.data)
-                      .then(() => {
-                        res.status(200).send({ message: 'success', pin: parseInt(pin, 10).toString(14).padStart(3, '0') });
-                      // resolve({'email': request.data.to, 'html': request.data.htmlContent, 'response': 'success'});
-                      })
-                      .catch((err) => { // Send Email error
+            new Registration({ data: res.locals.user.uid })
+              .then((stream) => {
+                stream
+                  .on('data', (data) => {
+                    user = data;
+                  }).on('err', (err) => { // Database registration retrieval
+                    const error = new Error();
+                    error.status = 500;
+                    error.body = err.message;
+                    console.error(error);
+                    next(error);
+                  }).on('end', () => {
+                    const { email } = user;
+                    const name = user.firstname;
+                    const pin = user.pin || 78;
+                    functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
+                      name,
+                      pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
+                    })
+                      .then((subbedHTML) => {
+                        const request = functions.createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, '');
+                        functions.sendEmail(request.data)
+                          .then(() => {
+                            res.status(200).send({
+                              message: 'success',
+                              pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
+                            });
+                          // resolve({'email': request.data.to, 'html': request.data.htmlContent, 'response': 'success'});
+                          })
+                          .catch((err) => { // Send Email error
+                            const error = new Error();
+                            error.status = 500;
+                            error.body = err.message;
+                            console.error(error);
+                            next(error);
+                          });
+                      }).catch((err) => { // Email Substitute error
                         const error = new Error();
                         error.status = 500;
                         error.body = err.message;
                         console.error(error);
                         next(error);
                       });
-                  }).catch((err) => { // Email Substitute error
-                    const error = new Error();
-                    error.status = 500;
-                    error.body = err.message;
-                    console.error(error);
-                    next(error);
                   });
               });
-          } // End if
-          else {
+          } else {
             res.status(200).send({ message: 'success' });
           }
         }).catch((err) => { // Set RSVP error
@@ -351,9 +365,10 @@ router.post('/rsvp', (req, res, next) => {
  */
 router.get('/rsvp', (req, res, next) => {
   if (res.locals.user) {
-    database.getRSVP(res.locals.user.uid)
-      .then((RSVP_status) => {
-        res.status(200).send(RSVP_status || { rsvp_status: false });
+    new RSVP({ uid: res.locals.user.uid })
+      .get()
+      .then((status) => {
+        res.status(200).send(status || { rsvp_status: false });
       }).catch((err) => {
         const error = new Error();
         error.status = err.status || 500;
@@ -385,8 +400,8 @@ router.get('/rsvp', (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next) => {
-  if (parseInt(req.body.reimbursementAmount)) {
-    req.body.reimbursementAmount = parseInt(req.body.reimbursementAmount);
+  if (parseInt(req.body.reimbursementAmount, 10)) {
+    req.body.reimbursementAmount = parseInt(req.body.reimbursementAmount, 10);
     if (!(req.body && validateReimbursement(req.body))) {
       const error = new Error();
       error.body = { error: 'Request body must be set and be valid' };
@@ -400,8 +415,9 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
         constants.s3Connection.s3TravelReimbursementBucket
       }/${
         file.key}`).join(',');
-      database.addTravelReimbursement(new TravelReimbursementModel(Object.assign(req.body, { uid: res.locals.user.uid })))
-        .then((result) => {
+      new TravelReimbursement(Object.assign(req.body, { uid: res.locals.user.uid }))
+        .add()
+        .then(() => {
           res.status(200).send({
             result: `Travel reimbursement request submitted. Final amount: $${
               req.body.reimbursementAmount
@@ -443,7 +459,7 @@ router.post('/project', (req, res, next) => {
    */
   if (res.locals.user) {
     // User is present
-    /********************************/
+    /** ***************************** */
 
     // Check for data format
     if (validateProjectRegistration(req.body)) {
@@ -456,46 +472,47 @@ router.post('/project', (req, res, next) => {
           if (!uids.includes(res.locals.user.uid)) {
             uids.push(res.locals.user.uid);
           }
-          const categories = req.body.categories;
-          if (categories && Array.isArray(categories) && categories.length === categories.filter((value) => value.match(/\d+/)).length) {
+          const { categories } = req.body;
+          if (categories && Array.isArray(categories) && categories.length === categories.filter(value => value.match(/\d+/)).length) {
             // Categories array is valid
-            database.storeProjectInfo(req.body.projectName, uids, categories)
+            const project = new Project({ projectName: req.body.projectName, team: uids, categories })
+              .add()
               .then((result) => {
                 if (process.env.NODE_ENV === 'test') {
                   console.log(result);
                 }
                 // Project ID returned here.
                 // Assign a table now
-                database.assignTable(result[0].projectID, categories)
-                  .then((result) => {
-                    res.status(200).send(result);
+                project.assignTable()
+                  .then((result1) => {
+                    res.status(200).send(result1);
                   }).catch((err) => {
-                  const error = new Error();
-                  error.status = 500;
-                  error.body = err.message;
-                  next(error);
-                });
+                    const error = new Error();
+                    error.status = 500;
+                    error.body = err.message;
+                    next(error);
+                  });
               }).catch((err) => {
-              const error = new Error();
-              error.status = 500;
-              error.body = err.message;
-              next(error);
-            });
+                const error = new Error();
+                error.status = 500;
+                error.body = err.message;
+                next(error);
+              });
           } else {
             const error = new Error();
-            error.body = {result: 'Some categories were not valid. Check and try again'};
+            error.body = { result: 'Some categories were not valid. Check and try again' };
             error.status = 400;
             next(error);
           }
         }).catch((err) => {
-        const error = new Error();
-        error.status = 400;
-        error.body = {
-          result: 'Some emails were not associated with an account. Please check your input and try again.',
-          info: err.message,
-        };
-        next(error);
-      });
+          const error = new Error();
+          error.status = 400;
+          error.body = {
+            result: 'Some emails were not associated with an account. Please check your input and try again.',
+            info: err.message,
+          };
+          next(error);
+        });
     } else {
       const error = new Error();
       error.status = 400;
@@ -517,19 +534,17 @@ router.post('/project', (req, res, next) => {
  * @apiSuccess {Array} Categories
  */
 router.get('/event_categories', (req, res, next) => {
-  const r = [];
-  database.getCategoryInfo()
-    .on('data', (data) => {
-      r.push(data);
-    })
-    .on('err', () => {
-      const error = new Error();
-      error.status = 500;
-      error.body = { error: 'Could not retrieve category information' };
-      next(error);
-    })
-    .on('end', () => {
-      res.status(200).send(r);
+  Category.getAll()
+    .then((stream) => {
+      stream.pipe(res);
+      stream.on('err', () => {
+        const error = new Error();
+        error.status = 500;
+        error.body = { error: 'Could not retrieve category information' };
+        next(error);
+      }).on('end', () => {
+        res.status(200).send();
+      });
     });
 });
 

@@ -8,6 +8,16 @@ module.exports = class Attendance extends BaseObject {
     super(uow, null, TABLE_NAME);
   }
 
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getAll(uow, opts) {
+    return super.getAll(uow, TABLE_NAME, opts);
+  }
+
   add() {
     throw new Error('This method is not supported by this class');
   }

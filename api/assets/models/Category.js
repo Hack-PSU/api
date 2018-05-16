@@ -23,4 +23,8 @@ module.exports = class Category extends BaseObject {
     testObj.category_name = chance.string();
     return testObj;
   }
+
+  static getAll(uow, opts) {
+    return super.getAll(uow, TABLE_NAME, opts);
+  }
 };

@@ -54,11 +54,13 @@ module.exports = class BaseObject {
 
   /**
    * Returns all or certain number of objects as a stream
+   * @param uow
+   * @param tableName
    * @param opts {{}} opts.fields: fields to include :: opts.startAt: object number to start at ::
    * opts.count: how many objects to return
    * @return {Promise<Stream>}
    */
-  getAll(opts) {
+  static getAll(uow, tableName, opts) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
       .fields((opts && opts.fields) || null)
@@ -67,7 +69,7 @@ module.exports = class BaseObject {
       .toString()
       .concat(';');
     const params = [];
-    return this.uow.query(query, params, { stream: true });
+    return uow.query(query, params, { stream: true });
   }
 
   /**

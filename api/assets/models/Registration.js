@@ -73,6 +73,11 @@ module.exports = class Registration extends BaseObject {
     return testObj;
   }
 
+  /**
+   *
+   * @param uid
+   * @return {Promise<any>}
+   */
   static getEmail(uid) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(TABLE_NAME)
@@ -83,6 +88,20 @@ module.exports = class Registration extends BaseObject {
     return this.uow.query(query);
   }
 
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getAll(uow, opts) {
+    return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  /**
+   *
+   * @return {Promise<any>}
+   */
   submit() {
     const query = squel.update({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .table(TABLE_NAME)

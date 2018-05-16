@@ -14,7 +14,9 @@ const aws = require('aws-sdk');
 const multer = require('multer');
 const multers3 = require('multer-s3');
 const database = require('../assets/helpers/database/database');
-const RegistrationModel = require('../assets/models/Registration');
+const Registration = require('../assets/models/Registration');
+const PreRegistration = require('../assets/models/PreRegistration');
+
 
 aws.config.update({
   accessKeyId: constants.s3Connection.accessKeyId,
@@ -116,7 +118,7 @@ function checkAuthentication(req, res, next) {
  */
 function storeIP(req, res, next) {
   if (process.env.NODE_ENV === 'prod') {
-    database.storeIP(req.headers.http_x_forwarded_for, req.headers['user-agent'])
+    database.storeIP(req.uow, req.headers.http_x_forwarded_for, req.headers['user-agent'])
       .then(() => {
         next();
       }).catch(() => {
@@ -147,7 +149,8 @@ router.post('/pre', (req, res, next) => {
     error.status = 400;
     next(error);
   } else {
-    database.addPreRegistration(req.body.email)
+    new PreRegistration({ email: req.body.email })
+      .add()
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
@@ -257,9 +260,10 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
       }/${
         generateFileName(req.body.uid, req.body.firstName, req.body.lastName)}`;
     }
-    database.addRegistration(new RegistrationModel(req.body))
+    const reg = new Registration(req.body)
+      .add()
       .then(() => {
-        database.setRegistrationSubmitted(req.body.uid);
+        reg.submit();
         res.status(200).send({ response: 'Success' });
       }).catch((err) => {
         const error = new Error();

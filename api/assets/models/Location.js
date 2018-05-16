@@ -23,4 +23,14 @@ module.exports = class Location extends BaseObject {
     testObj.location_name = chance.string();
     return testObj;
   }
+
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getAll(uow, opts) {
+    return super.getAll(uow, TABLE_NAME, opts);
+  }
 };

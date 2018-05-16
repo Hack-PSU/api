@@ -21,28 +21,13 @@ module.exports = class Project extends BaseObject {
     throw new Error('Not implemented');
   }
 
-  add() {
-    let prepped = 'CALL ';
-    prepped = prepped.concat(process.env.NODE_ENV === 'test' ? 'assignTeam_test' : 'assignTeam');
-    prepped = prepped.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;');
-    const list = [this.projectName, this.team.join(','), this.categories.join(',')];
-    return this.uow.query(prepped, list);
-  }
-
-  assignTable() {
-    let prepped = 'CALL ';
-    prepped = prepped.concat(process.env.NODE_ENV === 'test' ? 'assignTable_test' : 'assignTable')
-      .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
-    const list = [this.projectId, Math.min(...this.categories.map(c => parseInt(c, 10)))];
-    return this.uow.query(prepped, list);
-  }
-
   /**
    *
    * @param uid User id to return project details of
+   * @param uow
    * @return {Promise<Stream>}
    */
-  getByUser(uid) {
+  static getByUser(uid, uow) {
     // 1) Query PROJECT_TEAM to get projectID (no project id, return {found: false}
     // 2) Join with PROJECT_LIST
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
@@ -58,6 +43,30 @@ module.exports = class Project extends BaseObject {
       .join('CATEGORY_LIST', 'cl', 'cl.categoryID = pc.categoryID ')
       .toParam();
     query.text = query.text.concat(';');
-    return this.uow.query(query.text, query.values, { stream: true });
+    return uow.query(query.text, query.values, { stream: true });
+  }
+
+  /**
+   *
+   * @return {Promise<any>}
+   */
+  add() {
+    let prepped = 'CALL ';
+    prepped = prepped.concat(process.env.NODE_ENV === 'test' ? 'assignTeam_test' : 'assignTeam');
+    prepped = prepped.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;');
+    const list = [this.projectName, this.team.join(','), this.categories.join(',')];
+    return this.uow.query(prepped, list);
+  }
+
+  /**
+   *
+   * @return {Promise<any>}
+   */
+  assignTable() {
+    let prepped = 'CALL ';
+    prepped = prepped.concat(process.env.NODE_ENV === 'test' ? 'assignTable_test' : 'assignTable')
+      .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
+    const list = [this.projectId, Math.min(...this.categories.map(c => parseInt(c, 10)))];
+    return this.uow.query(prepped, list);
   }
 };

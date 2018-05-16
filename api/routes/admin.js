@@ -1,15 +1,18 @@
 /* eslint-disable max-len */
 import { emailObjectSchema } from '../assets/helpers/schemas';
 
-const constants = require('../assets/helpers/constants');
-const functions = require('../assets/helpers/functions');
 const validator = require('email-validator');
-
-const admin = require('firebase-admin');
+const Ajv = require('ajv');
+const { Transform } = require('stream');
 const express = require('express');
 const authenticator = require('../assets/helpers/auth');
 const database = require('../assets/helpers/database/database');
-const Ajv = require('ajv');
+const functions = require('../assets/helpers/functions');
+const Registration = require('../assets/models/Registration');
+const PreRegistration = require('../assets/models/PreRegistration');
+const RSVP = require('../assets/models/RSVP');
+const Attendance = require('../assets/models/Attendance');
+const Location = require('../assets/models/Location');
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -120,7 +123,7 @@ function verifyACL(level) {
 
 /** ********************** ROUTES ******************************** */
 
-router.get('/', (req, res, next) => {
+router.get('/', (req, res) => {
   res.status(200).send({ response: 'authorized' });
 });
 
@@ -153,27 +156,54 @@ router.get('/', (req, res, next) => {
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
   if ((!req.query.limit || parseInt(req.query.limit, 10)) && (!req.query.offset || parseInt(req.query.offset, 10))) {
-    const arr = [];
-    database.getRegistrations(parseInt(req.query.limit, 10), parseInt(req.query.offset, 10))
-      .on('data', (document) => {
-        arr.push(document);
-      }).on('err', (err) => {
+    Registration.getAll(req.uow, {
+      count: parseInt(req.query.limit, 10),
+      limit: parseInt(req.query.offset, 10),
+    }).then((stream) => {
+      stream.pipe(new Transform({
+        readableObjectMode: true,
+        writableObjectMode: true,
+        transform(chunk, encoding, callback) {
+          const obj = chunk;
+          authenticator.getUserData(chunk.uid)
+            .then((user) => {
+              obj.sign_up_time = new Date(user.metadata.creationTime).getTime();
+              this.push(obj);
+              callback();
+            });
+        },
+      })).on('error', () => {
+        res.status(207);
+      }).pipe(res)
+        .on('end', () => {
+          res.status(200).send();
+        });
+      stream.on('error', (err) => {
         const error = new Error();
         error.status = 500;
         error.body = err.message;
         next(error);
-      }).on('end', () => {
-        Promise.all(arr.map(value => new Promise((resolve, reject) => {
-          authenticator.getUserData(value.uid)
-            .then((user) => {
-              value.sign_up_time = new Date(user.metadata.creationTime).getTime();
-              resolve(value);
-            }).catch(err => reject(err));
-        }))).then(result => res.status(200).send(result))
-          .catch((err) => {
-            res.status(207).send(arr);
-          });
       });
+    }).catch((err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
+    // stream.on('data', (document) => {
+    //   arr.push(document);
+    // }).on('end', () => {
+    //   Promise.all(arr.map(value => new Promise((resolve, reject) => {
+    //     authenticator.getUserData(value.uid)
+    //       .then((user) => {
+    //         value.sign_up_time = new Date(user.metadata.creationTime).getTime();
+    //         resolve(value);
+    //       }).catch(err => reject(err));
+    //   }))).then(result => res.status(200).send(result))
+    //     .catch((err) => {
+    //       res.status(207).send(arr);
+    //     });
+    // });
   } else {
     const error = new Error();
     error.status = 400;
@@ -208,19 +238,36 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/preregistered', verifyACL(2), (req, res, next) => {
-  if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
-    const arr = [];
-    database.getPreRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
-      .on('data', (document) => {
-        arr.push(document);
-      }).on('err', (err) => {
+  if ((!req.query.limit || parseInt(req.query.limit, 10)) && (!req.query.offset || parseInt(req.query.offset, 10))) {
+    PreRegistration.getAll(req.uow, {
+      count: parseInt(req.query.limit, 10),
+      limit: parseInt(req.query.offset, 10),
+    }).then((stream) => {
+      stream.pipe(res);
+      stream.on('end', () => res.status(200).send());
+      stream.on('err', (err) => {
         const error = new Error();
         error.status = 500;
         error.body = err.message;
         next(error);
-      }).on('end', () => {
-        res.status(200).send(arr);
       });
+    }).catch((err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
+    // database.getPreRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
+    //   .on('data', (document) => {
+    //     arr.push(document);
+    //   }).on('err', (err) => {
+    //   const error = new Error();
+    //   error.status = 500;
+    //   error.body = err.message;
+    //   next(error);
+    // }).on('end', () => {
+    //   res.status(200).send(arr);
+    // });
   } else {
     const error = new Error();
     error.status = 400;
@@ -264,7 +311,7 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
 /**
  * @api {get} /admin/rsvp_list Get list of people who rsvp
  * @apiVersion 0.1.0
- * @apiName Retrive RSVP list
+ * @apiName Retrieve RSVP list
  * @apiGroup Admin
  * @apiPermission Exec
 
@@ -276,19 +323,26 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array of hackers who RSVP
  */
 router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
-  if ((!req.query.limit || parseInt(req.query.limit)) && (!req.query.offset || parseInt(req.query.offset))) {
-    const arr = [];
-    database.getRSVPList(parseInt(req.query.limit), parseInt(req.query.offset))
-      .on('data', (document) => {
-        arr.push(document);
-      }).on('err', (err) => {
+  if ((!req.query.limit || parseInt(req.query.limit, 10)) && (!req.query.offset || parseInt(req.query.offset, 10))) {
+    RSVP.getAll(req.uow, {
+      count: parseInt(req.query.limit, 10),
+      limit: parseInt(req.query.offset, 10),
+    }).then((stream) => {
+      stream.pipe(res);
+      stream.on('end', () => res.status(200).send());
+      stream.on('err', (err) => {
         const error = new Error();
         error.status = 500;
         error.body = err.message;
         next(error);
-      }).on('end', () => {
-        res.status(200).send(arr);
       });
+    });
+    // database.getRSVPList(parseInt(req.query.limit), parseInt(req.query.offset))
+    //   .on('data', (document) => {
+    //     arr.push(document);
+    //   }).on('end', () => {
+    //   res.status(200).send(arr);
+    // });
   } else {
     const error = new Error();
     error.status = 400;
@@ -308,54 +362,64 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array of hackers who attended
  */
 router.get('/attendance_list', verifyACL(2), (req, res, next) => {
-  const arr = [];
-  database.getAttendanceList()
-    .on('data', (document) => {
-      arr.push(document);
-    }).on('err', (err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    }).on('end', () => {
-      res.status(200).send(arr);
+  Attendance.getAll(req.uow)
+    .then((stream) => {
+      stream.pipe(res);
+      stream.on('end', () => res.status(200).send());
+      stream.on('err', (err) => {
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
     });
+  // database.getAttendanceList()
+  //   .on('data', (document) => {
+  //     arr.push(document);
+  //   }).on('err', (err) => {
+  //   const error = new Error();
+  //   error.status = 500;
+  //   error.body = err.message;
+  //   next(error);
+  // }).on('end', () => {
+  //   res.status(200).send(arr);
+  // });
 });
 
-/**
- * @api {get} /admin/rsvp_attendance retrieve the list of people who attended
- * @apiVersion 0.3.2
- * @apiName Retrieve Attendance List based on RSVPs
- * @apiGroup Admin
- * @apiPermission Exec
- *
- * @apiUse AuthArgumentRequired
- * @apiSuccess {Array} Array of hackers who attended
- */
-// TODO: remove this route on open source version
-router.get('/rsvp_attendance', verifyACL(2), (req, res, next) => {
-  const arr = [];
-  database.getAttendanceHackedRsvpSpringMess()
-    .on('data', (document) => {
-      arr.push(document);
-    }).on('err', (err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    }).on('end', () => {
-      Promise.all(arr.map(value => new Promise((resolve, reject) => {
-        authenticator.getUserData(value.uid)
-          .then((user) => {
-            value.sign_up_time = new Date(user.metadata.creationTime).getTime();
-            resolve(value);
-          }).catch(err => reject(err));
-      }))).then(result => res.status(200).send(result))
-        .catch((err) => {
-          res.status(207).send(arr);
-        });
-    });
-});
+// /**
+//  * @api {get} /admin/rsvp_attendance retrieve the list of people who attended
+//  * @apiVersion 0.3.2
+//  * @apiName Retrieve Attendance List based on RSVPs
+//  * @apiGroup Admin
+//  * @apiPermission Exec
+//  *
+//  * @apiUse AuthArgumentRequired
+//  * @apiSuccess {Array} Array of hackers who attended
+//  */
+// // TODO: remove this route on open source version
+// router.get('/rsvp_attendance', verifyACL(2), (req, res, next) => {
+//   const arr = [];
+//   database.getAttendanceHackedRsvpSpringMess()
+//     .on('data', (document) => {
+//       arr.push(document);
+//     }).on('err', (err) => {
+//     const error = new Error();
+//     error.status = 500;
+//     error.body = err.message;
+//     next(error);
+//   }).on('end', () => {
+//     Promise.all(arr.map(value => new Promise((resolve, reject) => {
+//       authenticator.getUserData(value.uid)
+//         .then((user) => {
+//           value.sign_up_time = new Date(user.metadata.creationTime).getTime();
+//           resolve(value);
+//         }).catch(err => reject(err));
+//     }))).then(result => res.status(200).send(result))
+//       .catch((err) => {
+//         res.status(207).send(arr);
+//       });
+//   });
+// });
 
 /**
  * @api {post} /admin/makeadmin Elevate a user's privileges
@@ -373,7 +437,7 @@ router.get('/rsvp_attendance', verifyACL(2), (req, res, next) => {
  */
 router.post('/makeadmin', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.uid) {
-    const privilege = (req.body.privilege && parseInt(req.body.privilege)) || 1;
+    const privilege = (req.body.privilege && parseInt(req.body.privilege, 10)) || 1;
     if ((res.locals.privilege < 4) && privilege < res.locals.privilege) { // If not tech-exec and attempting to reduce permissions
       const error = new Error();
       error.status = 400;
@@ -410,17 +474,27 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array containing all locations in the database
  */
 router.get('/location_list', verifyACL(3), (req, res, next) => {
-  const arr = [];
-  database.getAllLocations().on('data', (document) => {
-    arr.push(document);
-  }).on('err', (err) => {
-    const error = new Error();
-    error.status = 500;
-    error.body = err.message;
-    next(error);
-  }).on('end', () => {
-    res.status(200).send(arr);
-  });
+  Location.getAll()
+    .then((stream) => {
+      stream.pipe(res);
+      stream.on('end', () => res.status(200).send());
+      stream.on('err', (err) => {
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
+    });
+  // database.getAllLocations().on('data', (document) => {
+  //   arr.push(document);
+  // }).on('err', (err) => {
+  //   const error = new Error();
+  //   error.status = 500;
+  //   error.body = err.message;
+  //   next(error);
+  // }).on('end', () => {
+  //   res.status(200).send(arr);
+  // });
 });
 
 /**
@@ -437,14 +511,20 @@ router.get('/location_list', verifyACL(3), (req, res, next) => {
  */
 router.post('/create_location', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.locationName && (req.body.locationName.length > 0)) {
-    database.addNewLocation(req.body.locationName).then(() => {
-      res.status(200).send({ status: 'Success' });
-    }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+    const location = new Location({ location_name: req.body.locationName }, req.uow);
+    location.add()
+      .then(() => {
+        res.status(200).send({ status: 'Success' });
+      }).catch((err) => {
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
+    // database.addNewLocation(req.body.locationName).then(() => {
+    // }).catch((err) => {
+    //
+    // });
   } else {
     const error = new Error();
     error.status = 400;
@@ -473,7 +553,8 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
     req.body.name &&
     req.body.name.length > 0 &&
     (req.body.uid.length > 0)) {
-    database.updateLocation(req.body.uid, req.body.name)
+    const location = new Location({ uid: req.body.uid, location_name: req.body.name }, req.uow);
+    location.update()
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
@@ -482,6 +563,15 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
         error.body = err.message;
         next(error);
       });
+    // database.updateLocation(req.body.uid, req.body.name)
+    //   .then(() => {
+    //     res.status(200).send({ status: 'Success' });
+    //   }).catch((err) => {
+    //     const error = new Error();
+    //     error.status = 500;
+    //     error.body = err.message;
+    //     next(error);
+    //   });
   } else {
     const error = new Error();
     error.status = 400;
@@ -504,7 +594,8 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
  */
 router.post('/remove_location', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.uid && (req.body.uid.length > 0)) {
-    database.removeLocation(req.body.uid)
+    const location = new Location({ uid: req.body.uid }, req.uow);
+    location.delete()
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
@@ -513,6 +604,15 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
         error.body = err.message;
         next(error);
       });
+    // database.removeLocation(req.body.uid)
+    //   .then(() => {
+    //     res.status(200).send({ status: 'Success' });
+    //   }).catch((err) => {
+    //     const error = new Error();
+    //     error.status = 500;
+    //     error.body = err.message;
+    //     next(error);
+    //   });
   } else {
     const error = new Error();
     error.status = 400;
@@ -534,16 +634,15 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
  */
 router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
   const arr = [];
-  database.getExtraCreditClassList()
-    .on('data', (document) => {
-      arr.push(document);
-    }).on('err', (err) => {
+  database.getExtraCreditClassList(req.uow)
+    .pipe(res)
+    .on('error', (err) => {
       const error = new Error();
       error.status = 500;
       error.body = err.message;
       next(error);
     }).on('end', () => {
-      res.status(200).send(arr);
+      res.status(200).send();
     });
 });
 
@@ -562,7 +661,7 @@ router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
  */
 router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.uid && req.body.cid && parseInt(req.body.cid)) {
-    database.assignExtraCredit(req.body.uid, req.body.cid)
+    database.assignExtraCredit(req.uow, req.body.uid, req.body.cid)
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
@@ -648,7 +747,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
           };
           next(error);
         } else if (res.locals.failArray.length > 0) {
-          database.addEmailsHistory(resolves.map(resolution => ({
+          database.addEmailsHistory(req.uow, resolves.map(resolution => ({
             sender: res.locals.user.uid,
             recipient: resolution.email,
             email_content: req.body.html,

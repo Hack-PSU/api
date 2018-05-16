@@ -22,7 +22,7 @@ function getExtraCreditClassList(uow) {
  */
 function assignExtraCredit(uow, uid, cid) {
   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .into(process.env.NODE_ENV === 'test' ? 'EXTRA_CREDIT_ASSIGNMENT_TEST' : 'EXTRA_CREDIT_ASSIGNMENT')
+    .into('EXTRA_CREDIT_ASSIGNMENT')
     .setFieldsRows([{ class_uid: cid, user_uid: uid }])
     .toParam();
   query.text = query.text.concat(';');
@@ -92,10 +92,42 @@ function addEmailsHistory(uow, successes, fails) {
   return uow.query(query.text, query.values);
 }
 
+/**
+ *
+ * @param assignments
+ * @param uow
+ * @return {Promise<any>}
+ */
+function addRfidAssignments(assignments,uow) {
+  const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+    .into('RFID_ASSIGNMENTS')
+    .setFieldsRows(assignments)
+    .toParam();
+  query.text = query.text.concat(';');
+  return uow.query(query.text, query.values);
+}
+
+/**
+ *
+ * @param scans
+ * @param uow
+ * @return {Promise<any>}
+ */
+function addRfidScans(scans, uow) {
+  const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+    .into('RFID_SCANS')
+    .setFieldsRows(scans)
+    .toParam();
+  query.text = query.text.concat(';');
+  return uow.query(query.text, query.values);
+}
+
 
 module.exports = {
   writePiMessage,
   getExtraCreditClassList,
+  addRfidAssignments,
+  addRfidScans,
   assignExtraCredit,
   storeIP,
   addEmailsHistory,

@@ -11,6 +11,7 @@ const fs = require('fs');
 const nodecipher = require('node-cipher');
 const cors = require('cors');
 const redisAdapter = require('socket.io-redis');
+const UnitOfWork = require('./assets/helpers/database/uow_factory');
 
 /**
  * Normalize a port into a number, string, or false.
@@ -34,6 +35,27 @@ function normalizePort(val) {
 }
 
 const app = express();
+
+app.use((req, res, next) => {
+  function complete() {
+    if (req.uow) {
+      req.uow.complete();
+    }
+  }
+  res.on('finish', complete);
+  res.on('close', complete);
+  next();
+});
+
+app.use((req, res, next) => {
+  UnitOfWork.create().then((uow) => {
+    req.uow = uow;
+    next();
+  }).catch((err) => {
+    next(err);
+  });
+});
+
 /**
  * Create HTTP server.
  */

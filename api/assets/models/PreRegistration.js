@@ -20,4 +20,14 @@ module.exports = class PreRegistration extends BaseObject {
     testObj.email = chance.email();
     return testObj;
   }
+
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getAll(uow, opts) {
+    return super.getAll(uow, TABLE_NAME, opts);
+  }
 };

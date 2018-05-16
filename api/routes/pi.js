@@ -3,6 +3,7 @@ const Ajv = require('ajv');
 
 const router = express.Router();
 const database = require('../assets/helpers/database/database');
+const Registration = require('../assets/models/Registration');
 
 
 const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/helpers/constants');
@@ -40,17 +41,27 @@ router.use((req, res, next) => {
  */
 router.get('/registrations', (req, res, next) => {
   const arr = [];
-  database.getRegistrations(null, null, { fields: ['uid', 'pin', 'firstname', 'lastname', 'shirt_size', 'dietary_restriction'] })
-    .on('data', document => arr.push(document))
-    .on('err', (err) => {
+  Registration.getAll(req.uow, { fields: ['uid', 'pin', 'firstname', 'lastname', 'shirt_size', 'dietary_restriction'] })
+    .then((stream) => {
+      stream.pipe(res)
+        .on('err', (err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        })
+        .on('end', () => {
+          res.status(200).send(arr);
+        });
+    }).catch((err) => {
       const error = new Error();
       error.status = 500;
       error.body = err.message;
       next(error);
-    })
-    .on('end', () => {
-      res.status(200).send(arr);
     });
+
+  // database.getRegistrations(null, null, { fields: ['uid', 'pin', 'firstname', 'lastname', 'shirt_size', 'dietary_restriction'] })
+  //   .on('data', document => arr.push(document))
 });
 
 /**
@@ -79,7 +90,7 @@ router.post('/assignment', (req, res, next) => {
   const validate = ajv.compile(rfidAssignmentSchema);
   if (req.body && req.body.assignments && validate(req.body.assignments)) {
     // LEGAL
-    database.addRfidAssignments(req.body.assignments)
+    database.addRfidAssignments(req.body.assignments,req.uow)
       .then(() => {
         res.status(200).send({ message: 'success' });
       }).catch((err) => {
@@ -123,7 +134,7 @@ router.post('/scans', (req, res, next) => {
   const validate = ajv.compile(rfidScansSchema);
   if (req.body && req.body.scans && validate(req.body.scans)) {
     // LEGAL
-    database.addRfidScans(req.body.scans)
+    database.addRfidScans(req.body.scans, req.uow)
       .then(() => {
         res.status(200).send({ message: 'success' });
       }).catch((err) => {

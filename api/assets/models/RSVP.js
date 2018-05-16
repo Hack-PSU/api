@@ -17,19 +17,13 @@ module.exports = class PreRegistration extends BaseObject {
     throw new Error('Method not implemented');
   }
 
-  rsvpStatus(userUid) {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(TABLE_NAME, 'rsvp')
-      .field('r.pin')
-      .field('rsvp.*')
-      .where('rsvp.user_id = ?', userUid)
-      .join('REGISTRATION', 'r', 'r.uid=rsvp.user_id')
-      .toParam();
-    query.text = query.text.concat(';');
-    return this.uow.query(query);
-  }
-
-  getAll(opts) {
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getAll(uow, opts) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(TABLE_NAME)
       .field('rsvp.*')
@@ -43,6 +37,18 @@ module.exports = class PreRegistration extends BaseObject {
       .join('REGISTRATION', 'r', 'r.uid=rsvp.user_id')
       .toString()
       .concat(';');
-    return this.uow.query(query, null, { stream: true });
+    return uow.query(query, null, { stream: true });
+  }
+
+  rsvpStatus(userUid) {
+    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(TABLE_NAME, 'rsvp')
+      .field('r.pin')
+      .field('rsvp.*')
+      .where('rsvp.user_id = ?', userUid)
+      .join('REGISTRATION', 'r', 'r.uid=rsvp.user_id')
+      .toParam();
+    query.text = query.text.concat(';');
+    return this.uow.query(query);
   }
 };

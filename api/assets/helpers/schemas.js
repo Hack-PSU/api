@@ -17,6 +17,34 @@ module.exports = {
     },
     required: ['email'],
   },
+  preRegisteredSchema: {
+    type: 'object',
+    properties: {
+      uid: {
+        type: 'string',
+      },
+      email: {
+        type: 'string',
+        format: 'email',
+      },
+    },
+    required: ['uid', 'email'],
+  },
+  rsvpSchema: {
+    type: 'object',
+    properties: {
+      user_uid: {
+        type: 'string',
+      },
+      rsvp_time: {
+        type: 'number',
+      },
+      rsvp_status: {
+        type: 'boolean',
+      },
+    },
+    required: ['user_uid', 'rsvp_time', 'rsvp_status'],
+  },
   registeredUserSchema: {
     type: 'object',
     properties: {
@@ -62,8 +90,7 @@ module.exports = {
       },
       email: {
         type: 'string',
-        format:
-          'email',
+        format: 'email',
       },
       academicYear: {
         enum:
@@ -118,8 +145,10 @@ module.exports = {
       },
       expectations: {
         type: 'string',
-      }
-      ,
+      },
+      time: {
+        type: 'number',
+      },
     },
     required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'uid', 'eighteenBeforeEvent', 'mlhcoc', 'mlhdcp'],
   },

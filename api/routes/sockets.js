@@ -7,7 +7,7 @@ const constants = require('../assets/helpers/constants');
 const database = require('../assets/helpers/database/database');
 const authenticator = require('../assets/helpers/auth');
 
-const UpdateModel = require('../assets/models/UpdateModel');
+const UpdateModel = require('../assets/models/Update');
 const EventModel = require('../assets/models/Event');
 
 const { sendNotification } = require('../assets/helpers/functions');

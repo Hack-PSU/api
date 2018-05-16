@@ -12,6 +12,10 @@ const dbConnection = mysql.createPool(sqlConnection);
  * chosen based on config.
  */
 module.exports = class UowFactory {
+  /**
+   *
+   * @return {Promise<MysqlUow>}
+   */
   static create() {
     return new Promise((resolve, reject) => {
       switch (process.env.NODE_ENV) {

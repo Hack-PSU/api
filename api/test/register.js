@@ -3,15 +3,16 @@ process.env.NODE_ENV = 'test';
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const server = require('../app');
-const sql = require("mysql");
-const squel = require("squel");
+const sql = require('mysql');
+const squel = require('squel');
 
 const Chance = require('chance');
-const firebase = require("firebase");
+const firebase = require('firebase');
 
 const chance = new Chance(123);
 
 const sqlOptions = require('../assets/helpers/constants').sqlConnection;
+
 const connection = sql.createConnection(sqlOptions);
 
 connection.connect((err) => {
@@ -62,10 +63,10 @@ function generateBadRegistration() {
     lastName: chance.bool() ? chance.last() : null,
     email: chance.bool() ? chance.email() : null,
     gender: chance.bool() ? chance.gender().toLowerCase() : null,
-    shirtSize: chance.bool() ? "M" : null,
-    dietaryRestriction: chance.bool() ? "vegetarian" : null,
+    shirtSize: chance.bool() ? 'M' : null,
+    dietaryRestriction: chance.bool() ? 'vegetarian' : null,
     university: chance.bool() ? 'Georgetown university' : null,
-  }
+  };
 }
 
 /**
@@ -78,9 +79,9 @@ function generateGoodRegistration() {
     lastName: chance.last(),
     email: chance.email(),
     gender: chance.gender().toLowerCase(),
-    shirtSize: "M",
-    dietaryRestriction: "vegetarian",
-    university: "Georgetown University",
+    shirtSize: 'M',
+    dietaryRestriction: 'vegetarian',
+    university: 'Georgetown University',
     travelReimbursement: false,
     firstHackathon: true,
     academicYear: 'freshman',
@@ -92,19 +93,19 @@ function generateGoodRegistration() {
     mlhcoc: true,
     mlhdcp: true,
     uid: 'WaPm1vcEVvaw0tbCbrBHs2e891s2',
-    referral: "Facebook",
+    referral: 'Facebook',
     project: chance.sentence(),
     expectations: chance.sentence(),
-    veteran: true
-  }
+    veteran: true,
+  };
 }
 
 describe('pre-registration tests', () => {
-  let idToken = null;
+  const idToken = null;
   // Scrub DB
   before((done) => {
-    const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-      .from("PRE_REGISTRATION_TEST")
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from('PRE_REGISTRATION_TEST')
       .toString()
       .concat(';');
     connection.query(query, (err, response, fields) => {
@@ -168,18 +169,17 @@ describe('pre-registration tests', () => {
   });
   after((done) => {
     done();
-  })
+  });
 });
 
 
 describe('registration tests', () => {
-
   let idToken = null;
 
-// Scrub DB
+  // Scrub DB
   before((done) => {
-    const query = squel.delete({autoQuoteTableNames: true, autoQuoteFieldNames: true})
-      .from("REGISTRATION_TEST")
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from('REGISTRATION_TEST')
       .where('uid = ?', 'WaPm1vcEVvaw0tbCbrBHs2e891s2')
       .toParam();
     query.text = query.text.concat(';');
@@ -189,7 +189,6 @@ describe('registration tests', () => {
       } else {
         done();
       }
-
     });
   });
 
@@ -231,7 +230,7 @@ describe('registration tests', () => {
         .send(generateGoodRegistration())
         .end((err, res) => {
           res.should.have.status(200);
-          should.equal(res.body.response, "Success");
+          should.equal(res.body.response, 'Success');
           should.equal(err, null);
           done();
         });

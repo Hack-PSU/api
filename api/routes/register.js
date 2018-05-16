@@ -14,7 +14,7 @@ const aws = require('aws-sdk');
 const multer = require('multer');
 const multers3 = require('multer-s3');
 const database = require('../assets/helpers/database/database');
-const RegistrationModel = require('../assets/models/RegistrationModel');
+const RegistrationModel = require('../assets/models/Registration');
 
 aws.config.update({
   accessKeyId: constants.s3Connection.accessKeyId,

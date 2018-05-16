@@ -1,12 +1,14 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const server = require('../app');
-const sql = require("mysql");
-const firebase = require("firebase");
+const sql = require('mysql');
+const firebase = require('firebase');
 const Chance = require('chance');
+
 const chance = new Chance(123);
 
 const sqlOptions = require('../assets/helpers/constants').sqlConnection;
+
 const connection = sql.createConnection(sqlOptions);
 
 connection.connect((err) => {
@@ -57,9 +59,9 @@ function generateGoodRegistration() {
     lastName: chance.last(),
     email: chance.email(),
     gender: chance.gender().toLowerCase(),
-    shirtSize: "M",
-    dietaryRestriction: "vegetarian",
-    university: "Georgetown University",
+    shirtSize: 'M',
+    dietaryRestriction: 'vegetarian',
+    university: 'Georgetown University',
     travelReimbursement: false,
     firstHackathon: true,
     academicYear: 'freshman',
@@ -71,11 +73,11 @@ function generateGoodRegistration() {
     mlhcoc: true,
     mlhdcp: true,
     uid: 'WaPm1vcEVvaw0tbCbrBHs2e891s2',
-    referral: "Facebook",
+    referral: 'Facebook',
     project: chance.sentence(),
     expectations: chance.sentence(),
-    veteran: true
-  }
+    veteran: true,
+  };
 }
 
 describe('get registration', () => {
@@ -123,7 +125,7 @@ describe('get registration', () => {
           res.body.should.be.a('object');
           done();
         });
-    })
+    });
   });
 
   after((done) => {
@@ -133,11 +135,11 @@ describe('get registration', () => {
 });
 
 
-//no idtoken
-//non existant user
-//rsvp success
+// no idtoken
+// non existant user
+// rsvp success
 describe('rsvp user', () => {
-  let checkin = true;
+  const checkin = true;
   let idToken = null;
   before((done) => {
     loginRegular()
@@ -145,7 +147,7 @@ describe('rsvp user', () => {
         user.getIdToken(true)
           .then((decodedIdToken) => {
             idToken = decodedIdToken;
-            let generatedRegistration = generateGoodRegistration();
+            const generatedRegistration = generateGoodRegistration();
             generatedRegistration.email = 'test@email.com';
             generatedRegistration.uid = user.uid;
             generatedRegistration.pin = 78;
@@ -191,17 +193,17 @@ describe('rsvp user', () => {
       chai.request(server)
         .post('/v1/users/rsvp')
         .set('idtoken', idToken)
-        .send({rsvp: checkin.toString()})
+        .send({ rsvp: checkin.toString() })
         .end((err, res) => {
           should.equal(err, null);
           res.should.have.status(200);
           done();
-        })
-    })
+        });
+    });
   });
 
   after((done) => {
     firebase.auth().signOut();
     done();
-  })
+  });
 });

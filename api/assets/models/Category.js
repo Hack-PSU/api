@@ -5,6 +5,7 @@ const chance = new Chance(123);
 const { categorySchema } = require('../helpers/schemas');
 
 const TABLE_NAME = 'CATEGORY_LIST';
+module.exports = TABLE_NAME;
 
 module.exports = class Category extends BaseObject {
   /**

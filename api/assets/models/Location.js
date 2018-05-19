@@ -5,6 +5,7 @@ const chance = new Chance(123);
 const { locationSchema } = require('../helpers/schemas');
 
 const TABLE_NAME = 'LOCATIONS';
+module.exports = TABLE_NAME;
 
 module.exports = class Location extends BaseObject {
   /**

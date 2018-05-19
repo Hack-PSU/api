@@ -1,10 +1,10 @@
 /* eslint-disable import/no-dynamic-require,global-require,no-undef,array-callback-return,new-cap */
-process.env.NODE_ENV = 'debug';
+process.env.NODE_ENV = 'test';
 const chai = require('chai');
 const fs = require('fs');
 const UowFactory = require('../assets/helpers/database/uow_factory');
 
-const modelFiles = fs.readdirSync('../assets/models')
+const modelFiles = fs.readdirSync('./assets/models')
   .map(a => a.replace(/\.js/g, ''))
   .filter(a => a !== 'BaseObject');
 const models = modelFiles.map(model => require(`../assets/models/${model}`));
@@ -28,14 +28,18 @@ describe('Object retrieval tests', () => {
   models.map((model) => {
     describe(`Testing ${model.name}`, () => {
       describe(`Get all ${model.name}`, () => {
-        it('it should get all objects of type model', async (done) => {
+        it(`it should get all objects of type ${model.name}`, async (done) => {
           try {
-            const m = new model({}, uow);
-            const result = await m.getAll();
-            result.should.be.an('array');
-            done();
+            const result = await model.getAll(uow);
+            result.on('data', (d) => {
+              console.log(d);
+            });
+            result.on('end', () => done());
+            result.on('error', err => done(err));
           } catch (e) {
-            done(e);
+            if (e.message !== 'This method is not supported by this class') {
+              done(e);
+            }
           }
         });
       });
@@ -52,7 +56,6 @@ describe('Object retrieval tests', () => {
           }
         });
       });
-
     });
   });
 });

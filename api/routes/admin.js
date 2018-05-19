@@ -1,10 +1,10 @@
 /* eslint-disable max-len */
-import { emailObjectSchema } from '../assets/helpers/schemas';
 
 const validator = require('email-validator');
 const Ajv = require('ajv');
 const { Transform } = require('stream');
 const express = require('express');
+const { emailObjectSchema } = require('../assets/helpers/schemas');
 const authenticator = require('../assets/helpers/auth');
 const database = require('../assets/helpers/database/database');
 const functions = require('../assets/helpers/functions');
@@ -41,11 +41,11 @@ router.use((req, res, next) => {
           next(error);
         }
       }).catch((err) => {
-        const error = new Error();
-        error.status = 401;
-        error.body = err.message;
-        next(error);
-      });
+      const error = new Error();
+      error.status = 401;
+      error.body = err.message;
+      next(error);
+    });
   } else {
     const error = new Error();
     error.status = 401;
@@ -516,11 +516,11 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
     // database.addNewLocation(req.body.locationName).then(() => {
     // }).catch((err) => {
     //
@@ -558,11 +558,11 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
     // database.updateLocation(req.body.uid, req.body.name)
     //   .then(() => {
     //     res.status(200).send({ status: 'Success' });
@@ -599,11 +599,11 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
     // database.removeLocation(req.body.uid)
     //   .then(() => {
     //     res.status(200).send({ status: 'Success' });
@@ -642,8 +642,8 @@ router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
       error.body = err.message;
       next(error);
     }).on('end', () => {
-      res.status(200).send();
-    });
+    res.status(200).send();
+  });
 });
 
 /**
@@ -665,11 +665,11 @@ router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
   } else {
     const error = new Error();
     error.status = 400;
@@ -727,9 +727,9 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
               .then(() => {
                 resolve({ email: request.data.to, response: 'success', name: emailObject.name }); // If successful, resolve
               }).catch((error) => {
-                res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
-                resolve(null);
-              });
+              res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
+              resolve(null);
+            });
           }).catch((error) => {
             res.locals.failArray.push(Object.assign(emailObject, error)); // if email substitution fails, add to fail array for partial HTTP success response
             resolve(null);

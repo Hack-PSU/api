@@ -27,6 +27,26 @@ module.exports = class BaseObject {
   }
 
   /**
+   * Returns all or certain number of objects as a stream
+   * @param uow
+   * @param tableName
+   * @param opts {{}} opts.fields: fields to include :: opts.startAt: object number to start at ::
+   * opts.count: how many objects to return
+   * @return {Promise<Stream>}
+   */
+  static getAll(uow, tableName, opts) {
+    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(tableName)
+      .fields((opts && opts.fields) || null)
+      .offset((opts && opts.startAt) || null)
+      .limit((opts && opts.count) || null)
+      .toString()
+      .concat(';');
+    const params = [];
+    return uow.query(query, params, { stream: true });
+  }
+
+  /**
    * Returns a representation of the object that can be added directly to the database
    * For any subclass that contains properties that do not get added to the db,
    * ensure that this method is overridden and calls super._dbRepresentation()
@@ -47,29 +67,12 @@ module.exports = class BaseObject {
    * @return {{result: boolean | ajv.Thenable<any>, error: *}}
    */
   validate() {
-    const validate = ajv.compile(this.schema);
-    const result = validate(this);
-    return { result, error: result ? null : ajv.errorsText(validate.errors) };
-  }
-
-  /**
-   * Returns all or certain number of objects as a stream
-   * @param uow
-   * @param tableName
-   * @param opts {{}} opts.fields: fields to include :: opts.startAt: object number to start at ::
-   * opts.count: how many objects to return
-   * @return {Promise<Stream>}
-   */
-  static getAll(uow, tableName, opts) {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(this.tableName)
-      .fields((opts && opts.fields) || null)
-      .offset((opts && opts.startAt) || null)
-      .limit((opts && opts.count) || null)
-      .toString()
-      .concat(';');
-    const params = [];
-    return uow.query(query, params, { stream: true });
+    if (this.schema) {
+      const validate = ajv.compile(this.schema);
+      const result = validate(this);
+      return { result, error: result ? null : ajv.errorsText(validate.errors) };
+    }
+    return { result: true, error: null };
   }
 
   /**

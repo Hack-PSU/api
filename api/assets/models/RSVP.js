@@ -4,6 +4,7 @@ const squel = require('squel');
 const { rsvpSchema } = require('../helpers/schemas');
 
 const TABLE_NAME = 'RSVP';
+module.exports = TABLE_NAME;
 
 module.exports = class PreRegistration extends BaseObject {
   constructor(data, uow) {

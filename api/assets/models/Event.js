@@ -7,6 +7,7 @@ const chance = new Chance(123);
 const { eventSchema } = require('../helpers/schemas');
 
 const TABLE_NAME = 'EVENTS';
+module.exports = TABLE_NAME;
 
 module.exports = class Event extends BaseObject {
 

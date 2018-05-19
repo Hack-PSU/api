@@ -3,6 +3,7 @@ const BaseObject = require('./BaseObject');
 const { travelReimbursementSchema } = require('../helpers/schemas');
 
 const TABLE_NAME = 'TRAVEL_REIMBURSEMENTS';
+module.exports = TABLE_NAME;
 
 module.exports = class TravelReimbursement extends BaseObject {
   constructor(data, uow) {

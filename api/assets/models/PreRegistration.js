@@ -7,6 +7,7 @@ const { preRegisteredSchema } = require('../helpers/schemas');
 const chance = new Chance(new Date().getTime());
 
 const TABLE_NAME = 'PRE_REGISTRATIONS';
+module.exports = TABLE_NAME;
 
 module.exports = class PreRegistration extends BaseObject {
   constructor(data, uow) {

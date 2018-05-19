@@ -3,9 +3,15 @@ const BaseObject = require('./BaseObject');
 
 const TABLE_NAME = 'ATTENDANCE';
 
+module.exports = TABLE_NAME;
+
 module.exports = class Attendance extends BaseObject {
   constructor(data, uow) {
     super(uow, null, TABLE_NAME);
+  }
+
+  static generateTestData() {
+    throw new Error('not implemented');
   }
 
   /**

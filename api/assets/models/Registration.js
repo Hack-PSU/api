@@ -7,6 +7,7 @@ const { registeredUserSchema } = require('../helpers/schemas');
 const chance = new Chance(new Date().getTime());
 
 const TABLE_NAME = 'REGISTRATIONS';
+module.exports = TABLE_NAME;
 
 module.exports = class Registration extends BaseObject {
   constructor(data, uow) {

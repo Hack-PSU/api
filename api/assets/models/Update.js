@@ -5,6 +5,7 @@ const squel = require('squel');
 
 
 const TABLE_NAME = 'LIVE_UPDATES';
+module.exports = TABLE_NAME;
 
 module.exports = class Update extends BaseObject {
   constructor(data, uow) {

@@ -32,7 +32,7 @@
     "node-ses": "^2.1.0",
     "node-time-uuid": "0.1.5",
     "pug": "^2.0.0-rc.4",
-    "request": "latest",
+    "request": "2.86.0",
     "request-ip": "^2.0.2",
     "socket.io": "2.0.4",
     "socket.io-redis": "5.2.0",

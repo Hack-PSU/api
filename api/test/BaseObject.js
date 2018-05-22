@@ -1,6 +1,6 @@
 /* eslint-disable import/no-dynamic-require,global-require,no-undef,array-callback-return,new-cap */
-process.env.NODE_ENV = 'test';
 const chai = require('chai');
+const { expect } = require('chai');
 const fs = require('fs');
 const UowFactory = require('../assets/helpers/database/uow_factory');
 
@@ -31,13 +31,10 @@ describe('Object retrieval tests', () => {
         it(`it should get all objects of type ${model.name}`, async (done) => {
           try {
             const result = await model.getAll(uow);
-            result.on('data', (d) => {
-              console.log(d);
-            });
+            result.on('data', console.log);
             result.on('end', () => done());
-            result.on('error', err => done(err));
           } catch (e) {
-            if (e.message !== 'This method is not supported by this class') {
+            if (e.message !== 'This method is not supported by this class' && e.message !== 'Not implemented') {
               done(e);
             }
           }
@@ -45,15 +42,19 @@ describe('Object retrieval tests', () => {
       });
 
       describe(`Add new ${model.name}`, () => {
-        it(`it should add a new test ${model.name}`, async (done) => {
-          try {
-            const m = model.generateTestData(uow);
-            const result = await m.add();
-            should.not.equal(result, null); // TODO: Add actual test condition
-            done();
-          } catch (e) {
-            done(e);
-          }
+        it(`it should add a new test ${model.name}`, (done) => {
+          model.generateTestData(uow)
+            .then((m) => {
+              const result = m.add();
+              should.not.equal(result, null); // TODO: Add actual test condition
+              done();
+            }).catch((e) => {
+              if (e.message !== 'This method is not supported by this class' && e.message !== 'Not implemented') {
+                done(e);
+              } else {
+                done();
+              }
+            });
         });
       });
     });

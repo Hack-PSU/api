@@ -1,3 +1,17 @@
+const fs = require('fs');
+
+class MockStream {
+  constructor() {
+    this.s = fs.createReadStream('./assets/helpers/database/dump_text', { encoding: 'utf-8' });
+  }
+
+  stream() {
+    console.log(`Streaming data :P ${this.toString()}`);
+    return this.s;
+  }
+}
+
+
 module.exports = class MockConnection {
   /**
    *
@@ -23,12 +37,12 @@ module.exports = class MockConnection {
    *
    * @param query
    * @param params
-   * @return {Stream}
+   * @return {MockStream}
    */
   query(query, params) {
     console.log(`Query: ${query}\n Params: ${params}`);
     this.noop();
-    return process.stdout; // TODO: Change to object that has .stream() as property
+    return new MockStream();
   }
 
   commit(callback) {
@@ -49,3 +63,4 @@ module.exports = class MockConnection {
     return this;
   }
 };
+

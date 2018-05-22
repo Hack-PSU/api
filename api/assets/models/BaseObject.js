@@ -24,6 +24,7 @@ module.exports = class BaseObject {
     this.uow = uow;
     this.schema = schema;
     this.tableName = tableName;
+    this.disallowedProperties = ['uow', 'schema', 'tableName']; // In a sub-class, make sure this array also includes all super properties
   }
 
   /**
@@ -55,8 +56,9 @@ module.exports = class BaseObject {
    */
   _dbRepresentation() {
     return Object.entries(this)
-      .filter(kv => !'uowschematableName'.includes(kv[0])) // hacky
+      .filter(kv => !this.disallowedProperties.includes(kv[0])) // hacky
       .reduce((accumulator, currentValue) => {
+        // eslint-disable-next-line prefer-destructuring
         accumulator[currentValue[0]] = currentValue[1];
         return accumulator;
       }, {});

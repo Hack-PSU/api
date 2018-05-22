@@ -1,11 +1,12 @@
+/* eslint-disable func-names */
 const admin = require('firebase-admin');
 /**
  * Checks if the provided token is authenticated
- * @param idToken
+ * @param idtoken
  * @return {Promise<admin.auth.DecodedIdToken>}
  */
-module.exports = function checkAuthentication(idToken) {
-  return admin.auth().verifyIdToken(idToken);
+module.exports.checkAuthentication = function (idtoken) {
+  return admin.auth().verifyIdToken(idtoken);
 };
 
 /**
@@ -14,7 +15,7 @@ module.exports = function checkAuthentication(idToken) {
  * @param privilege
  * @return {Promise<any>}
  */
-module.exports = function elevate(uid, privilege) {
+module.exports.elevate = function (uid, privilege) {
   return admin.auth().setCustomUserClaims(uid, { admin: true, privilege });
 };
 
@@ -23,7 +24,7 @@ module.exports = function elevate(uid, privilege) {
  *  @param email
  *  @return Promise{admin.auth.UserRecord}
  */
-module.exports = function getUserId(email) {
+module.exports.getUserId = function (email) {
   return admin.auth().getUserByEmail(email);
 };
 
@@ -32,6 +33,6 @@ module.exports = function getUserId(email) {
  * @param uid
  * @return {Promise<admin.auth.UserRecord>}
  */
-module.exports = function getUserData(uid) {
+module.exports.getUserData = function (uid) {
   return admin.auth().getUser(uid);
 };

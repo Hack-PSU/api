@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+/* eslint-disable max-len,func-names */
 const ses = require('node-ses');
 const validator = require('email-validator');
 const request = require('request');
@@ -13,7 +13,7 @@ const client = ses.createClient(emailKey);
  * @param {Object} [substitutions] A map of strings with the following format { keyword-to-substitute: string-to-substitute-with, ... }; Example: { date: "09-23-2000" }
  * @return {Promise} return a promised data with a subbed version of the html
  */
-module.exports = function emailSubstitute(html, name, substitutions) {
+module.exports.emailSubstitute = function (html, name, substitutions) {
   return new Promise(((resolve, reject) => {
     let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
     for (const key in substitutions) {
@@ -34,7 +34,7 @@ module.exports = function emailSubstitute(html, name, substitutions) {
  * @param data Contains the options for the POST request. For schema, refer to function createEmailRequest or the SendInBlue API
  * @return {Promise<any>}
  */
-module.exports = function sendEmail(data) {
+module.exports.sendEmail = function (data) {
   return new Promise((resolve, reject) => {
     client.sendEmail(data, (err) => {
       if (err) {
@@ -62,7 +62,7 @@ module.exports = function sendEmail(data) {
  * @param {String} fromEmail
  * @return {Object} { data, options }
  */
-module.exports = function createEmailRequest(email, htmlContent, subject, fromEmail) {
+module.exports.createEmailRequest = function (email, htmlContent, subject, fromEmail) {
   const emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
   const data = {
     to: email,
@@ -82,7 +82,7 @@ module.exports = function createEmailRequest(email, htmlContent, subject, fromEm
  * @param notificationBody
  * @return {Promise<any>}
  */
-module.exports = function sendNotification(notificationTitle, notificationBody) {
+module.exports.sendNotification = function (notificationTitle, notificationBody) {
   return new Promise((resolve, reject) => {
     const headers = {
       'Content-Type': 'application/json; charset=utf-8',

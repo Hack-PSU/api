@@ -11,7 +11,7 @@ module.exports = class Attendance extends BaseObject {
   }
 
   static generateTestData() {
-    throw new Error('not implemented');
+    throw new Error('Not implemented');
   }
 
   /**

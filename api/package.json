@@ -37,6 +37,7 @@
     "socket.io": "2.0.4",
     "socket.io-redis": "5.2.0",
     "squel": "5.12.0",
+    "streaming-json-stringify": "3.1.0",
     "uuid": "3.2.1"
   },
   "devDependencies": {

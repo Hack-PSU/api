@@ -4,6 +4,7 @@ const validator = require('email-validator');
 const Ajv = require('ajv');
 const { Transform } = require('stream');
 const express = require('express');
+const Stringify = require('streaming-json-stringify')
 const { emailObjectSchema } = require('../assets/helpers/schemas');
 const authenticator = require('../assets/helpers/auth');
 const database = require('../assets/helpers/database/database');
@@ -25,7 +26,6 @@ const router = express.Router();
 /**
  * Administrator authentication middleware
  */
-
 router.use((req, res, next) => {
   if (req.headers.idtoken) {
     authenticator.checkAuthentication(req.headers.idtoken)
@@ -800,17 +800,18 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
  */
 router.get('/all_users', verifyACL(2), (req, res, next) => {
   database.getAllUsersList(req.uow)
-    .pipe(res)
-    .on('error', (err) => {
-      const error = new Error();
-      error.status = 500
-      error.body = err.message;
-      next(error);
-    }).on('end', () => {
-    res.status(200).send();
-  });
+    .then((stream) => {
+      stream
+        .pipe(Stringify())
+        .pipe(res.type('json').status(200))
+        .on('error', (err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+    });
 });
-
 
 
 module.exports = router;

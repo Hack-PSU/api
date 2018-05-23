@@ -132,7 +132,7 @@ function getAllUsersList(uow) {
     .from('REGISTRATION')
     .toString();
   query = query.concat(';');
-  return uow.query(query, null, {stream: true});
+  return uow.query(query, null, { stream: true });
 }
 
 /** 

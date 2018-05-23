@@ -122,6 +122,49 @@ function addRfidScans(scans, uow) {
   return uow.query(query.text, query.values);
 }
 
+/**
+ *
+ * @param uow
+ * @return {Promise<any>}
+ */
+function getAllUsersList(uow) {
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from('REGISTRATION')
+    .toString();
+  query = query.concat(';');
+  return uow.query(query, null, {stream: true});
+}
+
+/** 
+function getAllUsersList(uow) {
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from(
+      squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
+        .from('PRE_REGISTRATION')
+        .field('id')
+        .union(
+         squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
+          .from('REGISTRATION')
+          .field('uid')
+        )
+        .union(
+          squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
+          .from('RSVP')
+          .field('user_id')
+        ), 'a'
+    )
+    .left_join('PRE_REGISTRATION', 'p', 'a.id = p.id')
+    .left_join('REGISTRATION', 'r', 'a.id = r.uid')
+    .left_join('RSVP', 'v', 'a.id = v.user_id')
+    .field('a.id')
+    .field('p.id')
+    .field('r.*')
+    .field('v.user_id')
+    .toString();
+  query = query.concat(';');
+  return uow.query(query, null, {stream: true});
+}
+**/
 
 module.exports = {
   writePiMessage,
@@ -131,4 +174,5 @@ module.exports = {
   assignExtraCredit,
   storeIP,
   addEmailsHistory,
+  getAllUsersList,
 };

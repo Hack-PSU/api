@@ -6,7 +6,7 @@ const { registeredUserSchema } = require('../helpers/schemas');
 
 const chance = new Chance(new Date().getTime());
 
-const TABLE_NAME = 'REGISTRATIONS';
+const TABLE_NAME = 'REGISTRATION';
 module.exports = TABLE_NAME;
 
 module.exports = class Registration extends BaseObject {
@@ -88,7 +88,7 @@ module.exports = class Registration extends BaseObject {
       .concat(';');
     return this.uow.query(query);
   }
-
+  
   /**
    *
    * @param uow

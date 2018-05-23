@@ -784,6 +784,34 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
   }
 });
 
+/**
+ * @api {get} /admin/all_users Get all users
+ * @apiVersion 0.2.2
+ * @apiName Get all users list
+ * @apiGroup Admin
+ * @apiPermission Team Member
+ *
+ * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of all users
+ */
+router.get('/all_users', verifyACL(2), (req, res, next) => {
+  database.getAllUsersList(req.uow)
+    .pipe(res)
+    .on('error', (err) => {
+      const error = new Error();
+      error.status = 500
+      error.body = err.message;
+      next(error);
+    }).on('end', () => {
+    res.status(200).send();
+  });
+});
+
+
 
 module.exports = router;
 

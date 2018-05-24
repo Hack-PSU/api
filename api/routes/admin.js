@@ -243,6 +243,22 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
       count: parseInt(req.query.limit, 10),
       limit: parseInt(req.query.offset, 10),
     }).then((stream) => {
+      stream
+        .pipe(Stringify())
+        .pipe(res.type('json').status(200))
+        .on('error', (err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+    }).catch((err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
+      /*
       stream.pipe(res);
       stream.on('end', () => res.status(200).send());
       stream.on('err', (err) => {
@@ -251,12 +267,7 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
         error.body = err.message;
         next(error);
       });
-    }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+    
     // database.getPreRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
     //   .on('data', (document) => {
     //     arr.push(document);
@@ -267,13 +278,14 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
     //   next(error);
     // }).on('end', () => {
     //   res.status(200).send(arr);
-    // });
+    // });*/
   } else {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Limit must be an integer' };
     next(error);
   }
+  
 });
 
 
@@ -785,9 +797,9 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/all_users Get all users
+ * @api {get} /admin/user_data Get all user data
  * @apiVersion 0.2.2
- * @apiName Get all users list
+ * @apiName Get list of all users
  * @apiGroup Admin
  * @apiPermission Team Member
  *
@@ -798,7 +810,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
  *
  * @apiSuccess {Array} Array of all users
  */
-router.get('/all_users', verifyACL(2), (req, res, next) => {
+router.get('/user_data', verifyACL(2), (req, res, next) => {
   database.getAllUsersList(req.uow)
     .then((stream) => {
       stream
@@ -813,6 +825,34 @@ router.get('/all_users', verifyACL(2), (req, res, next) => {
     });
 });
 
+/**
+ * @api {get} /admin/prereg_count Get a count of all PreRegistered Users
+ * @apiVersion 0.2.2
+ * @apiName Get a count of all PreRegistered Users
+ * @apiGroup Admin
+ * @apiPermission Team Member
+ *
+ * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of all users
+ */
+router.get('/prereg_count', verifyACL(2), (req, res, next) => {
+  PreRegistration.getCount(req.uow)
+    .then((stream) => {
+      stream
+        .pipe(Stringify())
+        .pipe(res.type('json').status(200))
+        .on('error', (err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+    });
+});
 
 module.exports = router;
 

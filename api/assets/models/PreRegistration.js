@@ -6,7 +6,8 @@ const { preRegisteredSchema } = require('../helpers/schemas');
 
 const chance = new Chance(new Date().getTime());
 
-const TABLE_NAME = 'PRE_REGISTRATIONS';
+const TABLE_NAME = 'PRE_REGISTRATION';
+const COLUMN_NAME = 'id';
 module.exports = TABLE_NAME;
 
 module.exports = class PreRegistration extends BaseObject {
@@ -30,5 +31,15 @@ module.exports = class PreRegistration extends BaseObject {
    */
   static getAll(uow, opts) {
     return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getCount(uow, opts) {
+    return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
   }
 };

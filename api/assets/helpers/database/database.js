@@ -129,42 +129,33 @@ function addRfidScans(scans, uow) {
  */
 function getAllUsersList(uow) {
   let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .from('REGISTRATION')
-    .toString();
-  query = query.concat(';');
-  return uow.query(query, null, { stream: true });
-}
-
-/** 
-function getAllUsersList(uow) {
-  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(
       squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
-        .from('PRE_REGISTRATION')
-        .field('id')
-        .union(
-         squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
           .from('REGISTRATION')
           .field('uid')
-        )
         .union(
           squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
           .from('RSVP')
           .field('user_id')
-        ), 'a'
+        ).union(
+          squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
+          .from('RFID_ASSIGNMENTS')
+          .field('user_uid')
+        ), 'a',
     )
-    .left_join('PRE_REGISTRATION', 'p', 'a.id = p.id')
-    .left_join('REGISTRATION', 'r', 'a.id = r.uid')
-    .left_join('RSVP', 'v', 'a.id = v.user_id')
-    .field('a.id')
-    .field('p.id')
+    .left_join('REGISTRATION', 'r', 'a.uid = r.uid')
+    .left_join('RSVP', 'v', 'a.uid = v.user_id')
+    .left_join('RFID_ASSIGNMENTS', 'f', 'a.uid = f.user_uid')
+    .left_join('PRE_REGISTRATION', 'p', 'r.email = p.email')
     .field('r.*')
+    .field('p.id')
     .field('v.user_id')
+    .field('f.user_uid')
     .toString();
   query = query.concat(';');
   return uow.query(query, null, {stream: true});
 }
-**/
+
 
 module.exports = {
   writePiMessage,

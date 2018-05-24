@@ -47,6 +47,17 @@ module.exports = class BaseObject {
     return uow.query(query, params, { stream: true });
   }
 
+  static getCount(uow, tableName, column_name) {
+    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+      .from(tableName)
+      .field('COUNT('+column_name+')', 'count')
+      .toString()
+      .concat(';');
+    const params = [];
+    console.log("Hello: " + query);
+    return uow.query(query, params, { stream: true });
+  }
+
   /**
    * Returns a representation of the object that can be added directly to the database
    * For any subclass that contains properties that do not get added to the db,

@@ -4,6 +4,7 @@ const squel = require('squel');
 const { rsvpSchema } = require('../helpers/schemas');
 
 const TABLE_NAME = 'RSVP';
+const COLUMN_NAME = 'user_id';
 module.exports = TABLE_NAME;
 
 module.exports = class PreRegistration extends BaseObject {
@@ -51,5 +52,15 @@ module.exports = class PreRegistration extends BaseObject {
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query);
+  }
+
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getCount(uow, opts) {
+    return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
   }
 };

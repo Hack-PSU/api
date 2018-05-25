@@ -7,6 +7,7 @@ const { registeredUserSchema } = require('../helpers/schemas');
 const chance = new Chance(new Date().getTime());
 
 const TABLE_NAME = 'REGISTRATION';
+const COLUMN_NAME = 'uid';
 module.exports = TABLE_NAME;
 
 module.exports = class Registration extends BaseObject {
@@ -97,6 +98,16 @@ module.exports = class Registration extends BaseObject {
    */
   static getAll(uow, opts) {
     return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getCount(uow, opts) {
+    return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
   }
 
   /**

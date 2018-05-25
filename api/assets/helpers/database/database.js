@@ -156,6 +156,40 @@ function getAllUsersList(uow) {
   return uow.query(query, null, {stream: true});
 }
 
+/**
+ *
+ * @param uow
+ * @return {Promise<any>}
+ */
+function getAllUsersCount(uow) {
+  let prereg_column_name = 'id';
+  let reg_column_name = 'uid';
+  let rsvp_column_name = 'user_id';
+  let rfidscan_column_name = 'user_uid';
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+    .from('PRE_REGISTRATION')
+    .field('COUNT('+prereg_column_name+')', 'pre_count')
+    .union(
+      squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+        .from('REGISTRATION')
+        .field('COUNT('+reg_column_name+')', 'reg_count')
+    ).union(
+      squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+        .from('RSVP')
+        .field('COUNT('+rsvp_column_name+')', 'rsvp_count')
+    ).union(
+      squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+        .from('RFID_ASSIGNMENTS')
+        .field('COUNT('+rfidscan_column_name+')', 'rfidscan_count')
+    )
+    .toString();
+  query = query.concat(';');
+  //console.log('Users:' + query);
+  return uow.query(query, null, {stream: true});
+}
+
+
+
 
 module.exports = {
   writePiMessage,
@@ -166,4 +200,5 @@ module.exports = {
   storeIP,
   addEmailsHistory,
   getAllUsersList,
+  getAllUsersCount,
 };

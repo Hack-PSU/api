@@ -798,7 +798,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
 
 /**
  * @api {get} /admin/user_data Get all user data
- * @apiVersion 0.2.2
+ * @apiVersion 0.3.2
  * @apiName Get list of all users
  * @apiGroup Admin
  * @apiPermission Team Member
@@ -826,18 +826,15 @@ router.get('/user_data', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/prereg_count Get a count of all PreRegistered Users
- * @apiVersion 0.2.2
- * @apiName Get a count of all PreRegistered Users
+ * @api {get} /admin/prereg_count Get a count of Preregistered Users
+ * @apiVersion 0.3.2
+ * @apiName get count preregistration
  * @apiGroup Admin
  * @apiPermission Team Member
  *
- * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
- * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
- *
  * @apiUse AuthArgumentRequired
  *
- * @apiSuccess {Array} Array of all users
+ * @apiSuccess {Array} number of preregistered users
  */
 router.get('/prereg_count', verifyACL(2), (req, res, next) => {
   PreRegistration.getCount(req.uow)
@@ -853,6 +850,85 @@ router.get('/prereg_count', verifyACL(2), (req, res, next) => {
         }).on('end', res.end); // TODO: Make this the standard whenever piping to res
     });
 });
+
+/**
+ * @api {get} /admin/reg_count Get a count of Registered Users
+ * @apiVersion 0.3.2
+ * @apiName get count registration
+ * @apiGroup Admin
+ * @apiPermission Team Member
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} number of registered users
+ */
+router.get('/reg_count', verifyACL(2), (req, res, next) => {
+  Registration.getCount(req.uow)
+    .then((stream) => {
+      stream
+        .pipe(Stringify())
+        .pipe(res.type('json').status(200))
+        .on('error', (err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+    });
+});
+
+/**
+ * @api {get} /admin/rsvp_count Get a count of users who RSVP'd
+ * @apiVersion 0.3.2
+ * @apiName get rsvp count
+ * @apiGroup Admin
+ * @apiPermission Team Member
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} number of users who rsvp'd
+ */
+router.get('/rsvp_count', verifyACL(2), (req, res, next) => {
+  RSVP.getCount(req.uow)
+    .then((stream) => {
+      stream
+        .pipe(Stringify())
+        .pipe(res.type('json').status(200))
+        .on('error', (err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+    });
+});
+
+/**
+ * @api {get} /admin/user_count Get the count of users in each category
+ * @apiVersion 0.3.2
+ * @apiName user count
+ * @apiGroup Admin
+ * @apiPermission Team Member
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
+ */
+router.get('/user_count', verifyACL(2), (req, res, next) => {
+  database.getAllUsersCount(req.uow)
+    .then((stream) => {
+      stream
+        .pipe(Stringify())p
+        .pipe(res.type('json').status(200))
+        .on('error', (err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+    });
+});
+
 
 module.exports = router;
 

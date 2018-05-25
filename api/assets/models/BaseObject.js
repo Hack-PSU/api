@@ -54,7 +54,7 @@ module.exports = class BaseObject {
       .toString()
       .concat(';');
     const params = [];
-    console.log("Hello: " + query);
+    console.log('Base:' + query);
     return uow.query(query, params, { stream: true });
   }
 

@@ -26,33 +26,33 @@ const router = express.Router();
 /**
  * Administrator authentication middleware
  */
-// router.use((req, res, next) => {
-//   if (req.headers.idtoken) {
-//     authenticator.checkAuthentication(req.headers.idtoken)
-//       .then((decodedToken) => {
-//         if (decodedToken.admin === true) {
-//           res.locals.privilege = decodedToken.privilege;
-//           res.locals.user = decodedToken;
-//           next();
-//         } else {
-//           const error = new Error();
-//           error.status = 401;
-//           error.body = { error: 'You do not have sufficient permissions for this operation' };
-//           next(error);
-//         }
-//       }).catch((err) => {
-//         const error = new Error();
-//         error.status = 401;
-//         error.body = err.message;
-//         next(error);
-//       });
-//   } else {
-//     const error = new Error();
-//     error.status = 401;
-//     error.body = { error: 'ID Token must be provided' };
-//     next(error);
-//   }
-// });
+router.use((req, res, next) => {
+  if (req.headers.idtoken) {
+    authenticator.checkAuthentication(req.headers.idtoken)
+      .then((decodedToken) => {
+        if (decodedToken.admin === true) {
+          res.locals.privilege = decodedToken.privilege;
+          res.locals.user = decodedToken;
+          next();
+        } else {
+          const error = new Error();
+          error.status = 401;
+          error.body = { error: 'You do not have sufficient permissions for this operation' };
+          next(error);
+        }
+      }).catch((err) => {
+        const error = new Error();
+        error.status = 401;
+        error.body = err.message;
+        next(error);
+      });
+  } else {
+    const error = new Error();
+    error.status = 401;
+    error.body = { error: 'ID Token must be provided' };
+    next(error);
+  }
+});
 
 
 /**
@@ -115,7 +115,7 @@ function verifyACL(level) {
       const error = new Error();
       error.status = 500;
       error.body = { error: 'Something went wrong while accessing permissions' };
-      next();
+      next(error);
     }
   };
 }

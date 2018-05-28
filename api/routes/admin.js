@@ -486,6 +486,21 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array containing all locations in the database
  */
 router.get('/location_list', verifyACL(3), (req, res, next) => {
+  Location.getAll(req.uow)
+    .then((stream) => {
+      stream
+        .pipe(Stringify())
+        .pipe(res.type('json').status(200))
+        .on('error', (err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+    });
+});
+/*
+router.get('/location_list', verifyACL(3), (req, res, next) => {
   Location.getAll()
     .then((stream) => {
       stream.pipe(res);
@@ -497,6 +512,7 @@ router.get('/location_list', verifyACL(3), (req, res, next) => {
         next(error);
       });
     });
+
   // database.getAllLocations().on('data', (document) => {
   //   arr.push(document);
   // }).on('err', (err) => {
@@ -508,6 +524,9 @@ router.get('/location_list', verifyACL(3), (req, res, next) => {
   //   res.status(200).send(arr);
   // });
 });
+*/
+
+
 
 /**
  * @api {post} /admin/create_location Insert a new location in to the database
@@ -521,6 +540,31 @@ router.get('/location_list', verifyACL(3), (req, res, next) => {
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
+router.post('/create_location', verifyACL(2), (req, res, next) => {
+  if (req.body && req.body.locationName && (req.body.locationName.length > 0)) {
+    const location = new Location({ location_name: req.body.locationName }, req.uow);
+    console.log('if:' + req.body.locationName);
+    location.add()
+      .then((stream) => {
+        stream
+          .pipe(Stringify())
+          .pipe(res.type('json').status(200))
+          .on('error', (err) => {
+            const error = new Error();
+            error.status = 500;
+            error.body = err.message;
+            next(error);
+          }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+      });
+  } else {
+      console.log('else:' + req.body.locationName);
+      const error = new Error();
+      error.status = 400;
+      error.body = 'Require a name for the location';
+      next(error);
+  }
+});
+/*
 router.post('/create_location', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.locationName && (req.body.locationName.length > 0)) {
     const location = new Location({ location_name: req.body.locationName }, req.uow);
@@ -544,6 +588,8 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
     next(error);
   }
 });
+*/
+
 
 /**
  * @api {post} /admin/update_location Update name of the location associated with the uid in the database
@@ -918,7 +964,7 @@ router.get('/user_count', verifyACL(2), (req, res, next) => {
   database.getAllUsersCount(req.uow)
     .then((stream) => {
       stream
-        .pipe(Stringify())p
+        .pipe(Stringify())
         .pipe(res.type('json').status(200))
         .on('error', (err) => {
           const error = new Error();

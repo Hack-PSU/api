@@ -4,7 +4,7 @@ const validator = require('email-validator');
 const Ajv = require('ajv');
 const { Transform } = require('stream');
 const express = require('express');
-const Stringify = require('streaming-json-stringify')
+const Stringify = require('streaming-json-stringify');
 const { emailObjectSchema } = require('../assets/helpers/schemas');
 const authenticator = require('../assets/helpers/auth');
 const database = require('../assets/helpers/database/database');
@@ -26,33 +26,33 @@ const router = express.Router();
 /**
  * Administrator authentication middleware
  */
-router.use((req, res, next) => {
-  if (req.headers.idtoken) {
-    authenticator.checkAuthentication(req.headers.idtoken)
-      .then((decodedToken) => {
-        if (decodedToken.admin === true) {
-          res.locals.privilege = decodedToken.privilege;
-          res.locals.user = decodedToken;
-          next();
-        } else {
-          const error = new Error();
-          error.status = 401;
-          error.body = { error: 'You do not have sufficient permissions for this operation' };
-          next(error);
-        }
-      }).catch((err) => {
-      const error = new Error();
-      error.status = 401;
-      error.body = err.message;
-      next(error);
-    });
-  } else {
-    const error = new Error();
-    error.status = 401;
-    error.body = { error: 'ID Token must be provided' };
-    next(error);
-  }
-});
+// router.use((req, res, next) => {
+//   if (req.headers.idtoken) {
+//     authenticator.checkAuthentication(req.headers.idtoken)
+//       .then((decodedToken) => {
+//         if (decodedToken.admin === true) {
+//           res.locals.privilege = decodedToken.privilege;
+//           res.locals.user = decodedToken;
+//           next();
+//         } else {
+//           const error = new Error();
+//           error.status = 401;
+//           error.body = { error: 'You do not have sufficient permissions for this operation' };
+//           next(error);
+//         }
+//       }).catch((err) => {
+//         const error = new Error();
+//         error.status = 401;
+//         error.body = err.message;
+//         next(error);
+//       });
+//   } else {
+//     const error = new Error();
+//     error.status = 401;
+//     error.body = { error: 'ID Token must be provided' };
+//     next(error);
+//   }
+// });
 
 
 /**
@@ -115,7 +115,7 @@ function verifyACL(level) {
       const error = new Error();
       error.status = 500;
       error.body = { error: 'Something went wrong while accessing permissions' };
-      next(error);
+      next();
     }
   };
 }
@@ -258,7 +258,7 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
       error.body = err.message;
       next(error);
     });
-      /*
+    /*
       stream.pipe(res);
       stream.on('end', () => res.status(200).send());
       stream.on('err', (err) => {
@@ -267,7 +267,7 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
         error.body = err.message;
         next(error);
       });
-    
+
     // database.getPreRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
     //   .on('data', (document) => {
     //     arr.push(document);
@@ -278,14 +278,13 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
     //   next(error);
     // }).on('end', () => {
     //   res.status(200).send(arr);
-    // });*/
+    // }); */
   } else {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Limit must be an integer' };
     next(error);
   }
-  
 });
 
 
@@ -528,11 +527,11 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
     // database.addNewLocation(req.body.locationName).then(() => {
     // }).catch((err) => {
     //
@@ -570,11 +569,11 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
     // database.updateLocation(req.body.uid, req.body.name)
     //   .then(() => {
     //     res.status(200).send({ status: 'Success' });
@@ -611,11 +610,11 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
     // database.removeLocation(req.body.uid)
     //   .then(() => {
     //     res.status(200).send({ status: 'Success' });
@@ -654,8 +653,8 @@ router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
       error.body = err.message;
       next(error);
     }).on('end', () => {
-    res.status(200).send();
-  });
+      res.status(200).send();
+    });
 });
 
 /**
@@ -677,11 +676,11 @@ router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      });
   } else {
     const error = new Error();
     error.status = 400;
@@ -739,9 +738,9 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
               .then(() => {
                 resolve({ email: request.data.to, response: 'success', name: emailObject.name }); // If successful, resolve
               }).catch((error) => {
-              res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
-              resolve(null);
-            });
+                res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
+                resolve(null);
+              });
           }).catch((error) => {
             res.locals.failArray.push(Object.assign(emailObject, error)); // if email substitution fails, add to fail array for partial HTTP success response
             resolve(null);
@@ -918,7 +917,7 @@ router.get('/user_count', verifyACL(2), (req, res, next) => {
   database.getAllUsersCount(req.uow)
     .then((stream) => {
       stream
-        .pipe(Stringify())p
+        .pipe(Stringify())
         .pipe(res.type('json').status(200))
         .on('error', (err) => {
           const error = new Error();

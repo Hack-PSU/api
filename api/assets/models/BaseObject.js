@@ -24,7 +24,7 @@ module.exports = class BaseObject {
     this.uow = uow;
     this.schema = schema;
     this.tableName = tableName;
-    this.disallowedProperties = ['uow', 'schema', 'tableName']; // In a sub-class, make sure this array also includes all super properties
+    this.disallowedProperties = ['uow', 'schema', 'tableName', 'disallowedProperties']; // In a sub-class, make sure this array also includes all super properties
   }
 
   /**
@@ -50,11 +50,11 @@ module.exports = class BaseObject {
   static getCount(uow, tableName, column_name) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(tableName)
-      .field('COUNT('+column_name+')', 'count')
+      .field(`COUNT(${column_name})`, 'count')
       .toString()
       .concat(';');
     const params = [];
-    console.log('Base:' + query);
+    console.log(`Base:${query}`);
     return uow.query(query, params, { stream: true });
   }
 
@@ -68,6 +68,7 @@ module.exports = class BaseObject {
   _dbRepresentation() {
     return Object.entries(this)
       .filter(kv => !this.disallowedProperties.includes(kv[0])) // hacky
+      .filter(kv => kv[1])
       .reduce((accumulator, currentValue) => {
         // eslint-disable-next-line prefer-destructuring
         accumulator[currentValue[0]] = currentValue[1];

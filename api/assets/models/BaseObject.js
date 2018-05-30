@@ -92,14 +92,15 @@ module.exports = class BaseObject {
   /**
    * Returns one object as noted by parameter uid
    * @param uid {String} uid of object
+   * @param columnName {String} name of primary key column
    * @param opts {{}} opts.fields: fields to include
    * @return {Promise<Stream>}
    */
-  get(uid, opts) {
+  get(uid, columnName, opts) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName)
       .fields((opts && opts.fields) || null)
-      .where('uid = ?', uid)
+      .where(`${columnName}= ?`, uid)
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query.text, query.values, { stream: true });
@@ -126,7 +127,7 @@ module.exports = class BaseObject {
    * Updates the object in the database
    * @return {Promise<any>}
    */
-  update() {
+  update(uid, columnName) {
     const validation = this.validate();
     if (!validation.result) {
       return new Promise(((resolve, reject) => reject(new Error(validation.error))));
@@ -134,6 +135,7 @@ module.exports = class BaseObject {
     const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)
       .setFields(this._dbRepresentation())
+      .where(`${columnName} = ?`, uid)
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query.text, query.values);

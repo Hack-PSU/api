@@ -376,7 +376,7 @@ router.post('/update_registration', verifyACL(3), (req, res, next) => {
     const updatedRegistration = new Registration(req.body.registration, req.uow);
     if (updatedRegistration.mlh_coc && updatedRegistration.mlh_dcp && updatedRegistration.eighteenBeforeEvent) {
       updatedRegistration
-        .update()
+        .update(req.body.registration.uid, 'uid')
         .then(() => res.status(200).send({ status: 'Success' }))
         .catch((err) => {
           const error = new Error();
@@ -601,7 +601,7 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
     req.body.name.length > 0 &&
     (req.body.uid.length > 0)) {
     const location = new Location({ uid: req.body.uid, location_name: req.body.name }, req.uow);
-    location.update()
+    location.update(req.body.uid, 'uid')
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {

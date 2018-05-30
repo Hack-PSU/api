@@ -239,7 +239,11 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
 
   req.body.mlhdcp = req.body.mlhdcp && req.body.mlhdcp === 'true';
 
-  if (!(req.body && validateRegistration(req.body) && validator.validate(req.body.email) && req.body.eighteenBeforeEvent && req.body.mlhcoc && req.body.mlhdcp)) {
+  if (!(req.body &&
+    validateRegistration(req.body) &&
+    validator.validate(req.body.email) &&
+    req.body.eighteenBeforeEvent &&
+    req.body.mlhcoc && req.body.mlhdcp)) {
     console.error('Request body:');
     console.error(req.body);
     console.error('Registration validation:');

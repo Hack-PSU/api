@@ -47,10 +47,10 @@ module.exports = class BaseObject {
     return uow.query(query, params, { stream: true });
   }
 
-  static getCount(uow, tableName, column_name) {
+  static getCount(uow, tableName, columnName) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(tableName)
-      .field(`COUNT(${column_name})`, 'count')
+      .field(`COUNT(${columnName})`, 'count')
       .toString()
       .concat(';');
     const params = [];

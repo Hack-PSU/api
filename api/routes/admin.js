@@ -539,6 +539,7 @@ router.get('/location_list', verifyACL(3), (req, res, next) => {
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
+ /*
 router.post('/create_location', verifyACL(2), (req, res, next) => {
   if (req.body && req.body.locationName && (req.body.locationName.length > 0)) {
     const location = new Location({ location_name: req.body.locationName }, req.uow);
@@ -563,7 +564,8 @@ router.post('/create_location', verifyACL(2), (req, res, next) => {
       next(error);
   }
 });
-/*
+*/
+
 router.post('/create_location', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.locationName && (req.body.locationName.length > 0)) {
     const location = new Location({ location_name: req.body.locationName }, req.uow);
@@ -587,7 +589,7 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
     next(error);
   }
 });
-*/
+
 
 
 /**
@@ -598,7 +600,7 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
  * @apiPermission Exec
  *
  * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
- * @apiParam {String} name - the new name that is being updated with the name associated with the uid
+ * @apiParam {String} location_name - the new name that is being updated with the name associated with the uid
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
@@ -607,10 +609,10 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
   if (
     req.body &&
     req.body.uid &&
-    req.body.name &&
-    req.body.name.length > 0 &&
+    req.body.location_name &&
+    req.body.location_name.length > 0 &&
     (req.body.uid.length > 0)) {
-    const location = new Location({ uid: req.body.uid, location_name: req.body.name }, req.uow);
+    const location = new Location({ uid: req.body.uid, location_name: req.body.location_name }, req.uow);
     location.update()
       .then(() => {
         res.status(200).send({ status: 'Success' });
@@ -689,6 +691,22 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array containing the list of class offering extra credit
  */
+
+router.get('/extra_credit_list', verifyACL(2), (req, res, next) => {
+  database.getExtraCreditClassList(req.uow)
+    .then((stream) => {
+      stream
+        .pipe(Stringify())
+        .pipe(res.type('json').status(200))
+        .on('error', (err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+    });
+});
+/*
 router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
   const arr = [];
   database.getExtraCreditClassList(req.uow)
@@ -702,7 +720,7 @@ router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
       res.status(200).send();
     });
 });
-
+*/
 /**
  * @api {post} /admin/assign_extra_credit setting user with the class they are receiving extra credit
  * @apiName Assign Extra Credit

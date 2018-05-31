@@ -112,19 +112,14 @@ module.exports = class BaseObject {
    */
   add() {
     const validation = this.validate();
-    console.log("Hello World");
     if (!validation.result) {
-      console.log("failure in the add");
       return new Promise(((resolve, reject) => reject(new Error(validation.error))));
     }
-    console.log("Before the query in add");
-    console.log(this.tableName);
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([this._dbRepresentation()])
       .toParam();
     query.text = query.text.concat(';');
-    console.log(query);
     return this.uow.query(query.text, query.values);
   }
 

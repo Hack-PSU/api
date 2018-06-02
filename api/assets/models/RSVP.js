@@ -7,7 +7,7 @@ const TABLE_NAME = 'RSVP';
 const COLUMN_NAME = 'user_id';
 module.exports = TABLE_NAME;
 
-module.exports = class PreRegistration extends BaseObject {
+module.exports = class RSVP extends BaseObject {
   constructor(data, uow) {
     super(uow, rsvpSchema, TABLE_NAME);
     this.user_uid = data.user_uid || null;

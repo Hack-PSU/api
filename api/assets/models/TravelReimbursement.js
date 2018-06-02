@@ -16,4 +16,12 @@ module.exports = class TravelReimbursement extends BaseObject {
     this.receipt_uris = data.receiptURIs || null;
     this.uid = data.uid || uuid().replace(/-/g, '');
   }
+
+  static getAll(uow, opts) {
+    return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  static generateTestData() {
+    throw new Error('Not implemented');
+  }
 };

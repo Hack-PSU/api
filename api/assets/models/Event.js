@@ -29,7 +29,7 @@ module.exports = class Event extends BaseObject {
 
   static generateTestData(uow) {
     const testObj = new Event({}, uow);
-    testObj.event_location = chance.string();
+    testObj.event_location = chance.integer({ min: 1, max: 15 });
     testObj.event_start_time = chance.date().getTime();
     testObj.event_end_time = chance.date({ min: new Date(testObj.event_start_time) }).getTime();
     testObj.event_title = chance.sentence();
@@ -38,7 +38,7 @@ module.exports = class Event extends BaseObject {
     return testObj;
   }
 
-  getAll() {
+  static getAll(uow) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(TABLE_NAME, 'e')
       .field('e.*')
@@ -47,7 +47,7 @@ module.exports = class Event extends BaseObject {
       .join('LOCATIONS', 'l', 'event_location=l.uid')
       .toString()
       .concat(';');
-    return this.uow.query(query);
+    return uow.query(query, [], { stream: true });
   }
 
   add() {

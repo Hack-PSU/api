@@ -1,7 +1,7 @@
 const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 
-const chance = new Chance(123);
+const chance = new Chance(new Date().getTime());
 const { categorySchema } = require('../helpers/schemas');
 
 const TABLE_NAME = 'CATEGORY_LIST';
@@ -16,12 +16,15 @@ module.exports = class Category extends BaseObject {
   constructor(data, uow) {
     super(uow, categorySchema, TABLE_NAME);
     this.uid = data.uid || null;
-    this.category_name = data.category_name || '';
+    this.categoryName = data.category_name || '';
+    this.isSponsor = data.isSponsor || false;
   }
 
   static generateTestData(uow) {
     const testObj = new Category({}, uow);
-    testObj.category_name = chance.string();
+    testObj.categoryName = chance.string();
+    testObj.isSponsor = chance.bool();
+    testObj.uid = chance.integer({ max: 2147483647, min: 0 });
     return testObj;
   }
 

@@ -11,7 +11,7 @@ module.exports = class Attendance extends BaseObject {
   }
 
   static generateTestData() {
-    throw new Error('Not implemented');
+    throw new Error('This method is not supported by this class');
   }
 
   /**

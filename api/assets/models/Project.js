@@ -46,6 +46,10 @@ module.exports = class Project extends BaseObject {
     return uow.query(query.text, query.values, { stream: true });
   }
 
+  static getAll(uow, opts) {
+    throw new Error("Not implemented");
+  }
+
   /**
    *
    * @return {Promise<any>}

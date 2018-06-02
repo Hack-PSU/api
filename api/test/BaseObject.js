@@ -25,17 +25,21 @@ describe('Object retrieval tests', () => {
     uow.complete();
     done();
   });
-  models.map((model) => {
+  models.forEach((model) => {
     describe(`Testing ${model.name}`, () => {
       describe(`Get all ${model.name}`, () => {
-        it(`it should get all objects of type ${model.name}`, async (done) => {
+        it(`it should get all objects of type ${model.name}`, (done) => {
           try {
-            const result = await model.getAll(uow);
-            result.on('data', console.log);
-            result.on('end', () => done());
+            model.getAll(uow)
+              .then((result) => {
+                result.on('data', console.log);
+                result.on('end', () => done());
+              }).catch(done);
           } catch (e) {
             if (e.message !== 'This method is not supported by this class' && e.message !== 'Not implemented') {
               done(e);
+            } else {
+              done();
             }
           }
         });
@@ -43,18 +47,20 @@ describe('Object retrieval tests', () => {
 
       describe(`Add new ${model.name}`, () => {
         it(`it should add a new test ${model.name}`, (done) => {
-          model.generateTestData(uow)
-            .then((m) => {
-              const result = m.add();
-              should.not.equal(result, null); // TODO: Add actual test condition
-              done();
-            }).catch((e) => {
-              if (e.message !== 'This method is not supported by this class' && e.message !== 'Not implemented') {
-                done(e);
-              } else {
+          try {
+            const m = model.generateTestData(uow);
+            m.add()
+              .then((result) => {
+                should.not.equal(result, null); // TODO: Add actual test condition
                 done();
-              }
-            });
+              }).catch(done);
+          } catch (e) {
+            if (e.message !== 'This method is not supported by this class' && e.message !== 'Not implemented') {
+              done(e);
+            } else {
+              done();
+            }
+          }
         });
       });
     });

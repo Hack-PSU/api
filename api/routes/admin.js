@@ -160,7 +160,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
       count: parseInt(req.query.limit, 10),
       limit: parseInt(req.query.offset, 10),
     }).then((stream) => {
-      stream.pipe(new Transform({
+      stream.pipe(Stringify()).pipe(new Transform({
         readableObjectMode: true,
         writableObjectMode: true,
         transform(chunk, encoding, callback) {
@@ -168,6 +168,11 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
           authenticator.getUserData(chunk.uid)
             .then((user) => {
               obj.sign_up_time = new Date(user.metadata.creationTime).getTime();
+              this.push(obj);
+              callback();
+            }).catch((error) => {
+              console.error(error);
+              obj.sign_up_time = null;
               this.push(obj);
               callback();
             });
@@ -338,8 +343,9 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
     RSVP.getAll(req.uow, {
       count: parseInt(req.query.limit, 10),
       limit: parseInt(req.query.offset, 10),
-    }).then((stream) => {
-      stream.pipe(res);
+    }).then((stream) =>
+     {
+      stream.pipe(Stringify()).pipe(res);
       stream.on('end', () => res.status(200).send());
       stream.on('err', (err) => {
         const error = new Error();
@@ -636,11 +642,12 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
  * @apiPermission Exec
  *
  * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
- * @apiParam {String} location_name - the new name that is being updated with the name associated with the uid
+ * @apiParam {String} name - the new name that is being updated with the name associated with the uid
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
+
 router.post('/update_location', verifyACL(3), (req, res, next) => {
   if (
     req.body &&
@@ -648,13 +655,9 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
     req.body.location_name &&
     req.body.location_name.length > 0 &&
     (req.body.uid.length > 0)) {
-<<<<<<< HEAD
+
     const location = new Location({ uid: req.body.uid, location_name: req.body.location_name }, req.uow);
-    location.update()
-=======
-    const location = new Location({ uid: req.body.uid, location_name: req.body.name }, req.uow);
     location.update(req.body.uid, 'uid')
->>>>>>> 9f0fb87ad774dc3bb243c53c83fe965639ef6d64
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
@@ -695,7 +698,7 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
 router.post('/remove_location', verifyACL(3), (req, res, next) => {
   if (req.body && req.body.uid && (req.body.uid.length > 0)) {
     const location = new Location({ uid: req.body.uid }, req.uow);
-    location.delete()
+    location.delete(req.body.uid)
       .then(() => {
         res.status(200).send({ status: 'Success' });
       }).catch((err) => {
@@ -1033,6 +1036,31 @@ router.get('/user_count', verifyACL(2), (req, res, next) => {
     });
 });
 
+/**
+ * @api {get} /admin/statistics Get the count of each option for the registration options
+ * @apiVersion 0.3.2
+ * @apiName stats
+ * @apiGroup Admin
+ * @apiPermission Team Member
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of registration options and respective counts
+ */
+router.get('/statistics', verifyACL(2), (req, res, next) => {
+  Registration.getStatsCount(req.uow)
+    .then((stream) => {
+      stream
+        .pipe(Stringify())
+        .pipe(res.type('json').status(200))
+        .on('error', (err) => {
+          const error = new Error();
+          error.status = 500;
+          error.body = err.message;
+          next(error);
+        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+    });
+});
 
 module.exports = router;
 

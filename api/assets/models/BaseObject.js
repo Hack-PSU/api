@@ -55,7 +55,7 @@ module.exports = class BaseObject {
       .toString()
       .concat(';');
     const params = [];
-    console.log(`Base:${query}`);
+    //console.log(`Base:${query}`);
     return uow.query(query, params, { stream: true });
   }
 
@@ -147,10 +147,12 @@ module.exports = class BaseObject {
    * @param uid
    * @return {Promise<any>}
    */
-  delete(uid) {
+  delete(uid, columnName) {
+    let temp = '';
+    (columnName) ?  temp = `${columnName} = ?`: temp = 'uid = ?';
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(this.tableName)
-      .where('uid = ?', uid)
+      .from(this.tableName)  
+      .where(temp, uid)
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query.text, query.values);

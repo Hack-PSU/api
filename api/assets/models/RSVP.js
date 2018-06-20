@@ -27,7 +27,7 @@ module.exports = class PreRegistration extends BaseObject {
    */
   static getAll(uow, opts) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(TABLE_NAME)
+      .from(TABLE_NAME, 'rsvp')
       .field('rsvp.*')
       .field('r.firstname')
       .field('r.lastname')

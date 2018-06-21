@@ -14,7 +14,7 @@ module.exports = class Category extends BaseObject {
    * @param uow {MysqlUow}
    */
   constructor(data, uow) {
-    super(uow, categorySchema, TABLE_NAME);
+    super(uow);
     this.uid = data.uid || null;
     this.categoryName = data.category_name || '';
     this.isSponsor = data.isSponsor || false;
@@ -30,5 +30,13 @@ module.exports = class Category extends BaseObject {
 
   static getAll(uow, opts) {
     return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  get schema() {
+    return categorySchema;
+  }
+
+  get tableName() {
+    return TABLE_NAME;
   }
 };

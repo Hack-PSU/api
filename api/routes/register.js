@@ -5,37 +5,14 @@ const router = express.Router();
 const validator = require('email-validator');
 const authenticator = require('../assets/helpers/auth');
 const constants = require('../assets/helpers/constants');
-const Ajv = require('ajv');
 const path = require('path');
-
-const ajv = new Ajv({ allErrors: true });
-
-const aws = require('aws-sdk');
-const multer = require('multer');
-const multers3 = require('multer-s3');
 const database = require('../assets/helpers/database/database');
+const storage = require('../assets/helpers/storage');
 const Registration = require('../assets/models/Registration');
 const PreRegistration = require('../assets/models/PreRegistration');
 
 
-aws.config.update({
-  accessKeyId: constants.s3Connection.accessKeyId,
-  secretAccessKey: constants.s3Connection.secretAccessKey,
-  region: constants.s3Connection.region,
-});
-
-const s3 = new aws.S3();
-
 /** ****************** HELPER FUNCTIONS ********************** */
-
-/**
- *
- * @param data
- */
-function validateRegistration(data) {
-  const validate = ajv.compile(constants.registeredUserSchema);
-  return !!validate(data);
-}
 
 /**
  *
@@ -48,25 +25,19 @@ function generateFileName(uid, firstName, lastName) {
   return `${uid}-${firstName}-${lastName}-HackPSUS2018.pdf`;
 }
 
-
-const storage = multers3({
-  s3,
-  bucket: constants.s3Connection.s3BucketName,
-  acl: 'public-read',
-  serverSideEncryption: 'AES256',
-  metadata(req, file, cb) {
-    cb(null, {
-      fieldName: file.fieldname,
-      uid: req.body.uid,
-    });
-  },
-  key(req, file, cb) {
-    cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
-  },
-});
-
-
-const upload = multer({
+const upload = storage.upload({
+  storage: storage.generateStorage({
+    bucket: constants.s3Connection.s3BucketName,
+    metadata(req, file, cb) {
+      cb(null, {
+        fieldName: file.fieldname,
+        uid: req.body.uid,
+      });
+    },
+    key(req, file, cb) {
+      cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
+    },
+  }),
   fileFilter(req, file, cb) {
     if (path.extname(file.originalname) !== '.pdf') {
       const error = new Error();
@@ -74,11 +45,8 @@ const upload = multer({
       error.body = 'Only pdfs are allowed';
       return cb(error);
     }
-
     cb(null, true);
   },
-  storage,
-  limits: { fileSize: 1024 * 1024 * 10 }, // limit to 10MB
 });
 
 
@@ -149,7 +117,7 @@ router.post('/pre', (req, res, next) => {
     error.status = 400;
     next(error);
   } else {
-    new PreRegistration({ email: req.body.email })
+    new PreRegistration({ email: req.body.email }, req.uow)
       .add()
       .then(() => {
         res.status(200).send({ status: 'Success' });
@@ -240,14 +208,11 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
   req.body.mlhdcp = req.body.mlhdcp && req.body.mlhdcp === 'true';
 
   if (!(req.body &&
-    validateRegistration(req.body) &&
     validator.validate(req.body.email) &&
     req.body.eighteenBeforeEvent &&
     req.body.mlhcoc && req.body.mlhdcp)) {
     console.error('Request body:');
     console.error(req.body);
-    console.error('Registration validation:');
-    console.error(validateRegistration(req.body));
     console.error('Email validation:');
     console.error(validator.validate(req.body.email));
     const error = new Error();
@@ -264,7 +229,8 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
       }/${
         generateFileName(req.body.uid, req.body.firstName, req.body.lastName)}`;
     }
-    const reg = new Registration(req.body)
+    const reg = new Registration(req.body, req.uow);
+    reg
       .add()
       .then(() => {
         reg.submit();

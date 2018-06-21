@@ -42,4 +42,12 @@ module.exports = class PreRegistration extends BaseObject {
   static getCount(uow, opts) {
     return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
   }
+
+  get schema() {
+    return preRegisteredSchema;
+  }
+
+  get tableName() {
+    return TABLE_NAME;
+  }
 };

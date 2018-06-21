@@ -2,24 +2,41 @@
 process.env.NODE_ENV = 'test';
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const server = require('../app');
+const server = require('../../app');
 const sql = require('mysql');
 const squel = require('squel');
 
 const Chance = require('chance');
 const firebase = require('firebase');
+const util = require('util');
 
 const chance = new Chance(123);
 
-const sqlOptions = require('../assets/helpers/constants').sqlConnection;
+const sqlOptions = require('../../assets/helpers/constants').sqlConnection;
 
 const connection = sql.createConnection(sqlOptions);
+util.promisify(connection.connect);
 
-connection.connect((err) => {
-  if (err) {
-    console.error(err);
-  }
-});
+async function connect() {
+  await connection.connect((err) => {
+    if (err) {
+      console.error(err);
+    }
+  });
+}
+
+// // Initialize Firebase
+// const config = {
+//   apiKey: 'AIzaSyCpvAPdiIcqKV_NTyt6DZgDUNyjmA6kwzU',
+//   authDomain: 'hackpsu18.firebaseapp.com',
+//   databaseURL: 'https://hackpsu18-test.firebaseio.com',
+//   projectId: 'hackpsu18',
+//   storageBucket: 'hackpsu18.appspot.com',
+//   messagingSenderId: '1002677206617',
+// };
+// firebase.initializeApp(config);
+
+connect();
 
 const should = chai.should();
 
@@ -101,25 +118,28 @@ function generateGoodRegistration() {
 }
 
 describe('pre-registration tests', () => {
-  const idToken = null;
-  // Scrub DB
+  const succMatrix = ['abc@xyz.com', 'myname@email.com', 'a@b.com'];
   before((done) => {
-    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from('PRE_REGISTRATION_TEST')
-      .toString()
-      .concat(';');
-    connection.query(query, (err, response, fields) => {
-      if (err) {
-        done(err);
-      } else {
-        done();
-      }
-    });
+    // Remove existing pre-registrations
+    const promises = succMatrix.map(email => new Promise((resolve, reject) => {
+      const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+        .from('PRE_REGISTRATION')
+        .where('email = ?', email)
+        .toParam();
+      query.text = query.text.concat(';');
+      connection.query(query.text, query.values, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    }));
+    Promise.all(promises)
+      .then(() => done())
+      .catch(err => done(err));
   });
-
-
   it('it should respond with success', (done) => {
-    const succMatrix = ['abc@xyz.com', 'myname@email.com', 'a@b.com'];
     const promises = [];
     succMatrix.forEach((email) => {
       promises.push(new Promise((resolve) => {
@@ -179,7 +199,7 @@ describe('registration tests', () => {
   // Scrub DB
   before((done) => {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from('REGISTRATION_TEST')
+      .from('REGISTRATION')
       .where('uid = ?', 'WaPm1vcEVvaw0tbCbrBHs2e891s2')
       .toParam();
     query.text = query.text.concat(';');
@@ -204,6 +224,9 @@ describe('registration tests', () => {
   });
 
   afterEach((done) => {
+    if (listener) {
+      listener();
+    }
     firebase.auth().signOut();
     done();
   });
@@ -216,6 +239,7 @@ describe('registration tests', () => {
         .type('form')
         .send(generateBadRegistration())
         .end((err, res) => {
+          console.log(err);
           res.should.have.status(400);
           done();
         });

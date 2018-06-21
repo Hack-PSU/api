@@ -50,6 +50,14 @@ module.exports = class Event extends BaseObject {
     return uow.query(query, [], { stream: true });
   }
 
+  get tableName() {
+    return TABLE_NAME;
+  }
+
+  get schema() {
+    return eventSchema;
+  }
+
   add() {
     const validation = this.validate();
     if (!validation.result) {
@@ -57,7 +65,7 @@ module.exports = class Event extends BaseObject {
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
-      .setFieldsRows([this._dbRepresentation()])
+      .setFieldsRows([this._dbRepresentation])
       .toParam();
     query.text = query.text.concat(';');
     query.text = query.text.concat(';');

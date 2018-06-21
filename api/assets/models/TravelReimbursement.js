@@ -2,7 +2,7 @@ const uuid = require('uuid/v4');
 const BaseObject = require('./BaseObject');
 const { travelReimbursementSchema } = require('../helpers/schemas');
 
-const TABLE_NAME = 'TRAVEL_REIMBURSEMENTS';
+const TABLE_NAME = 'TRAVEL_REIMBURSEMENT';
 module.exports = TABLE_NAME;
 
 module.exports = class TravelReimbursement extends BaseObject {

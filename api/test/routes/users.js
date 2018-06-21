@@ -1,13 +1,16 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const server = require('../app');
 const sql = require('mysql');
 const firebase = require('firebase');
 const Chance = require('chance');
 
+const server = require('../../app');
+const RSVP = require('../../assets/models/RSVP');
+const UowFactory = require('../../assets/helpers/database/uow_factory');
+
 const chance = new Chance(123);
 
-const sqlOptions = require('../assets/helpers/constants').sqlConnection;
+const sqlOptions = require('../../assets/helpers/constants').sqlConnection;
 
 const connection = sql.createConnection(sqlOptions);
 
@@ -16,6 +19,17 @@ connection.connect((err) => {
     console.error(err);
   }
 });
+
+// Initialize Firebase
+const config = {
+  apiKey: 'AIzaSyCpvAPdiIcqKV_NTyt6DZgDUNyjmA6kwzU',
+  authDomain: 'hackpsu18.firebaseapp.com',
+  databaseURL: 'https://hackpsu18-test.firebaseio.com',
+  projectId: 'hackpsu18',
+  storageBucket: 'hackpsu18.appspot.com',
+  messagingSenderId: '1002677206617',
+};
+firebase.initializeApp(config);
 
 const should = chai.should();
 
@@ -51,7 +65,12 @@ function loginRegular() {
 
 /**
  *
- * @return {{firstName, lastName: *, email, gender: string, shirtSize: string, dietaryRestriction: string, university: string, travelReimbursement: boolean, firstHackathon: boolean, academicYear: string, major: string, phone: *|{type, minLength, maxLength}, ethnicity: string, codingExperience: string, eighteenBeforeEvent: boolean, mlhcoc: boolean, mlhdcp: boolean, uid: string, referral: string, project: *, expectations: *, veteran: boolean}}
+ * @return {{firstName, lastName: *, email, gender: string, shirtSize: string,
+ * dietaryRestriction: string, university: string, travelReimbursement: boolean,
+ * firstHackathon: boolean, academicYear: string, major: string,
+ * phone: *|{type, minLength, maxLength}, ethnicity: string, codingExperience: string,
+ * eighteenBeforeEvent: boolean, mlhcoc: boolean, mlhdcp: boolean, uid: string,
+ * referral: string, project: *, expectations: *, veteran: boolean}}
  */
 function generateGoodRegistration() {
   return {
@@ -96,7 +115,7 @@ describe('get registration', () => {
               .set('idtoken', idToken)
               .type('form')
               .send(generatedRegistration)
-              .end((err, res) => {
+              .end(() => {
                 done();
               });
           }).catch(err => done(err));
@@ -141,9 +160,11 @@ describe('get registration', () => {
 describe('rsvp user', () => {
   const checkin = true;
   let idToken = null;
+  let loggedInUser = null;
   before((done) => {
     loginRegular()
       .then((user) => {
+        loggedInUser = user;
         user.getIdToken(true)
           .then((decodedIdToken) => {
             idToken = decodedIdToken;
@@ -156,7 +177,7 @@ describe('rsvp user', () => {
               .set('idtoken', idToken)
               .type('form')
               .send(generatedRegistration)
-              .end((err, res) => {
+              .end(() => {
                 done();
               });
           }).catch(err => done(err));
@@ -189,6 +210,19 @@ describe('rsvp user', () => {
   });
 
   describe('success', () => {
+    before((done) => {
+      // Remove RSVP from db if exists
+      UowFactory.create()
+        .then((uow) => {
+          new RSVP({ user_uid: loggedInUser.uid }, uow)
+            .delete()
+            .then(() => {
+              uow.complete();
+              done();
+            })
+            .catch(done);
+        });
+    });
     it('it should send send an email containing their pin', (done) => {
       chai.request(server)
         .post('/v1/users/rsvp')

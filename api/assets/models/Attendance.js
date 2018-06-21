@@ -7,7 +7,7 @@ module.exports = TABLE_NAME;
 
 module.exports = class Attendance extends BaseObject {
   constructor(data, uow) {
-    super(uow, null, TABLE_NAME);
+    super(uow);
   }
 
   static generateTestData() {
@@ -22,6 +22,10 @@ module.exports = class Attendance extends BaseObject {
    */
   static getAll(uow, opts) {
     return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  get tableName() {
+    return TABLE_NAME;
   }
 
   add() {

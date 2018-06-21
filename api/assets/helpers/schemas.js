@@ -1,4 +1,5 @@
 module.exports = {
+  // TODO: Possibly revamp this to use a single getter
   emailObjectSchema: {
     type: 'object',
     properties: {
@@ -33,7 +34,7 @@ module.exports = {
   rsvpSchema: {
     type: 'object',
     properties: {
-      user_uid: {
+      user_id: {
         type: 'string',
       },
       rsvp_time: {
@@ -43,17 +44,17 @@ module.exports = {
         type: 'boolean',
       },
     },
-    required: ['user_uid', 'rsvp_time', 'rsvp_status'],
+    required: ['user_id', 'rsvp_time', 'rsvp_status'],
   },
   registeredUserSchema: {
     type: 'object',
     properties: {
-      firstName: {
+      firstname: {
         type: 'string',
         minLength: 1,
         maxLength: 45,
       },
-      lastName: {
+      lastname: {
         type: 'string',
         minLength: 1,
         maxLength: 45,
@@ -61,11 +62,11 @@ module.exports = {
       gender: {
         enum: ['male', 'female', 'non-binary', 'no-disclose'],
       },
-      shirtSize: {
+      shirt_size: {
         enum:
           ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
       },
-      dietaryRestriction: {
+      dietary_restriction: {
         type: 'string',
         minLength:
           1,
@@ -75,10 +76,10 @@ module.exports = {
       allergies: {
         type: 'string',
       },
-      travelReimbursement: {
+      travel_reimbursement: {
         type: 'boolean',
       },
-      firstHackathon: {
+      first_hackathon: {
         type: 'boolean',
       },
       university: {
@@ -92,7 +93,7 @@ module.exports = {
         type: 'string',
         format: 'email',
       },
-      academicYear: {
+      academic_year: {
         enum:
           ['freshman', 'sophomore', 'junior', 'senior', 'graduate', 'other'],
       },
@@ -115,7 +116,7 @@ module.exports = {
         maxLength:
           150,
       },
-      codingExperience: {
+      coding_experience: {
         enum:
           ['none', 'beginner', 'intermediate', 'advanced', 'null'],
       },
@@ -131,10 +132,10 @@ module.exports = {
       eighteenBeforeEvent: {
         type: 'boolean',
       },
-      mlhcoc: {
+      mlh_coc: {
         type: 'boolean',
       },
-      mlhdcp: {
+      mlh_dcp: {
         type: 'boolean',
       },
       referral: {
@@ -150,7 +151,21 @@ module.exports = {
         type: 'number',
       },
     },
-    required: ['firstName', 'lastName', 'gender', 'shirtSize', 'travelReimbursement', 'firstHackathon', 'email', 'academicYear', 'major', 'uid', 'eighteenBeforeEvent', 'mlhcoc', 'mlhdcp'],
+    required: [
+      'firstname',
+      'lastname',
+      'gender',
+      'shirt_size',
+      'travel_reimbursement',
+      'first_hackathon',
+      'email',
+      'academic_year',
+      'major',
+      'uid',
+      'eighteenBeforeEvent',
+      'mlh_coc',
+      'mlh_dcp',
+    ],
   },
   rfidAssignmentSchema: {
     type: 'array',

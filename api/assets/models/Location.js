@@ -14,7 +14,7 @@ module.exports = class Location extends BaseObject {
    * @param uow {MysqlUow}
    */
   constructor(data, uow) {
-    super(uow, locationSchema, TABLE_NAME);
+    super(uow);
     this.uid = data.uid || null;
     this.location_name = data.location_name || '';
   }
@@ -33,5 +33,13 @@ module.exports = class Location extends BaseObject {
    */
   static getAll(uow, opts) {
     return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  get schema() {
+    return locationSchema;
+  }
+
+  get tableName() {
+    return TABLE_NAME;
   }
 };

@@ -2,7 +2,7 @@
 process.env.NODE_ENV = 'test';
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const server = require('../app');
+const server = require('../../app');
 const firebase = require('firebase');
 const admin = require('firebase-admin');
 const Chance = require('chance');
@@ -13,7 +13,7 @@ const chance = new Chance(123);
 const config = {
   apiKey: 'AIzaSyCpvAPdiIcqKV_NTyt6DZgDUNyjmA6kwzU',
   authDomain: 'hackpsu18.firebaseapp.com',
-  databaseURL: 'https://hackpsu18.firebaseio.com',
+  databaseURL: 'https://hackpsu18-test.firebaseio.com',
   projectId: 'hackpsu18',
   storageBucket: 'hackpsu18.appspot.com',
   messagingSenderId: '1002677206617',
@@ -48,7 +48,6 @@ function loginAdmin() {
 
 
 describe('test get registered hackers', () => {
-  const listener = null;
   afterEach((done) => {
     firebase.auth().signOut();
     if (listener) {
@@ -98,8 +97,6 @@ describe('test get registered hackers', () => {
               .set('content-type', 'application/json')
               .set('idtoken', idToken)
               .end((err, res) => {
-                console.log(res.status);
-                console.log(res.body);
                 res.status.should.satisfy(num => num === 200 || num === 207);
                 res.body.should.be.a('array');
                 done();
@@ -111,44 +108,43 @@ describe('test get registered hackers', () => {
 });
 
 describe('test user id', () => {
-  const listener = null;
   afterEach(() => {
     firebase.auth().signOut();
-    if(listener) {
+    if (listener) {
       listener();
     }
   });
   describe('un-authenticated user tries to get user id', () => {
     it('it should reject un-authenticated user with and unauthenticated message', (done) => {
-    chai.request(server)
-      .get('/v1/admin/userid')
-      .query({email: 'test@email.com'})
-      .end((err, res) =>{
-        res.should.have.status(401);
-        err.response.body.should.be.a('object');
-        should.equal(err.response.body.error, 'ID Token must be provided');
-        done();
-      });
+      chai.request(server)
+        .get('/v1/admin/userid')
+        .query({ email: 'test@email.com' })
+        .end((err, res) => {
+          res.should.have.status(401);
+          err.response.body.should.be.a('object');
+          should.equal(err.response.body.error, 'ID Token must be provided');
+          done();
+        });
     });
   });
   describe('user with insufficient permission tries to get user id', () => {
-   it('it should reject with an lack of privileges message', (done) => {
+    it('it should reject with an lack of privileges message', (done) => {
       loginRegular().then((user) => {
-         user.getIdToken(true)
-           .then((idToken) => {
-             chai.request(server)
-                .get('/v1/admin/userid')
-               .set('content-type', 'application/json')
-               .set('idtoken', idToken)
-               .query({email: 'test@email.com'})
-               .end((err, res) => {
-                 res.should.have.status(401);
-                 err.response.body.should.be.a('object');
-                 should.equal(err.response.body.error, 'You do not have sufficient permissions for this operation');
-                 done();
-                });
-            }).catch(error => done(error));
-        }).catch(err => done(err));
+        user.getIdToken(true)
+          .then((idToken) => {
+            chai.request(server)
+              .get('/v1/admin/userid')
+              .set('content-type', 'application/json')
+              .set('idtoken', idToken)
+              .query({ email: 'test@email.com' })
+              .end((err, res) => {
+                res.should.have.status(401);
+                err.response.body.should.be.a('object');
+                should.equal(err.response.body.error, 'You do not have sufficient permissions for this operation');
+                done();
+              });
+          }).catch(error => done(error));
+      }).catch(err => done(err));
     });
   });
   describe('admin auth success', () => {
@@ -160,7 +156,7 @@ describe('test user id', () => {
               .get('/v1/admin/userid')
               .set('content-type', 'application/json')
               .set('idtoken', idToken)
-              .query({email: 'test@email.com'})
+              .query({ email: 'test@email.com' })
               .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');
@@ -173,7 +169,6 @@ describe('test user id', () => {
 });
 
 describe('test make admin', () => {
-  const listener = null;
   afterEach(() => {
     firebase.auth().signOut();
     if (listener) {
@@ -320,8 +315,6 @@ describe('test make admin', () => {
 });
 
 describe.skip('test send emails', () => {
-  const listener = null;
-
   /**
    *
    * @return {Object} JSON Parameter that has no errors
@@ -370,7 +363,7 @@ describe.skip('test send emails', () => {
         case 'email':
           result.emails = [];
           for (let i = 0; i < numEmails; i += 1) {
-            if (chance.bool({likelihood: 25})) {
+            if (chance.bool({ likelihood: 25 })) {
               result.emails.push({
                 email: chance.email(),
                 name: chance.name(),

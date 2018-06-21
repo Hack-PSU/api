@@ -14,17 +14,14 @@ module.exports = class BaseObject {
   /**
    *
    * @param uow {MysqlUow}
-   * @param schema
-   * @param tableName
    */
-  constructor(uow, schema, tableName) {
+  constructor(uow) {
     if (Object.getPrototypeOf(this) === BaseObject.prototype) {
       throw new Error('BaseObject is abstract and cannot be instantiated');
     }
     this.uow = uow;
-    this.schema = schema;
-    this.tableName = tableName;
-    this.disallowedProperties = ['uow', 'schema', 'tableName', 'disallowedProperties']; // In a sub-class, make sure this array also includes all super properties
+    // In a sub-class, make sure this array also includes all super properties
+    this.disallowedProperties = ['uow', '_disallowedProperties'];
   }
 
   /**
@@ -62,12 +59,12 @@ module.exports = class BaseObject {
    * Returns a representation of the object that can be added directly to the database
    * For any subclass that contains properties that do not get added to the db,
    * ensure that this method is overridden and calls super._dbRepresentation()
-   * @return {{}}
+   * @return {Object}
    * @private
    */
-  _dbRepresentation() {
+  get _dbRepresentation() {
     return Object.entries(this)
-      .filter(kv => !this.disallowedProperties.includes(kv[0])) // hacky
+      .filter(kv => !this.disallowedProperties.includes(kv[0]))
       .filter(kv => kv[1])
       .reduce((accumulator, currentValue) => {
         // eslint-disable-next-line prefer-destructuring
@@ -76,6 +73,41 @@ module.exports = class BaseObject {
       }, {});
   }
 
+  get disallowedProperties() {
+    return this._disallowedProperties;
+  }
+
+  set disallowedProperties(arr) {
+    if (this._disallowedProperties) {
+      this._disallowedProperties.push(arr);
+    } else {
+      this._disallowedProperties = arr;
+    }
+  }
+
+  /**
+   *
+   * @returns {*} The primary key value for this object type
+   */
+  get id() {
+    return this.uid;
+  }
+
+  /**
+   *
+   * @returns {string} Name of the column that is the Primary key in the DB
+   */
+  get columnName() {
+    return 'uid';
+  }
+
+  get tableName() {
+    throw new Error('Base Object does not have a tableName.');
+  }
+
+  get schema() {
+    throw new Error('Base Object does not have a schema.');
+  }
   /**
    * Validates that the object matches some ajv schema
    * @return {{result: boolean | ajv.Thenable<any>, error: *}}
@@ -96,11 +128,11 @@ module.exports = class BaseObject {
    * @param opts {{}} opts.fields: fields to include
    * @return {Promise<Stream>}
    */
-  get(uid, columnName, opts) {
+  get(opts) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName)
       .fields((opts && opts.fields) || null)
-      .where(`${columnName}= ?`, uid)
+      .where(`${this.columnName}= ?`, this.id)
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query.text, query.values, { stream: true });
@@ -117,7 +149,7 @@ module.exports = class BaseObject {
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
-      .setFieldsRows([this._dbRepresentation()])
+      .setFieldsRows([this._dbRepresentation])
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query.text, query.values);
@@ -127,15 +159,15 @@ module.exports = class BaseObject {
    * Updates the object in the database
    * @return {Promise<any>}
    */
-  update(uid, columnName) {
+  update() {
     const validation = this.validate();
     if (!validation.result) {
       return new Promise(((resolve, reject) => reject(new Error(validation.error))));
     }
     const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)
-      .setFields(this._dbRepresentation())
-      .where(`${columnName} = ?`, uid)
+      .setFields(this._dbRepresentation)
+      .where(`${this.columnName} = ?`, this.id)
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query.text, query.values);
@@ -143,13 +175,12 @@ module.exports = class BaseObject {
 
   /**
    * Deletes the object from the database
-   * @param uid
    * @return {Promise<any>}
    */
-  delete(uid) {
+  delete() {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where('uid = ?', uid)
+      .where(`${this.columnName} = ?`, this.id)
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query.text, query.values);

@@ -9,14 +9,40 @@ module.exports = TABLE_NAME;
 
 module.exports = class RSVP extends BaseObject {
   constructor(data, uow) {
-    super(uow, rsvpSchema, TABLE_NAME);
-    this.user_uid = data.user_uid || null;
+    super(uow);
+    this.user_id = data.user_uid || null;
     this.rsvp_time = new Date().getTime();
     this.rsvp_status = data.rsvp_status || false;
   }
 
+  get schema() {
+    return rsvpSchema;
+  }
+
+  get tableName() {
+    return TABLE_NAME;
+  }
+
+  get columnName() {
+    return 'user_id';
+  }
+
+  get id() {
+    return this.user_id;
+  }
+
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getCount(uow, opts) {
+    return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
+  }
+
   static generateTestData(uow) {
-    throw new Error('Method not implemented');
+    throw new Error('Not implemented');
   }
 
   /**
@@ -27,7 +53,7 @@ module.exports = class RSVP extends BaseObject {
    */
   static getAll(uow, opts) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(TABLE_NAME)
+      .from(TABLE_NAME, 'rsvp')
       .field('rsvp.*')
       .field('r.firstname')
       .field('r.lastname')
@@ -52,15 +78,5 @@ module.exports = class RSVP extends BaseObject {
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query);
-  }
-
-  /**
-   *
-   * @param uow
-   * @param opts
-   * @return {Promise<Stream>}
-   */
-  static getCount(uow, opts) {
-    return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
   }
 };

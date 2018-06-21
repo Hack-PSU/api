@@ -262,5 +262,17 @@ module.exports = {
     },
     required: ['projectName', 'team', 'categories'],
   },
+  locationSchema: {
+    type: 'object',
+    properties: {
+      uid: {
+        type: 'string',
+      },
+      location_name: {
+        type: 'string',
+      },
+    },
+    required: ['uid', 'location_name'],
+  },
   eventSchema: {},
 };

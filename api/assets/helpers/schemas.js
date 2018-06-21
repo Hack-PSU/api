@@ -274,5 +274,35 @@ module.exports = {
     },
     required: ['uid', 'location_name'],
   },
-  eventSchema: {},
+  eventSchema: {
+    type: 'object',
+    properties: {
+      uid: {
+        type: 'string',
+        min: 1,
+      },
+      event_location: {
+        type: 'string',
+        min: 1,
+      },
+      event_start_time: {
+        type: 'number',
+      },
+      event_end_time: {
+        type: 'number',
+      },
+      event_title: {
+        type: 'string',
+        min: 1,
+      },
+      event_description: {
+        type: 'string',
+        min: 1,
+      },
+      event_type: {
+        enum: ['food', 'workshop', 'activity'],
+      },
+    },
+    required: ['uid', 'event_location', 'event_start_time', 'event_end_time', 'event_title', 'event_type'],
+  },
 };

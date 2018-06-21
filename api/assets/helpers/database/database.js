@@ -143,7 +143,7 @@ function getAllUsersList(uow) {
     .left_join('RFID_ASSIGNMENTS', 'f', 'a.uid = f.user_uid')
     .left_join('PRE_REGISTRATION', 'p', 'r.email = p.email')
     .field('r.*')
-    .field('p.id')
+    .field('p.uid')
     .field('v.user_id')
     .field('f.user_uid')
     .toString();
@@ -157,7 +157,7 @@ function getAllUsersList(uow) {
  * @return {Promise<any>}
  */
 function getAllUsersCount(uow) {
-  const preregColumnName = 'id';
+  const preregColumnName = 'uid';
   const reg_column_name = 'uid';
   const rsvp_column_name = 'user_id';
   const rfidscan_column_name = 'user_uid';
@@ -175,7 +175,7 @@ function getAllUsersCount(uow) {
       .field(`COUNT(${rfidscan_column_name})`, 'rfidscan_count'))
     .toString();
   query = query.concat(';');
-  // console.log('Users:' + query);
+  console.log('Users:' + query);
   return uow.query(query, null, { stream: true });
 }
 

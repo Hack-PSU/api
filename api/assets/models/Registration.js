@@ -120,6 +120,59 @@ module.exports = class Registration extends BaseObject {
   }
 
   /**
+   * @param uow
+   * @return {Promise<any>}
+   */
+  static getStatsCount(uow) {
+    var columnNames = ["\"academic_year\"",
+                       "academic_year",
+                       "\"coding_experience\"",
+                       "coding_experience",
+                       "\"dietary_restriction\"",
+                       "dietary_restriction",
+                       "\"travel_reimbursement\"",
+                       "travel_reimbursement",
+                       "\"race\"",
+                       "race",
+                       "\"shirt_size\"",
+                       "shirt_size",
+                       "\"gender\"",
+                       "gender",
+                       "\"first_hackathon\"",
+                       "first_hackathon",
+                       "\"veteran\"",
+                       "veteran"]
+
+    //First Column - built as a string
+    var query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+      .from(TABLE_NAME)
+      .field(columnNames[0], 'CATEGORY')
+      .field(columnNames[1], "OPTION")
+      .field("COUNT(*)", "COUNT")
+      .group(columnNames[1])
+      .toString();
+    var i = 0;
+    var length = columnNames.length;
+    
+    //Rest of the Columns in the list - built onto the existing string using UNION
+    for(i = 2; i < length - 2; i+=2) {
+      query = query.concat(" UNION( ")
+                   .concat(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+                    .from(TABLE_NAME)
+                    .field(columnNames[i], 'CATEGORY')
+                    .field(columnNames[i + 1], "OPTION")
+                    .field("COUNT(*)", "COUNT")
+                    .group(columnNames[i + 1])
+                    .toString() )
+                   .concat(")");
+    }
+    query.concat(";");
+    return uow.query(query, null, { stream: true });
+  }
+
+
+
+  /**
    *
    * @return {Promise<any>}
    */

@@ -266,13 +266,13 @@ module.exports = {
     type: 'object',
     properties: {
       uid: {
-        type: 'string',
+        type: 'number',
       },
       location_name: {
         type: 'string',
       },
     },
-    required: ['uid', 'location_name'],
+    required: ['location_name'],
   },
   eventSchema: {
     type: 'object',

@@ -20,16 +20,16 @@ connection.connect((err) => {
   }
 });
 
-// Initialize Firebase
-const config = {
-  apiKey: 'AIzaSyCpvAPdiIcqKV_NTyt6DZgDUNyjmA6kwzU',
-  authDomain: 'hackpsu18.firebaseapp.com',
-  databaseURL: 'https://hackpsu18-test.firebaseio.com',
-  projectId: 'hackpsu18',
-  storageBucket: 'hackpsu18.appspot.com',
-  messagingSenderId: '1002677206617',
-};
-firebase.initializeApp(config);
+// // Initialize Firebase
+// const config = {
+//   apiKey: 'AIzaSyCpvAPdiIcqKV_NTyt6DZgDUNyjmA6kwzU',
+//   authDomain: 'hackpsu18.firebaseapp.com',
+//   databaseURL: 'https://hackpsu18-test.firebaseio.com',
+//   projectId: 'hackpsu18',
+//   storageBucket: 'hackpsu18.appspot.com',
+//   messagingSenderId: '1002677206617',
+// };
+// firebase.initializeApp(config);
 
 const should = chai.should();
 

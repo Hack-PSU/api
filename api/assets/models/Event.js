@@ -10,7 +10,6 @@ const TABLE_NAME = 'EVENTS';
 module.exports = TABLE_NAME;
 
 module.exports = class Event extends BaseObject {
-
   /**
    *
    * @param data
@@ -29,12 +28,12 @@ module.exports = class Event extends BaseObject {
 
   static generateTestData(uow) {
     const testObj = new Event({}, uow);
-    testObj.event_location = chance.integer({ min: 1, max: 15 });
+    testObj.event_location = chance.integer({ min: 1, max: 73 }).toString();
     testObj.event_start_time = chance.date().getTime();
     testObj.event_end_time = chance.date({ min: new Date(testObj.event_start_time) }).getTime();
     testObj.event_title = chance.sentence();
     testObj.event_description = chance.paragraph();
-    testObj.event_type = chance.word();
+    testObj.event_type = ['food', 'activity', 'workshop'][chance.integer({ min: 0, max: 2 })];
     return testObj;
   }
 

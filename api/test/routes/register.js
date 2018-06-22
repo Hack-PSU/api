@@ -198,11 +198,17 @@ describe('registration tests', () => {
 
   // Scrub DB
   before((done) => {
+    const query0 = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from('RSVP')
+      .where('user_id = ?', 'WaPm1vcEVvaw0tbCbrBHs2e891s2')
+      .toParam();
+    query0.text = query0.text.concat(';');
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from('REGISTRATION')
       .where('uid = ?', 'WaPm1vcEVvaw0tbCbrBHs2e891s2')
       .toParam();
-    query.text = query.text.concat(';');
+    query.text = ''.concat(query0.text).concat(query.text.concat(';'));
+    query.values.push(query0.values[0]);
     connection.query(query.text, query.values, (err) => {
       if (err) {
         done(err);

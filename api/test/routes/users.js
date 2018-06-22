@@ -68,7 +68,7 @@ function loginRegular() {
  * @return {{firstName, lastName: *, email, gender: string, shirtSize: string,
  * dietaryRestriction: string, university: string, travelReimbursement: boolean,
  * firstHackathon: boolean, academicYear: string, major: string,
- * phone: *|{type, minLength, maxLength}, ethnicity: string, codingExperience: string,
+ * phone: number, ethnicity: string, codingExperience: string,
  * eighteenBeforeEvent: boolean, mlhcoc: boolean, mlhdcp: boolean, uid: string,
  * referral: string, project: *, expectations: *, veteran: boolean}}
  */

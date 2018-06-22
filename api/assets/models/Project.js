@@ -10,7 +10,7 @@ module.exports = class Project extends BaseObject {
    * @param uow {MysqlUow}
    */
   constructor(data, uow) {
-    super(uow, projectRegistrationSchema, null);
+    super(uow);
     this.projectName = data.project_name || null;
     this.team = data.team || [];
     this.categories = data.categories || [];
@@ -46,6 +46,10 @@ module.exports = class Project extends BaseObject {
     return uow.query(query.text, query.values, { stream: true });
   }
 
+  get schema() {
+    return projectRegistrationSchema;
+  }
+
   /**
    *
    * @return {Promise<any>}
@@ -68,5 +72,9 @@ module.exports = class Project extends BaseObject {
       .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
     const list = [this.projectId, Math.min(...this.categories.map(c => parseInt(c, 10)))];
     return this.uow.query(prepped, list);
+  }
+
+  static getAll(uow, opts) {
+    throw new Error('Not implemented');
   }
 };

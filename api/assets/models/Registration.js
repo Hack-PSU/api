@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 const squel = require('squel');
@@ -12,13 +13,13 @@ module.exports = TABLE_NAME;
 
 module.exports = class Registration extends BaseObject {
   constructor(data, uow) {
-    super(uow, registeredUserSchema, TABLE_NAME);
+    super(uow, registeredUserSchema);
     this.firstname = data.firstName || null;
     this.lastname = data.lastName || null;
     this.gender = data.gender || null;
     this.shirt_size = data.shirtSize || null;
     this.dietary_restriction = data.dietaryRestriction || null;
-    this.allergies = data.allergies || null;
+    this.allergies = data.allergies || '';
     this.travel_reimbursement = data.travelReimbursement || false;
     this.first_hackathon = data.firstHackathon || false;
     this.university = data.university || null;
@@ -40,11 +41,54 @@ module.exports = class Registration extends BaseObject {
     this.time = new Date().getTime();
   }
 
+  get schema() {
+    return registeredUserSchema;
+  }
+
+  get tableName() {
+    return TABLE_NAME;
+  }
+
+  /**
+   *
+   * @param uid
+   * @return {Promise<any>}
+   */
+  static getEmail(uid) {
+    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(TABLE_NAME)
+      .field('email')
+      .where('uid = ?', uid)
+      .toString()
+      .concat(';');
+    return this.uow.query(query);
+  }
+
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getAll(uow, opts) {
+    return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  /**
+   *
+   * @param uow
+   * @param opts
+   * @return {Promise<Stream>}
+   */
+  static getCount(uow, opts) {
+    return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
+  }
+
   static generateTestData(uow) {
     const testObj = new Registration({}, uow);
     testObj.firstname = chance.first();
     testObj.lastname = chance.last();
-    testObj.gender = chance.gender();
+    testObj.gender = ['male', 'female', 'non-binary', 'no-disclose'][chance.integer({ min: 0, max: 3 })];
     testObj.shirt_size = ['XS', 'S', 'M', 'L', 'XL', 'XXL'][chance.integer({ min: 0, max: 5 })];
     testObj.dietary_restriction = chance.word();
     testObj.allergies = chance.sentence();
@@ -65,49 +109,14 @@ module.exports = class Registration extends BaseObject {
       max: 4,
     })];
     testObj.uid = chance.guid();
-    testObj.eighteenBeforeEvent = chance.bool();
-    testObj.mlh_coc = chance.bool();
-    testObj.mlh_dcp = chance.bool();
+    testObj.eighteenBeforeEvent = true;
+    testObj.mlh_coc = true;
+    testObj.mlh_dcp = true;
     testObj.referral = chance.sentence();
     testObj.project = chance.paragraph();
     testObj.expectations = chance.paragraph();
-    testObj.veteran = chance.bool();
+    testObj.veteran = chance.bool().toString();
     return testObj;
-  }
-
-  /**
-   *
-   * @param uid
-   * @return {Promise<any>}
-   */
-  static getEmail(uid) {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(TABLE_NAME)
-      .field('email')
-      .where('uid = ?', uid)
-      .toString()
-      .concat(';');
-    return this.uow.query(query);
-  }
-  
-  /**
-   *
-   * @param uow
-   * @param opts
-   * @return {Promise<Stream>}
-   */
-  static getAll(uow, opts) {
-    return super.getAll(uow, TABLE_NAME, opts);
-  }
-
-  /**
-   *
-   * @param uow
-   * @param opts
-   * @return {Promise<Stream>}
-   */
-  static getCount(uow, opts) {
-    return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
   }
 
   /**

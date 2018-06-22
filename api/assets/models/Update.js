@@ -1,32 +1,43 @@
+/* eslint-disable class-methods-use-this */
+const Timeuuid = require('node-time-uuid');
 const BaseObject = require('./BaseObject');
 const { liveUpdateSchema } = require('../helpers/schemas');
-const Timeuuid = require('node-time-uuid');
-const squel = require('squel');
+const RtdbUow = require('../helpers/database/rtdb_uow');
 
-
-const TABLE_NAME = 'LIVE_UPDATES';
-module.exports = TABLE_NAME;
+const REFERENCE = '/updates';
 
 module.exports = class Update extends BaseObject {
   constructor(data, uow) {
-    super(uow, liveUpdateSchema, TABLE_NAME);
-    this.uid = data.uid || new Timeuuid().toString('hex');
+    super(uow);
     this.update_title = data.update_title || null;
     this.update_text = data.update_text || null;
     this.update_image = data.update_image || null;
     this.update_time = data.update_time || null;
+    this.disallowedProperties = ['useRTDB'];
   }
 
-  getAll(opts) {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(this.tableName)
-      .fields((opts && opts.fields) || null)
-      .order('uid')
-      .offset((opts && opts.startAt) || null)
-      .limit((opts && opts.count) || null)
-      .toString()
-      .concat(';');
-    const params = [];
-    return this.uow.query(query, params, { stream: true });
+  static get useRTDB() {
+    return true;
+  }
+
+  get schema() {
+    return liveUpdateSchema;
+  }
+
+  static getAll(uow) {
+    return uow.query(RtdbUow.queries.GET, REFERENCE);
+  }
+
+  static generateTestData() {
+    throw new Error('Not implemented');
+  }
+
+  add() {
+    const validation = this.validate();
+    if (!validation.result) {
+      return new Promise(((resolve, reject) => reject(new Error(validation.error))));
+    }
+    const uid = new Timeuuid().toString();
+    return this.uow.query(RtdbUow.queries.SET, `${REFERENCE}/${uid}`, this._dbRepresentation);
   }
 };

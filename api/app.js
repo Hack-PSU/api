@@ -6,11 +6,8 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
-const firebase = require('firebase-admin');
 const fs = require('fs');
-const nodecipher = require('node-cipher');
 const cors = require('cors');
-const redisAdapter = require('socket.io-redis');
 const UnitOfWork = require('./assets/helpers/database/uow_factory');
 
 /**
@@ -56,35 +53,42 @@ app.use((req, res, next) => {
   });
 });
 
+app.use((req, res, next) => {
+  UnitOfWork.createRTDB().then((uow) => {
+    req.rtdb = uow;
+    next();
+  }).catch(next);
+});
+
 /**
  * Create HTTP server.
  */
 const server = http.createServer(app);
 
 // TODO: Decide if we need this
-/**
- * Socket IO listener
- */
-const io = require('socket.io').listen(server, {
-  origin: 'http://localhost:*',
-  path: '/v1/live',
-  handlePreflightRequest(req, res) {
-    const headers = {
-      'Access-Control-Allow-Headers': 'Content-Type, idtoken',
-      'Access-Control-Allow-Origin': req.headers.origin,
-      'Access-Control-Allow-Credentials': true,
-    };
-    res.writeHead(200, headers);
-    res.end();
-  },
-});
-
-io.adapter(redisAdapter({
-  host: 'redis-17891.c44.us-east-1-2.ec2.cloud.redislabs.com',
-  port: 17891,
-  password: process.env.PKEY_PASS,
-})); // TODO: Update
-require('./routes/sockets')(io);
+// /**
+//  * Socket IO listener
+//  */
+// const io = require('socket.io').listen(server, {
+//   origin: 'http://localhost:*',
+//   path: '/v1/live',
+//   handlePreflightRequest(req, res) {
+//     const headers = {
+//       'Access-Control-Allow-Headers': 'Content-Type, idtoken',
+//       'Access-Control-Allow-Origin': req.headers.origin,
+//       'Access-Control-Allow-Credentials': true,
+//     };
+//     res.writeHead(200, headers);
+//     res.end();
+//   },
+// });
+//
+// io.adapter(redisAdapter({
+//   host: 'redis-17891.c44.us-east-1-2.ec2.cloud.redislabs.com',
+//   port: 17891,
+//   password: process.env.PKEY_PASS,
+// })); // TODO: Update
+// require('./routes/sockets')(io);
 
 /**
  * Get port from environment and store in Express.
@@ -104,6 +108,7 @@ const corsOptions = {
   },
 };
 
+// TODO: Fix CORS
 app.options('/', (req, res, next) => {
   next();
 });
@@ -112,22 +117,8 @@ const index = require('./routes/index');
 const users = require('./routes/users');
 const register = require('./routes/register');
 const admin = require('./routes/admin');
-const pi = require('./routes/pi'); // Deprecated
+const pi = require('./routes/pi');
 const live = require('./routes/live');
-
-nodecipher.decryptSync({
-  input: 'privatekey.aes',
-  output: 'config.json',
-  password: process.env.PKEY_PASS,
-  algorithm: 'aes-256-cbc-hmac-sha256',
-});
-
-const serviceAccount = require('./config.json');
-
-firebase.initializeApp({
-  credential: firebase.credential.cert(serviceAccount),
-  databaseURL: 'https://hackpsu18.firebaseio.com',
-});
 
 fs.unlinkSync('./config.json');
 app.use(helmet());
@@ -147,7 +138,7 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(bodyParser.json({
   limit: '10mb',
 }));
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 

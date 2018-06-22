@@ -1,9 +1,4 @@
 /* eslint-disable no-console,max-len */
-const aws = require('aws-sdk');
-const base64 = require('base64-stream');
-const { Readable } = require('stream');
-
-const constants = require('../assets/helpers/constants');
 const database = require('../assets/helpers/database/database');
 const authenticator = require('../assets/helpers/auth');
 
@@ -12,27 +7,10 @@ const EventModel = require('../assets/models/Event');
 
 const { sendNotification } = require('../assets/helpers/functions');
 
-aws.config.update({
-  accessKeyId: constants.s3Connection.accessKeyId,
-  secretAccessKey: constants.s3Connection.secretAccessKey,
-  region: constants.s3Connection.region,
-});
-const s3 = new aws.S3();
+// TODO: Deprecated
 
 
 /** ************** HELPER FUNCTIONS *************** */
-/**
- *
- * @param {String} dataString base64 encoded string
- * @return {NodeJS.WritableStream}
- */
-function parseFile(dataString) {
-  const readable = new Readable();
-  readable.push(dataString.split(',')[1]);
-  readable.push(null);
-  return readable.pipe(base64.decode());
-}
-
 module.exports = (io) => {
   const updates = io.of('/updates');
   const events = io.of('/events');

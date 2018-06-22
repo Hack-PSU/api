@@ -1,14 +1,12 @@
-/* eslint-disable consistent-return,no-use-before-define,no-param-reassign,max-len */
+/* eslint-disable consistent-return,no-use-before-define,no-param-reassign,max-len,no-new */
 const express = require('express');
-const aws = require('aws-sdk');
-const multer = require('multer');
-const multers3 = require('multer-s3');
 const path = require('path');
 const Ajv = require('ajv');
+const Stringify = require('streaming-json-stringify');
 
 const functions = require('../assets/helpers/functions');
 const authenticator = require('../assets/helpers/auth');
-const database = require('../assets/helpers/database/database');
+const storage = require('../assets/helpers/storage');
 const constants = require('../assets/helpers/constants');
 const TravelReimbursement = require('../assets/models/TravelReimbursement');
 const { projectRegistrationSchema, travelReimbursementSchema } = require('../assets/helpers/schemas');
@@ -22,43 +20,24 @@ const router = express.Router();
 
 const ajv = new Ajv({ allErrors: true });
 
-
-aws.config.update({
-  accessKeyId: constants.s3Connection.accessKeyId,
-  secretAccessKey: constants.s3Connection.secretAccessKey,
-  region: constants.s3Connection.region,
-});
-
-
-const s3 = new aws.S3();
-
-const storage = multers3({
-  s3,
-  bucket: constants.s3Connection.s3TravelReimbursementBucket,
-  acl: 'public-read',
-  serverSideEncryption: 'AES256',
-  metadata(req, file, cb) {
-    cb(null, {
-      fieldName: file.fieldname,
-    });
-  },
-  key(req, file, cb) {
-    cb(null, generateFileName(req.body.fullName, file));
-  },
-});
-
-function generateFileName(fullName, file) {
-  return `${fullName}-receipt-${file.originalname}`;
-}
-
-const upload = multer({
+const upload = storage.upload({
+  storage: storage.generateStorage({
+    bucket: constants.s3Connection.s3TravelReimbursementBucket,
+    metadata(req, file, cb) {
+      cb(null, {
+        fieldName: file.fieldname,
+      });
+    },
+    key(req, file, cb) {
+      cb(null, generateFileName(req.body.fullName, file));
+    },
+  }),
   fileFilter(req, file, cb) {
     if (path.extname(file.originalname) !== '.jpeg' && path.extname(file.originalname) !== '.png' && path.extname(file.originalname) !== '.jpg') {
       return cb(new Error('Only jpeg, jpg, and png are allowed'));
     }
     cb(null, true);
   },
-  storage,
   limits: { fileSize: 1024 * 1024 * 5 }, // limit to 5MB
 });
 
@@ -125,6 +104,16 @@ String.prototype.padStart = String.prototype.padStart ?
     return pad + String(this).slice(0);
   };
 
+/**
+ *
+ * @param fullName
+ * @param file
+ * @returns {string}
+ */
+function generateFileName(fullName, file) {
+  return `${fullName}-receipt-${file.originalname}`;
+}
+
 /** *********** HELPER MIDDLEWARE ***************** */
 /**
  * User authentication middleware
@@ -187,10 +176,11 @@ router.get('/', (req, res, next) => {
  */
 router.get('/registration', (req, res, next) => {
   if (res.locals.user) {
-    new Registration({ uid: res.locals.users.uid })
+    new Registration({ uid: res.locals.user.uid }, req.uow)
       .get()
       .then((stream) => {
         stream
+          .pipe(Stringify())
           .pipe(res)
           .on('err', (err) => {
             const error = new Error();
@@ -198,9 +188,15 @@ router.get('/registration', (req, res, next) => {
             error.body = err.message;
             next(error);
           }).on('end', () => {
-            res.status(200).send();
+          res.type('application/json').status(200).send();
           });
-      });
+      }).catch((err) => { // Send Email error
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      console.error(error);
+      next(error);
+    });
   } else {
     const error = new Error();
     error.status = 500;
@@ -276,65 +272,71 @@ router.get('/project', (req, res, next) => {
 router.post('/rsvp', (req, res, next) => {
   if (req.body && (typeof req.body.rsvp !== 'undefined')) {
     if (res.locals.user) {
-      database.setRSVP(res.locals.user.uid, req.body.rsvp === 'true')
-        .then(() => {
-          if (req.body.rsvp === 'true') {
-            let user = null;
-            new Registration({ data: res.locals.user.uid })
-              .then((stream) => {
-                stream
-                  .on('data', (data) => {
-                    user = data;
-                  }).on('err', (err) => { // Database registration retrieval
-                    const error = new Error();
-                    error.status = 500;
-                    error.body = err.message;
-                    console.error(error);
-                    next(error);
-                  }).on('end', () => {
-                    const { email } = user;
-                    const name = user.firstname;
-                    const pin = user.pin || 78;
-                    functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
-                      name,
-                      pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
-                    })
-                      .then((subbedHTML) => {
-                        const request = functions.createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, '');
-                        functions.sendEmail(request.data)
-                          .then(() => {
-                            res.status(200).send({
-                              message: 'success',
-                              pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
-                            });
-                          // resolve({'email': request.data.to, 'html': request.data.htmlContent, 'response': 'success'});
-                          })
-                          .catch((err) => { // Send Email error
-                            const error = new Error();
-                            error.status = 500;
-                            error.body = err.message;
-                            console.error(error);
-                            next(error);
-                          });
-                      }).catch((err) => { // Email Substitute error
+      new RSVP(
+        { user_uid: res.locals.user.uid, rsvp_status: req.body.rsvp === 'true' },
+        req.uow,
+      ).add().then(() => {
+        req.uow.complete();
+        if (req.body.rsvp === 'true') {
+          let user = null;
+          // TODO: Refactor this. Put into a Pipeline probably.
+          // TODO: Try: http://bvaughn.github.io/task-runner/#/getting-started/working-with-promises
+          new Registration({ uid: res.locals.user.uid }, req.uow)
+            .get()
+            .then((stream) => {
+              stream
+                .on('data', (data) => {
+                  user = data;
+                }).on('err', (err) => { // Database registration retrieval
+                const error = new Error();
+                error.status = 500;
+                error.body = err.message;
+                console.error(error);
+                next(error);
+              }).on('end', () => {
+                const { email } = user;
+                const name = user.firstname;
+                const pin = user.pin || 78;
+                functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
+                  name,
+                  pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
+                })
+                  .then((subbedHTML) => {
+                    const request = functions.createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, '');
+                    functions.sendEmail(request.data)
+                      .then(() => {
+                        res.status(200).send({
+                          message: 'success',
+                          pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
+                        });
+                        // resolve({'email': request.data.to, 'html': request.data.htmlContent, 'response': 'success'});
+                      })
+                      .catch((err) => { // Send Email error
                         const error = new Error();
                         error.status = 500;
                         error.body = err.message;
                         console.error(error);
                         next(error);
                       });
-                  });
+                  }).catch((err) => { // Email Substitute error
+                  const error = new Error();
+                  error.status = 500;
+                  error.body = err.message;
+                  console.error(error);
+                  next(error);
+                });
               });
-          } else {
-            res.status(200).send({ message: 'success' });
-          }
-        }).catch((err) => { // Set RSVP error
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          console.error(error);
-          next(error);
-        });
+            });
+        } else {
+          res.status(200).send({ message: 'success' });
+        }
+      }).catch((err) => { // Set RSVP error
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        console.error(error);
+        next(error);
+      });
     } else {
       const error = new Error();
       error.status = 400;

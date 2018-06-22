@@ -1,8 +1,8 @@
-/* eslint-disable max-len */
+/* eslint-disable max-len,no-param-reassign */
 
 const validator = require('email-validator');
 const Ajv = require('ajv');
-const { Transform } = require('stream');
+const transform = require('parallel-transform');
 const express = require('express');
 const Stringify = require('streaming-json-stringify');
 const { emailObjectSchema } = require('../assets/helpers/schemas');
@@ -160,28 +160,31 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
       count: parseInt(req.query.limit, 10),
       limit: parseInt(req.query.offset, 10),
     }).then((stream) => {
-      stream.pipe(Stringify()).pipe(new Transform({
-        readableObjectMode: true,
-        writableObjectMode: true,
-        transform(chunk, encoding, callback) {
-          const obj = chunk;
-          authenticator.getUserData(chunk.uid)
-            .then((user) => {
-              obj.sign_up_time = new Date(user.metadata.creationTime).getTime();
-              this.push(obj);
-              callback();
-            }).catch((error) => {
-              console.error(error);
-              obj.sign_up_time = null;
-              this.push(obj);
-              callback();
+      res.status(200).type('application/json');
+      stream
+        .pipe(transform(
+          100,
+          { objectMode: true, ordered: false },
+          (data, callback) => {
+            authenticator.getUserData(data.uid)
+              .then((user) => {
+                data.sign_up_time = new Date(user.metadata.creationTime).getTime();
+                callback(null, data);
+              }).catch(() => {
+              res.status(207);
+              callback(null, data);
             });
-        },
-      })).on('error', () => {
-        res.status(207);
-      }).pipe(res)
+          },
+        )).on('error', (err) => {
+        const error = new Error();
+        error.status = 500;
+        error.body = err.message;
+        next(error);
+      })
+        .pipe(Stringify())
+        .pipe(res)
         .on('end', () => {
-          res.status(200).send();
+          res.end();
         });
       stream.on('error', (err) => {
         const error = new Error();
@@ -195,20 +198,6 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
       error.body = err.message;
       next(error);
     });
-    // stream.on('data', (document) => {
-    //   arr.push(document);
-    // }).on('end', () => {
-    //   Promise.all(arr.map(value => new Promise((resolve, reject) => {
-    //     authenticator.getUserData(value.uid)
-    //       .then((user) => {
-    //         value.sign_up_time = new Date(user.metadata.creationTime).getTime();
-    //         resolve(value);
-    //       }).catch(err => reject(err));
-    //   }))).then(result => res.status(200).send(result))
-    //     .catch((err) => {
-    //       res.status(207).send(arr);
-    //     });
-    // });
   } else {
     const error = new Error();
     error.status = 400;
@@ -752,17 +741,18 @@ router.get('/extra_credit_list', verifyACL(2), (req, res, next) => {
 });
 /*
 router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
-  const arr = [];
   database.getExtraCreditClassList(req.uow)
+    .pipe(Stringify())
     .pipe(res)
     .on('error', (err) => {
       const error = new Error();
       error.status = 500;
       error.body = err.message;
       next(error);
-    }).on('end', () => {
-    res.status(200).send();
-  });
+    })
+    .on('end', () => {
+      res.status(200).send();
+    });
 });
 */
 /**
@@ -779,7 +769,7 @@ router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
-  if (req.body && req.body.uid && req.body.cid && parseInt(req.body.cid)) {
+  if (req.body && req.body.uid && req.body.cid && parseInt(req.body.cid, 10)) {
     database.assignExtraCredit(req.uow, req.body.uid, req.body.cid)
       .then(() => {
         res.status(200).send({ status: 'Success' });

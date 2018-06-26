@@ -1,0 +1,9 @@
+env: standard
+runtime: nodejs8
+service:
+  default
+automatic_scaling:
+  min_instances: 0
+  max_instances: 1
+env_variables:
+  GCLOUD_ENV: "prod"

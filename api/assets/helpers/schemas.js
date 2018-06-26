@@ -305,4 +305,21 @@ module.exports = {
     },
     required: ['uid', 'event_location', 'event_start_time', 'event_end_time', 'event_title', 'event_type'],
   },
+  categorySchema: {
+    type: 'object',
+    properties: {
+      uid: {
+        type: 'number',
+      },
+      categoryName: {
+        type: 'string',
+        min: 1,
+        max: 50,
+      },
+      isSponsor: {
+        type: 'boolean',
+      },
+    },
+    required: ['uid', 'categoryName', 'isSponsor'],
+  },
 };

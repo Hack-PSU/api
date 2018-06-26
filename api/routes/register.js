@@ -7,8 +7,11 @@ const authenticator = require('../assets/helpers/auth');
 const constants = require('../assets/helpers/constants');
 const path = require('path');
 const database = require('../assets/helpers/database/database');
-const storage = require('../assets/helpers/storage');
+const StorageService = require('../assets/helpers/storage_service');
+
+const Storage = new StorageService();
 const Registration = require('../assets/models/Registration');
+const { StorageFactory } = require('../assets/helpers/storage_factory');
 const PreRegistration = require('../assets/models/PreRegistration');
 
 
@@ -25,8 +28,8 @@ function generateFileName(uid, firstName, lastName) {
   return `${uid}-${firstName}-${lastName}-HackPSUS2018.pdf`;
 }
 
-const upload = storage.upload({
-  storage: storage.generateStorage({
+const upload = new Storage().upload({
+  storage: StorageFactory.S3Storage({
     bucket: constants.s3Connection.s3BucketName,
     metadata(req, file, cb) {
       cb(null, {

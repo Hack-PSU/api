@@ -6,7 +6,10 @@ const Stringify = require('streaming-json-stringify');
 
 const functions = require('../assets/helpers/functions');
 const authenticator = require('../assets/helpers/auth');
-const storage = require('../assets/helpers/storage');
+const StorageService = require('../assets/helpers/storage_service');
+const { StorageFactory } = require('../assets/helpers/storage_factory');
+
+const storage = new StorageService();
 const constants = require('../assets/helpers/constants');
 const TravelReimbursement = require('../assets/models/TravelReimbursement');
 const { projectRegistrationSchema, travelReimbursementSchema } = require('../assets/helpers/schemas');
@@ -21,7 +24,7 @@ const router = express.Router();
 const ajv = new Ajv({ allErrors: true });
 
 const upload = storage.upload({
-  storage: storage.generateStorage({
+  storage: StorageFactory.S3Storage({
     bucket: constants.s3Connection.s3TravelReimbursementBucket,
     metadata(req, file, cb) {
       cb(null, {

@@ -65,9 +65,7 @@ module.exports = class RtdbUow {
             }, true)
             .catch(reject);
           break;
-
-        case
-        RtdbUow.queries.REF:
+        case RtdbUow.queries.REF:
           resolve(this.db.ref(reference).toString());
           break;
 

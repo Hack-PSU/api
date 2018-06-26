@@ -72,7 +72,7 @@ describe('Object retrieval tests', () => {
 
       describe(`Update existing ${model.name}`, () => {
         let obj;
-        before(function (done) {
+        beforeEach(function (done) {
           try {
             const m = model.generateTestData(uow);
             m.add()
@@ -84,6 +84,18 @@ describe('Object retrieval tests', () => {
           } catch (e) {
             this.skip();
           }
+        });
+        it('should fail validation', (done) => {
+          delete obj.id;
+          delete obj[Object.keys(obj).pop()];
+          obj.update()
+            .then(() => {
+              done(new Error('Should not succeed'));
+            })
+            .catch((err) => {
+              should.not.equal(err, null);
+              done();
+            });
         });
 
         it('should update the object successfully', (done) => {

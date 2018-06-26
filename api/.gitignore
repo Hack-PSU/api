@@ -7,3 +7,8 @@
 node_modules/
 Pipfile
 hackpsu18-firebase-adminsdk-xf07l-3905b29787.json
+*.env
+config.json
+config.json 
+gcs_config.json
+gcs_config_staging.json

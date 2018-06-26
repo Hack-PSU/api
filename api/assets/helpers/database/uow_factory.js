@@ -1,6 +1,5 @@
 const mysql = require('mysql');
 const firebase = require('firebase-admin');
-const nodecipher = require('node-cipher');
 
 const { sqlConnection, firebaseDB } = require('../constants');
 const MockConnection = require('./mock_connection');
@@ -9,13 +8,6 @@ const MysqlUow = require('./mysql_uow');
 const RtdbUow = require('./rtdb_uow');
 
 const dbConnection = mysql.createPool(sqlConnection);
-
-nodecipher.decryptSync({
-  input: 'privatekey.aes',
-  output: 'config.json',
-  password: process.env.PKEY_PASS,
-  algorithm: 'aes-256-cbc-hmac-sha256',
-});
 
 const serviceAccount = require('../../../config.json');
 

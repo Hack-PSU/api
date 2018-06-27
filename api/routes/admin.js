@@ -354,15 +354,7 @@ router.get('/attendance_list', verifyACL(2), (req, res, next) => {
 });
 
 // /**
-//  * @api {get} /admin/rsvp_attendance retrieve the list of people who attended
-//  * @apiVersion 0.3.2
-//  * @apiName Retrieve Attendance List based on RSVPs
-//  * @apiGroup Admin
-//  * @apiPermission Exec
 //  *
-//  * @apiUse AuthArgumentRequired
-//  * @apiSuccess {Array} Array of hackers who attended
-//  */
 // // TODO: remove this route on open source version
 // router.get('/rsvp_attendance', verifyACL(2), (req, res, next) => {
 //   const arr = [];

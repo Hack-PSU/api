@@ -8,11 +8,12 @@ module.exports = {
     connectionLimit: 1000,
     timeout: 60 * 60 * 1000,
     connectTimeout: 60 * 60 * 1000,
-    aquireTimeout: 60 * 60 * 1000,
-    host: process.env.RDS_HOSTNAME || 'localhost',
-    user: process.env.RDS_USERNAME || 'user',
-    password: process.env.RDS_PASSWORD || 'secret',
-    database: process.env.RDS_DATABASE || 'my_db',
+    acquireTimeout: 60 * 60 * 1000,
+    socketPath: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`,
+    // host: process.env.SQL_HOSTNAME || process.env.RDS_HOSTNAME || 'localhost',
+    user: process.env.SQL_USER || process.env.RDS_USERNAME || 'user',
+    password: process.env.SQL_PASSWORD || process.env.RDS_PASSWORD || 'secret',
+    database: process.env.SQL_DATABASE || process.env.RDS_DATABASE || 'my_db',
     multipleStatements: true,
     typeCast: function castField(field, useDefaultTypeCasting) {
       // We only want to cast bit fields that have a single-bit in them. If the field
@@ -38,8 +39,8 @@ module.exports = {
     app_id: process.env.ONESIGNAL_APP_ID || '',
   },
   s3Connection: {
-    s3BucketName: process.env.NODE_ENV === 'test' ? 'hackpsu-resumes-test' : 'hackpsus2018-resumes',
-    s3TravelReimbursementBucket: process.env.NODE_ENV === 'test' ? 'hackpsu2018-travel-reimbursement-receipts-test' : 'hackpsus2018-travel-reimbursement-receipts',
+    s3BucketName: process.env.APP_ENV === 'test' ? 'hackpsu-resumes-test' : 'hackpsus2018-resumes',
+    s3TravelReimbursementBucket: process.env.APP_ENV === 'test' ? 'hackpsu2018-travel-reimbursement-receipts-test' : 'hackpsus2018-travel-reimbursement-receipts',
     secretAccessKey: process.env.SECRET_ACCESS_KEY,
     accessKeyId: process.env.ACCESS_KEY_ID,
     region: 'us-east-2',

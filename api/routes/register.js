@@ -8,10 +8,10 @@ const constants = require('../assets/helpers/constants');
 const path = require('path');
 const database = require('../assets/helpers/database/database');
 const StorageService = require('../assets/helpers/storage_service');
+const { STORAGE_TYPES, StorageFactory } = require('../assets/helpers/storage_factory');
 
-const Storage = new StorageService();
+const Storage = new StorageService(STORAGE_TYPES.S3);
 const Registration = require('../assets/models/Registration');
-const { StorageFactory } = require('../assets/helpers/storage_factory');
 const PreRegistration = require('../assets/models/PreRegistration');
 
 
@@ -28,7 +28,7 @@ function generateFileName(uid, firstName, lastName) {
   return `${uid}-${firstName}-${lastName}-HackPSUS2018.pdf`;
 }
 
-const upload = new Storage().upload({
+const upload = Storage.upload({
   storage: StorageFactory.S3Storage({
     bucket: constants.s3Connection.s3BucketName,
     metadata(req, file, cb) {
@@ -88,7 +88,7 @@ function checkAuthentication(req, res, next) {
  * @param next
  */
 function storeIP(req, res, next) {
-  if (process.env.NODE_ENV === 'prod') {
+  if (process.env.APP_ENV === 'prod') {
     database.storeIP(req.uow, req.headers.http_x_forwarded_for, req.headers['user-agent'])
       .then(() => {
         next();

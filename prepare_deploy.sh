@@ -73,13 +73,13 @@ function continue_if {
 # A
 declare -A files
 # .env file
-if [[ $1 -eq "prod" ]]; then
+if [ "$1" = "prod" ]; then
     files[".prod.env.aes"]=".env"
 else
     files[".staging.env.aes"]=".env"
 fi
 # gcs config files
-if [[ $1 -eq "prod" ]]; then
+if [[ "$1" = "prod" ]]; then
     files["gcs_config.json.aes"]="gcs_config.json"
 else
     files["gcs_config_staging.json.aes"]="gcs_config.json"

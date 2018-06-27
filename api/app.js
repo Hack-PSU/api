@@ -7,7 +7,6 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
-const fs = require('fs');
 const cors = require('cors');
 const UnitOfWork = require('./assets/helpers/database/uow_factory');
 
@@ -66,31 +65,6 @@ app.use((req, res, next) => {
  */
 const server = http.createServer(app);
 
-// TODO: Decide if we need this
-// /**
-//  * Socket IO listener
-//  */
-// const io = require('socket.io').listen(server, {
-//   origin: 'http://localhost:*',
-//   path: '/v1/live',
-//   handlePreflightRequest(req, res) {
-//     const headers = {
-//       'Access-Control-Allow-Headers': 'Content-Type, idtoken',
-//       'Access-Control-Allow-Origin': req.headers.origin,
-//       'Access-Control-Allow-Credentials': true,
-//     };
-//     res.writeHead(200, headers);
-//     res.end();
-//   },
-// });
-//
-// io.adapter(redisAdapter({
-//   host: 'redis-17891.c44.us-east-1-2.ec2.cloud.redislabs.com',
-//   port: 17891,
-//   password: process.env.PKEY_PASS,
-// })); // TODO: Update
-// require('./routes/sockets')(io);
-
 /**
  * Get port from environment and store in Express.
  */
@@ -120,8 +94,6 @@ const register = require('./routes/register');
 const admin = require('./routes/admin');
 const pi = require('./routes/pi');
 const live = require('./routes/live');
-
-fs.unlinkSync('./config.json');
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
 
@@ -132,7 +104,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 // don't show the log when it is test
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.APP_ENV !== 'test') {
   // use morgan to log at command line
   app.use(logger('combined')); // 'combined' outputs the Apache style LOGs
 }
@@ -161,7 +133,7 @@ app.use((req, res, next) => {
 
 // error handler
 app.use((err, req, res, next) => {
-  if (process.env.NODE_ENV !== 'test') {
+  if (process.env.APP_ENV !== 'test') {
     console.error(err);
   }
   // set locals, only providing error in development

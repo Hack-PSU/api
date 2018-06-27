@@ -7,9 +7,9 @@ const Stringify = require('streaming-json-stringify');
 const functions = require('../assets/helpers/functions');
 const authenticator = require('../assets/helpers/auth');
 const StorageService = require('../assets/helpers/storage_service');
-const { StorageFactory } = require('../assets/helpers/storage_factory');
+const { STORAGE_TYPES, StorageFactory } = require('../assets/helpers/storage_factory');
 
-const storage = new StorageService();
+const storage = new StorageService(STORAGE_TYPES.S3);
 const constants = require('../assets/helpers/constants');
 const TravelReimbursement = require('../assets/models/TravelReimbursement');
 const { projectRegistrationSchema, travelReimbursementSchema } = require('../assets/helpers/schemas');
@@ -48,7 +48,7 @@ const upload = storage.upload({
 
 function validateProjectRegistration(project) {
   const validate = ajv.compile(projectRegistrationSchema);
-  if (process.env.NODE_ENV === 'test') {
+  if (process.env.APP_ENV === 'test') {
     validate(project);
     console.error(validate.errors);
   }
@@ -483,7 +483,7 @@ router.post('/project', (req, res, next) => {
             const project = new Project({ projectName: req.body.projectName, team: uids, categories })
               .add()
               .then((result) => {
-                if (process.env.NODE_ENV === 'test') {
+                if (process.env.APP_ENV === 'test') {
                   console.log(result);
                 }
                 // Project ID returned here.

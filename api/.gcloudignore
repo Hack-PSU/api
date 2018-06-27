@@ -15,4 +15,16 @@
 
 # Node.js dependencies:
 node_modules/
-*.env
+*.env.aes
+.privatekey.aes
+*.yaml
+*.yml
+.ebignore
+.prod.env
+.staging.env
+.temp.env
+*.json.aes
+gcs_config_staging.json
+.idea/
+.ebextensions/
+.DS_Store/

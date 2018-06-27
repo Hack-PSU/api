@@ -3,7 +3,7 @@ const multer = require('multer');
 // const multers3 = require('multer-s3');
 // const aws = require('aws-sdk');
 // const constants = require('./constants');
-const { STORAGE_TYPE, StorageFactory } = require('./storage_factory');
+const { STORAGE_TYPES, StorageFactory } = require('./storage_factory');
 
 // aws.config.update({
 //   accessKeyId: constants.s3Connection.accessKeyId,
@@ -20,10 +20,10 @@ module.exports = class StorageService {
     }
 
     switch (storageType) {
-      case STORAGE_TYPE.GCS:
+      case STORAGE_TYPES.GCS:
         this._storage = StorageFactory.GCStorage(opts);
         break;
-      case STORAGE_TYPE.S3:
+      case STORAGE_TYPES.S3:
         this._storage = StorageFactory.S3Storage(opts);
         break;
       default:

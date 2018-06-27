@@ -56,7 +56,7 @@ module.exports = class Project extends BaseObject {
    */
   add() {
     let prepped = 'CALL ';
-    prepped = prepped.concat(process.env.NODE_ENV === 'test' ? 'assignTeam_test' : 'assignTeam');
+    prepped = prepped.concat(process.env.APP_ENV === 'test' ? 'assignTeam_test' : 'assignTeam');
     prepped = prepped.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;');
     const list = [this.projectName, this.team.join(','), this.categories.join(',')];
     return this.uow.query(prepped, list);
@@ -68,7 +68,7 @@ module.exports = class Project extends BaseObject {
    */
   assignTable() {
     let prepped = 'CALL ';
-    prepped = prepped.concat(process.env.NODE_ENV === 'test' ? 'assignTable_test' : 'assignTable')
+    prepped = prepped.concat(process.env.APP_ENV === 'test' ? 'assignTable_test' : 'assignTable')
       .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
     const list = [this.projectId, Math.min(...this.categories.map(c => parseInt(c, 10)))];
     return this.uow.query(prepped, list);

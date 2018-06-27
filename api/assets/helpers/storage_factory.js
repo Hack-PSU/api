@@ -12,10 +12,10 @@ aws.config.update({
 
 // Enumerable for types of storage available
 const STORAGE_TYPES = Object.freeze({ GCS: 1, S3: 2 });
-module.exports = STORAGE_TYPES;
 
 const s3 = new aws.S3();
-module.exports = class StorageFactory {
+
+class StorageFactory {
   /**
    *
    * @param opts
@@ -55,4 +55,9 @@ module.exports = class StorageFactory {
       maxRetries: 10,
     });
   }
+}
+
+module.exports = {
+  STORAGE_TYPES,
+  StorageFactory,
 };

@@ -28,7 +28,7 @@ module.exports = class UowFactory {
    */
   static create() {
     return new Promise((resolve, reject) => {
-      switch (process.env.NODE_ENV) {
+      switch (process.env.APP_ENV) {
         case 'DEBUG':
         case 'debug':
           resolve(new MysqlUow(new MockConnection()));
@@ -46,7 +46,7 @@ module.exports = class UowFactory {
           });
           break;
         default:
-          reject(new Error('NODE_ENV must be set'));
+          reject(new Error('APP_ENV must be set'));
           break;
       }
     });
@@ -58,7 +58,7 @@ module.exports = class UowFactory {
    */
   static createRTDB() {
     return new Promise((resolve, reject) => {
-      switch (process.env.NODE_ENV) {
+      switch (process.env.APP_ENV) {
         case 'DEBUG':
         case 'debug':
           resolve(new RtdbUow(admin.database(firebaseDB.debug)));
@@ -72,7 +72,7 @@ module.exports = class UowFactory {
           resolve(new RtdbUow(admin.database()));
           break;
         default:
-          reject(new Error('NODE_ENV must be set'));
+          reject(new Error('APP_ENV must be set'));
       }
     });
   }

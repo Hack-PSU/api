@@ -1,11 +1,11 @@
 /* eslint-disable no-console,max-len */
-const database = require('../assets/helpers/database/database');
-const authenticator = require('../assets/helpers/auth');
+const database = require('../services/database');
+const authenticator = require('../services/auth');
 
-const UpdateModel = require('../assets/models/Update');
-const EventModel = require('../assets/models/Event');
+const UpdateModel = require('../models/Update');
+const EventModel = require('../models/Event');
 
-const { sendNotification } = require('../assets/helpers/functions');
+const { sendNotification } = require('../services/functions');
 
 // TODO: Deprecated
 

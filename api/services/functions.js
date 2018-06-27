@@ -1,9 +1,10 @@
 /* eslint-disable max-len,func-names */
+// Collection of utility functions
 const ses = require('node-ses');
 const validator = require('email-validator');
 const request = require('request');
 
-const { emailKey, pushNotifKey } = require('./constants');
+const { emailKey, pushNotifKey } = require('../assets/helpers/constants/constants');
 
 const client = ses.createClient(emailKey);
 /**
@@ -39,7 +40,7 @@ module.exports.sendEmail = function (data) {
     client.sendEmail(data, (err) => {
       if (err) {
         reject(err);
-      } else resolve(true);
+      } else resolve(data);
     });
   });
 };
@@ -112,4 +113,11 @@ module.exports.sendNotification = function (notificationTitle, notificationBody)
       }
     });
   });
+};
+
+module.exports.errorHandler500 = function (err, handler) {
+  const error = new Error();
+  error.status = 500;
+  error.body = err.message;
+  handler(error);
 };

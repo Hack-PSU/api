@@ -2,7 +2,7 @@ const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 
 const chance = new Chance(123);
-const { locationSchema } = require('../helpers/schemas');
+const { locationSchema } = require('../assets/helpers/database/schemas');
 
 const TABLE_NAME = 'LOCATIONS';
 module.exports = TABLE_NAME;

@@ -1,15 +1,13 @@
 const mysql = require('mysql');
 const firebase = require('firebase-admin');
-
-const { sqlConnection, firebaseDB } = require('../constants');
-const MockConnection = require('./mock_connection');
-
-const MysqlUow = require('./mysql_uow');
-const RtdbUow = require('./rtdb_uow');
+const { sqlConnection, firebaseDB } = require('../../assets/helpers/constants/constants');
+const MockConnection = require('../mock_connection');
+const MysqlUow = require('../mysql_uow');
+const RtdbUow = require('../rtdb_uow');
 
 const dbConnection = mysql.createPool(sqlConnection);
 
-const serviceAccount = require('../../../config.json');
+const serviceAccount = require('../../config.json');
 
 const admin = firebase.initializeApp({
   credential: firebase.credential.cert(serviceAccount),
@@ -23,7 +21,8 @@ const admin = firebase.initializeApp({
  */
 module.exports = class UowFactory {
   /**
-   *
+   * Returns a {MysqlUow} object to the caller based
+   * on environment configurations
    * @return {Promise<MysqlUow>}
    */
   static create() {
@@ -53,7 +52,8 @@ module.exports = class UowFactory {
   }
 
   /**
-   *
+   * Returns a RtdbUow object to the caller
+   * based on environment configuration
    * @returns {Promise<RtdbUow>}
    */
   static createRTDB() {
@@ -73,6 +73,7 @@ module.exports = class UowFactory {
           break;
         default:
           reject(new Error('APP_ENV must be set'));
+          break;
       }
     });
   }

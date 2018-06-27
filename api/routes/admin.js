@@ -1,19 +1,23 @@
-/* eslint-disable max-len,no-param-reassign */
-
+/* eslint-disable max-len,no-param-reassign,consistent-return */
 const validator = require('email-validator');
 const Ajv = require('ajv');
 const transform = require('parallel-transform');
 const express = require('express');
 const Stringify = require('streaming-json-stringify');
-const { emailObjectSchema } = require('../assets/helpers/schemas');
-const authenticator = require('../assets/helpers/auth');
-const database = require('../assets/helpers/database/database');
-const functions = require('../assets/helpers/functions');
-const Registration = require('../assets/models/Registration');
-const PreRegistration = require('../assets/models/PreRegistration');
-const RSVP = require('../assets/models/RSVP');
-const Attendance = require('../assets/models/Attendance');
-const Location = require('../assets/models/Location');
+const { emailObjectSchema } = require('../assets/helpers/database/schemas');
+const authenticator = require('../services/auth');
+const database = require('../services/database');
+const {
+  errorHandler500,
+  emailSubstitute,
+  createEmailRequest,
+  sendEmail,
+} = require('../services/functions');
+const Registration = require('../models/Registration');
+const PreRegistration = require('../models/PreRegistration');
+const RSVP = require('../models/RSVP');
+const Attendance = require('../models/Attendance');
+const Location = require('../models/Location');
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -27,31 +31,50 @@ const router = express.Router();
  * Administrator authentication middleware
  */
 router.use((req, res, next) => {
-  if (req.headers.idtoken) {
-    authenticator.checkAuthentication(req.headers.idtoken)
-      .then((decodedToken) => {
-        if (decodedToken.admin === true) {
-          res.locals.privilege = decodedToken.privilege;
-          res.locals.user = decodedToken;
-          next();
-        } else {
-          const error = new Error();
-          error.status = 401;
-          error.body = { error: 'You do not have sufficient permissions for this operation' };
-          next(error);
-        }
-      }).catch((err) => {
-      const error = new Error();
-      error.status = 401;
-      error.body = err.message;
-      next(error);
-    });
-  } else {
+  if (!req.headers.idtoken) {
     const error = new Error();
     error.status = 401;
     error.body = { error: 'ID Token must be provided' };
-    next(error);
+    return next(error);
   }
+  authenticator.checkAuthentication(req.headers.idtoken)
+    .then((decodedToken) => {
+      if (decodedToken.admin === true) {
+        res.locals.privilege = decodedToken.privilege;
+        res.locals.user = decodedToken;
+        return next();
+      }
+      const error = new Error();
+      error.status = 401;
+      error.body = { error: 'You do not have sufficient permissions for this operation' };
+      next(error);
+    })
+    .catch((err) => {
+      const error = new Error();
+      error.status = 401;
+      error.body = err.message;
+      return next(error);
+    });
+});
+
+router.use((req, res, next) => {
+  if (req.query.limit || parseInt(req.query.limit, 10)) {
+    res.locals.limit = parseInt(req.query.limit, 10);
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = { message: 'Limit must be an integer' };
+    return next(error);
+  }
+  if (req.query.offset || parseInt(req.query.offset, 10)) {
+    res.locals.offset = parseInt(req.query.offset, 10);
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = { message: 'Limit must be an integer' };
+    return next(error);
+  }
+  return next();
 });
 
 
@@ -64,35 +87,36 @@ router.use((req, res, next) => {
  * @param next
  */
 function validateEmails(req, res, next) {
-  if (req.body && req.body.emails && Array.isArray(req.body.emails)) {
-    if (req.body.html && typeof req.body.html === 'string') {
-      // Run validation
-      const validate = ajv.compile(emailObjectSchema);
-      const successArray = [];
-      const failArray = [];
-      req.body.emails.map((emailObject) => {
-        if (validate(emailObject)) {
-          successArray.push(emailObject);
-        } else {
-          failArray.push(Object.assign(emailObject, { error: ajv.errorsText(validate.errors) }));
-        }
-        return true;
-      });
-      res.locals.successArray = successArray;
-      res.locals.failArray = failArray;
-      next();
-    } else {
-      const error = new Error();
-      error.status = 400;
-      error.body = { error: 'Email subject must be provided' };
-      next(error);
-    }
-  } else {
+  if (!(req.body && req.body.emails && Array.isArray(req.body.emails))) {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'Emails must be provided as an array' };
-    next(error);
+    return next(error);
   }
+  if (!(req.body.html && typeof req.body.html === 'string')) {
+    const error = new Error();
+    error.status = 400;
+    error.body = { error: 'Email subject must be provided' };
+    return next(error);
+  }
+  // Run validation
+  const validate = ajv.compile(emailObjectSchema);
+  const successArray = [];
+  const failArray = [];
+  req.body.emails.map((emailObject) => {
+    if (validate(emailObject)) {
+      successArray.push(emailObject);
+    } else {
+      failArray.push(Object.assign(
+        emailObject,
+        { error: ajv.errorsText(validate.errors) },
+      ));
+    }
+    return true;
+  });
+  res.locals.successArray = successArray;
+  res.locals.failArray = failArray;
+  next();
 }
 
 /**
@@ -102,21 +126,19 @@ function validateEmails(req, res, next) {
  */
 function verifyACL(level) {
   return function (req, res, next) {
-    if (res.locals.privilege) {
-      if (res.locals.privilege >= level) {
-        next();
-      } else {
-        const error = new Error();
-        error.status = 401;
-        error.body = { error: 'You do not have sufficient permissions for this operation' };
-        next(error);
-      }
-    } else {
+    if (!res.locals.privilege) {
       const error = new Error();
       error.status = 500;
       error.body = { error: 'Something went wrong while accessing permissions' };
-      next(error);
+      return next(error);
     }
+    if (res.locals.privilege < level) {
+      const error = new Error();
+      error.status = 401;
+      error.body = { error: 'You do not have sufficient permissions for this operation' };
+      return next(error);
+    }
+    next();
   };
 }
 
@@ -155,55 +177,35 @@ router.get('/', (req, res) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
-  if ((!req.query.limit || parseInt(req.query.limit, 10)) && (!req.query.offset || parseInt(req.query.offset, 10))) {
-    Registration.getAll(req.uow, {
-      count: parseInt(req.query.limit, 10),
-      limit: parseInt(req.query.offset, 10),
-    }).then((stream) => {
+  Registration.getAll(req.uow, {
+    count: res.locals.limit,
+    limit: res.locals.offset,
+  })
+    .then((stream) => {
       res.status(200).type('application/json');
-      stream
-        .pipe(transform(
-          100,
-          { objectMode: true, ordered: false },
-          (data, callback) => {
-            authenticator.getUserData(data.uid)
-              .then((user) => {
-                data.sign_up_time = new Date(user.metadata.creationTime).getTime();
-                callback(null, data);
-              }).catch(() => {
+      stream.pipe(transform(
+        100,
+        { objectMode: true, ordered: false },
+        (data, callback) => {
+          authenticator.getUserData(data.uid)
+            .then((user) => {
+              data.sign_up_time = new Date(user.metadata.creationTime).getTime();
+              callback(null, data);
+            })
+            .catch(() => {
               res.status(207);
               callback(null, data);
             });
-          },
-        )).on('error', (err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      })
+        },
+      ))
+        .on('error', err => errorHandler500(err, next))
         .pipe(Stringify())
         .pipe(res)
         .on('end', () => {
           res.end();
         });
-      stream.on('error', (err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
-    }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
-  } else {
-    const error = new Error();
-    error.status = 400;
-    error.body = { message: 'Limit and offset must be integers' };
-    next(error);
-  }
+    })
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -232,53 +234,16 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/preregistered', verifyACL(2), (req, res, next) => {
-  if ((!req.query.limit || parseInt(req.query.limit, 10)) && (!req.query.offset || parseInt(req.query.offset, 10))) {
-    PreRegistration.getAll(req.uow, {
-      count: parseInt(req.query.limit, 10),
-      limit: parseInt(req.query.offset, 10),
-    }).then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('error', (err) => {
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          next(error);
-        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
-    }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
-    /*
-      stream.pipe(res);
-      stream.on('end', () => res.status(200).send());
-      stream.on('err', (err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
-
-    // database.getPreRegistrations(parseInt(req.query.limit), parseInt(req.query.offset))
-    //   .on('data', (document) => {
-    //     arr.push(document);
-    //   }).on('err', (err) => {
-    //   const error = new Error();
-    //   error.status = 500;
-    //   error.body = err.message;
-    //   next(error);
-    // }).on('end', () => {
-    //   res.status(200).send(arr);
-    // }); */
-  } else {
-    const error = new Error();
-    error.status = 400;
-    error.body = { message: 'Limit must be an integer' };
-    next(error);
-  }
+  PreRegistration.getAll(req.uow, {
+    count: res.locals.limit,
+    limit: res.locals.offset,
+  }).then((stream) => {
+    stream
+      .pipe(Stringify())
+      .pipe(res.type('json').status(200))
+      .on('error', err => errorHandler500(err, next))
+      .on('end', res.end);
+  }).catch(err => errorHandler500(err, next));
 });
 
 
@@ -295,22 +260,17 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.get('/userid', verifyACL(3), (req, res, next) => {
-  if (!(req.query && req.query.email && validator.validate(req.query.email))) {
+  if (!req.query ||
+    !req.query.email ||
+    !validator.validate(req.query.email)) {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'request query must be set and a valid email' };
-    next(error);
-  } else {
-    authenticator.getUserId(req.query.email).then((user) => {
-      res.status(200).send({ uid: user.uid, displayName: user.displayName });
-    }).catch((error) => {
-      const err = new Error();
-      console.error(error);
-      err.status = error.status || 500;
-      err.body = error.message;
-      next(err);
-    });
+    return next(error);
   }
+  authenticator.getUserId(req.query.email).then((user) => {
+    res.status(200).send({ uid: user.uid, displayName: user.displayName });
+  }).catch(error => errorHandler500(error, next));
 });
 
 /**
@@ -328,33 +288,14 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array of hackers who RSVP
  */
 router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
-  if ((!req.query.limit || parseInt(req.query.limit, 10)) && (!req.query.offset || parseInt(req.query.offset, 10))) {
-    RSVP.getAll(req.uow, {
-      count: parseInt(req.query.limit, 10),
-      limit: parseInt(req.query.offset, 10),
-    }).then((stream) =>
-     {
-      stream.pipe(Stringify()).pipe(res);
-      stream.on('end', () => res.status(200).send());
-      stream.on('err', (err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
-    });
-    // database.getRSVPList(parseInt(req.query.limit), parseInt(req.query.offset))
-    //   .on('data', (document) => {
-    //     arr.push(document);
-    //   }).on('end', () => {
-    //   res.status(200).send(arr);
-    // });
-  } else {
-    const error = new Error();
-    error.status = 400;
-    error.body = { message: 'Limit or offset must be an integer' };
-    next(error);
-  }
+  RSVP.getAll(req.uow, {
+    count: res.locals.limit,
+    limit: res.locals.offset,
+  }).then((stream) => {
+    stream.pipe(Stringify()).pipe(res);
+    stream.on('end', () => res.status(200).send());
+    stream.on('err', err => errorHandler500(err, next));
+  });
 });
 
 /**
@@ -367,30 +308,30 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
  * @apiUse AuthArgumentRequired
  */
 router.post('/update_registration', verifyACL(3), (req, res, next) => {
-  if (req.body && req.body.registration) {
-    const updatedRegistration = new Registration(req.body.registration, req.uow);
-    if (updatedRegistration.mlh_coc && updatedRegistration.mlh_dcp && updatedRegistration.eighteenBeforeEvent) {
-      updatedRegistration
-        .update(req.body.registration.uid, 'uid')
-        .then(() => res.status(200).send({ status: 'Success' }))
-        .catch((err) => {
-          const error = new Error();
-          error.status = 400;
-          error.body = err.message;
-          next(error);
-        });
-    } else {
-      const error = new Error();
-      error.status = 400;
-      error.body = { message: 'Must agree to MLH terms and be over eighteen' };
-      next(error);
-    }
-  } else {
+  if (!req.body || !req.body.registration) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Updated registration data must be provided' };
-    next(error);
+    return next(error);
   }
+  const updatedRegistration = new Registration(req.body.registration, req.uow);
+  if (!updatedRegistration.mlh_coc ||
+    !updatedRegistration.mlh_dcp ||
+    !updatedRegistration.eighteenBeforeEvent) {
+    const error = new Error();
+    error.status = 400;
+    error.body = { message: 'Must agree to MLH terms and be over eighteen' };
+    return next(error);
+  }
+  updatedRegistration
+    .update(req.body.registration.uid, 'uid')
+    .then(() => res.status(200).send({ status: 'Success' }))
+    .catch((err) => {
+      const error = new Error();
+      error.status = 400;
+      error.body = err.message;
+      next(error);
+    });
 });
 
 /**
@@ -408,24 +349,8 @@ router.get('/attendance_list', verifyACL(2), (req, res, next) => {
     .then((stream) => {
       stream.pipe(res);
       stream.on('end', () => res.status(200).send());
-      stream.on('err', (err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
+      stream.on('err', err => errorHandler500(err, next));
     });
-  // database.getAttendanceList()
-  //   .on('data', (document) => {
-  //     arr.push(document);
-  //   }).on('err', (err) => {
-  //   const error = new Error();
-  //   error.status = 500;
-  //   error.body = err.message;
-  //   next(error);
-  // }).on('end', () => {
-  //   res.status(200).send(arr);
-  // });
 });
 
 // /**
@@ -478,31 +403,30 @@ router.get('/attendance_list', verifyACL(2), (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.post('/makeadmin', verifyACL(3), (req, res, next) => {
-  if (req.body && req.body.uid) {
-    const privilege = (req.body.privilege && parseInt(req.body.privilege, 10)) || 1;
-    if ((res.locals.privilege < 4) && privilege < res.locals.privilege) { // If not tech-exec and attempting to reduce permissions
-      const error = new Error();
-      error.status = 400;
-      error.body = { message: 'You cannot reduce privileges' };
-      next(error);
-    } else {
-      authenticator.elevate(req.body.uid, privilege)
-        .then(() => {
-          res.status(200).send({ status: 'Success' });
-        })
-        .catch((err) => {
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          next(error);
-        });
-    }
-  } else {
+  if (!req.body || !req.body.uid) {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'UID must be provided' };
-    next(error);
+    return next(error);
   }
+  const privilege = (req.body.privilege && parseInt(req.body.privilege, 10)) || 1;
+  // If not tech-exec and attempting to reduce permissions
+  if ((res.locals.privilege < 4) && privilege < res.locals.privilege) {
+    const error = new Error();
+    error.status = 400;
+    error.body = { message: 'You cannot reduce privileges' };
+    return next(error);
+  }
+  authenticator.elevate(req.body.uid, privilege)
+    .then(() => {
+      res.status(200).send({ status: 'Success' });
+    })
+    .catch((err) => {
+      const error = new Error();
+      error.status = 500;
+      error.body = err.message;
+      next(error);
+    });
 });
 
 /**
@@ -521,42 +445,10 @@ router.get('/location_list', verifyACL(3), (req, res, next) => {
       stream
         .pipe(Stringify())
         .pipe(res.type('json').status(200))
-        .on('error', (err) => {
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          next(error);
-        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+        .on('error', err => errorHandler500(err, next))
+        .on('end', res.end);
     });
 });
-/*
-router.get('/location_list', verifyACL(3), (req, res, next) => {
-  Location.getAll()
-    .then((stream) => {
-      stream.pipe(res);
-      stream.on('end', () => res.status(200).send());
-      stream.on('err', (err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
-    });
-
-  // database.getAllLocations().on('data', (document) => {
-  //   arr.push(document);
-  // }).on('err', (err) => {
-  //   const error = new Error();
-  //   error.status = 500;
-  //   error.body = err.message;
-  //   next(error);
-  // }).on('end', () => {
-  //   res.status(200).send(arr);
-  // });
-});
-*/
-
-
 
 /**
  * @api {post} /admin/create_location Insert a new location in to the database
@@ -570,57 +462,22 @@ router.get('/location_list', verifyACL(3), (req, res, next) => {
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
- /*
-router.post('/create_location', verifyACL(2), (req, res, next) => {
-  if (req.body && req.body.locationName && (req.body.locationName.length > 0)) {
-    const location = new Location({ location_name: req.body.locationName }, req.uow);
-    console.log('if:' + req.body.locationName);
-    location.add()
-      .then((stream) => {
-        stream
-          .pipe(Stringify())
-          .pipe(res.type('json').status(200))
-          .on('error', (err) => {
-            const error = new Error();
-            error.status = 500;
-            error.body = err.message;
-            next(error);
-          }).on('end', res.end); // TODO: Make this the standard whenever piping to res
-      });
-  } else {
-      console.log('else:' + req.body.locationName);
-      const error = new Error();
-      error.status = 400;
-      error.body = 'Require a name for the location';
-      next(error);
-  }
-});
-*/
-
 router.post('/create_location', verifyACL(3), (req, res, next) => {
-  if (req.body && req.body.locationName && (req.body.locationName.length > 0)) {
-    const location = new Location({ location_name: req.body.locationName }, req.uow);
-    location.add()
-      .then(() => {
-        res.status(200).send({ status: 'Success' });
-      }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
-    // database.addNewLocation(req.body.locationName).then(() => {
-    // }).catch((err) => {
-    //
-    // });
-  } else {
+  if (!req.body ||
+    !req.body.locationName ||
+    req.body.locationName.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = 'Require a name for the location';
-    next(error);
+    return next(error);
   }
+  const location = new Location({ location_name: req.body.locationName }, req.uow);
+  location.add()
+    .then(() => {
+      res.status(200).send({ status: 'Success' });
+    })
+    .catch(errorHandler500);
 });
-
 
 
 /**
@@ -638,38 +495,30 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
  */
 
 router.post('/update_location', verifyACL(3), (req, res, next) => {
-  if (
-    req.body &&
-    req.body.uid &&
-    req.body.location_name &&
-    req.body.location_name.length > 0 &&
-    (req.body.uid.length > 0)) {
-
-    const location = new Location({ uid: req.body.uid, location_name: req.body.location_name }, req.uow);
-    location.update(req.body.uid, 'uid')
-      .then(() => {
-        res.status(200).send({ status: 'Success' });
-      }).catch((err) => {
+  if (!req.body ||
+    !req.body.uid ||
+    !req.body.location_name ||
+    req.body.location_name.length === 0 ||
+    req.body.uid.length === 0) {
+    const error = new Error();
+    error.status = 400;
+    error.body = 'Require the uid and/or name for the location';
+    return next(error);
+  }
+  const location = new Location({
+    uid: req.body.uid,
+    location_name: req.body.location_name,
+  }, req.uow);
+  location.update(req.body.uid, 'uid')
+    .then(() => {
+      res.status(200).send({ status: 'Success' });
+    })
+    .catch((err) => {
       const error = new Error();
       error.status = 500;
       error.body = err.message;
       next(error);
     });
-    // database.updateLocation(req.body.uid, req.body.name)
-    //   .then(() => {
-    //     res.status(200).send({ status: 'Success' });
-    //   }).catch((err) => {
-    //     const error = new Error();
-    //     error.status = 500;
-    //     error.body = err.message;
-    //     next(error);
-    //   });
-  } else {
-    const error = new Error();
-    error.status = 400;
-    error.body = 'Require the uid and/or name for the location';
-    next(error);
-  }
 });
 
 /**
@@ -685,32 +534,20 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.post('/remove_location', verifyACL(3), (req, res, next) => {
-  if (req.body && req.body.uid && (req.body.uid.length > 0)) {
-    const location = new Location({ uid: req.body.uid }, req.uow);
-    location.delete(req.body.uid)
-      .then(() => {
-        res.status(200).send({ status: 'Success' });
-      }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
-    // database.removeLocation(req.body.uid)
-    //   .then(() => {
-    //     res.status(200).send({ status: 'Success' });
-    //   }).catch((err) => {
-    //     const error = new Error();
-    //     error.status = 500;
-    //     error.body = err.message;
-    //     next(error);
-    //   });
-  } else {
+  if (!req.body ||
+    !req.body.uid ||
+    req.body.uid.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = 'Require the uid for the location';
-    next(error);
+    return next(error);
   }
+  const location = new Location({ uid: req.body.uid }, req.uow);
+  location.delete(req.body.uid)
+    .then(() => {
+      res.status(200).send({ status: 'Success' });
+    })
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -731,30 +568,11 @@ router.get('/extra_credit_list', verifyACL(2), (req, res, next) => {
       stream
         .pipe(Stringify())
         .pipe(res.type('json').status(200))
-        .on('error', (err) => {
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          next(error);
-        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+        .on('error', err => errorHandler500(err, next))
+        .on('end', res.end);
     });
 });
-/*
-router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
-  database.getExtraCreditClassList(req.uow)
-    .pipe(Stringify())
-    .pipe(res)
-    .on('error', (err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    })
-    .on('end', () => {
-      res.status(200).send();
-    });
-});
-*/
+
 /**
  * @api {post} /admin/assign_extra_credit setting user with the class they are receiving extra credit
  * @apiName Assign Extra Credit
@@ -769,22 +587,19 @@ router.get('/extra_credit_list', verifyACL(3), (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
-  if (req.body && req.body.uid && req.body.cid && parseInt(req.body.cid, 10)) {
-    database.assignExtraCredit(req.uow, req.body.uid, req.body.cid)
-      .then(() => {
-        res.status(200).send({ status: 'Success' });
-      }).catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
-  } else {
+  if (!req.body ||
+    !req.body.uid ||
+    !req.body.cid ||
+    !parseInt(req.body.cid, 10)) {
     const error = new Error();
     error.status = 400;
     error.body = 'Need a proper id for the class or the hacker (int)';
-    next(error);
+    return next(error);
   }
+  database.assignExtraCredit(req.uow, req.body.uid, req.body.cid)
+    .then(() => {
+      res.status(200).send({ status: 'Success' });
+    }).catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -822,75 +637,82 @@ router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
  * @apiSuccess (207) {Object[]} Partial-Success An array of success responses as well as failure objects
  */
 router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
-  if (res.locals.successArray && res.locals.successArray.length > 0) {
-    if (req.body.subject && typeof req.body.subject === 'string') {
-      const promises = [];
-      // All valid input
-      // Send all the emails
-      res.locals.successArray.forEach((emailObject) => { // For each emailObject
-        promises.push(new Promise((resolve) => {
-          // Substitute HTML with name/emails and send email
-          functions.emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions).then((subbedHTML) => {
-            const request = functions.createEmailRequest(emailObject.email, subbedHTML, req.body.subject, req.body.fromEmail); // Generate the POST request
-            functions.sendEmail(request.data)
-              .then(() => {
-                resolve({ email: request.data.to, response: 'success', name: emailObject.name }); // If successful, resolve
-              }).catch((error) => {
-              res.locals.failArray.push(Object.assign(emailObject, error)); // Else add to the failArray for the partial HTTP success response
-              resolve(null);
-            });
-          }).catch((error) => {
-            res.locals.failArray.push(Object.assign(emailObject, error)); // if email substitution fails, add to fail array for partial HTTP success response
-            resolve(null);
-          });
-        }));
-      });
-      Promise.all(promises).then((resolution) => {
-        const resolves = resolution.filter(result => result !== null);
-        if (resolves.length === 0) {
-          const error = new Error();
-          error.status = 500;
-          error.body = {
-            text: 'Emails could not be sent',
-            error: res.locals.failArray,
-          };
-          next(error);
-        } else if (res.locals.failArray.length > 0) {
-          database.addEmailsHistory(req.uow, resolves.map(resolution => ({
-            sender: res.locals.user.uid,
-            recipient: resolution.email,
-            email_content: req.body.html,
-            subject: req.body.subject,
-            recipient_name: resolution.name,
-            time: new Date().getTime(),
-          })), res.locals.failArray ? res.locals.failArray.map(errorEmail => ({
-            sender: res.locals.user.uid,
-            recipient: errorEmail.email || null,
-            email_content: req.body.html || null,
-            subject: req.body.subject || null,
-            recipient_name: errorEmail.name || null,
-            time: new Date().getTime(),
-          })) : null).catch(err => console.error(err));
-          res.status(207).send(res.locals.failArray.concat(resolves)); // Partial success response
-        } else {
-          res.status(200).send(resolves); // Full success response
-        }
-      }).catch(err => console.error(err));
-    } else {
-      const error = new Error();
-      error.status = 400;
-      error.body = { error: 'Email subject must be provided' };
-      next(error);
-    }
-  } else {
+  // Validation
+  if (!res.locals.successArray ||
+    res.locals.successArray.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = {
       text: 'All provided emails had illegal format',
       error: res.locals.failArray,
     };
-    next(error);
+    return next(error);
   }
+  if (!req.body.subject ||
+    typeof req.body.subject !== 'string') {
+    const error = new Error();
+    error.status = 400;
+    error.body = { error: 'Email subject must be provided' };
+    return next(error);
+  }
+  // All valid input
+  // Send all the emails
+  const promises = res.locals.successArray.map(emailObject => // For each emailObject
+    // Substitute HTML with name/emails and send email
+    new Promise((resolve) => {
+      emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions)
+        .then((subbedHTML) => {
+          // Generate the POST request
+          const request = createEmailRequest(
+            emailObject.email,
+            subbedHTML,
+            req.body.subject,
+            req.body.fromEmail,
+          );
+          return sendEmail(request.data);
+        })
+        .then(request =>
+          // If successful, resolve
+          resolve({ email: request.data.to, response: 'success', name: emailObject.name }))
+        .catch((error) => {
+          // Else add to the failArray for the partial HTTP success response
+          res.locals.failArray.push(Object.assign(emailObject, error));
+          resolve(null);
+        });
+    }));
+  Promise.all(promises).then((resolution) => {
+    const resolves = resolution.filter(result => result !== null);
+    if (resolves.length === 0) {
+      const error = new Error();
+      error.status = 500;
+      error.body = {
+        text: 'Emails could not be sent',
+        error: res.locals.failArray,
+      };
+      return next(error);
+    }
+    if (res.locals.failArray.length === 0) {
+      return res.status(200).send(resolves); // Full success response
+    }
+    database.addEmailsHistory(req.uow, resolves.map(successEmail => ({
+      sender: res.locals.user.uid,
+      recipient: successEmail.email,
+      email_content: req.body.html,
+      subject: req.body.subject,
+      recipient_name: successEmail.name,
+      time: new Date().getTime(),
+    })), res.locals.failArray ? res.locals.failArray.map(errorEmail => ({
+      sender: res.locals.user.uid,
+      recipient: errorEmail.email || null,
+      email_content: req.body.html || null,
+      subject: req.body.subject || null,
+      recipient_name: errorEmail.name || null,
+      time: new Date().getTime(),
+    })) : null)
+      .catch(err => console.error(err));
+    // Partial success response
+    res.status(207).send(res.locals.failArray.concat(resolves));
+  }).catch(err => console.error(err));
 });
 
 /**
@@ -913,12 +735,8 @@ router.get('/user_data', verifyACL(2), (req, res, next) => {
       stream
         .pipe(Stringify())
         .pipe(res.type('json').status(200))
-        .on('error', (err) => {
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          next(error);
-        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+        .on('error', err => errorHandler500(err, next))
+        .on('end', res.end); // TODO: Make this the standard whenever piping to res
     });
 });
 
@@ -939,12 +757,8 @@ router.get('/prereg_count', verifyACL(2), (req, res, next) => {
       stream
         .pipe(Stringify())
         .pipe(res.type('json').status(200))
-        .on('error', (err) => {
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          next(error);
-        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+        .on('error', err => errorHandler500(err, next))
+        .on('end', res.end);
     });
 });
 
@@ -965,12 +779,8 @@ router.get('/reg_count', verifyACL(2), (req, res, next) => {
       stream
         .pipe(Stringify())
         .pipe(res.type('json').status(200))
-        .on('error', (err) => {
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          next(error);
-        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+        .on('error', err => errorHandler500(err, next))
+        .on('end', res.end);
     });
 });
 
@@ -991,12 +801,8 @@ router.get('/rsvp_count', verifyACL(2), (req, res, next) => {
       stream
         .pipe(Stringify())
         .pipe(res.type('json').status(200))
-        .on('error', (err) => {
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          next(error);
-        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+        .on('error', err => errorHandler500(err, next))
+        .on('end', res.end);
     });
 });
 
@@ -1017,12 +823,8 @@ router.get('/user_count', verifyACL(2), (req, res, next) => {
       stream
         .pipe(Stringify())
         .pipe(res.type('json').status(200))
-        .on('error', (err) => {
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          next(error);
-        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+        .on('error', err => errorHandler500(err, next))
+        .on('end', res.end);
     });
 });
 
@@ -1037,18 +839,15 @@ router.get('/user_count', verifyACL(2), (req, res, next) => {
  *
  * @apiSuccess {Array} Array of registration options and respective counts
  */
+// TODO: Add test for route
 router.get('/statistics', verifyACL(2), (req, res, next) => {
   Registration.getStatsCount(req.uow)
     .then((stream) => {
       stream
         .pipe(Stringify())
         .pipe(res.type('json').status(200))
-        .on('error', (err) => {
-          const error = new Error();
-          error.status = 500;
-          error.body = err.message;
-          next(error);
-        }).on('end', res.end); // TODO: Make this the standard whenever piping to res
+        .on('error', err => errorHandler500(err, next))
+        .on('end', res.end);
     });
 });
 

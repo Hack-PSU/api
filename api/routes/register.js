@@ -1,19 +1,19 @@
 /* eslint-disable consistent-return,no-param-reassign */
 const express = require('express');
-
-const router = express.Router();
 const validator = require('email-validator');
-const authenticator = require('../assets/helpers/auth');
-const constants = require('../assets/helpers/constants');
 const path = require('path');
-const database = require('../assets/helpers/database/database');
-const StorageService = require('../assets/helpers/storage_service');
-const { STORAGE_TYPES, StorageFactory } = require('../assets/helpers/storage_factory');
+const authenticator = require('../services/auth');
+const constants = require('../assets/helpers/constants/constants');
+const { errorHandler500 } = require('../services/functions');
+const database = require('../services/database');
+const StorageService = require('../services/storage_service');
+const { STORAGE_TYPES, StorageFactory } = require('../services/factories/storage_factory');
+const Registration = require('../models/Registration');
+const PreRegistration = require('../models/PreRegistration');
 
 const Storage = new StorageService(STORAGE_TYPES.S3);
-const Registration = require('../assets/models/Registration');
-const PreRegistration = require('../assets/models/PreRegistration');
 
+const router = express.Router();
 
 /** ****************** HELPER FUNCTIONS ********************** */
 
@@ -60,25 +60,24 @@ const upload = Storage.upload({
  */
 
 function checkAuthentication(req, res, next) {
-  if (req.headers.idtoken) {
-    authenticator.checkAuthentication(req.headers.idtoken)
-      .then((decodedToken) => {
-        res.locals.privilege = decodedToken.privilege;
-        res.locals.uid = decodedToken.uid;
-
-        next();
-      }).catch((err) => {
-        const error = new Error();
-        error.status = 401;
-        error.body = err.message;
-        next(error);
-      });
-  } else {
+  if (!req.headers.idtoken) {
     const error = new Error();
     error.status = 401;
     error.body = { error: 'ID Token must be provided' };
-    next(error);
+    return next(error);
   }
+  authenticator.checkAuthentication(req.headers.idtoken)
+    .then((decodedToken) => {
+      res.locals.privilege = decodedToken.privilege;
+      res.locals.uid = decodedToken.uid;
+      next();
+    })
+    .catch((err) => {
+      const error = new Error();
+      error.status = 401;
+      error.body = err.message;
+      next(error);
+    });
 }
 
 /**
@@ -88,16 +87,11 @@ function checkAuthentication(req, res, next) {
  * @param next
  */
 function storeIP(req, res, next) {
-  if (process.env.APP_ENV === 'prod') {
-    database.storeIP(req.uow, req.headers.http_x_forwarded_for, req.headers['user-agent'])
-      .then(() => {
-        next();
-      }).catch(() => {
-        next();
-      });
-  } else {
-    next();
+  if (process.env.APP_ENV !== 'prod') {
+    return next();
   }
+  database.storeIP(req.uow, req.headers.http_x_forwarded_for, req.headers['user-agent'])
+    .finally(next);
 }
 
 
@@ -114,21 +108,20 @@ function storeIP(req, res, next) {
  * @apiUse IllegalArgumentError
  */
 router.post('/pre', (req, res, next) => {
-  if (!(req.body && req.body.email && validator.validate(req.body.email))) {
+  if (!req.body ||
+    !req.body.email ||
+    !validator.validate(req.body.email)) {
     const error = new Error();
     error.body = { error: 'Request body must be set and must be a valid email' };
     error.status = 400;
-    next(error);
-  } else {
-    new PreRegistration({ email: req.body.email }, req.uow)
-      .add()
-      .then(() => {
-        res.status(200).send({ status: 'Success' });
-      }).catch((err) => {
-        err.status = err.status || 500;
-        next(err);
-      });
+    return next(error);
   }
+  new PreRegistration({ email: req.body.email }, req.uow)
+    .add()
+    .then(() => {
+      res.status(200).send({ status: 'Success' });
+    })
+    .catch(err => errorHandler500(err, next));
 });
 
 
@@ -221,31 +214,30 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
     const error = new Error();
     error.body = { error: 'Reasons for error: Request body must be set, must use valid email, eighteenBeforeEvent mlhcoc and mlhdcp must all be true' };
     error.status = 400;
-    next(error);
-  } else {
-    // Add to database
-    if (req.file) {
-      req.body.resume = `https://s3.${
-        constants.s3Connection.region
-      }.amazonaws.com/${
-        constants.s3Connection.s3BucketName
-      }/${
-        generateFileName(req.body.uid, req.body.firstName, req.body.lastName)}`;
-    }
-    const reg = new Registration(req.body, req.uow);
-    reg
-      .add()
-      .then(() => {
-        reg.submit();
-        res.status(200).send({ response: 'Success' });
-      }).catch((err) => {
-        const error = new Error();
-        error.body = { error: err.message };
-        error.status = 400;
-        next(error);
-      });
+    return next(error);
   }
+  // Add to database
+  if (req.file) {
+    req.body.resume = `https://s3.${
+      constants.s3Connection.region
+    }.amazonaws.com/${
+      constants.s3Connection.s3BucketName
+    }/${
+      generateFileName(req.body.uid, req.body.firstName, req.body.lastName)}`;
+  }
+  const reg = new Registration(req.body, req.uow);
+  reg
+    .add()
+    .then(() => {
+      reg.submit();
+      res.status(200).send({ response: 'Success' });
+    })
+    .catch((err) => {
+      const error = new Error();
+      error.body = { error: err.message };
+      error.status = 400;
+      next(error);
+    });
 });
-
 
 module.exports = router;

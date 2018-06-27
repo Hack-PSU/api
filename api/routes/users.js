@@ -3,21 +3,23 @@ const express = require('express');
 const path = require('path');
 const Ajv = require('ajv');
 const Stringify = require('streaming-json-stringify');
+const tr = require('task-runner-js');
 
-const functions = require('../assets/helpers/functions');
-const authenticator = require('../assets/helpers/auth');
-const StorageService = require('../assets/helpers/storage_service');
-const { STORAGE_TYPES, StorageFactory } = require('../assets/helpers/storage_factory');
+const {
+  errorHandler500, emailSubstitute, createEmailRequest, sendEmail,
+} = require('../services/functions');
+const authenticator = require('../services/auth');
+const StorageService = require('../services/storage_service');
+const { STORAGE_TYPES, StorageFactory } = require('../services/factories/storage_factory');
+const constants = require('../assets/helpers/constants/constants');
+const { projectRegistrationSchema, travelReimbursementSchema } = require('../assets/helpers/database/schemas');
+const TravelReimbursement = require('../models/TravelReimbursement');
+const Registration = require('../models/Registration');
+const Project = require('../models/Project');
+const RSVP = require('../models/RSVP');
+const Category = require('../models/Category');
 
 const storage = new StorageService(STORAGE_TYPES.S3);
-const constants = require('../assets/helpers/constants');
-const TravelReimbursement = require('../assets/models/TravelReimbursement');
-const { projectRegistrationSchema, travelReimbursementSchema } = require('../assets/helpers/schemas');
-const Registration = require('../assets/models/Registration');
-const Project = require('../assets/models/Project');
-const RSVP = require('../assets/models/RSVP');
-const Category = require('../assets/models/Category');
-
 const router = express.Router();
 
 
@@ -36,7 +38,9 @@ const upload = storage.upload({
     },
   }),
   fileFilter(req, file, cb) {
-    if (path.extname(file.originalname) !== '.jpeg' && path.extname(file.originalname) !== '.png' && path.extname(file.originalname) !== '.jpg') {
+    if (path.extname(file.originalname) !== '.jpeg' &&
+      path.extname(file.originalname) !== '.png' &&
+      path.extname(file.originalname) !== '.jpg') {
       return cb(new Error('Only jpeg, jpg, and png are allowed'));
     }
     cb(null, true);
@@ -90,9 +94,7 @@ String.prototype.padStart = String.prototype.padStart ?
   function (targetLength, padString) {
     targetLength = Math.floor(targetLength) || 0;
     if (targetLength < this.length) return String(this);
-
     padString = padString ? String(padString) : ' ';
-
     let pad = '';
     const len = targetLength - this.length;
     let i = 0;
@@ -103,7 +105,6 @@ String.prototype.padStart = String.prototype.padStart ?
       pad += padString[i];
       i++;
     }
-
     return pad + String(this).slice(0);
   };
 
@@ -122,24 +123,24 @@ function generateFileName(fullName, file) {
  * User authentication middleware
  */
 router.use((req, res, next) => {
-  if (req.headers.idtoken) {
-    authenticator.checkAuthentication(req.headers.idtoken)
-      .then((decodedToken) => {
-        res.locals.user = decodedToken;
-        res.locals.uid = decodedToken.uid;
-        next();
-      }).catch((err) => {
-        const error = new Error();
-        error.status = 401;
-        error.body = err.message;
-        next(error);
-      });
-  } else {
+  if (!req.headers.idtoken) {
     const error = new Error();
     error.status = 401;
     error.body = { error: 'ID Token must be provided' };
-    next(error);
+    return next(error);
   }
+  authenticator.checkAuthentication(req.headers.idtoken)
+    .then((decodedToken) => {
+      res.locals.user = decodedToken;
+      res.locals.uid = decodedToken.uid;
+      next();
+    })
+    .catch((err) => {
+      const error = new Error();
+      error.status = 401;
+      error.body = err.message;
+      next(error);
+    });
 });
 
 
@@ -156,14 +157,13 @@ router.use((req, res, next) => {
  * @apiSuccess {Object} JSON Object with user's data
  */
 router.get('/', (req, res, next) => {
-  if (res.locals.user) {
-    res.status(200).send({ admin: res.locals.user.admin, privilege: res.locals.user.privilege });
-  } else {
+  if (!res.locals.user) {
     const error = new Error();
     error.status = 500;
     error.body = { error: 'Could not retrieve user information' };
-    next(error);
+    return next(error);
   }
+  res.status(200).send({ admin: res.locals.user.admin, privilege: res.locals.user.privilege });
 });
 
 /**
@@ -178,34 +178,23 @@ router.get('/', (req, res, next) => {
  * @apiSuccess {Object} JSON Object with user's data
  */
 router.get('/registration', (req, res, next) => {
-  if (res.locals.user) {
-    new Registration({ uid: res.locals.user.uid }, req.uow)
-      .get()
-      .then((stream) => {
-        stream
-          .pipe(Stringify())
-          .pipe(res)
-          .on('err', (err) => {
-            const error = new Error();
-            error.status = 500;
-            error.body = err.message;
-            next(error);
-          }).on('end', () => {
-          res.type('application/json').status(200).send();
-          });
-      }).catch((err) => { // Send Email error
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      console.error(error);
-      next(error);
-    });
-  } else {
+  if (!res.locals.user) {
     const error = new Error();
     error.status = 500;
     error.body = { error: 'Could not retrieve user information' };
-    next(error);
+    return next(error);
   }
+  new Registration({ uid: res.locals.user.uid }, req.uow)
+    .get()
+    .then((stream) => {
+      stream
+        .pipe(Stringify())
+        .pipe(res)
+        .on('err', err => errorHandler500(err, next))
+        .on('end', () => {
+          res.type('application/json').status(200).send();
+        });
+    }).catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -220,43 +209,38 @@ router.get('/registration', (req, res, next) => {
  * @apiSuccess {Object} JSON Object with user's table assignment data
  */
 router.get('/project', (req, res, next) => {
-  if (res.locals.user) {
-    const info = [];
-    Project.getByUser(res.locals.user.uid, req.uow)
-      .then((stream) => {
-        stream
-          .on('data', (data) => {
-            // Due to stream nature, data may be partial array or full array of responses
-            info.push(data);
-          }).on('err', (err) => {
-            const error = new Error();
-            error.status = 500;
-            error.body = err.message;
-            next(error);
-          }).on('end', () => {
-          // Reduce the large number of responses that differ by
-          // category name and id into a json array internally instead
-            const rJSON = info.reduce((accumulator, currentVal) => {
-              Object.keys(currentVal).forEach((k) => {
-                if (k !== 'categoryName' && k !== 'categoryID') { // If the field is going to be the same
-                  accumulator[k] = currentVal[k];
-                } else if (accumulator[k]) { // Else accumulate it in an array
-                  accumulator[k].push(currentVal[k]);
-                } else {
-                  accumulator[k] = [currentVal[k]];
-                }
-              });
-              return accumulator;
-            }, {});
-            res.status(200).send(rJSON);
-          });
-      });
-  } else {
+  if (!res.locals.user) {
     const error = new Error();
     error.status = 500;
     error.body = { error: 'Could not retrieve user information' };
-    next(error);
+    return next(error);
   }
+  const info = [];
+  Project.getByUser(res.locals.user.uid, req.uow)
+    .then((stream) => {
+      stream
+        .on('data', (data) => {
+          info.push(data);
+        })
+        .on('err', err => errorHandler500(err, next))
+        .on('end', () => {
+          // Reduce the large number of responses that differ by
+          // category name and id into a json array internally instead
+          const rJSON = info.reduce((accumulator, currentVal) => {
+            Object.keys(currentVal).forEach((k) => {
+              if (k !== 'categoryName' && k !== 'categoryID') { // If the field is going to be the same
+                accumulator[k] = currentVal[k];
+              } else if (accumulator[k]) { // Else accumulate it in an array
+                accumulator[k].push(currentVal[k]);
+              } else {
+                accumulator[k] = [currentVal[k]];
+              }
+            });
+            return accumulator;
+          }, {});
+          res.status(200).send(rJSON);
+        });
+    });
 });
 /**
  * @api {post} /users/rsvp confirm the RSVP status for the current user and send a email containing their pin
@@ -273,86 +257,66 @@ router.get('/project', (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.post('/rsvp', (req, res, next) => {
-  if (req.body && (typeof req.body.rsvp !== 'undefined')) {
-    if (res.locals.user) {
-      new RSVP(
-        { user_uid: res.locals.user.uid, rsvp_status: req.body.rsvp === 'true' },
-        req.uow,
-      ).add().then(() => {
-        req.uow.complete();
-        if (req.body.rsvp === 'true') {
-          let user = null;
-          // TODO: Refactor this. Put into a Pipeline probably.
-          // TODO: Try: http://bvaughn.github.io/task-runner/#/getting-started/working-with-promises
-          new Registration({ uid: res.locals.user.uid }, req.uow)
-            .get()
-            .then((stream) => {
-              stream
-                .on('data', (data) => {
-                  user = data;
-                }).on('err', (err) => { // Database registration retrieval
-                const error = new Error();
-                error.status = 500;
-                error.body = err.message;
-                console.error(error);
-                next(error);
-              }).on('end', () => {
-                const { email } = user;
-                const name = user.firstname;
-                const pin = user.pin || 78;
-                functions.emailSubstitute(constants.RSVPEmailHtml.text, name, {
-                  name,
-                  pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
-                })
-                  .then((subbedHTML) => {
-                    const request = functions.createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, '');
-                    functions.sendEmail(request.data)
-                      .then(() => {
-                        res.status(200).send({
-                          message: 'success',
-                          pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
-                        });
-                        // resolve({'email': request.data.to, 'html': request.data.htmlContent, 'response': 'success'});
-                      })
-                      .catch((err) => { // Send Email error
-                        const error = new Error();
-                        error.status = 500;
-                        error.body = err.message;
-                        console.error(error);
-                        next(error);
-                      });
-                  }).catch((err) => { // Email Substitute error
-                  const error = new Error();
-                  error.status = 500;
-                  error.body = err.message;
-                  console.error(error);
-                  next(error);
-                });
-              });
-            });
-        } else {
-          res.status(200).send({ message: 'success' });
-        }
-      }).catch((err) => { // Set RSVP error
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        console.error(error);
-        next(error);
-      });
-    } else {
-      const error = new Error();
-      error.status = 400;
-      error.body = { error: 'Could not identify user' };
-      console.error(error);
-      next(error);
-    }
-  } else {
+  // Validations.
+  if (!req.body || typeof req.body.rsvp === 'undefined') {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'RSVP value must be included' };
-    next(error);
+    return next(error);
   }
+  if (!res.locals.user) {
+    const error = new Error();
+    error.status = 400;
+    error.body = { error: 'Could not identify user' };
+    console.error(error);
+    return next(error);
+  }
+  // RSVP login starts here
+  const rsvp = new RSVP(
+    { user_uid: res.locals.user.uid, rsvp_status: req.body.rsvp === 'true' },
+    req.uow,
+  );
+  let email = null;
+  let pin = null;
+  rsvp.add()
+    .then(() => {
+      req.uow.complete();
+      if (req.body.rsvp === 'true') {
+        return new Registration({ uid: res.locals.user.uid }, req.uow).get();
+      }
+      return res.status(200).send({ message: 'success' });
+    })
+    .then((stream) => {
+      let user = null;
+      return new Promise((resolve, reject) => {
+        stream
+          .on('data', (data) => {
+            user = data;
+          })
+          .on('err', reject)
+          .on('end', () => resolve(user));
+      });
+    })
+    .then((user) => {
+      email = user.email || '';
+      const name = user.firstname;
+      pin = user.pin || 78;
+      return emailSubstitute(constants.RSVPEmailHtml.text, name, {
+        name,
+        pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
+      });
+    })
+    .then((subbedHTML) => {
+      const request = createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, '');
+      return sendEmail(request.data);
+    })
+    .then(() => {
+      res.status(200).send({
+        message: 'success',
+        pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
+      });
+    })
+    .catch(err => errorHandler500(err, next));
 });
 
 
@@ -369,23 +333,17 @@ router.post('/rsvp', (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.get('/rsvp', (req, res, next) => {
-  if (res.locals.user) {
-    new RSVP({ uid: res.locals.user.uid })
-      .get()
-      .then((status) => {
-        res.status(200).send(status || { rsvp_status: false });
-      }).catch((err) => {
-        const error = new Error();
-        error.status = err.status || 500;
-        error.body = error.message;
-        next(error);
-      });
-  } else {
+  if (!res.locals.user) {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'Could not identify user' };
-    next(error);
+    return next(error);
   }
+  new RSVP({ uid: res.locals.user.uid })
+    .get()
+    .then((status) => {
+      res.status(200).send(status || { rsvp_status: false });
+    }).catch(err => errorHandler500(err, next));
 });
 
 
@@ -405,40 +363,33 @@ router.get('/rsvp', (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next) => {
-  if (parseInt(req.body.reimbursementAmount, 10)) {
-    req.body.reimbursementAmount = parseInt(req.body.reimbursementAmount, 10);
-    if (!(req.body && validateReimbursement(req.body))) {
-      const error = new Error();
-      error.body = { error: 'Request body must be set and be valid' };
-      error.status = 400;
-      next(error);
-    } else {
-      req.body.reimbursementAmount = adjustReimbursementPrice(req.body.reimbursementAmount, req.body.groupMembers);
-      req.body.receiptURIs = req.files.map(file => `https://s3.${
-        constants.s3Connection.region
-      }.amazonaws.com/${
-        constants.s3Connection.s3TravelReimbursementBucket
-      }/${
-        file.key}`).join(',');
-      new TravelReimbursement(Object.assign(req.body, { uid: res.locals.user.uid }))
-        .add()
-        .then(() => {
-          res.status(200).send({
-            result: `Travel reimbursement request submitted. Final amount: $${
-              req.body.reimbursementAmount
-            }. This amount is based on the number of people in your party.`,
-          });
-        }).catch((error) => {
-          error.status = 500;
-          next(error);
-        });
-    }
-  } else {
+  if (!parseInt(req.body.reimbursementAmount, 10)) {
     const error = new Error();
     error.body = { error: 'Reimbursement amount must be a number' };
     error.status = 400;
-    next(error);
+    return next(error);
   }
+  req.body.reimbursementAmount = parseInt(req.body.reimbursementAmount, 10);
+  if (!req.body || !validateReimbursement(req.body)) {
+    const error = new Error();
+    error.body = { error: 'Request body must be set and be valid' };
+    error.status = 400;
+    return next(error);
+  }
+  req.body.reimbursementAmount = adjustReimbursementPrice(req.body.reimbursementAmount, req.body.groupMembers);
+  req.body.receiptURIs = req.files.map(file =>
+    `https://s3.${constants.s3Connection.region}
+    .amazonaws.com/${constants.s3Connection.s3TravelReimbursementBucket}
+    /${file.key}`).join(',');
+  new TravelReimbursement(Object.assign(req.body, { uid: res.locals.user.uid }))
+    .add()
+    .then(() => {
+      res.status(200).send({
+        result: `Travel reimbursement request submitted. Final amount: $${
+          req.body.reimbursementAmount
+          }. This amount is based on the number of people in your party.`,
+      });
+    }).catch(error => errorHandler500(error, next));
 });
 
 /**
@@ -462,72 +413,67 @@ router.post('/project', (req, res, next) => {
   3) insert project categories
   4) get project id
    */
-  if (res.locals.user) {
-    // User is present
-    /** ***************************** */
-
-    // Check for data format
-    if (validateProjectRegistration(req.body)) {
-      // Valid project
-      const uidPromises = req.body.team.map(email => authenticator.getUserId(email));
-      Promise.all(uidPromises)
-        .then((records) => {
-          const uids = records.map(r => r.uid);
-          // uids contains an array of uids
-          if (!uids.includes(res.locals.user.uid)) {
-            uids.push(res.locals.user.uid);
-          }
-          const { categories } = req.body;
-          if (categories && Array.isArray(categories) && categories.length === categories.filter(value => value.match(/\d+/)).length) {
-            // Categories array is valid
-            const project = new Project({ projectName: req.body.projectName, team: uids, categories })
-              .add()
-              .then((result) => {
-                if (process.env.APP_ENV === 'test') {
-                  console.log(result);
-                }
-                // Project ID returned here.
-                // Assign a table now
-                project.assignTable()
-                  .then((result1) => {
-                    res.status(200).send(result1);
-                  }).catch((err) => {
-                    const error = new Error();
-                    error.status = 500;
-                    error.body = err.message;
-                    next(error);
-                  });
-              }).catch((err) => {
-                const error = new Error();
-                error.status = 500;
-                error.body = err.message;
-                next(error);
-              });
-          } else {
-            const error = new Error();
-            error.body = { result: 'Some categories were not valid. Check and try again' };
-            error.status = 400;
-            next(error);
-          }
-        }).catch((err) => {
-          const error = new Error();
-          error.status = 400;
-          error.body = {
-            result: 'Some emails were not associated with an account. Please check your input and try again.',
-            info: err.message,
-          };
-          next(error);
-        });
-    } else {
+  if (!res.locals.user) {
+    const error = new Error();
+    error.body = { error: 'Could not find user' };
+    error.status = 400;
+    return next(error);
+  }
+  if (!validateProjectRegistration(req.body)) {
+    const error = new Error();
+    error.status = 400;
+    error.body = {
+      result: 'Some properties were not as expected. Make sure you provide a list of team members and categories',
+    };
+    return next(error);
+  }
+  // Valid project
+  const uidPromises = req.body.team.map(email => authenticator.getUserId(email));
+  let project = null;
+  Promise.all(uidPromises)
+    .catch((err) => {
       const error = new Error();
       error.status = 400;
       error.body = {
-        result: 'Some properties were not as expected. Make sure you provide a list of team members and categories',
+        result: 'Some emails were not associated with an account. Please check your input and try again.',
+        info: err.message,
       };
       next(error);
-    }
-  }
+    })
+    .then((records) => {
+      const uids = records.map(r => r.uid);
+      // uids contains an array of uids
+      if (!uids.includes(res.locals.user.uid)) {
+        uids.push(res.locals.user.uid);
+      }
+      const { categories } = req.body;
+      if (!categories ||
+        !Array.isArray(categories) ||
+        categories.length !== categories.filter(value => value.match(/\d+/)).length) {
+        const error = new Error();
+        error.body = { result: 'Some categories were not valid. Check and try again' };
+        error.status = 400;
+        return next(error);
+      }
+      // Categories array is valid
+      project = new Project({ projectName: req.body.projectName, team: uids, categories });
+      return project
+        .add();
+    })
+    .then((result) => {
+      if (process.env.APP_ENV === 'test') {
+        console.debug(result);
+      }
+      // Project ID returned here.
+      // Assign a table now
+      return project.assignTable();
+    })
+    .then((result1) => {
+      res.status(200).send(result1);
+    })
+    .catch(err => errorHandler500(err, next));
 });
+
 /**
  * @api {get} /user/event_categories Get all the event categories
  * @apiName Get Event Categories
@@ -552,6 +498,5 @@ router.get('/event_categories', (req, res, next) => {
       });
     });
 });
-
 
 module.exports = router;

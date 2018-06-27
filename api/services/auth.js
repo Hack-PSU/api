@@ -1,4 +1,5 @@
 /* eslint-disable func-names */
+// Thin wrapper around the firebase auth functions
 const admin = require('firebase-admin');
 /**
  * Checks if the provided token is authenticated
@@ -10,7 +11,7 @@ module.exports.checkAuthentication = function (idtoken) {
 };
 
 /**
- * Makes the provided UID an administrator with the provided provilege level
+ * Makes the provided UID an administrator with the provided privilege level
  * @param uid
  * @param privilege
  * @return {Promise<any>}
@@ -20,7 +21,7 @@ module.exports.elevate = function (uid, privilege) {
 };
 
 /**
- * Retreive the userID base on the email provided
+ * Retrieve the userID base on the email provided
  *  @param email
  *  @return Promise{admin.auth.UserRecord}
  */

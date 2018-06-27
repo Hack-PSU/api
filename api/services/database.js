@@ -113,6 +113,7 @@ function addRfidAssignments(assignments, uow) {
  * @param uow
  * @return {Promise<any>}
  */
+// TODO: Possibly migrate to Scans model?
 function addRfidScans(scans, uow) {
   const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
     .into('RFID_SCANS')
@@ -175,7 +176,7 @@ function getAllUsersCount(uow) {
       .field(`COUNT(${rfidscan_column_name})`, 'rfidscan_count'))
     .toString();
   query = query.concat(';');
-  console.log('Users:' + query);
+  console.debug('Users:' + query);
   return uow.query(query, null, { stream: true });
 }
 

@@ -8,7 +8,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const cors = require('cors');
-const UnitOfWork = require('./assets/helpers/database/uow_factory');
+const UnitOfWork = require('./services/factories/uow_factory');
 
 /**
  * Normalize a port into a number, string, or false.

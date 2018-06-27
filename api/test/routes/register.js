@@ -12,7 +12,7 @@ const util = require('util');
 
 const chance = new Chance(123);
 
-const sqlOptions = require('../../assets/helpers/constants').sqlConnection;
+const sqlOptions = require('../../assets/helpers/constants/constants').sqlConnection;
 
 const connection = sql.createConnection(sqlOptions);
 util.promisify(connection.connect);

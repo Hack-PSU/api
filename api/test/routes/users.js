@@ -5,12 +5,12 @@ const firebase = require('firebase');
 const Chance = require('chance');
 
 const server = require('../../app');
-const RSVP = require('../../assets/models/RSVP');
-const UowFactory = require('../../assets/helpers/database/uow_factory');
+const RSVP = require('../../models/RSVP');
+const UowFactory = require('../../services/factories/uow_factory');
 
 const chance = new Chance(123);
 
-const sqlOptions = require('../../assets/helpers/constants').sqlConnection;
+const sqlOptions = require('../../assets/helpers/constants/constants').sqlConnection;
 
 const connection = sql.createConnection(sqlOptions);
 

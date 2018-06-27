@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 const Timeuuid = require('node-time-uuid');
 const BaseObject = require('./BaseObject');
-const { liveUpdateSchema } = require('../assets/helpers/database/schemas');
+const { liveUpdateSchema } = require('../assets/database/schemas');
 const RtdbUow = require('../services/rtdb_uow');
 
 const REFERENCE = '/updates';

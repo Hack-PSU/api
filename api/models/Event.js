@@ -4,7 +4,7 @@ const uuidv4 = require('uuid/v4');
 const squel = require('squel');
 
 const chance = new Chance(123);
-const { eventSchema } = require('../assets/helpers/database/schemas');
+const { eventSchema } = require('../assets/database/schemas');
 
 const TABLE_NAME = 'EVENTS';
 module.exports = TABLE_NAME;

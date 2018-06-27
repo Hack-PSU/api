@@ -10,7 +10,7 @@ const UowFactory = require('../../services/factories/uow_factory');
 
 const chance = new Chance(123);
 
-const sqlOptions = require('../../assets/helpers/constants/constants').sqlConnection;
+const sqlOptions = require('../../assets/constants/constants').sqlConnection;
 
 const connection = sql.createConnection(sqlOptions);
 

@@ -3,7 +3,7 @@ const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 const squel = require('squel');
 
-const { registeredUserSchema } = require('../assets/helpers/database/schemas');
+const { registeredUserSchema } = require('../assets/database/schemas');
 
 const chance = new Chance(new Date().getTime());
 

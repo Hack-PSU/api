@@ -4,7 +4,7 @@ const Ajv = require('ajv');
 const transform = require('parallel-transform');
 const express = require('express');
 const Stringify = require('streaming-json-stringify');
-const { emailObjectSchema } = require('../assets/helpers/database/schemas');
+const { emailObjectSchema } = require('../assets/database/schemas');
 const authenticator = require('../services/auth');
 const database = require('../services/database');
 const {

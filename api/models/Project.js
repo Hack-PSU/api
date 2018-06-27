@@ -1,7 +1,7 @@
 const BaseObject = require('./BaseObject');
 const squel = require('squel');
 
-const { projectRegistrationSchema } = require('../assets/helpers/database/schemas');
+const { projectRegistrationSchema } = require('../assets/database/schemas');
 
 module.exports = class Project extends BaseObject {
   /**

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 module.exports = {
   emailKey: {
@@ -52,6 +53,6 @@ module.exports = {
   RSVPEmailHtml: {
     fromEmail: 'team@hackpsu.org',
     subject: 'HackPSU RSVP Confirmation',
-    text: fs.readFileSync('RSVP_Email.html', 'utf-8'),
+    text: fs.readFileSync(path.join(__dirname, 'RSVP_Email.html'), 'utf-8'),
   },
 };

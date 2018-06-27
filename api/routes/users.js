@@ -3,7 +3,6 @@ const express = require('express');
 const path = require('path');
 const Ajv = require('ajv');
 const Stringify = require('streaming-json-stringify');
-const tr = require('task-runner-js');
 
 const {
   errorHandler500, emailSubstitute, createEmailRequest, sendEmail,
@@ -11,8 +10,8 @@ const {
 const authenticator = require('../services/auth');
 const StorageService = require('../services/storage_service');
 const { STORAGE_TYPES, StorageFactory } = require('../services/factories/storage_factory');
-const constants = require('../assets/helpers/constants/constants');
-const { projectRegistrationSchema, travelReimbursementSchema } = require('../assets/helpers/database/schemas');
+const constants = require('../assets/constants/constants');
+const { projectRegistrationSchema, travelReimbursementSchema } = require('../assets/database/schemas');
 const TravelReimbursement = require('../models/TravelReimbursement');
 const Registration = require('../models/Registration');
 const Project = require('../models/Project');

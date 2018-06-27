@@ -1,6 +1,6 @@
 const mysql = require('mysql');
 const firebase = require('firebase-admin');
-const { sqlConnection, firebaseDB } = require('../../assets/helpers/constants/constants');
+const { sqlConnection, firebaseDB } = require('../../assets/constants/constants');
 const MockConnection = require('../mock_connection');
 const MysqlUow = require('../mysql_uow');
 const RtdbUow = require('../rtdb_uow');

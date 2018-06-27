@@ -8,7 +8,7 @@ const { errorHandler500 } = require('../services/functions');
 const Registration = require('../models/Registration');
 
 
-const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/helpers/constants/constants');
+const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/constants/constants');
 
 const ajv = new Ajv({ allErrors: true });
 /** ************* HELPER FUNCTIONS ************** */

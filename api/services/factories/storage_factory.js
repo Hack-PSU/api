@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 const multers3 = require('multer-s3');
 const aws = require('aws-sdk');
-const constants = require('../../assets/helpers/constants/constants');
+const constants = require('../../assets/constants/constants');
 const Storage = require('multer-google-storage');
 
 aws.config.update({

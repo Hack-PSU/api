@@ -2,7 +2,7 @@ const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 
 const chance = new Chance(new Date().getTime());
-const { categorySchema } = require('../assets/helpers/database/schemas');
+const { categorySchema } = require('../assets/database/schemas');
 
 const TABLE_NAME = 'CATEGORY_LIST';
 module.exports = TABLE_NAME;

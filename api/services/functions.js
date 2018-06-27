@@ -4,7 +4,7 @@ const ses = require('node-ses');
 const validator = require('email-validator');
 const request = require('request');
 
-const { emailKey, pushNotifKey } = require('../assets/helpers/constants/constants');
+const { emailKey, pushNotifKey } = require('../assets/constants/constants');
 
 const client = ses.createClient(emailKey);
 /**

@@ -2,7 +2,7 @@ const fs = require('fs');
 
 class MockStream {
   constructor() {
-    this.s = fs.createReadStream('./assets/helpers/database/dump_text', { encoding: 'utf-8' });
+    this.s = fs.createReadStream('.dump_text', { encoding: 'utf-8' });
   }
 
   stream() {

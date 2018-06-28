@@ -118,6 +118,6 @@ module.exports.sendNotification = function (notificationTitle, notificationBody)
 module.exports.errorHandler500 = function (err, handler) {
   const error = new Error();
   error.status = 500;
-  error.body = err.message;
+  error.body = err.message || err;
   handler(error);
 };

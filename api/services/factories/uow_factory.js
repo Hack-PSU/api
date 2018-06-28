@@ -1,11 +1,20 @@
-const mysql = require('mysql');
 const firebase = require('firebase-admin');
 const { sqlConnection, firebaseDB } = require('../../assets/constants/constants');
 const MockConnection = require('../mock_connection');
 const MysqlUow = require('../mysql_uow');
 const RtdbUow = require('../rtdb_uow');
+// const mysql = require('mysql');
+const Mysqlcache = require('mysql-cache');
 
-const dbConnection = mysql.createPool(sqlConnection);
+if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production') {
+  sqlConnection.host = '';
+} else {
+  sqlConnection.socketPath = '';
+}
+const dbConnection = new Mysqlcache(sqlConnection);
+dbConnection.connect(console.error);
+// const dbConnection = mysql.getPool(console.error);
+// const dbConnection = mysql.createPool(sqlConnection);
 
 const serviceAccount = require('../../config.json');
 
@@ -36,13 +45,14 @@ module.exports = class UowFactory {
         case 'test':
         case 'prod':
         case 'PROD':
-          dbConnection.getConnection((err, connection) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(new MysqlUow(connection));
-            }
-          });
+          resolve(new MysqlUow(dbConnection));
+          // dbConnection.getPool((err, connection) => {
+          //   if (err) {
+          //     reject(err);
+          //   } else {
+          //     resolve(new MysqlUow(connection));
+          //   }
+          // });
           break;
         default:
           reject(new Error('APP_ENV must be set'));

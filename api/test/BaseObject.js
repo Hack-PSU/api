@@ -1,12 +1,13 @@
 /* eslint-disable import/no-dynamic-require,global-require,no-undef,array-callback-return,new-cap */
 const chai = require('chai');
 const fs = require('fs');
+require('dotenv').config();
 const UowFactory = require('../services/factories/uow_factory');
 
-const modelFiles = fs.readdirSync('./assets/models')
+const modelFiles = fs.readdirSync('./models')
   .map(a => a.replace(/\.js/g, ''))
   .filter(a => a !== 'BaseObject');
-const models = modelFiles.map(model => require(`./api/models`));
+const models = modelFiles.map(model => require(`../models/${model}`));
 
 const should = chai.should();
 

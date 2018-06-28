@@ -90,7 +90,10 @@ module.exports = class Registration extends BaseObject {
     testObj.lastname = chance.last();
     testObj.gender = ['male', 'female', 'non-binary', 'no-disclose'][chance.integer({ min: 0, max: 3 })];
     testObj.shirt_size = ['XS', 'S', 'M', 'L', 'XL', 'XXL'][chance.integer({ min: 0, max: 5 })];
-    testObj.dietary_restriction = chance.word();
+    testObj.dietary_restriction = ['vegetarian', 'vegan', 'halal', 'kosher', 'allergies', 'gluten-free'][chance.integer({
+      min: 0,
+      max: 5,
+    })];
     testObj.allergies = chance.sentence();
     testObj.travel_reimbursement = chance.bool();
     testObj.first_hackathon = chance.bool();

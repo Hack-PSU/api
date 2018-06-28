@@ -58,7 +58,7 @@ router.use((req, res, next) => {
 });
 
 router.use((req, res, next) => {
-  if (req.query.limit || parseInt(req.query.limit, 10)) {
+  if (!req.query.limit || parseInt(req.query.limit, 10)) {
     res.locals.limit = parseInt(req.query.limit, 10);
   } else {
     const error = new Error();
@@ -66,12 +66,12 @@ router.use((req, res, next) => {
     error.body = { message: 'Limit must be an integer' };
     return next(error);
   }
-  if (req.query.offset || parseInt(req.query.offset, 10)) {
+  if (!req.query.offset || parseInt(req.query.offset, 10)) {
     res.locals.offset = parseInt(req.query.offset, 10);
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = { message: 'Limit must be an integer' };
+    error.body = { message: 'Offset must be an integer' };
     return next(error);
   }
   return next();
@@ -292,9 +292,10 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
     count: res.locals.limit,
     limit: res.locals.offset,
   }).then((stream) => {
-    stream.pipe(Stringify()).pipe(res);
-    stream.on('end', () => res.status(200).send());
-    stream.on('err', err => errorHandler500(err, next));
+    stream.pipe(Stringify())
+      .pipe(res.type('json').status(200))
+      .on('end', res.end)
+      .on('error', err => errorHandler500(err, next));
   });
 });
 
@@ -347,9 +348,10 @@ router.post('/update_registration', verifyACL(3), (req, res, next) => {
 router.get('/attendance_list', verifyACL(2), (req, res, next) => {
   Attendance.getAll(req.uow)
     .then((stream) => {
-      stream.pipe(res);
-      stream.on('end', () => res.status(200).send());
-      stream.on('err', err => errorHandler500(err, next));
+      stream.pipe(Stringify())
+        .pipe(res.type('json').status(200))
+        .on('end', res.end)
+        .on('error', err => errorHandler500(err, next));
     });
 });
 

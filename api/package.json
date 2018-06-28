@@ -1,10 +1,13 @@
 {
   "name": "hackpsu-api",
   "version": "0.2.1",
+  "engines": {
+    "node": ">=8.0.0 || >=9.0.0"
+  },
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "mocha --exit --timeout 10000",
+    "test": "mocha --exit --timeout 10000 --recursive",
     "prod": "APP_ENV=prod node ./bin/www",
     "apidoc": "apidoc -i ./routes -o doc/",
     "debug": "node --inspect ./bin/www"
@@ -22,6 +25,7 @@
     "email-validator": "1.2.3",
     "express": "4.16.3",
     "express-limiter": "^1.6.1",
+    "farmhash": "2.1.0",
     "firebase": "4.13.1",
     "firebase-admin": "5.12.0",
     "helmet": "3.12.1",
@@ -30,6 +34,7 @@
     "multer-google-storage": "1.2.1",
     "multer-s3": "^2.7.0",
     "mysql": "2.15.0",
+    "mysql-cache": "2.1.2",
     "node-ses": "^2.1.0",
     "node-time-uuid": "0.1.5",
     "parallel-transform": "1.1.0",

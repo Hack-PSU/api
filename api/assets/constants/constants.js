@@ -6,7 +6,6 @@ module.exports = {
     key: process.env.ACCESS_KEY_ID,
     secret: process.env.SECRET_ACCESS_KEY,
   },
-  rediskey: process.env.REDIS_API_KEY || 'rediskey',
   sqlConnection: {
     connectionLimit: 1000,
     timeout: 60 * 60 * 1000,
@@ -15,11 +14,25 @@ module.exports = {
     // Required for GCP
     socketPath: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`,
     // Required for AWS
-    // host: process.env.SQL_HOSTNAME || process.env.RDS_HOSTNAME || 'localhost',
+    host: process.env.SQL_HOSTNAME || process.env.RDS_HOSTNAME || 'localhost',
     user: process.env.SQL_USER || process.env.RDS_USERNAME || 'user',
     password: process.env.SQL_PASSWORD || process.env.RDS_PASSWORD || 'secret',
     database: process.env.SQL_DATABASE || process.env.RDS_DATABASE || 'my_db',
     multipleStatements: true,
+    prettyError: true,
+    caching: true,
+    cacheProvider: 'node-cache',
+    // cacheProviders can be supplied with additional configurations via this variable!
+    cacheProviderSetup: {
+      serverLocation: process.env.REDIS_SERVER || '127.0.0.1:11211',
+      username: process.env.REDIS_USERNAME || 'username',
+      password: process.env.REDIS_PASSWORD || '',
+      options: {
+        retries: 10,
+        retry: 10000,
+        remove: true,
+      },
+    },
     typeCast: function castField(field, useDefaultTypeCasting) {
       // We only want to cast bit fields that have a single-bit in them. If the field
       // has more than one bit, then we cannot assume it is supposed to be a Boolean.

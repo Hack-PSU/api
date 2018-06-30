@@ -115,7 +115,7 @@ describe('get registration', () => {
               .set('idtoken', idToken)
               .type('form')
               .send(generatedRegistration)
-              .end(() => {
+              .end((err, res) => {
                 done();
               });
           }).catch(err => done(err));

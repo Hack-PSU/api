@@ -228,8 +228,8 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
   const reg = new Registration(req.body, req.uow);
   reg
     .add()
+    .then(() => reg.submit())
     .then(() => {
-      reg.submit();
       res.status(200).send({ response: 'Success' });
     })
     .catch((err) => {

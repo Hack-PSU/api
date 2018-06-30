@@ -1,4 +1,4 @@
-/* eslint-disable import/no-unresolved,no-console */
+/* eslint-disable import/no-unresolved,no-console,global-require */
 require('dotenv').config();
 const http = require('http');
 const express = require('express');
@@ -9,6 +9,11 @@ const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const cors = require('cors');
 const UnitOfWork = require('./services/factories/uow_factory');
+
+if (process.env.NODE_ENV === 'production') {
+  require('@google-cloud/trace-agent').start();
+}
+
 
 /**
  * Normalize a port into a number, string, or false.
@@ -30,6 +35,8 @@ function normalizePort(val) {
 
   return false;
 }
+
+/** ************ EXPRESS APP ************ */
 
 const app = express();
 
@@ -94,6 +101,8 @@ const register = require('./routes/register');
 const admin = require('./routes/admin');
 const pi = require('./routes/pi');
 const live = require('./routes/live');
+const internal = require('./routes/internal');
+
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
 
@@ -122,6 +131,7 @@ app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 app.use('/v1/admin', admin);
 app.use('/v1/pi', pi); // Deprecated
 app.use('/v1/live', live);
+app.use('/v1/internal', internal);
 
 
 // catch 404 and forward to error handler

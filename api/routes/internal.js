@@ -2,12 +2,14 @@ const express = require('express');
 const Metrics = require('../services/monitoring');
 const { _dbConnection } = require('../services/factories/uow_factory');
 
+const { connection } = _dbConnection;
+
 
 const router = express.Router();
 
 /** ********* GLOBAL MIDDLEWARE ****** */
 router.use((req, res, next) => {
-  if (!req.headers('X-Appengine-Cron')) {
+  if (!req.headers['x-appengine-cron']) {
     const error = new Error();
     error.status = 401;
     error.message = 'You cannot call internal URLs';
@@ -17,15 +19,23 @@ router.use((req, res, next) => {
 });
 
 router.get('/metrics', (req, res, next) => {
-  const metrics = new Metrics(
-    'mysql_metrics',
-    'Metrics for MySQL database',
-    null, [
+  const hitMetrics = new Metrics(
+    'mysql_metrics_hits',
+    'Cache hit metrics for MySQL database',
+    null,
+    [
       {
         key: 'hits',
         valueType: 'DOUBLE',
         description: 'Cache hits for MySQL Queries',
       },
+    ],
+  );
+  const missMetrics = new Metrics(
+    'mysql_metrics_misses',
+    'Cache miss metrics for MySQL database',
+    null,
+    [
       {
         key: 'misses',
         valueType: 'DOUBLE',
@@ -33,10 +43,14 @@ router.get('/metrics', (req, res, next) => {
       },
     ],
   );
-  metrics.instantiate()
+
+  Promise.all([
+    hitMetrics.instantiate(),
+    missMetrics.instantiate(),
+  ])
     .then(() => Promise.all([
-      metrics.track(_dbConnection.hits, 'hits'),
-      metrics.track(_dbConnection.misses, 'misses'),
+      hitMetrics.track(connection.hits, { metric_type: 'hits' }),
+      missMetrics.track(connection.misses, { metric_type: 'misses' }),
     ]))
     .then(() => {
       res.status(200).send({ message: 'Logged metrics' });

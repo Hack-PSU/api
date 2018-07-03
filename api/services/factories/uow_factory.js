@@ -3,6 +3,7 @@ const firebase = require('firebase-admin');
 const { sqlConnection, firebaseDB } = require('../../assets/constants/constants');
 const MockConnection = require('../mock_connection');
 const MysqlUow = require('../mysql_uow');
+const MysqlConnection = require('../mysql_connection');
 const RtdbUow = require('../rtdb_uow');
 // const mysql = require('mysql');
 const Mysqlcache = require('mysql-cache');
@@ -12,7 +13,7 @@ if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production
 } else {
   sqlConnection.socketPath = '';
 }
-const dbConnection = new Mysqlcache(sqlConnection);
+const dbConnection = new MysqlConnection(new Mysqlcache(sqlConnection));
 module.exports._dbConnection = dbConnection;
 
 const serviceAccount = require('../../config.json');
@@ -27,7 +28,7 @@ const admin = firebase.initializeApp({
  * Use create method in the client and connection will be
  * chosen based on config.
  */
-module.exports = class UowFactory {
+module.exports.UowFactory = class UowFactory {
   /**
    * Returns a {MysqlUow} object to the caller based
    * on environment configurations

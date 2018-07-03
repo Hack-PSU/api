@@ -45,12 +45,6 @@ module.exports = class MockConnection {
     return new MockStream();
   }
 
-  commit(callback) {
-    console.log('Committing');
-    this.noop();
-    callback();
-  }
-
   release(callback) {
     console.log('Connection released');
     this.noop();

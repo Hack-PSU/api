@@ -8,7 +8,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const cors = require('cors');
-const UnitOfWork = require('./services/factories/uow_factory');
+const { UowFactory } = require('./services/factories/uow_factory');
 
 if (process.env.NODE_ENV === 'production') {
   require('@google-cloud/trace-agent').start();
@@ -52,7 +52,7 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  UnitOfWork.create().then((uow) => {
+  UowFactory.create().then((uow) => {
     req.uow = uow;
     next();
   }).catch((err) => {
@@ -61,7 +61,7 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  UnitOfWork.createRTDB().then((uow) => {
+  UowFactory.createRTDB().then((uow) => {
     req.rtdb = uow;
     next();
   }).catch(next);
@@ -143,9 +143,9 @@ app.use((req, res, next) => {
 
 // error handler
 app.use((err, req, res, next) => {
-  if (process.env.APP_ENV !== 'test') {
-    console.error(err);
-  }
+  // if (process.env.APP_ENV !== 'test') {
+  console.error(err);
+  // }
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

@@ -2,6 +2,8 @@
 const chai = require('chai');
 const fs = require('fs');
 require('dotenv').config();
+
+process.env.SQL_DATABASE = 'test';
 const UowFactory = require('../services/factories/uow_factory');
 
 const modelFiles = fs.readdirSync('./models')

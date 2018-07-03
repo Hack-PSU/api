@@ -3,7 +3,7 @@ const { Readable } = require('stream');
 module.exports = class MysqlUow {
   /**
    *
-   * @param connection {MysqlCache}
+   * @param connection {MysqlConnection}
    */
   constructor(connection) {
     this.connection = connection;
@@ -19,8 +19,8 @@ module.exports = class MysqlUow {
     if (!params) {
       params = {};
     }
-    return this.connection.connectAsync()
-      .then(() => this.connection.queryAsync(query, params))
+    return this.connection.beginTransaction()
+      .then(() => this.connection.query(query, params))
       .then((result) => {
         if (opts && opts.stream) {
           const stream = new Readable({ objectMode: true });
@@ -33,6 +33,6 @@ module.exports = class MysqlUow {
   }
 
   complete() {
-    return this.connection.endPoolAsync();
+    return this.connection.release();
   }
 };

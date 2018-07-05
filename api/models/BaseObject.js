@@ -1,4 +1,4 @@
-/* eslint-disable no-underscore-dangle,no-param-reassign */
+/* eslint-disable no-underscore-dangle,no-param-reassign,class-methods-use-this */
 
 const squel = require('squel');
 const Ajv = require('ajv');
@@ -41,7 +41,6 @@ module.exports = class BaseObject {
       .toString()
       .concat(';');
     const params = [];
-    //console.log(query);
     return uow.query(query, params, { stream: true });
   }
 
@@ -52,7 +51,6 @@ module.exports = class BaseObject {
       .toString()
       .concat(';');
     const params = [];
-    //console.log(`Base:${query}`);
     return uow.query(query, params, { stream: true });
   }
 
@@ -92,6 +90,10 @@ module.exports = class BaseObject {
    */
   get id() {
     return this.uid;
+  }
+
+  get useRTDB() {
+    return false;
   }
 
   /**
@@ -146,6 +148,7 @@ module.exports = class BaseObject {
   add() {
     const validation = this.validate();
     if (!validation.result) {
+      console.log(this);
       return new Promise(((resolve, reject) => reject(new Error(validation.error))));
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })

@@ -117,8 +117,12 @@ module.exports = {
           150,
       },
       coding_experience: {
+        type: [
+          'string',
+          'null',
+        ],
         enum:
-          ['none', 'beginner', 'intermediate', 'advanced', 'null'],
+          ['none', 'beginner', 'intermediate', 'advanced', 'god', null],
       },
       uid: {
         type: 'string',
@@ -270,6 +274,8 @@ module.exports = {
       },
       location_name: {
         type: 'string',
+        minLength: 1,
+        maxLength: 50,
       },
     },
     required: ['location_name'],
@@ -279,11 +285,11 @@ module.exports = {
     properties: {
       uid: {
         type: 'string',
-        min: 1,
+        minLength: 1,
       },
       event_location: {
         type: 'string',
-        min: 1,
+        minLength: 1,
       },
       event_start_time: {
         type: 'number',
@@ -293,11 +299,11 @@ module.exports = {
       },
       event_title: {
         type: 'string',
-        min: 1,
+        minLength: 1,
       },
       event_description: {
         type: 'string',
-        min: 1,
+        minLength: 1,
       },
       event_type: {
         enum: ['food', 'workshop', 'activity'],
@@ -313,8 +319,8 @@ module.exports = {
       },
       categoryName: {
         type: 'string',
-        min: 1,
-        max: 50,
+        minLength: 1,
+        maxLength: 50,
       },
       isSponsor: {
         type: 'boolean',

@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/usr/bin/env bash
 # REQUIREMENT: Bash v4+. On MacOS: Run brew install bash --upgrade
 # This script prepares the directory for uploading to the cloud
 # platform of your choice. It will unencrypt any configuration and

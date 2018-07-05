@@ -6,7 +6,7 @@ const Chance = require('chance');
 
 const server = require('../../app');
 const RSVP = require('../../models/RSVP');
-const UowFactory = require('../../services/factories/uow_factory');
+const { UowFactory } = require('../../services/factories/uow_factory');
 
 const chance = new Chance(123);
 
@@ -20,21 +20,20 @@ connection.connect((err) => {
   }
 });
 
-// Initialize Firebase
-const config = {
-  apiKey: 'AIzaSyCpvAPdiIcqKV_NTyt6DZgDUNyjmA6kwzU',
-  authDomain: 'hackpsu18.firebaseapp.com',
-  databaseURL: 'https://hackpsu18-test.firebaseio.com',
-  projectId: 'hackpsu18',
-  storageBucket: 'hackpsu18.appspot.com',
-  messagingSenderId: '1002677206617',
-};
-firebase.initializeApp(config);
+// // Initialize Firebase
+// const config = {
+//   apiKey: 'AIzaSyCpvAPdiIcqKV_NTyt6DZgDUNyjmA6kwzU',
+//   authDomain: 'hackpsu18.firebaseapp.com',
+//   databaseURL: 'https://hackpsu18-test.firebaseio.com',
+//   projectId: 'hackpsu18',
+//   storageBucket: 'hackpsu18.appspot.com',
+//   messagingSenderId: '1002677206617',
+// };
+// firebase.initializeApp(config);
 
 const should = chai.should();
 
 chai.use(chaiHttp);
-
 
 let listener = null;
 

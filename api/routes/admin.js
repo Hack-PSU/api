@@ -31,7 +31,7 @@ const router = express.Router();
  * Administrator authentication middleware
  */
 router.use((req, res, next) => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV === 'debug') {
     // Remove if you require idtoken support locally
     return next();
   }
@@ -130,7 +130,7 @@ function validateEmails(req, res, next) {
  */
 function verifyACL(level) {
   return function (req, res, next) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV === 'debug') {
       // Remove if you require idtoken support locally
       return next();
     }

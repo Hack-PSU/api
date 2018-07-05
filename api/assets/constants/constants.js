@@ -14,11 +14,11 @@ module.exports = {
     // Required for GCP
     socketPath: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`,
     // Required for AWS
-    // host: process.env.SQL_HOSTNAME || process.env.RDS_HOSTNAME || 'localhost',
-    host: 'localhost',
+    host: process.env.SQL_HOSTNAME || process.env.RDS_HOSTNAME || 'localhost',
     user: process.env.SQL_USER || process.env.RDS_USERNAME || 'user',
     password: process.env.SQL_PASSWORD || process.env.RDS_PASSWORD || 'secret',
     database: process.env.SQL_DATABASE || process.env.RDS_DATABASE || 'my_db',
+    port: process.env.SQL_PORT || 3306,
     multipleStatements: true,
     prettyError: true,
     caching: true,

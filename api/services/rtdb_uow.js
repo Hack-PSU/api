@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 const { Readable } = require('stream');
 
 module.exports = class RtdbUow {
@@ -74,6 +75,9 @@ module.exports = class RtdbUow {
           break;
       }
     });
+  }
+  complete() {
+    return Promise.resolve();
   }
 };
 

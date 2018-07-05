@@ -122,6 +122,9 @@ function generateFileName(fullName, file) {
  * User authentication middleware
  */
 router.use((req, res, next) => {
+  if (process.env.APP_ENV === 'debug') {
+    return next();
+  }
   if (!req.headers.idtoken) {
     const error = new Error();
     error.status = 401;
@@ -279,18 +282,19 @@ router.post('/rsvp', (req, res, next) => {
   let pin = null;
   rsvp.add()
     .then(() => {
-      req.uow.complete();
+      // Retrieve registration.
       if (req.body.rsvp === 'true') {
         return new Registration({ uid: res.locals.user.uid }, req.uow).get();
       }
       return res.status(200).send({ message: 'success' });
     })
     .then((stream) => {
+      // Get user data.
       let user = null;
       return new Promise((resolve, reject) => {
         stream
           .on('data', (data) => {
-            user = data;
+            [user] = data;
           })
           .on('err', reject)
           .on('end', () => resolve(user));
@@ -386,7 +390,7 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
       res.status(200).send({
         result: `Travel reimbursement request submitted. Final amount: $${
           req.body.reimbursementAmount
-          }. This amount is based on the number of people in your party.`,
+        }. This amount is based on the number of people in your party.`,
       });
     }).catch(error => errorHandler500(error, next));
 });

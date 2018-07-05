@@ -18,7 +18,7 @@ module.exports.emailSubstitute = function (html, name, substitutions) {
   return new Promise(((resolve, reject) => {
     let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
     for (const key in substitutions) {
-      if (substitutions[key].length > 0 && key.length > 0) {
+      if (substitutions[key] && substitutions[key].length > 0 && key.length > 0) {
         subbedHTML = subbedHTML.replace(new RegExp(`\\$${key}\\$`, 'g'), substitutions[key]);
       } else {
         const error = new Error();

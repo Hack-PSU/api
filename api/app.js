@@ -1,5 +1,10 @@
 /* eslint-disable import/no-unresolved,no-console,global-require */
 require('dotenv').config();
+
+if (process.env.NODE_ENV === 'production') {
+  require('@google-cloud/trace-agent').start();
+}
+
 const http = require('http');
 const express = require('express');
 const path = require('path');
@@ -10,9 +15,6 @@ const helmet = require('helmet');
 const cors = require('cors');
 const { UowFactory } = require('./services/factories/uow_factory');
 
-if (process.env.NODE_ENV === 'production') {
-  require('@google-cloud/trace-agent').start();
-}
 
 
 /**

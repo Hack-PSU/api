@@ -107,9 +107,9 @@ module.exports = class Registration extends BaseObject {
     testObj.phone = chance.phone();
     testObj.race = chance.nationality();
     testObj.resume = chance.file({ extension: 'pdf' });
-    testObj.coding_experience = ['none', 'beginner', 'intermediate', 'advanced', 'null'][chance.integer({
+    testObj.coding_experience = ['none', 'beginner', 'intermediate', 'advanced', 'god', null][chance.integer({
       min: 0,
-      max: 4,
+      max: 5,
     })];
     testObj.uid = chance.guid();
     testObj.eighteenBeforeEvent = true;

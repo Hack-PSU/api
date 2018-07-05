@@ -22,7 +22,7 @@ module.exports = class Category extends BaseObject {
 
   static generateTestData(uow) {
     const testObj = new Category({}, uow);
-    testObj.categoryName = chance.string();
+    testObj.categoryName = chance.word();
     testObj.isSponsor = chance.bool();
     testObj.uid = chance.integer({ max: 2147483647, min: 0 });
     return testObj;

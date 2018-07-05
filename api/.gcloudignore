@@ -15,6 +15,7 @@
 
 # Node.js dependencies:
 node_modules/
+# Encrypted files
 *.env.aes
 .privatekey.aes
 *.yaml
@@ -25,6 +26,12 @@ node_modules/
 .temp.env
 *.json.aes
 gcs_config_staging.json
+
+# SQL_PROXY
+cloud_sql_proxy
+
+# FS folders
 .idea/
 .ebextensions/
 .DS_Store/
+hackpsu18-ecc9dc4878c6.json.enc

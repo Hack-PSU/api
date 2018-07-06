@@ -5,10 +5,10 @@ const chaiHttp = require('chai-http');
 const server = require('../../app');
 const sql = require('mysql');
 const squel = require('squel');
-
 const Chance = require('chance');
 const firebase = require('firebase');
 const util = require('util');
+require('../test_helper')();
 
 const chance = new Chance(123);
 
@@ -109,7 +109,7 @@ function generateGoodRegistration() {
     eighteenBeforeEvent: true,
     mlhcoc: true,
     mlhdcp: true,
-    uid: 'WaPm1vcEVvaw0tbCbrBHs2e891s2',
+    uid: 'CgnrzbSsqDZru1KbhTLI5AUdhZB2',
     referral: 'Facebook',
     project: chance.sentence(),
     expectations: chance.sentence(),
@@ -200,12 +200,12 @@ describe('registration tests', () => {
   before((done) => {
     const query0 = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from('RSVP')
-      .where('user_id = ?', 'WaPm1vcEVvaw0tbCbrBHs2e891s2')
+      .where('user_id = ?', 'CgnrzbSsqDZru1KbhTLI5AUdhZB2')
       .toParam();
     query0.text = query0.text.concat(';');
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from('REGISTRATION')
-      .where('uid = ?', 'WaPm1vcEVvaw0tbCbrBHs2e891s2')
+      .where('uid = ?', 'CgnrzbSsqDZru1KbhTLI5AUdhZB2')
       .toParam();
     query.text = ''.concat(query0.text).concat(query.text.concat(';'));
     query.values.push(query0.values[0]);

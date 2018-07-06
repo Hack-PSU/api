@@ -2,7 +2,7 @@ const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 
 const chance = new Chance(new Date().getTime());
-const { categorySchema } = require('../assets/database/schemas');
+const categorySchema = require('../assets/database/schemas')('categorySchema');
 
 const TABLE_NAME = 'CATEGORY_LIST';
 module.exports = TABLE_NAME;
@@ -30,6 +30,10 @@ module.exports = class Category extends BaseObject {
 
   static getAll(uow, opts) {
     return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  static getCount(uow) {
+    return super.getCount(uow, TABLE_NAME);
   }
 
   get schema() {

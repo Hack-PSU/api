@@ -20,8 +20,12 @@ module.exports = class Attendance extends BaseObject {
    * @param opts
    * @return {Promise<Stream>}
    */
-  static getAll(uow, opts) {
-    return super.getAll(uow, TABLE_NAME, opts);
+  static getAll(uow) {
+    return super.getAll(uow, TABLE_NAME);
+  }
+
+  static getCount(uow) {
+    return super.getCount(uow, TABLE_NAME);
   }
 
   get tableName() {

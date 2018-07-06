@@ -23,10 +23,10 @@ module.exports.emailSubstitute = function (html, name, substitutions) {
       } else {
         const error = new Error();
         error.body = { error: 'One or more substitution keyword or substitution-text is empty' };
-        reject(error);
+        return reject(error);
       }
     }
-    resolve(subbedHTML);
+    return resolve(subbedHTML);
   }));
 };
 

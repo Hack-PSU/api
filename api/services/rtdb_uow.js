@@ -16,6 +16,7 @@ module.exports = class RtdbUow {
       SET: 1,
       UPDATE: 2,
       REF: 3,
+      COUNT: 4,
     });
   }
 
@@ -27,6 +28,7 @@ module.exports = class RtdbUow {
    * @returns {Promise<DataSnapshot>}
    */
   query(query, reference, data) {
+    let count = 0;
     console.debug(query, reference, data);
     this.db.goOnline();
     return new Promise((resolve, reject) => {
@@ -66,10 +68,21 @@ module.exports = class RtdbUow {
             }, true)
             .catch(reject);
           break;
+
         case RtdbUow.queries.REF:
           resolve(this.db.ref(reference).toString());
           break;
 
+        case RtdbUow.queries.COUNT:
+          this.db.ref(reference)
+            .on('child_added', () => {
+              count += 1;
+            });
+          this.db.ref(reference)
+            .once('value', () => {
+              resolve(count);
+            });
+          break;
         default:
           reject(new Error('Illegal query'));
           break;

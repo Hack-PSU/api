@@ -2,7 +2,7 @@ const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 
 const chance = new Chance(123);
-const { locationSchema } = require('../assets/database/schemas');
+const locationSchema = require('../assets/database/schemas')('locationSchema');
 
 const TABLE_NAME = 'LOCATIONS';
 module.exports = TABLE_NAME;
@@ -33,6 +33,10 @@ module.exports = class Location extends BaseObject {
    */
   static getAll(uow, opts) {
     return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  static getCount(uow) {
+    return super.getCount(uow, TABLE_NAME);
   }
 
   get schema() {

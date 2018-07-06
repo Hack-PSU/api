@@ -47,7 +47,7 @@ module.exports = class BaseObject {
   static getCount(uow, tableName, columnName) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(tableName)
-      .field(`COUNT(${columnName})`, 'count')
+      .field(`COUNT(${columnName || 'uid'})`, 'count')
       .toString()
       .concat(';');
     const params = [];
@@ -148,8 +148,9 @@ module.exports = class BaseObject {
   add() {
     const validation = this.validate();
     if (!validation.result) {
-      console.log(this);
-      return new Promise(((resolve, reject) => reject(new Error(validation.error))));
+      console.warn('Validation failed while adding object.');
+      console.warn(this._dbRepresentation);
+      return Promise.reject(new Error(validation.error));
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)

@@ -1,6 +1,6 @@
 const uuid = require('uuid/v4');
 const BaseObject = require('./BaseObject');
-const { travelReimbursementSchema } = require('../assets/database/schemas');
+const travelReimbursementSchema = require('../assets/database/schemas')('travelReimbursementSchema');
 
 const TABLE_NAME = 'TRAVEL_REIMBURSEMENT';
 module.exports = TABLE_NAME;
@@ -21,7 +21,15 @@ module.exports = class TravelReimbursement extends BaseObject {
     return super.getAll(uow, TABLE_NAME, opts);
   }
 
+  static getCount(uow) {
+    return super.getCount(uow, TABLE_NAME);
+  }
+
   static generateTestData() {
     throw new Error('Not implemented');
+  }
+
+  get schema() {
+    return travelReimbursementSchema;
   }
 };

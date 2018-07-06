@@ -3,7 +3,7 @@ const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 const squel = require('squel');
 
-const { registeredUserSchema } = require('../assets/database/schemas');
+const registeredUserSchema = require('../assets/database/schemas')('registeredUserSchema');
 
 const chance = new Chance(new Date().getTime());
 
@@ -80,7 +80,7 @@ module.exports = class Registration extends BaseObject {
    * @param opts
    * @return {Promise<Stream>}
    */
-  static getCount(uow, opts) {
+  static getCount(uow) {
     return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
   }
 

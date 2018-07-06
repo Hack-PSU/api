@@ -1,4 +1,6 @@
-module.exports = {
+const _ = require('lodash');
+
+const schemas = {
   // TODO: Possibly revamp this to use a single getter
   emailObjectSchema: {
     type: 'object',
@@ -236,9 +238,8 @@ module.exports = {
         enum:
           ['1', '2', '3', '4+'],
       },
-      required: ['fullName', 'reimbursementAmount', 'mailingAddress', 'groupMembers'],
-    }
-    ,
+    },
+    required: ['fullName', 'reimbursementAmount', 'mailingAddress', 'groupMembers'],
   },
   projectRegistrationSchema: {
     type: 'object',
@@ -328,4 +329,26 @@ module.exports = {
     },
     required: ['uid', 'categoryName', 'isSponsor'],
   },
+  liveUpdateSchema: {
+    type: 'object',
+    properties: {
+      update_title: {
+        type: 'string',
+        minLength: 1,
+      },
+      update_text: {
+        type: 'string',
+        minLength: 1,
+      },
+      update_image: {
+        type: 'string',
+        format: 'url',
+      },
+      update_time: {
+        type: 'number',
+        min: new Date().getTime(),
+      },
+    },
+  },
 };
+module.exports = name => _.get(schemas, name);

@@ -94,11 +94,11 @@ function addEmailsHistory(uow, successes, fails) {
 
 /**
  *
- * @param assignments
  * @param uow
+ * @param assignments
  * @return {Promise<any>}
  */
-function addRfidAssignments(assignments, uow) {
+function addRfidAssignments(uow, assignments) {
   const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
     .into('RFID_ASSIGNMENTS')
     .setFieldsRows(assignments)
@@ -109,12 +109,12 @@ function addRfidAssignments(assignments, uow) {
 
 /**
  *
- * @param scans
  * @param uow
+ * @param scans
  * @return {Promise<any>}
  */
 // TODO: Possibly migrate to Scans model?
-function addRfidScans(scans, uow) {
+function addRfidScans(uow, scans) {
   const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
     .into('RFID_SCANS')
     .setFieldsRows(scans)
@@ -176,7 +176,6 @@ function getAllUsersCount(uow) {
       .field(`COUNT(${rfidscan_column_name})`, 'rfidscan_count'))
     .toString();
   query = query.concat(';');
-  console.debug('Users:' + query);
   return uow.query(query, null, { stream: true });
 }
 

@@ -4,7 +4,7 @@ const uuidv4 = require('uuid/v4');
 const squel = require('squel');
 
 const chance = new Chance(123);
-const { eventSchema } = require('../assets/database/schemas');
+const eventSchema = require('../assets/database/schemas')('eventSchema');
 
 const TABLE_NAME = 'EVENTS';
 module.exports = TABLE_NAME;
@@ -47,6 +47,10 @@ module.exports = class Event extends BaseObject {
       .toString()
       .concat(';');
     return uow.query(query, [], { stream: true });
+  }
+
+  static getCount(uow) {
+    return super.getCount(uow, TABLE_NAME);
   }
 
   get tableName() {

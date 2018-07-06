@@ -1,7 +1,7 @@
 const BaseObject = require('./BaseObject');
 const squel = require('squel');
 
-const { rsvpSchema } = require('../assets/database/schemas');
+const rsvpSchema = require('../assets/database/schemas')('rsvpSchema');
 
 const TABLE_NAME = 'RSVP';
 const COLUMN_NAME = 'user_id';
@@ -37,7 +37,7 @@ module.exports = class RSVP extends BaseObject {
    * @param opts
    * @return {Promise<Stream>}
    */
-  static getCount(uow, opts) {
+  static getCount(uow) {
     return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
   }
 

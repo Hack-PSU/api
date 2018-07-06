@@ -2,7 +2,7 @@ const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 const uuid = require('uuid/v4');
 
-const { preRegisteredSchema } = require('../assets/database/schemas');
+const preRegisteredSchema = require('../assets/database/schemas')('preRegisteredSchema');
 
 const chance = new Chance(new Date().getTime());
 

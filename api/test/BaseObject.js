@@ -86,6 +86,27 @@ describe('Object CRUD tests', () => {
       });
 
       describe(`Add new ${model.name}`, () => {
+        let obj;
+        it('should fail validation', (done) => {
+          obj = new model({ }, uow);
+          try {
+            obj.add()
+              .then(() => {
+                done(new Error('Should not succeed'));
+              })
+              .catch((err) => {
+                should.not.equal(err, null);
+                done();
+              });
+          } catch (e) {
+            if (e.message !== 'This method is not supported by this class' && e.message !== 'Not implemented') {
+              done(e);
+            } else {
+              done();
+            }
+          }
+        });
+
         it(`it should add a new test ${model.name}`, (done) => {
           try {
             const m = model.generateTestData(uow);
@@ -145,6 +166,24 @@ describe('Object CRUD tests', () => {
           }
         });
       });
+
+      describe(`Get count for ${model.name}`, () => {
+        it(`it should get all objects of type ${model.name}`, (done) => {
+          try {
+            model.getCount(model.useRTDB ? uowrtdb : uow)
+              .then((result) => {
+                expect(result).to.be.a.ReadableStream;
+                done();
+              }).catch(done);
+          } catch (e) {
+            if (e.message !== 'This method is not supported by this class' && e.message !== 'Not implemented') {
+              done(e);
+            } else {
+              done();
+            }
+          }
+        });
+      })
     });
   });
 });

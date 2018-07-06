@@ -1,7 +1,7 @@
 const BaseObject = require('./BaseObject');
 const squel = require('squel');
 
-const { projectRegistrationSchema } = require('../assets/database/schemas');
+const projectRegistrationSchema = require('../assets/database/schemas')('projectRegistrationSchema');
 
 module.exports = class Project extends BaseObject {
   /**
@@ -46,6 +46,10 @@ module.exports = class Project extends BaseObject {
     return uow.query(query.text, query.values, { stream: true });
   }
 
+  static getCount(uow) {
+    throw new Error('Not implemented');
+  }
+
   get schema() {
     return projectRegistrationSchema;
   }
@@ -55,6 +59,12 @@ module.exports = class Project extends BaseObject {
    * @return {Promise<any>}
    */
   add() {
+    const validation = this.validate();
+    if (!validation.result) {
+      console.warn('Validation failed while adding object.');
+      console.warn(this);
+      return Promise.reject(new Error(validation.error));
+    }
     let prepped = 'CALL ';
     prepped = prepped.concat(process.env.APP_ENV === 'test' ? 'assignTeam_test' : 'assignTeam');
     prepped = prepped.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;');

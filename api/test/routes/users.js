@@ -3,7 +3,7 @@ const chaiHttp = require('chai-http');
 const sql = require('mysql');
 const firebase = require('firebase');
 const Chance = require('chance');
-
+require('../test_helper')();
 const server = require('../../app');
 const RSVP = require('../../models/RSVP');
 const { UowFactory } = require('../../services/factories/uow_factory');

@@ -15,8 +15,6 @@ const helmet = require('helmet');
 const cors = require('cors');
 const { UowFactory } = require('./services/factories/uow_factory');
 
-
-
 /**
  * Normalize a port into a number, string, or false.
  * @param val {number | string} The port
@@ -145,9 +143,9 @@ app.use((req, res, next) => {
 
 // error handler
 app.use((err, req, res, next) => {
-  // if (process.env.APP_ENV !== 'test') {
-  console.error(err);
-  // }
+  if (process.env.APP_ENV !== 'test') {
+    console.error(err);
+  }
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

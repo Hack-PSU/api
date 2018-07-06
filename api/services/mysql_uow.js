@@ -25,7 +25,6 @@ module.exports = class MysqlUow {
         if (opts && opts.stream) {
           const stream = new Readable({ objectMode: true });
           stream.push(result[0]);
-          console.info(result[1]);
           stream.push(null);
           return stream;
         }

@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "mocha --exit --timeout 10000 --recursive",
+    "test": "mocha --exit --timeout 20000 --recursive",
     "prod": "APP_ENV=prod node ./bin/www",
     "apidoc": "apidoc -i ./routes -o doc/",
     "debug": "node --inspect ./bin/www"

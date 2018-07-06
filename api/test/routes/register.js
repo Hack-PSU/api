@@ -245,7 +245,6 @@ describe('registration tests', () => {
         .type('form')
         .send(generateBadRegistration())
         .end((err, res) => {
-          console.log(err);
           res.should.have.status(400);
           done();
         });

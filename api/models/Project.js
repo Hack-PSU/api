@@ -62,7 +62,7 @@ module.exports = class Project extends BaseObject {
     const validation = this.validate();
     if (!validation.result) {
       console.warn('Validation failed while adding object.');
-      console.warn(this);
+      console.warn(this._dbRepresentation);
       return Promise.reject(new Error(validation.error));
     }
     let prepped = 'CALL ';

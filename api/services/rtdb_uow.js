@@ -1,5 +1,6 @@
-/* eslint-disable class-methods-use-this */
+/* eslint-disable class-methods-use-this,no-underscore-dangle */
 const { Readable } = require('stream');
+const _ = require('lodash');
 
 module.exports = class RtdbUow {
   /**
@@ -28,69 +29,84 @@ module.exports = class RtdbUow {
    * @returns {Promise<DataSnapshot>}
    */
   query(query, reference, data) {
-    let count = 0;
-    console.debug(query, reference, data);
+    if (process.env.APP_ENV === 'debug') {
+      console.debug(query, reference, data);
+    }
     this.db.goOnline();
+    switch (query) {
+      case RtdbUow.queries.GET:
+        return this._get(reference);
+      case RtdbUow.queries.SET:
+        return this._set(data, reference);
+      case RtdbUow.queries.REF:
+        return Promise.resolve(this.db.ref(reference)
+          .toString());
+      case RtdbUow.queries.COUNT:
+        return this._count(reference);
+      default:
+        return Promise.reject(new Error('Illegal query'));
+    }
+  }
+
+  _get(reference) {
     return new Promise((resolve, reject) => {
-      switch (query) {
-        case RtdbUow.queries.GET:
-          this.db.ref(reference)
-            .once('value', (d) => {
-              const firebaseData = d.val();
-              const stream = new Readable({ objectMode: true });
-              resolve(stream);
-              if (firebaseData) {
-                const returnArr = Object.keys(firebaseData).map((i) => {
-                  const obj = {};
-                  obj[i] = firebaseData.val()[i];
-                  return obj;
-                });
-                stream.push(returnArr);
-              }
-              stream.push(null);
-            }).catch(reject);
-          break;
-
-        case RtdbUow.queries.SET:
-          if (!data) {
-            reject(new Error('opts.data must be provided'));
-            return;
+      this.db.ref(reference)
+        .once('value', (d) => {
+          const firebaseData = d.val();
+          const stream = new Readable({ objectMode: true });
+          resolve(stream);
+          if (firebaseData) {
+            const result = Object
+              .entries(firebaseData)
+              .map((pair) => {
+                const r = {};
+                [, r[pair[0]]] = pair;
+                return r;
+              });
+            stream.push(result);
           }
-          this.db.ref(reference)
-            .transaction(() => data, (error, committed, snapshot) => {
-              if (error) {
-                reject(error);
-              } else {
-                const returnObject = {};
-                returnObject[snapshot.key] = snapshot.val();
-                resolve(returnObject);
-              }
-            }, true)
-            .catch(reject);
-          break;
-
-        case RtdbUow.queries.REF:
-          resolve(this.db.ref(reference).toString());
-          break;
-
-        case RtdbUow.queries.COUNT:
-          this.db.ref(reference)
-            .on('child_added', () => {
-              count += 1;
-            });
-          this.db.ref(reference)
-            .once('value', () => {
-              resolve(count);
-            });
-          break;
-        default:
-          reject(new Error('Illegal query'));
-          break;
-      }
+          stream.push(null);
+        })
+        .catch(reject);
     });
   }
+
+  _count(reference) {
+    return new Promise((resolve) => {
+      let count = 0;
+      this.db.ref(reference)
+        .on('child_added', () => {
+          count += 1;
+        });
+      this.db.ref(reference)
+        .once('value', () => {
+          resolve(count);
+        });
+    });
+  }
+
   complete() {
     return Promise.resolve();
+  }
+
+  _set(data, reference) {
+    return new Promise((resolve, reject) => {
+      if (!data) {
+        reject(new Error('opts.data must be provided'));
+        return;
+      }
+      this.db.ref(reference)
+        .transaction(() => data, (error, committed, snapshot) => {
+          if (error) {
+            reject(error);
+          } else {
+            const returnObject = {};
+            returnObject[snapshot.key] = snapshot.val();
+            resolve(returnObject);
+          }
+        }, true)
+        .catch(reject);
+    });
   }
 };
 

@@ -2,9 +2,9 @@ const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 const uuid = require('uuid/v4');
 
-const preRegisteredSchema = require('../assets/database/schemas')('preRegisteredSchema');
+const preRegisteredSchema = require('../assets/schemas/load-schemas')('preRegisteredSchema');
 
-const chance = new Chance(new Date().getTime());
+const chance = new Chance();
 
 const TABLE_NAME = 'PRE_REGISTRATION';
 const COLUMN_NAME = 'uid';

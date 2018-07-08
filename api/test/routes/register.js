@@ -10,7 +10,9 @@ const firebase = require('firebase');
 const util = require('util');
 require('../test_helper')();
 
-const chance = new Chance(123);
+const chance = new Chance();
+const standardAccessUid = 'CgnrzbSsqDZru1KbhTLI5AUdhZB2';
+
 
 const sqlOptions = require('../../assets/constants/constants').sqlConnection;
 
@@ -24,17 +26,6 @@ async function connect() {
     }
   });
 }
-
-// // Initialize Firebase
-// const config = {
-//   apiKey: 'AIzaSyCpvAPdiIcqKV_NTyt6DZgDUNyjmA6kwzU',
-//   authDomain: 'hackpsu18.firebaseapp.com',
-//   databaseURL: 'https://hackpsu18-test.firebaseio.com',
-//   projectId: 'hackpsu18',
-//   storageBucket: 'hackpsu18.appspot.com',
-//   messagingSenderId: '1002677206617',
-// };
-// firebase.initializeApp(config);
 
 connect();
 
@@ -109,7 +100,7 @@ function generateGoodRegistration() {
     eighteenBeforeEvent: true,
     mlhcoc: true,
     mlhdcp: true,
-    uid: 'CgnrzbSsqDZru1KbhTLI5AUdhZB2',
+    uid: standardAccessUid,
     referral: 'Facebook',
     project: chance.sentence(),
     expectations: chance.sentence(),
@@ -198,18 +189,19 @@ describe('registration tests', () => {
 
   // Scrub DB
   before((done) => {
-    const query0 = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    const rsvpDeleteQuery = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from('RSVP')
-      .where('user_id = ?', 'CgnrzbSsqDZru1KbhTLI5AUdhZB2')
+      .where('user_id = ?', standardAccessUid)
       .toParam();
-    query0.text = query0.text.concat(';');
-    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from('REGISTRATION')
-      .where('uid = ?', 'CgnrzbSsqDZru1KbhTLI5AUdhZB2')
-      .toParam();
-    query.text = ''.concat(query0.text).concat(query.text.concat(';'));
-    query.values.push(query0.values[0]);
-    connection.query(query.text, query.values, (err) => {
+    rsvpDeleteQuery.text = rsvpDeleteQuery.text.concat(';');
+    const registrationDeleteQuery =
+      squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+        .from('REGISTRATION')
+        .where('uid = ?', standardAccessUid)
+        .toParam();
+    registrationDeleteQuery.text = ''.concat(rsvpDeleteQuery.text).concat(registrationDeleteQuery.text.concat(';'));
+    registrationDeleteQuery.values.push(rsvpDeleteQuery.values[0]);
+    connection.query(registrationDeleteQuery.text, registrationDeleteQuery.values, (err) => {
       if (err) {
         done(err);
       } else {

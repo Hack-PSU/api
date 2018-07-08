@@ -3,9 +3,9 @@ const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 const squel = require('squel');
 
-const registeredUserSchema = require('../assets/database/schemas')('registeredUserSchema');
+const registeredUserSchema = require('../assets/schemas/load-schemas')('registeredUserSchema');
 
-const chance = new Chance(new Date().getTime());
+const chance = new Chance();
 
 const TABLE_NAME = 'REGISTRATION';
 const COLUMN_NAME = 'uid';

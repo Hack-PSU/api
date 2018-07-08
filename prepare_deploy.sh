@@ -10,7 +10,7 @@ trap '[ "$?" -ne 77 ] || exit 77' ERR
 # return 1 if global command line program installed, else 0
 # example
 # echo "node: $(program_is_installed node)"
-function program_is_installed {
+program_is_installed (){
   # set to 1 initially
   local return_=1
   # set to 0 if not found
@@ -22,7 +22,7 @@ function program_is_installed {
 # return 1 if local npm package is installed at ./node_modules, else 0
 # example
 # echo "gruntacular : $(npm_package_is_installed gruntacular)"
-function npm_package_is_installed {
+npm_package_is_installed (){
   # set to 1 initially
   local return_=1
   # set to 0 if not found
@@ -33,7 +33,7 @@ function npm_package_is_installed {
 # display a message in red with a cross by it
 # example
 # echo echo_fail "No"
-function echo_fail {
+echo_fail (){
   # echo first argument in red
   printf "\e[31m✘ ${1}"
   # reset colours back to normal
@@ -44,7 +44,7 @@ function echo_fail {
 # display a message in green with a tick by it
 # example
 # echo echo_fail "Yes"
-function echo_pass {
+echo_pass (){
   # echo first argument in green
   printf "\e[32m✔ ${1}"
   # reset colours back to normal
@@ -56,7 +56,7 @@ function echo_pass {
 # example
 # echo echo_if 1 "Passed"
 # echo echo_if 0 "Failed"
-function continue_if {
+continue_if (){
   if [ $1 == 1 ]; then
     echo_pass $2
   else
@@ -103,18 +103,9 @@ echo "Running decryption"
 for file in "${!files[@]}";
 do
    nodecipher decrypt "./api/$file" "./api/${files[$file]}" -p ${PKEY_PASS} -a aes-256-cbc-hmac-sha256
+    if [ $? -ne 0 ]; then
+        echo "Decryption failed for ./api/${files[$file]}"
+        exit 1;
+    fi
 done
-#
-#nodecipher decrypt ./api/${file_name} "./api/.env" -p ${PKEY_PASS} -a aes-256-cbc-hmac-sha256
-#if [ $? -ne 0 ]; then
-#    echo "Decryption failed for ./api/${file_name}"
-#    exit 1;
-#fi
-#
-#nodecipher decrypt ./api/${config_file_name} "./api/$(echo $config_file_name | sed -e \"/\.aes$//\")" -p ${PKEY_PASS} -a aes-256-cbc-hmac-sha256
-#nodecipher decrypt ./api/privatekey.aes "./api/config.json" -p ${PKEY_PASS} -a aes-256-cbc-hmac-sha256
-#if [ $? -ne 0 ]; then
-#    echo "Decryption failed for ./api/privatekey.aes"
-#    exit 1;
-#fi
 echo "Successfully decrypted"

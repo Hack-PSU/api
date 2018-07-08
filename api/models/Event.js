@@ -3,8 +3,8 @@ const Chance = require('chance');
 const uuidv4 = require('uuid/v4');
 const squel = require('squel');
 
-const chance = new Chance(123);
-const eventSchema = require('../assets/database/schemas')('eventSchema');
+const chance = new Chance();
+const eventSchema = require('../assets/schemas/load-schemas')('eventSchema');
 
 const TABLE_NAME = 'EVENTS';
 module.exports = TABLE_NAME;

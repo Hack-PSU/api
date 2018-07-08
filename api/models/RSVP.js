@@ -1,7 +1,7 @@
 const BaseObject = require('./BaseObject');
 const squel = require('squel');
 
-const rsvpSchema = require('../assets/database/schemas')('rsvpSchema');
+const rsvpSchema = require('../assets/schemas/load-schemas')('rsvpSchema');
 
 const TABLE_NAME = 'RSVP';
 const COLUMN_NAME = 'user_id';

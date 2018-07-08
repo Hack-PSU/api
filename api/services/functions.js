@@ -3,6 +3,8 @@
 const ses = require('node-ses');
 const validator = require('email-validator');
 const request = require('request');
+const Stringify = require('streaming-json-stringify');
+const { promisify } = require('util');
 
 const { emailKey, pushNotifKey } = require('../assets/constants/constants');
 
@@ -36,13 +38,14 @@ module.exports.emailSubstitute = function (html, name, substitutions) {
  * @return {Promise<any>}
  */
 module.exports.sendEmail = function (data) {
-  return new Promise((resolve, reject) => {
-    client.sendEmail(data, (err) => {
-      if (err) {
-        reject(err);
-      } else resolve(data);
-    });
-  });
+  return promisify(client.sendemail)(data);
+  // return new Promise((resolve, reject) => {
+  //   client.sendEmail(data, (err) => {
+  //     if (err) {
+  //       reject(err);
+  //     } else resolve(data);
+  //   });
+  // });
 };
 
 
@@ -65,15 +68,12 @@ module.exports.sendEmail = function (data) {
  */
 module.exports.createEmailRequest = function (email, htmlContent, subject, fromEmail) {
   const emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
-  const data = {
+  return {
     to: email,
     from: emailAddress,
     subject,
     message: htmlContent,
     replyTo: emailAddress,
-  };
-  return {
-    data,
   };
 };
 
@@ -115,9 +115,17 @@ module.exports.sendNotification = function (notificationTitle, notificationBody)
   });
 };
 
-module.exports.errorHandler500 = function (err, handler) {
+const errorHandler500 = function (err, handler) {
   const error = new Error();
   error.status = 500;
   error.body = err.message || err;
   handler(error);
+};
+module.exports.errorHandler500 = errorHandler500;
+
+module.exports.streamHandler = function (stream, res, next) {
+  stream.pipe(Stringify())
+    .pipe(res.type('json').status(200))
+    .on('end', res.end)
+    .on('error', err => errorHandler500(err, next));
 };

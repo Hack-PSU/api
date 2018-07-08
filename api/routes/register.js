@@ -87,7 +87,7 @@ function checkAuthentication(req, res, next) {
  * @param next
  */
 function storeIP(req, res, next) {
-  if (process.env.APP_ENV !== 'prod') {
+  if (process.env.NODE_ENV !== 'production') {
     return next();
   }
   database.storeIP(req.uow, req.headers.http_x_forwarded_for, req.headers['user-agent'])

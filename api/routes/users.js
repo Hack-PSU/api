@@ -1,17 +1,17 @@
-/* eslint-disable consistent-return,no-use-before-define,no-param-reassign,max-len,no-new */
+/* eslint-disable consistent-return,no-use-before-define,no-param-reassign,no-new */
 const express = require('express');
 const path = require('path');
 const Ajv = require('ajv');
-const Stringify = require('streaming-json-stringify');
-
+const _ = require('lodash');
 const {
-  errorHandler500, emailSubstitute, createEmailRequest, sendEmail,
+  errorHandler500, emailSubstitute, createEmailRequest, sendEmail, streamHandler,
 } = require('../services/functions');
 const authenticator = require('../services/auth');
 const StorageService = require('../services/storage_service');
 const { STORAGE_TYPES, StorageFactory } = require('../services/factories/storage_factory');
 const constants = require('../assets/constants/constants');
-const { projectRegistrationSchema, travelReimbursementSchema } = require('../assets/database/schemas');
+const { projectRegistrationSchema, travelReimbursementSchema } =
+  require('../assets/schemas/load-schemas')(['projectRegistrationSchema', 'travelReimbursementSchema']);
 const TravelReimbursement = require('../models/TravelReimbursement');
 const Registration = require('../models/Registration');
 const Project = require('../models/Project');
@@ -88,25 +88,6 @@ function adjustReimbursementPrice(price, groupMembers) {
   return price;
 }
 
-String.prototype.padStart = String.prototype.padStart ?
-  String.prototype.padStart :
-  function (targetLength, padString) {
-    targetLength = Math.floor(targetLength) || 0;
-    if (targetLength < this.length) return String(this);
-    padString = padString ? String(padString) : ' ';
-    let pad = '';
-    const len = targetLength - this.length;
-    let i = 0;
-    while (pad.length < len) {
-      if (!padString[i]) {
-        i = 0;
-      }
-      pad += padString[i];
-      i++;
-    }
-    return pad + String(this).slice(0);
-  };
-
 /**
  *
  * @param fullName
@@ -165,7 +146,11 @@ router.get('/', (req, res, next) => {
     error.body = { error: 'Could not retrieve user information' };
     return next(error);
   }
-  res.status(200).send({ admin: res.locals.user.admin, privilege: res.locals.user.privilege });
+  res.status(200)
+    .send({
+      admin: res.locals.user.admin,
+      privilege: res.locals.user.privilege,
+    });
 });
 
 /**
@@ -188,15 +173,8 @@ router.get('/registration', (req, res, next) => {
   }
   new Registration({ uid: res.locals.user.uid }, req.uow)
     .get()
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res)
-        .on('err', err => errorHandler500(err, next))
-        .on('end', () => {
-          res.type('application/json').status(200).send();
-        });
-    }).catch(err => errorHandler500(err, next));
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -228,19 +206,21 @@ router.get('/project', (req, res, next) => {
         .on('end', () => {
           // Reduce the large number of responses that differ by
           // category name and id into a json array internally instead
-          const rJSON = info.reduce((accumulator, currentVal) => {
-            Object.keys(currentVal).forEach((k) => {
-              if (k !== 'categoryName' && k !== 'categoryID') { // If the field is going to be the same
-                accumulator[k] = currentVal[k];
-              } else if (accumulator[k]) { // Else accumulate it in an array
-                accumulator[k].push(currentVal[k]);
-              } else {
-                accumulator[k] = [currentVal[k]];
-              }
-            });
+          const response = info.reduce((accumulator, currentVal) => {
+            Object.keys(currentVal)
+              .forEach((k) => {
+                if (k !== 'categoryName' && k !== 'categoryID') { // If the field is going to be the same
+                  accumulator[k] = currentVal[k];
+                } else if (accumulator[k]) { // Else accumulate it in an array
+                  accumulator[k].push(currentVal[k]);
+                } else {
+                  accumulator[k] = [currentVal[k]];
+                }
+              });
             return accumulator;
           }, {});
-          res.status(200).send(rJSON);
+          res.status(200)
+            .send(response);
         });
     });
 });
@@ -275,7 +255,10 @@ router.post('/rsvp', (req, res, next) => {
   }
   // RSVP login starts here
   const rsvp = new RSVP(
-    { user_uid: res.locals.user.uid, rsvp_status: req.body.rsvp === 'true' },
+    {
+      user_uid: res.locals.user.uid,
+      rsvp_status: req.body.rsvp === 'true',
+    },
     req.uow,
   );
   let email = null;
@@ -286,7 +269,8 @@ router.post('/rsvp', (req, res, next) => {
       if (req.body.rsvp === 'true') {
         return new Registration({ uid: res.locals.user.uid }, req.uow).get();
       }
-      return res.status(200).send({ message: 'success' });
+      return res.status(200)
+        .send({ message: 'success' });
     })
     .then((stream) => {
       // Get user data.
@@ -306,7 +290,7 @@ router.post('/rsvp', (req, res, next) => {
       pin = user.pin || 78;
       return emailSubstitute(constants.RSVPEmailHtml.text, name, {
         name,
-        pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
+        pin: _.padStart(pin.toString(), 4, '0'),
       });
     })
     .then((subbedHTML) => {
@@ -314,10 +298,11 @@ router.post('/rsvp', (req, res, next) => {
       return sendEmail(request.data);
     })
     .then(() => {
-      res.status(200).send({
-        message: 'success',
-        pin: parseInt(pin, 10).toString(14).padStart(3, '0'),
-      });
+      res.status(200)
+        .send({
+          message: 'success',
+          pin: _.padStart(pin.toString(), 4, '0'),
+        });
     })
     .catch(err => errorHandler500(err, next));
 });
@@ -344,9 +329,14 @@ router.get('/rsvp', (req, res, next) => {
   }
   new RSVP({ uid: res.locals.user.uid })
     .get()
-    .then((status) => {
-      res.status(200).send(status || { rsvp_status: false });
-    }).catch(err => errorHandler500(err, next));
+    .then((stream) => {
+      stream
+        .on('data', status => res.status(200)
+          .send(status || { rsvp_status: false }))
+        .on('error', err => errorHandler500(err, next))
+        .on('end', res.end);
+    })
+    .catch(err => errorHandler500(err, next));
 });
 
 
@@ -379,20 +369,22 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
     error.status = 400;
     return next(error);
   }
-  req.body.reimbursementAmount = adjustReimbursementPrice(req.body.reimbursementAmount, req.body.groupMembers);
+  req.body.reimbursementAmount =
+    adjustReimbursementPrice(req.body.reimbursementAmount, req.body.groupMembers);
   req.body.receiptURIs = req.files.map(file =>
     `https://s3.${constants.s3Connection.region}
     .amazonaws.com/${constants.s3Connection.s3TravelReimbursementBucket}
-    /${file.key}`).join(',');
+    /${file.key}`)
+    .join(',');
   new TravelReimbursement(Object.assign(req.body, { uid: res.locals.user.uid }))
     .add()
     .then(() => {
-      res.status(200).send({
-        result: `Travel reimbursement request submitted. Final amount: $${
-          req.body.reimbursementAmount
-        }. This amount is based on the number of people in your party.`,
-      });
-    }).catch(error => errorHandler500(error, next));
+      res.status(200)
+        .send({
+          amount: req.body.reimbursementAmount,
+        });
+    })
+    .catch(error => errorHandler500(error, next));
 });
 
 /**
@@ -444,10 +436,10 @@ router.post('/project', (req, res, next) => {
       next(error);
     })
     .then((records) => {
-      const uids = records.map(r => r.uid);
+      const uids = new Set(records.map(r => r.uid));
       // uids contains an array of uids
-      if (!uids.includes(res.locals.user.uid)) {
-        uids.push(res.locals.user.uid);
+      if (!uids.has(res.locals.user.uid)) {
+        uids.add(res.locals.user.uid);
       }
       const { categories } = req.body;
       if (!categories ||
@@ -459,21 +451,24 @@ router.post('/project', (req, res, next) => {
         return next(error);
       }
       // Categories array is valid
-      project = new Project({ projectName: req.body.projectName, team: uids, categories });
+      project = new Project({
+        projectName: req.body.projectName,
+        team: Array.from(uids),
+        categories,
+      });
       return project
         .add();
     })
     .then((result) => {
-      if (process.env.APP_ENV === 'test') {
+      if (process.env.APP_ENV === 'debug') {
         console.debug(result);
       }
       // Project ID returned here.
       // Assign a table now
       return project.assignTable();
     })
-    .then((result1) => {
-      res.status(200).send(result1);
-    })
+    .then(result => res.status(200)
+      .send(result))
     .catch(err => errorHandler500(err, next));
 });
 
@@ -489,17 +484,8 @@ router.post('/project', (req, res, next) => {
  */
 router.get('/event_categories', (req, res, next) => {
   Category.getAll()
-    .then((stream) => {
-      stream.pipe(res);
-      stream.on('err', () => {
-        const error = new Error();
-        error.status = 500;
-        error.body = { error: 'Could not retrieve category information' };
-        next(error);
-      }).on('end', () => {
-        res.status(200).send();
-      });
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 module.exports = router;

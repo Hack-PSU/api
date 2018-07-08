@@ -8,28 +8,18 @@ const server = require('../../app');
 const RSVP = require('../../models/RSVP');
 const { UowFactory } = require('../../services/factories/uow_factory');
 
-const chance = new Chance(123);
+const chance = new Chance();
 
 const sqlOptions = require('../../assets/constants/constants').sqlConnection;
 
 const connection = sql.createConnection(sqlOptions);
+const standardAccessUid = 'CgnrzbSsqDZru1KbhTLI5AUdhZB2';
 
 connection.connect((err) => {
   if (err) {
     console.error(err);
   }
 });
-
-// // Initialize Firebase
-// const config = {
-//   apiKey: 'AIzaSyCpvAPdiIcqKV_NTyt6DZgDUNyjmA6kwzU',
-//   authDomain: 'hackpsu18.firebaseapp.com',
-//   databaseURL: 'https://hackpsu18-test.firebaseio.com',
-//   projectId: 'hackpsu18',
-//   storageBucket: 'hackpsu18.appspot.com',
-//   messagingSenderId: '1002677206617',
-// };
-// firebase.initializeApp(config);
 
 const should = chai.should();
 
@@ -45,12 +35,15 @@ let listener = null;
  */
 function login(email, password) {
   return new Promise((resolve, reject) => {
-    firebase.auth().signInWithEmailAndPassword(email, password).catch(err => reject(err));
-    listener = firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        resolve(user);
-      }
-    });
+    firebase.auth()
+      .signInWithEmailAndPassword(email, password)
+      .catch(err => reject(err));
+    listener = firebase.auth()
+      .onAuthStateChanged((user) => {
+        if (user) {
+          resolve(user);
+        }
+      });
   });
 }
 
@@ -76,7 +69,8 @@ function generateGoodRegistration() {
     firstName: chance.first(),
     lastName: chance.last(),
     email: chance.email(),
-    gender: chance.gender().toLowerCase(),
+    gender: chance.gender()
+      .toLowerCase(),
     shirtSize: 'M',
     dietaryRestriction: 'vegetarian',
     university: 'Georgetown University',
@@ -90,7 +84,7 @@ function generateGoodRegistration() {
     eighteenBeforeEvent: true,
     mlhcoc: true,
     mlhdcp: true,
-    uid: 'WaPm1vcEVvaw0tbCbrBHs2e891s2',
+    uid: standardAccessUid,
     referral: 'Facebook',
     project: chance.sentence(),
     expectations: chance.sentence(),
@@ -105,20 +99,19 @@ describe('get registration', () => {
   before((done) => {
     generatedRegistration = generateGoodRegistration();
     loginRegular()
-      .then((user) => {
-        user.getIdToken(true)
-          .then((decodedIdToken) => {
-            idToken = decodedIdToken;
-            chai.request(server)
-              .post('/v1/register')
-              .set('idtoken', idToken)
-              .type('form')
-              .send(generatedRegistration)
-              .end((err, res) => {
-                done();
-              });
-          }).catch(err => done(err));
-      }).catch(err => done(err));
+      .then(user => user.getIdToken(true))
+      .then((decodedIdToken) => {
+        idToken = decodedIdToken;
+        chai.request(server)
+          .post('/v1/register')
+          .set('idtoken', idToken)
+          .type('form')
+          .send(generatedRegistration)
+          .end((err, res) => {
+            done();
+          });
+      })
+      .catch(err => done(err));
   });
 
   describe('failure', () => {
@@ -147,7 +140,8 @@ describe('get registration', () => {
   });
 
   after((done) => {
-    firebase.auth().signOut();
+    firebase.auth()
+      .signOut();
     done();
   });
 });
@@ -164,23 +158,24 @@ describe('rsvp user', () => {
     loginRegular()
       .then((user) => {
         loggedInUser = user;
-        user.getIdToken(true)
-          .then((decodedIdToken) => {
-            idToken = decodedIdToken;
-            const generatedRegistration = generateGoodRegistration();
-            generatedRegistration.email = 'test@email.com';
-            generatedRegistration.uid = user.uid;
-            generatedRegistration.pin = 78;
-            chai.request(server)
-              .post('/v1/register')
-              .set('idtoken', idToken)
-              .type('form')
-              .send(generatedRegistration)
-              .end(() => {
-                done();
-              });
-          }).catch(err => done(err));
-      }).catch(err => done(err));
+        return user.getIdToken(true);
+      })
+      .then((decodedIdToken) => {
+        idToken = decodedIdToken;
+        const generatedRegistration = generateGoodRegistration();
+        generatedRegistration.email = 'test@email.com';
+        generatedRegistration.uid = user.uid;
+        generatedRegistration.pin = 78;
+        chai.request(server)
+          .post('/v1/register')
+          .set('idtoken', idToken)
+          .type('form')
+          .send(generatedRegistration)
+          .end(() => {
+            done();
+          });
+      })
+      .catch(done);
   });
 
   describe('unauthorized failure', () => {
@@ -212,15 +207,13 @@ describe('rsvp user', () => {
     before((done) => {
       // Remove RSVP from db if exists
       UowFactory.create()
-        .then((uow) => {
-          new RSVP({ user_uid: loggedInUser.uid }, uow)
-            .delete()
-            .then(() => {
-              uow.complete();
-              done();
-            })
-            .catch(done);
-        });
+        .then(uow => new RSVP({ user_uid: loggedInUser.uid }, uow)
+          .delete())
+        .then(() => {
+          uow.complete();
+          done();
+        })
+        .catch(done);
     });
     it('it should send send an email containing their pin', (done) => {
       chai.request(server)
@@ -236,7 +229,8 @@ describe('rsvp user', () => {
   });
 
   after((done) => {
-    firebase.auth().signOut();
+    firebase.auth()
+      .signOut();
     done();
   });
 });

@@ -4,13 +4,15 @@ const Ajv = require('ajv');
 const transform = require('parallel-transform');
 const express = require('express');
 const Stringify = require('streaming-json-stringify');
-const { emailObjectSchema } = require('../assets/database/schemas');
+const _ = require('lodash');
+const emailObjectSchema = require('../assets/schemas/load-schemas')('emailObjectSchema');
 const authenticator = require('../services/auth');
 const database = require('../services/database');
 const {
   errorHandler500,
   emailSubstitute,
   createEmailRequest,
+  streamHandler,
   sendEmail,
 } = require('../services/functions');
 const Registration = require('../models/Registration');
@@ -154,7 +156,8 @@ function verifyACL(level) {
 /** ********************** ROUTES ******************************** */
 
 router.get('/', (req, res) => {
-  res.status(200).send({ response: 'authorized' });
+  res.status(200)
+    .send({ response: 'authorized' });
 });
 
 /**
@@ -190,10 +193,14 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
     limit: res.locals.offset,
   })
     .then((stream) => {
-      res.status(200).type('application/json');
+      res.status(200)
+        .type('application/json');
       stream.pipe(transform(
         100,
-        { objectMode: true, ordered: false },
+        {
+          objectMode: true,
+          ordered: false
+        },
         (data, callback) => {
           authenticator.getUserData(data.uid)
             .then((user) => {
@@ -208,10 +215,8 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
       ))
         .on('error', err => errorHandler500(err, next))
         .pipe(Stringify())
-        .pipe(res)
-        .on('end', () => {
-          res.end();
-        });
+        .pipe(res.type('json'))
+        .on('end', res.end);
     })
     .catch(err => errorHandler500(err, next));
 });
@@ -245,13 +250,9 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
   PreRegistration.getAll(req.uow, {
     count: res.locals.limit,
     limit: res.locals.offset,
-  }).then((stream) => {
-    stream
-      .pipe(Stringify())
-      .pipe(res.type('json').status(200))
-      .on('error', err => errorHandler500(err, next))
-      .on('end', res.end);
-  }).catch(err => errorHandler500(err, next));
+  })
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 
@@ -276,9 +277,15 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
     error.body = { error: 'request query must be set and a valid email' };
     return next(error);
   }
-  authenticator.getUserId(req.query.email).then((user) => {
-    res.status(200).send({ uid: user.uid, displayName: user.displayName });
-  }).catch(error => errorHandler500(error, next));
+  authenticator.getUserId(req.query.email)
+    .then((user) => {
+      res.status(200)
+        .send({
+          uid: user.uid,
+          displayName: user.displayName
+        });
+    })
+    .catch(error => errorHandler500(error, next));
 });
 
 /**
@@ -299,12 +306,9 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
   RSVP.getAll(req.uow, {
     count: res.locals.limit,
     limit: res.locals.offset,
-  }).then((stream) => {
-    stream.pipe(Stringify())
-      .pipe(res.type('json').status(200))
-      .on('end', res.end)
-      .on('error', err => errorHandler500(err, next));
-  });
+  })
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -334,7 +338,8 @@ router.post('/update_registration', verifyACL(3), (req, res, next) => {
   }
   updatedRegistration
     .update(req.body.registration.uid, 'uid')
-    .then(() => res.status(200).send({ status: 'Success' }))
+    .then(() => res.status(200)
+      .send({ status: 'Success' }))
     .catch((err) => {
       const error = new Error();
       error.status = 400;
@@ -344,7 +349,7 @@ router.post('/update_registration', verifyACL(3), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/get_attendance_list retrieve the list of people who attended
+ * @api {get} /admin/attendance_list retrieve the list of people who attended
  * @apiVersion 0.3.2
  * @apiName Retrieve Attendance List
  * @apiGroup Admin
@@ -355,12 +360,8 @@ router.post('/update_registration', verifyACL(3), (req, res, next) => {
  */
 router.get('/attendance_list', verifyACL(2), (req, res, next) => {
   Attendance.getAll(req.uow)
-    .then((stream) => {
-      stream.pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('end', res.end)
-        .on('error', err => errorHandler500(err, next));
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 // /**
@@ -421,7 +422,8 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
   }
   authenticator.elevate(req.body.uid, privilege)
     .then(() => {
-      res.status(200).send({ status: 'Success' });
+      res.status(200)
+        .send({ status: 'Success' });
     })
     .catch((err) => {
       const error = new Error();
@@ -443,13 +445,8 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  */
 router.get('/location_list', verifyACL(3), (req, res, next) => {
   Location.getAll(req.uow)
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('error', err => errorHandler500(err, next))
-        .on('end', res.end);
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -476,7 +473,8 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
   const location = new Location({ location_name: req.body.locationName }, req.uow);
   location.add()
     .then(() => {
-      res.status(200).send({ status: 'Success' });
+      res.status(200)
+        .send({ status: 'Success' });
     })
     .catch(errorHandler500);
 });
@@ -513,7 +511,8 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
   }, req.uow);
   location.update(req.body.uid, 'uid')
     .then(() => {
-      res.status(200).send({ status: 'Success' });
+      res.status(200)
+        .send({ status: 'Success' });
     })
     .catch((err) => {
       const error = new Error();
@@ -547,7 +546,8 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
   const location = new Location({ uid: req.body.uid }, req.uow);
   location.delete(req.body.uid)
     .then(() => {
-      res.status(200).send({ status: 'Success' });
+      res.status(200)
+        .send({ status: 'Success' });
     })
     .catch(err => errorHandler500(err, next));
 });
@@ -566,13 +566,8 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
 
 router.get('/extra_credit_list', verifyACL(2), (req, res, next) => {
   database.getExtraCreditClassList(req.uow)
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('error', err => errorHandler500(err, next))
-        .on('end', res.end);
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -600,8 +595,10 @@ router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
   }
   database.assignExtraCredit(req.uow, req.body.uid, req.body.cid)
     .then(() => {
-      res.status(200).send({ status: 'Success' });
-    }).catch(err => errorHandler500(err, next));
+      res.status(200)
+        .send({ status: 'Success' });
+    })
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -661,60 +658,63 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
   // Send all the emails
   const promises = res.locals.successArray.map(emailObject => // For each emailObject
     // Substitute HTML with name/emails and send email
-    new Promise((resolve) => {
-      emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions)
-        .then((subbedHTML) => {
-          // Generate the POST request
-          const request = createEmailRequest(
-            emailObject.email,
-            subbedHTML,
-            req.body.subject,
-            req.body.fromEmail,
-          );
-          return sendEmail(request.data);
-        })
-        .then(request =>
-          // If successful, resolve
-          resolve({ email: request.data.to, response: 'success', name: emailObject.name }))
-        .catch((error) => {
-          // Else add to the failArray for the partial HTTP success response
-          res.locals.failArray.push(Object.assign(emailObject, error));
-          resolve(null);
-        });
-    }));
-  Promise.all(promises).then((resolution) => {
-    const resolves = resolution.filter(result => result !== null);
-    if (resolves.length === 0) {
-      const error = new Error();
-      error.status = 500;
-      error.body = {
-        text: 'Emails could not be sent',
-        error: res.locals.failArray,
-      };
-      return next(error);
-    }
-    if (res.locals.failArray.length === 0) {
-      return res.status(200).send(resolves); // Full success response
-    }
-    database.addEmailsHistory(req.uow, resolves.map(successEmail => ({
-      sender: res.locals.user.uid,
-      recipient: successEmail.email,
-      email_content: req.body.html,
-      subject: req.body.subject,
-      recipient_name: successEmail.name,
-      time: new Date().getTime(),
-    })), res.locals.failArray ? res.locals.failArray.map(errorEmail => ({
-      sender: res.locals.user.uid,
-      recipient: errorEmail.email || null,
-      email_content: req.body.html || null,
-      subject: req.body.subject || null,
-      recipient_name: errorEmail.name || null,
-      time: new Date().getTime(),
-    })) : null)
-      .catch(err => console.error(err));
-    // Partial success response
-    res.status(207).send(res.locals.failArray.concat(resolves));
-  }).catch(err => console.error(err));
+    emailSubstitute(req.body.html, emailObject.name, emailObject.substitutions)
+      .then(subbedHTML =>
+        // Generate the POST request
+        sendEmail(createEmailRequest(
+          emailObject.email,
+          subbedHTML,
+          req.body.subject,
+          req.body.fromEmail,
+        )))
+      .then(request =>
+        ({
+          email: request.to,
+          response: 'success',
+          name: emailObject.name,
+        }))
+      .catch((error) => {
+        // Else add to the failArray for the partial HTTP success response
+        res.locals.failArray.push(_.assign(emailObject, error));
+        return null;
+      }));
+  Promise.all(promises)
+    .then((resolution) => {
+      const resolves = resolution.filter(result => result !== null);
+      if (resolves.length === 0) {
+        const error = new Error();
+        error.status = 500;
+        error.body = {
+          text: 'Emails could not be sent',
+          error: res.locals.failArray,
+        };
+        return next(error);
+      }
+      database.addEmailsHistory(req.uow, resolves.map(successEmail => ({
+        sender: res.locals.user.uid,
+        recipient: successEmail.email,
+        email_content: req.body.html,
+        subject: req.body.subject,
+        recipient_name: successEmail.name,
+        time: new Date().getTime(),
+      })), res.locals.failArray ? res.locals.failArray.map(errorEmail => ({
+        sender: res.locals.user.uid,
+        recipient: errorEmail.email || null,
+        email_content: req.body.html || null,
+        subject: req.body.subject || null,
+        recipient_name: errorEmail.name || null,
+        time: new Date().getTime(),
+      })) : null)
+        .catch(console.error);
+      if (res.locals.failArray.length === 0) {
+        return res.status(200)
+          .send(resolves); // Full success response
+      }
+      // Partial success response
+      res.status(207)
+        .send(res.locals.failArray.concat(resolves));
+    })
+    .catch(console.error);
 });
 
 /**
@@ -733,13 +733,8 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
  */
 router.get('/user_data', verifyACL(2), (req, res, next) => {
   database.getAllUsersList(req.uow)
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('error', err => errorHandler500(err, next))
-        .on('end', res.end); // TODO: Make this the standard whenever piping to res
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -755,13 +750,8 @@ router.get('/user_data', verifyACL(2), (req, res, next) => {
  */
 router.get('/prereg_count', verifyACL(2), (req, res, next) => {
   PreRegistration.getCount(req.uow)
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('error', err => errorHandler500(err, next))
-        .on('end', res.end);
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -777,13 +767,8 @@ router.get('/prereg_count', verifyACL(2), (req, res, next) => {
  */
 router.get('/reg_count', verifyACL(2), (req, res, next) => {
   Registration.getCount(req.uow)
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('error', err => errorHandler500(err, next))
-        .on('end', res.end);
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -799,13 +784,8 @@ router.get('/reg_count', verifyACL(2), (req, res, next) => {
  */
 router.get('/rsvp_count', verifyACL(2), (req, res, next) => {
   RSVP.getCount(req.uow)
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('error', err => errorHandler500(err, next))
-        .on('end', res.end);
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -821,13 +801,8 @@ router.get('/rsvp_count', verifyACL(2), (req, res, next) => {
  */
 router.get('/user_count', verifyACL(2), (req, res, next) => {
   database.getAllUsersCount(req.uow)
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('error', err => errorHandler500(err, next))
-        .on('end', res.end);
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -844,13 +819,8 @@ router.get('/user_count', verifyACL(2), (req, res, next) => {
 // TODO: Add test for route
 router.get('/statistics', verifyACL(2), (req, res, next) => {
   Registration.getStatsCount(req.uow)
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('error', err => errorHandler500(err, next))
-        .on('end', res.end);
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 module.exports = router;

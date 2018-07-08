@@ -46,6 +46,7 @@ app.use((req, res, next) => {
       req.uow.complete();
     }
   }
+
   res.on('finish', complete);
   res.on('close', complete);
   next();
@@ -79,13 +80,13 @@ const port = normalizePort(process.env.PORT || '5000');
 app.set('port', port);
 
 
-const whitelist = /^((https:\/\/)?((.*)\.)?hackpsu.(com|org))$/;
+const whitelist = /^((https:\/\/)?((.*)\.)?hackpsu.(com|org))|(http:\/\/localhost:?\d*)$/;
 const corsOptions = {
   origin: (origin, callback) => {
     if (whitelist.test(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // Allow all cross-origin requests for now
+      callback(null, false); // Allow all cross-origin requests for now
     }
   },
 };

@@ -8,7 +8,7 @@ const admin = require('firebase-admin');
 const Chance = require('chance');
 require('../test_helper')();
 
-const chance = new Chance(123);
+const chance = new Chance();
 
 const should = chai.should();
 

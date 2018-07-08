@@ -1,6 +1,6 @@
 const uuid = require('uuid/v4');
 const BaseObject = require('./BaseObject');
-const travelReimbursementSchema = require('../assets/database/schemas')('travelReimbursementSchema');
+const travelReimbursementSchema = require('../assets/schemas/load-schemas')('travelReimbursementSchema');
 
 const TABLE_NAME = 'TRAVEL_REIMBURSEMENT';
 module.exports = TABLE_NAME;

@@ -15,6 +15,9 @@ const router = express.Router();
  * User authentication middleware
  */
 router.use((req, res, next) => {
+  if (process.env.APP_ENV === 'debug') {
+    return next();
+  }
   if (!req.headers.idtoken) {
     const error = new Error();
     error.status = 401;

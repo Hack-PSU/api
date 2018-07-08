@@ -38,14 +38,13 @@ module.exports.emailSubstitute = function (html, name, substitutions) {
  * @return {Promise<any>}
  */
 module.exports.sendEmail = function (data) {
-  return promisify(client.sendemail)(data);
-  // return new Promise((resolve, reject) => {
-  //   client.sendEmail(data, (err) => {
-  //     if (err) {
-  //       reject(err);
-  //     } else resolve(data);
-  //   });
-  // });
+  return new Promise((resolve, reject) => {
+    client.sendEmail(data, (err) => {
+      if (err) {
+        reject(err);
+      } else resolve(data);
+    });
+  });
 };
 
 

@@ -133,7 +133,7 @@ describe('get registration', () => {
         .set('idtoken', idToken)
         .end((err, res) => {
           should.equal(err, null);
-          res.body.should.be.a('object');
+          res.body.should.be.a('array');
           done();
         });
     });
@@ -164,7 +164,7 @@ describe('rsvp user', () => {
         idToken = decodedIdToken;
         const generatedRegistration = generateGoodRegistration();
         generatedRegistration.email = 'test@email.com';
-        generatedRegistration.uid = user.uid;
+        generatedRegistration.uid = loggedInUser.uid;
         generatedRegistration.pin = 78;
         chai.request(server)
           .post('/v1/register')
@@ -204,17 +204,33 @@ describe('rsvp user', () => {
   });
 
   describe('success', () => {
-    before((done) => {
+    let uow;
+    beforeEach((done) => {
       // Remove RSVP from db if exists
       UowFactory.create()
-        .then(uow => new RSVP({ user_uid: loggedInUser.uid }, uow)
-          .delete())
+        .then((UOW) => {
+          uow = UOW;
+          return new RSVP({ user_uid: loggedInUser.uid }, uow)
+            .delete();
+        })
         .then(() => {
           uow.complete();
           done();
         })
         .catch(done);
     });
+    it('it should accept an RSVP value of false', (done) => {
+      chai.request(server)
+        .post('/v1/users/rsvp')
+        .set('idtoken', idToken)
+        .send({ rsvp: false.toString() })
+        .end((err, res) => {
+          should.equal(err, null);
+          res.should.have.status(200);
+          done();
+        });
+    });
+
     it('it should send send an email containing their pin', (done) => {
       chai.request(server)
         .post('/v1/users/rsvp')

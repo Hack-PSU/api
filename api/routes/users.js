@@ -267,42 +267,43 @@ router.post('/rsvp', (req, res, next) => {
     .then(() => {
       // Retrieve registration.
       if (req.body.rsvp === 'true') {
-        return new Registration({ uid: res.locals.user.uid }, req.uow).get();
+        return new Registration({ uid: res.locals.user.uid }, req.uow).get()
+          .then((stream) => {
+            // Get user data.
+            let user = null;
+            return new Promise((resolve, reject) => {
+              stream
+                .on('data', (data) => {
+                  [user] = data;
+                })
+                .on('err', reject)
+                .on('end', () => resolve(user));
+            });
+          })
+          .then((user) => {
+            email = user.email || '';
+            const name = user.firstname;
+            pin = user.pin || 78;
+            return emailSubstitute(constants.RSVPEmailHtml.text, name, {
+              name,
+              pin: _.padStart(pin.toString(), 4, '0'),
+            });
+          })
+          .then((subbedHTML) => {
+            const request = createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, '');
+            return sendEmail(request);
+          })
+          .then(() => {
+            res.status(200)
+              .send({
+                message: 'success',
+                pin: _.padStart(pin.toString(), 4, '0'),
+              });
+          })
+          .catch(err => errorHandler500(err, next));
       }
       return res.status(200)
         .send({ message: 'success' });
-    })
-    .then((stream) => {
-      // Get user data.
-      let user = null;
-      return new Promise((resolve, reject) => {
-        stream
-          .on('data', (data) => {
-            [user] = data;
-          })
-          .on('err', reject)
-          .on('end', () => resolve(user));
-      });
-    })
-    .then((user) => {
-      email = user.email || '';
-      const name = user.firstname;
-      pin = user.pin || 78;
-      return emailSubstitute(constants.RSVPEmailHtml.text, name, {
-        name,
-        pin: _.padStart(pin.toString(), 4, '0'),
-      });
-    })
-    .then((subbedHTML) => {
-      const request = createEmailRequest(email, subbedHTML, constants.RSVPEmailHtml.subject, '');
-      return sendEmail(request.data);
-    })
-    .then(() => {
-      res.status(200)
-        .send({
-          message: 'success',
-          pin: _.padStart(pin.toString(), 4, '0'),
-        });
     })
     .catch(err => errorHandler500(err, next));
 });

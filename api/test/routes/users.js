@@ -5,7 +5,7 @@ const firebase = require('firebase');
 const Chance = require('chance');
 require('../test_helper')();
 const server = require('../../app');
-const RSVP = require('../../models/RSVP');
+const { RSVP } = require('../../models/RSVP');
 const { UowFactory } = require('../../services/factories/uow_factory');
 
 const chance = new Chance();
@@ -89,6 +89,7 @@ function generateGoodRegistration() {
     project: chance.sentence(),
     expectations: chance.sentence(),
     veteran: true,
+    hackathon: '84ed52ff52f84591aabe151666fae240',
   };
 }
 

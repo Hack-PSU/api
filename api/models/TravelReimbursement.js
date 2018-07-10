@@ -3,9 +3,9 @@ const BaseObject = require('./BaseObject');
 const travelReimbursementSchema = require('../assets/schemas/load-schemas')('travelReimbursementSchema');
 
 const TABLE_NAME = 'TRAVEL_REIMBURSEMENT';
-module.exports = TABLE_NAME;
+module.exports.TABLE_NAME = TABLE_NAME;
 
-module.exports = class TravelReimbursement extends BaseObject {
+module.exports.TravelReimbursement = class TravelReimbursement extends BaseObject {
   constructor(data, uow) {
     super(uow, travelReimbursementSchema, TABLE_NAME);
     this.fullname = data.fullName || null;

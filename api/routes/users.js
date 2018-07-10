@@ -13,10 +13,10 @@ const constants = require('../assets/constants/constants');
 const { projectRegistrationSchema, travelReimbursementSchema } =
   require('../assets/schemas/load-schemas')(['projectRegistrationSchema', 'travelReimbursementSchema']);
 const TravelReimbursement = require('../models/TravelReimbursement');
-const Registration = require('../models/Registration');
-const Project = require('../models/Project');
-const RSVP = require('../models/RSVP');
-const Category = require('../models/Category');
+const { Registration } = require('../models/Registration');
+const { Project } = require('../models/Project');
+const { RSVP } = require('../models/RSVP');
+const { Category } = require('../models/Category');
 
 const storage = new StorageService(STORAGE_TYPES.S3);
 const router = express.Router();

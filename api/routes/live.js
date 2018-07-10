@@ -6,7 +6,7 @@ const Stringify = require('streaming-json-stringify');
 const authenticator = require('../services/auth');
 const { errorHandler500 } = require('../services/functions');
 
-const Update = require('../models/Update');
+const { Update } = require('../models/Update');
 
 const router = express.Router();
 

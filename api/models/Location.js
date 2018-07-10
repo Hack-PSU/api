@@ -5,9 +5,9 @@ const chance = new Chance();
 const locationSchema = require('../assets/schemas/load-schemas')('locationSchema');
 
 const TABLE_NAME = 'LOCATIONS';
-module.exports = TABLE_NAME;
+module.exports.TABLE_NAME = TABLE_NAME;
 
-module.exports = class Location extends BaseObject {
+module.exports.Location = class Location extends BaseObject {
   /**
    *
    * @param data

@@ -145,7 +145,10 @@ module.exports = class BaseObject {
    * Adds a new object to the appropriate table
    * @return {Promise<any>}
    */
-  add() {
+  add(opts) {
+    if (opts && opts.query && opts.query.text && opts.query.values) {
+      return this.uow.query(opts.query.text, opts.query.values);
+    }
     const validation = this.validate();
     if (!validation.result) {
       console.warn('Validation failed while adding object.');

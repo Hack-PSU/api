@@ -13,7 +13,6 @@ require('../test_helper')();
 const chance = new Chance();
 const standardAccessUid = 'CgnrzbSsqDZru1KbhTLI5AUdhZB2';
 
-
 const sqlOptions = require('../../assets/constants/constants').sqlConnection;
 
 const connection = sql.createConnection(sqlOptions);
@@ -105,6 +104,7 @@ function generateGoodRegistration() {
     project: chance.sentence(),
     expectations: chance.sentence(),
     veteran: true,
+    hackathon: '84ed52ff52f84591aabe151666fae240',
   };
 }
 
@@ -212,13 +212,12 @@ describe('registration tests', () => {
 
   beforeEach((done) => {
     loginRegular()
-      .then((user) => {
-        user.getIdToken(true)
-          .then((decodedIdToken) => {
-            idToken = decodedIdToken;
-            done();
-          }).catch(err => done(err));
-      }).catch(err => done(err));
+      .then(user => user.getIdToken(true))
+      .then((decodedIdToken) => {
+        idToken = decodedIdToken;
+        done();
+      })
+      .catch(err => done(err));
   });
 
   afterEach((done) => {

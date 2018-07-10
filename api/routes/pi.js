@@ -5,7 +5,7 @@ const Ajv = require('ajv');
 const router = express.Router();
 const database = require('../services/database');
 const { errorHandler500 } = require('../services/functions');
-const Registration = require('../models/Registration');
+const { Registration } = require('../models/Registration');
 
 
 const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/constants/constants');

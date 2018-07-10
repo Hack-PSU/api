@@ -5,9 +5,9 @@ const chance = new Chance();
 const categorySchema = require('../assets/schemas/load-schemas')('categorySchema');
 
 const TABLE_NAME = 'CATEGORY_LIST';
-module.exports = TABLE_NAME;
+module.exports.TABLE_NAME = TABLE_NAME;
 
-module.exports = class Category extends BaseObject {
+module.exports.Category = class Category extends BaseObject {
   /**
    *
    * @param data

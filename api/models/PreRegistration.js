@@ -8,9 +8,9 @@ const chance = new Chance();
 
 const TABLE_NAME = 'PRE_REGISTRATION';
 const COLUMN_NAME = 'uid';
-module.exports = TABLE_NAME;
+module.exports.TABLE_NAME = TABLE_NAME;
 
-module.exports = class PreRegistration extends BaseObject {
+module.exports.PreRegistration = class PreRegistration extends BaseObject {
   constructor(data, uow) {
     super(uow, preRegisteredSchema, TABLE_NAME);
     this.uid = data.uid || uuid().replace(/-/g, '');

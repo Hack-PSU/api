@@ -6,7 +6,7 @@ const RtdbUow = require('../services/rtdb_uow');
 
 const REFERENCE = '/updates';
 
-module.exports = class Update extends BaseObject {
+module.exports.Update = class Update extends BaseObject {
   constructor(data, uow) {
     super(uow);
     this.update_title = data.update_title || null;

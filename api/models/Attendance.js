@@ -3,9 +3,9 @@ const BaseObject = require('./BaseObject');
 
 const TABLE_NAME = 'ATTENDANCE';
 
-module.exports = TABLE_NAME;
+module.exports.TABLE_NAME = TABLE_NAME;
 
-module.exports = class Attendance extends BaseObject {
+module.exports.Attendance = class Attendance extends BaseObject {
   constructor(data, uow) {
     super(uow);
   }

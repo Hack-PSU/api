@@ -2,8 +2,8 @@
 const database = require('../services/database');
 const authenticator = require('../services/auth');
 
-const UpdateModel = require('../models/Update');
-const EventModel = require('../models/Event');
+const { Update: UpdateModel } = require('../models/Update');
+const { Event: EventModel } = require('../models/Event');
 
 const { sendNotification } = require('../services/functions');
 

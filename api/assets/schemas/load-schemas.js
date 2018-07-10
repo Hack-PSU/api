@@ -1,6 +1,17 @@
 const fs = require('fs');
 const _ = require('lodash');
 
+/**
+ * IMPORTANT: YOU SHOULD NOT HAVE TO CHANGE THIS FILE TO ADD A NEW SCHEMA!
+ * SIMPLY ADD A NEW SCHEMA JSON FILE TO THIS DIRECTORY, AND YOU SHOULD
+ * BE ABLE TO LOAD THE SCHEMAS DIRECTLY.
+ */
+
+/**
+ * Simple synchronous JSON parser.
+ * @param filename
+ * @returns {any}
+ */
 function readJsonFile(filename) {
   const filePath = `${__dirname}/${filename}`;
   if (!fs.existsSync(filePath)) {
@@ -10,7 +21,10 @@ function readJsonFile(filename) {
 }
 
 /**
- *
+ * This exported function will load a schema directly from the
+ * file system and return the schema object to the caller.
+ * This function also accepts an array of schemas to load
+ * and will return all the schemas as sub-objects.
  * @param name {String | Array} Schema(s) to load
  * @returns {Object}
  */

@@ -8,8 +8,8 @@ const { errorHandler500 } = require('../services/functions');
 const database = require('../services/database');
 const StorageService = require('../services/storage_service');
 const { STORAGE_TYPES, StorageFactory } = require('../services/factories/storage_factory');
-const Registration = require('../models/Registration');
-const PreRegistration = require('../models/PreRegistration');
+const { Registration } = require('../models/Registration');
+const { PreRegistration } = require('../models/PreRegistration');
 
 const Storage = new StorageService(STORAGE_TYPES.S3);
 

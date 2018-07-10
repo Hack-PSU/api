@@ -7,9 +7,9 @@ const chance = new Chance();
 const eventSchema = require('../assets/schemas/load-schemas')('eventSchema');
 
 const TABLE_NAME = 'EVENTS';
-module.exports = TABLE_NAME;
+module.exports.TABLE_NAME = TABLE_NAME;
 
-module.exports = class Event extends BaseObject {
+module.exports.Event = class Event extends BaseObject {
   /**
    *
    * @param data

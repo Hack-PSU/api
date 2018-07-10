@@ -15,11 +15,11 @@ const {
   streamHandler,
   sendEmail,
 } = require('../services/functions');
-const Registration = require('../models/Registration');
-const PreRegistration = require('../models/PreRegistration');
-const RSVP = require('../models/RSVP');
-const Attendance = require('../models/Attendance');
-const Location = require('../models/Location');
+const { Registration } = require('../models/Registration');
+const { PreRegistration } = require('../models/PreRegistration');
+const { RSVP } = require('../models/RSVP');
+const { Attendance } = require('../models/Attendance');
+const { Location } = require('../models/Location');
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -188,18 +188,17 @@ router.get('/', (req, res) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
+  let status = 200;
   Registration.getAll(req.uow, {
     count: res.locals.limit,
     limit: res.locals.offset,
   })
     .then((stream) => {
-      res.status(200)
-        .type('application/json');
       stream.pipe(transform(
         100,
         {
           objectMode: true,
-          ordered: false
+          ordered: false,
         },
         (data, callback) => {
           authenticator.getUserData(data.uid)
@@ -208,7 +207,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
               callback(null, data);
             })
             .catch(() => {
-              res.status(207);
+              status = 207;
               callback(null, data);
             });
         },
@@ -216,7 +215,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
         .on('error', err => errorHandler500(err, next))
         .pipe(Stringify())
         .pipe(res.type('json'))
-        .on('end', res.end);
+        .on('end', res.status(status).end);
     })
     .catch(err => errorHandler500(err, next));
 });
@@ -282,7 +281,7 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
       res.status(200)
         .send({
           uid: user.uid,
-          displayName: user.displayName
+          displayName: user.displayName,
         });
     })
     .catch(error => errorHandler500(error, next));

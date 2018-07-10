@@ -3,7 +3,7 @@ const squel = require('squel');
 
 const projectRegistrationSchema = require('../assets/schemas/load-schemas')('projectRegistrationSchema');
 
-module.exports = class Project extends BaseObject {
+module.exports.Project = class Project extends BaseObject {
   /**
    *
    * @param data

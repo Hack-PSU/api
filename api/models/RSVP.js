@@ -1,13 +1,13 @@
 const BaseObject = require('./BaseObject');
 const squel = require('squel');
-
+const { Hackathon } = require('./Hackathon');
 const rsvpSchema = require('../assets/schemas/load-schemas')('rsvpSchema');
 
 const TABLE_NAME = 'RSVP';
 const COLUMN_NAME = 'user_id';
-module.exports = TABLE_NAME;
+module.exports.TABLE_NAME = TABLE_NAME;
 
-module.exports = class RSVP extends BaseObject {
+module.exports.RSVP = class RSVP extends BaseObject {
   constructor(data, uow) {
     super(uow);
     this.user_id = data.user_uid || null;
@@ -63,6 +63,7 @@ module.exports = class RSVP extends BaseObject {
       .offset((opts && opts.startAt) || null)
       .limit((opts && opts.count) || null)
       .join('REGISTRATION', 'r', 'r.uid=rsvp.user_id')
+      .where('r.hackathon = ?', Hackathon.getActiveHackathonQuery())
       .toString()
       .concat(';');
     return uow.query(query, null, { stream: true });
@@ -75,6 +76,7 @@ module.exports = class RSVP extends BaseObject {
       .field('rsvp.*')
       .where('rsvp.user_id = ?', userUid)
       .join('REGISTRATION', 'r', 'r.uid=rsvp.user_id')
+      .where('r.hackathon = ?', Hackathon.getActiveHackathonQuery())
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query);

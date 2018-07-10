@@ -15,7 +15,7 @@ const RtdbUow = require('../services/rtdb_uow');
 const modelFiles = fs.readdirSync('./models')
   .map(a => a.replace(/\.js/g, ''))
   .filter(a => a !== 'BaseObject');
-const models = modelFiles.map(model => require(`../models/${model}`));
+const models = modelFiles.map(model => require(`../models/${model}`)[model]);
 
 chai.use(chaiStream);
 const should = chai.should();

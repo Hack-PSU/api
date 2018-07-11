@@ -22,7 +22,7 @@ const should = chai.should();
 const { expect } = chai;
 
 
-describe('Object CRUD tests', () => {
+describe('TEST: Object CRUD tests', () => {
   // Given: Uow objects.
   const uow = {};
   const uowrtdb = {};
@@ -66,9 +66,9 @@ describe('Object CRUD tests', () => {
   });
 
   models.forEach((model) => {
-    describe(`Testing ${model.name}`, () => {
-      describe(`Get all ${model.name}`, () => {
-        it(`it should get all objects of type ${model.name}`, (done) => {
+    describe(`TEST: ${model.name}`, () => {
+      describe(`TEST: Get all ${model.name}`, () => {
+        it(`gets all objects of type ${model.name}`, (done) => {
           try {
             model.getAll(model.useRTDB ? uowrtdb : uow)
               .then((result) => {
@@ -85,9 +85,9 @@ describe('Object CRUD tests', () => {
         });
       });
 
-      describe(`Add new ${model.name}`, () => {
+      describe(`TEST: Add new ${model.name}`, () => {
         let obj;
-        it('should fail validation', (done) => {
+        it('fails validation', (done) => {
           obj = new model({ }, uow);
           try {
             obj.add()
@@ -107,7 +107,7 @@ describe('Object CRUD tests', () => {
           }
         });
 
-        it(`it should add a new test ${model.name}`, (done) => {
+        it(`Adds a new ${model.name}`, (done) => {
           try {
             const m = model.generateTestData(uow);
             m.add()
@@ -126,7 +126,7 @@ describe('Object CRUD tests', () => {
         });
       });
 
-      describe(`Update existing ${model.name}`, () => {
+      describe(`TEST: Update existing ${model.name}`, () => {
         let obj;
         beforeEach(function (done) {
           try {
@@ -136,7 +136,7 @@ describe('Object CRUD tests', () => {
             this.skip();
           }
         });
-        it('should fail validation', (done) => {
+        it('fails validation', (done) => {
           obj = new model({ uid: obj.id }, uow);
           obj.update()
             .then(() => {
@@ -148,7 +148,7 @@ describe('Object CRUD tests', () => {
             });
         });
 
-        it('should update the object successfully', (done) => {
+        it('updates the object successfully', (done) => {
           obj.update()
             .then((result) => {
               should.not.equal(result, null);
@@ -167,8 +167,8 @@ describe('Object CRUD tests', () => {
         });
       });
 
-      describe(`Get count for ${model.name}`, () => {
-        it(`it should get all objects of type ${model.name}`, (done) => {
+      describe(`TEST: Get count for ${model.name}`, () => {
+        it(`gets all objects of type ${model.name}`, (done) => {
           try {
             model.getCount(model.useRTDB ? uowrtdb : uow)
               .then((result) => {
@@ -183,7 +183,7 @@ describe('Object CRUD tests', () => {
             }
           }
         });
-      })
+      });
     });
   });
 });

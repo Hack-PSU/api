@@ -1,6 +1,6 @@
 const BaseObject = require('./BaseObject');
 const Chance = require('chance');
-const uuid = require('uuid/v4');
+const uuidv4 = require('uuid/v4');
 
 const preRegisteredSchema = require('../assets/schemas/load-schemas')('preRegisteredSchema');
 
@@ -13,7 +13,7 @@ module.exports.TABLE_NAME = TABLE_NAME;
 module.exports.PreRegistration = class PreRegistration extends BaseObject {
   constructor(data, uow) {
     super(uow, preRegisteredSchema, TABLE_NAME);
-    this.uid = data.uid || uuid().replace(/-/g, '');
+    this.uid = data.uid || uuidv4().replace(/-/g, '');
     this.email = data.email || null;
   }
 

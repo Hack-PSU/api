@@ -274,7 +274,7 @@ router.post('/rsvp', (req, res, next) => {
             return new Promise((resolve, reject) => {
               stream
                 .on('data', (data) => {
-                  [user] = data;
+                  user = data;
                 })
                 .on('err', reject)
                 .on('end', () => resolve(user));

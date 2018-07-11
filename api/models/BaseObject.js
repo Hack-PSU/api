@@ -158,8 +158,10 @@ module.exports = class BaseObject {
     }
     const validation = this.validate();
     if (!validation.result) {
-      console.warn('Validation failed while adding object.');
-      console.warn(this._dbRepresentation);
+      if (process.env.APP_ENV !== 'test') {
+        console.warn('Validation failed while adding object.');
+        console.warn(this._dbRepresentation);
+      }
       return Promise.reject(new Error(validation.error));
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })

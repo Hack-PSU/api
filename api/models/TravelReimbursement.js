@@ -1,4 +1,4 @@
-const uuid = require('uuid/v4');
+const uuidv4 = require('uuid/v4');
 const BaseObject = require('./BaseObject');
 const travelReimbursementSchema = require('../assets/schemas/load-schemas')('travelReimbursementSchema');
 
@@ -14,7 +14,7 @@ module.exports.TravelReimbursement = class TravelReimbursement extends BaseObjec
     this.group_members = data.groupMembers || null;
     this.user_id = data.uid || null;
     this.receipt_uris = data.receiptURIs || null;
-    this.uid = data.uid || uuid().replace(/-/g, '');
+    this.uid = data.uid || uuidv4().replace(/-/g, '');
   }
 
   static getAll(uow, opts) {

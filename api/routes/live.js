@@ -1,11 +1,7 @@
 /* eslint-disable consistent-return */
-
 const express = require('express');
-const Stringify = require('streaming-json-stringify');
-
 const authenticator = require('../services/auth');
-const { errorHandler500 } = require('../services/functions');
-
+const { errorHandler500, streamHandler } = require('../services/functions');
 const { Update } = require('../models/Update');
 
 const router = express.Router();
@@ -47,13 +43,8 @@ router.use((req, res, next) => {
 // TODO: Add test
 router.get('/updates', (req, res, next) => {
   Update.getAll(req.rtdb)
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .pipe(res.type('json').status(200))
-        .on('error', err => errorHandler500(err, next))
-        .on('end', res.end);
-    });
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -61,10 +52,10 @@ router.get('/updates', (req, res, next) => {
  */
 // TODO: Add test
 router.post('/updates', (req, res, next) => {
-  new Update({ update_title: 'test update' }, req.rtdb).add()
-    .then((data) => {
-      res.status(200).send(data);
-    }).catch(err => errorHandler500(err, next));
+  new Update({ updateTitle: 'test update' }, req.rtdb)
+    .add()
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 /** ********** EVENTS ******** */

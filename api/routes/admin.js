@@ -188,34 +188,16 @@ router.get('/', (req, res) => {
  * @apiSuccess {Array} Array of registered hackers
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
-  let status = 200;
   Registration.getAll(req.uow, {
     count: res.locals.limit,
     limit: res.locals.offset,
   })
     .then((stream) => {
-      stream.pipe(transform(
-        100,
-        {
-          objectMode: true,
-          ordered: false,
-        },
-        (data, callback) => {
-          authenticator.getUserData(data.uid)
-            .then((user) => {
-              data.sign_up_time = new Date(user.metadata.creationTime).getTime();
-              callback(null, data);
-            })
-            .catch(() => {
-              status = 207;
-              callback(null, data);
-            });
-        },
-      ))
-        .on('error', err => errorHandler500(err, next))
+      stream
         .pipe(Stringify())
+        .on('error', err => errorHandler500(err, next))
         .pipe(res.type('json'))
-        .on('end', res.status(status).end);
+        .on('end', res.status(200).end);
     })
     .catch(err => errorHandler500(err, next));
 });
@@ -316,7 +298,7 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
  * @apiName Update Registration
  * @apiGroup Admin
  * @apiPermission Exec
- *
+ * @apiParam {Object} registration The updated registration object.
  * @apiUse AuthArgumentRequired
  */
 router.post('/update_registration', verifyACL(3), (req, res, next) => {
@@ -469,7 +451,7 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
     error.body = 'Require a name for the location';
     return next(error);
   }
-  const location = new Location({ location_name: req.body.locationName }, req.uow);
+  const location = new Location({ locationName: req.body.locationName }, req.uow);
   location.add()
     .then(() => {
       res.status(200)
@@ -487,7 +469,7 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
  * @apiPermission Exec
  *
  * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
- * @apiParam {String} name - the new name that is being updated with the name associated with the uid
+ * @apiParam {String} locationName - the new name that is being updated with the name associated with the uid
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
@@ -504,21 +486,13 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
     error.body = 'Require the uid and/or name for the location';
     return next(error);
   }
-  const location = new Location({
-    uid: req.body.uid,
-    location_name: req.body.location_name,
-  }, req.uow);
+  const location = new Location(req.body, req.uow);
   location.update(req.body.uid, 'uid')
     .then(() => {
       res.status(200)
         .send({ status: 'Success' });
     })
-    .catch((err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    });
+    .catch(err => errorHandler500(err, next));
 });
 
 /**

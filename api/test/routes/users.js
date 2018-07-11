@@ -211,7 +211,7 @@ describe('rsvp user', () => {
       UowFactory.create()
         .then((UOW) => {
           uow = UOW;
-          return new RSVP({ user_uid: loggedInUser.uid }, uow)
+          return new RSVP({ userUID: loggedInUser.uid }, uow)
             .delete();
         })
         .then(() => {

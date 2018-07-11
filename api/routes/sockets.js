@@ -143,12 +143,12 @@ module.exports = (io) => {
      * @apiGroup Websocket
      * @apiPermission Team Member
      *
-     * @apiParam {string} event_location UID of the location that the event takes place at
-     * @apiParam {number} event_start_time The epoch start time of the event
-     * @apiParam {number} event_end_time The epoch end time of the event
-     * @apiParam {string} event_title Title of the event
-     * @apiParam {string} event_description Description of the event
-     * @apiParam {enum} event_type The type of event. Possible types are: 'food', 'workshop', 'activity'
+     * @apiParam {string} eventLocation UID of the location that the event takes place at
+     * @apiParam {number} eventStartTime The epoch start time of the event
+     * @apiParam {number} eventEndTime The epoch end time of the event
+     * @apiParam {string} eventTitle Title of the event
+     * @apiParam {string} eventDescription Description of the event
+     * @apiParam {enum} eventType The type of event. Possible types are: 'food', 'workshop', 'activity'
      * @apiUse AuthArgumentRequired
      * @apiSuccess {Event} broadcasted on socket room 'event'
      *

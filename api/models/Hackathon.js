@@ -29,7 +29,7 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
     this.name = data.name || '';
     this.start_time = data.startTime || new Date().getTime();
     this.end_time = data.endTime || null;
-    this.base_pin = data.base_pin || null;
+    this.base_pin = data.basePin || null;
   }
 
   get schema() {

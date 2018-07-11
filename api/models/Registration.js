@@ -92,7 +92,7 @@ module.exports.Registration = class Registration extends BaseObject {
    *
    * @param uow
    * @param opts
-   * @return {Promise<Stream>}
+   * @return {Promise<Readable>}
    */
   static getAll(uow, opts) {
     if (opts && opts.currentHackathon) {

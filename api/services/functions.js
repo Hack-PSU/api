@@ -16,7 +16,7 @@ const client = ses.createClient(emailKey);
  * @param {Object} [substitutions] A map of strings with the following format { keyword-to-substitute: string-to-substitute-with, ... }; Example: { date: "09-23-2000" }
  * @return {Promise} return a promised data with a subbed version of the html
  */
-module.exports.emailSubstitute = function (html, name, substitutions) {
+function emailSubstitute (html, name, substitutions) {
   return new Promise(((resolve, reject) => {
     let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
     for (const key in substitutions) {
@@ -37,7 +37,7 @@ module.exports.emailSubstitute = function (html, name, substitutions) {
  * @param data Contains the options for the POST request. For schema, refer to function createEmailRequest or the SendInBlue API
  * @return {Promise<any>}
  */
-module.exports.sendEmail = function (data) {
+function sendEmail (data) {
   return new Promise((resolve, reject) => {
     client.sendEmail(data, (err) => {
       if (err) {
@@ -65,7 +65,7 @@ module.exports.sendEmail = function (data) {
  * @param {String} fromEmail
  * @return {Object} { data, options }
  */
-module.exports.createEmailRequest = function (email, htmlContent, subject, fromEmail) {
+function createEmailRequest(email, htmlContent, subject, fromEmail) {
   const emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
   return {
     to: email,
@@ -82,7 +82,7 @@ module.exports.createEmailRequest = function (email, htmlContent, subject, fromE
  * @param notificationBody
  * @return {Promise<any>}
  */
-module.exports.sendNotification = function (notificationTitle, notificationBody) {
+function sendNotification(notificationTitle, notificationBody) {
   return new Promise((resolve, reject) => {
     const headers = {
       'Content-Type': 'application/json; charset=utf-8',
@@ -112,19 +112,26 @@ module.exports.sendNotification = function (notificationTitle, notificationBody)
       }
     });
   });
-};
+}
 
-const errorHandler500 = function (err, handler) {
+function errorHandler500(err, handler) {
   const error = new Error();
   error.status = 500;
   error.body = err.message || err;
   handler(error);
-};
-module.exports.errorHandler500 = errorHandler500;
+}
 
-module.exports.streamHandler = function (stream, res, next) {
+function streamHandler(stream, res, next) {
   stream.pipe(Stringify())
     .pipe(res.type('json').status(200))
     .on('end', res.end)
     .on('error', err => errorHandler500(err, next));
+}
+module.exports = {
+  errorHandler500,
+  streamHandler,
+  emailSubstitute,
+  sendEmail,
+  createEmailRequest,
+  sendNotification,
 };

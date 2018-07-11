@@ -24,6 +24,11 @@ module.exports.Attendance = class Attendance extends BaseObject {
     return super.getAll(uow, TABLE_NAME);
   }
 
+  /**
+   * Returns a count of the number of Attendance objects.
+   * @param uow
+   * @returns {Promise<Readable>}
+   */
   static getCount(uow) {
     return super.getCount(uow, TABLE_NAME);
   }

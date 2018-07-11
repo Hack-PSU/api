@@ -11,7 +11,7 @@ module.exports.Project = class Project extends BaseObject {
    */
   constructor(data, uow) {
     super(uow);
-    this.projectName = data.project_name || null;
+    this.project_name = data.projectName || null;
     this.team = data.team || [];
     this.categories = data.categories || [];
     this.projectId = data.projectId || null;
@@ -32,7 +32,7 @@ module.exports.Project = class Project extends BaseObject {
     // 2) Join with PROJECT_LIST
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from('PROJECT_TEAM', 'pt')
-      .field('pl.projectName')
+      .field('pl.project_name')
       .field('pt.*')
       .field('ta.tableNumber')
       .field('cl.*')
@@ -68,7 +68,7 @@ module.exports.Project = class Project extends BaseObject {
     let prepped = 'CALL ';
     prepped = prepped.concat(process.env.APP_ENV === 'test' ? 'assignTeam_test' : 'assignTeam');
     prepped = prepped.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;');
-    const list = [this.projectName, this.team.join(','), this.categories.join(',')];
+    const list = [this.project_name, this.team.join(','), this.categories.join(',')];
     return this.uow.query(prepped, list);
   }
 

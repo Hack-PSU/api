@@ -9,10 +9,10 @@ const REFERENCE = '/updates';
 module.exports.Update = class Update extends BaseObject {
   constructor(data, uow) {
     super(uow);
-    this.update_title = data.update_title || null;
-    this.update_text = data.update_text || null;
-    this.update_image = data.update_image || null;
-    this.update_time = data.update_time || null;
+    this.update_title = data.updateTitle || null;
+    this.update_text = data.updateText || null;
+    this.update_image = data.updateImage || null;
+    this.update_time = data.updateTime || new Date().getTime();
     this.disallowedProperties = ['useRTDB'];
   }
 

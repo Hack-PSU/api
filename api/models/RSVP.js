@@ -10,7 +10,7 @@ module.exports.TABLE_NAME = TABLE_NAME;
 module.exports.RSVP = class RSVP extends BaseObject {
   constructor(data, uow) {
     super(uow);
-    this.user_id = data.user_uid || null;
+    this.user_id = data.userUID || null;
     this.rsvp_time = new Date().getTime();
     this.rsvp_status = data.rsvp_status || false;
   }

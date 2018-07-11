@@ -18,12 +18,12 @@ module.exports.Event = class Event extends BaseObject {
   constructor(data, uow) {
     super(uow, eventSchema, TABLE_NAME);
     this.uid = data.uid || uuidv4().replace(/-/g, '');
-    this.event_location = data.event_location || null;
-    this.event_start_time = data.event_start_time || null;
-    this.event_end_time = data.event_end_time || null;
-    this.event_title = data.event_title || null;
-    this.event_description = data.event_description || null;
-    this.event_type = data.event_type || null;
+    this.event_location = data.eventLocation || null;
+    this.event_start_time = data.eventStartTime || null;
+    this.event_end_time = data.eventEndTime || null;
+    this.event_title = data.eventTitle || null;
+    this.event_description = data.eventDescription || null;
+    this.event_type = data.eventType || null;
   }
 
   static generateTestData(uow) {
@@ -70,7 +70,6 @@ module.exports.Event = class Event extends BaseObject {
       .into(this.tableName)
       .setFieldsRows([this._dbRepresentation])
       .toParam();
-    query.text = query.text.concat(';');
     query.text = query.text.concat(';');
     query.text.concat('SELECT location_name FROM LOCATIONS WHERE uid=?;');
     query.values.push(this.event_location);

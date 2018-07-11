@@ -256,7 +256,7 @@ router.post('/rsvp', (req, res, next) => {
   // RSVP login starts here
   const rsvp = new RSVP(
     {
-      user_uid: res.locals.user.uid,
+      userUID: res.locals.user.uid,
       rsvp_status: req.body.rsvp === 'true',
     },
     req.uow,
@@ -328,7 +328,7 @@ router.get('/rsvp', (req, res, next) => {
     error.body = { error: 'Could not identify user' };
     return next(error);
   }
-  new RSVP({ uid: res.locals.user.uid })
+  new RSVP({ userUID: res.locals.user.uid })
     .get()
     .then((stream) => {
       stream
@@ -394,7 +394,7 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
  * @apiName Post user project data
  * @apiGroup Users
  * @apiPermission User
- * @apiParam {String} projectName Name of the project
+ * @apiParam {String} project_name Name of the project
  * @apiParam {Array} team Array of team emails
  * @apiParam {Array} categories Array of category IDs the project is submitting for
 
@@ -468,8 +468,7 @@ router.post('/project', (req, res, next) => {
       // Assign a table now
       return project.assignTable();
     })
-    .then(result => res.status(200)
-      .send(result))
+    .then(result => res.status(200).send(result))
     .catch(err => errorHandler500(err, next));
 });
 

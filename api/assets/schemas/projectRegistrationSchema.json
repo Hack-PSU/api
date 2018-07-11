@@ -1,1 +1,27 @@
-{"type":"object","properties":{"projectName":{"type":"string"},"team":{"type":"array","items":{"type":"string","format":"email"},"uniqueItems":true,"minItems":1,"maxItems":5},"categories":{"type":"array","uniqueItems":true}},"required":["projectName","team","categories"]}
+{
+  "type": "object",
+  "properties": {
+    "project_name": {
+      "type": "string"
+    },
+    "team": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "email"
+      },
+      "uniqueItems": true,
+      "minItems": 1,
+      "maxItems": 5
+    },
+    "categories": {
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "projectName",
+    "team",
+    "categories"
+  ]
+}

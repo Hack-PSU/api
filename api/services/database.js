@@ -3,8 +3,8 @@ const uuidv4 = require('uuid/v4');
 
 
 /**
- *
- * @return {Stream} Return the list of all class in the database
+ * Returns a list of extra credit classes available.
+ * @return {Promise<Stream>} Return the list of all class in the database
  */
 function getExtraCreditClassList(uow) {
   let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })

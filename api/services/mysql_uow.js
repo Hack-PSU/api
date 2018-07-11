@@ -1,4 +1,3 @@
-const { Readable } = require('stream');
 const streamify = require('stream-array');
 
 module.exports = class MysqlUow {
@@ -25,10 +24,6 @@ module.exports = class MysqlUow {
       .then((result) => {
         if (opts && opts.stream) {
           return streamify(result[0]);
-          // const stream = new Readable({ objectMode: true });
-          // stream.push(result[0]);
-          // stream.push(null);
-          // return stream;
         }
         return result[0];
       });

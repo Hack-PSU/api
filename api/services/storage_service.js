@@ -1,17 +1,6 @@
 /* eslint no-underscore-dangle: [2, { "allowAfterThis": true }] */
 const multer = require('multer');
-// const multers3 = require('multer-s3');
-// const aws = require('aws-sdk');
-// const constants = require('./constants');
 const { STORAGE_TYPES, StorageFactory } = require('./factories/storage_factory');
-
-// aws.config.update({
-//   accessKeyId: constants.s3Connection.accessKeyId,
-//   secretAccessKey: constants.s3Connection.secretAccessKey,
-//   region: constants.s3Connection.region,
-// });
-//
-// const s3 = new aws.S3();
 
 module.exports = class StorageService {
   constructor(storageType, opts) {

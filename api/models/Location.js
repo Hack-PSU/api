@@ -15,8 +15,8 @@ module.exports.Location = class Location extends BaseObject {
    */
   constructor(data, uow) {
     super(uow);
-    this.uid = data.uid || undefined;
-    this.location_name = data.location_name || '';
+    this.uid = data.uid;
+    this.location_name = data.locationName || '';
   }
 
   static generateTestData(uow) {

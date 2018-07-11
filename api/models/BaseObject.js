@@ -7,7 +7,7 @@ const ajv = new Ajv({ allErrors: true });
 
 
 /**
- *
+ * @Abstract
  * @type {module.BaseObject}
  */
 module.exports = class BaseObject {
@@ -44,6 +44,13 @@ module.exports = class BaseObject {
     return uow.query(query, params, { stream: true });
   }
 
+  /**
+   * Returns the number of objects of the type.
+   * @param uow
+   * @param tableName
+   * @param columnName
+   * @returns {Promise<Stream>}
+   */
   static getCount(uow, tableName, columnName) {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(tableName)

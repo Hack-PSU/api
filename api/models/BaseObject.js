@@ -145,7 +145,7 @@ module.exports = class BaseObject {
       .where(`${this.columnName}= ?`, this.id)
       .toParam();
     query.text = query.text.concat(';');
-    return this.uow.query(query.text, query.values, { stream: true });
+    return this.uow.query(query.text, query.values);
   }
 
   /**

@@ -7,6 +7,7 @@ require('../test_helper')();
 const server = require('../../app');
 const { RSVP } = require('../../models/RSVP');
 const { UowFactory } = require('../../services/factories/uow_factory');
+const { Registration } = require('../../models/Registration');
 
 const chance = new Chance();
 
@@ -134,7 +135,7 @@ describe('get registration', () => {
         .set('idtoken', idToken)
         .end((err, res) => {
           should.equal(err, null);
-          res.body.should.be.a('array');
+          res.body.should.be.a('object');
           done();
         });
     });

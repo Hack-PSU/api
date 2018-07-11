@@ -173,7 +173,10 @@ router.get('/registration', (req, res, next) => {
   }
   new Registration({ uid: res.locals.user.uid }, req.uow)
     .get()
-    .then(stream => streamHandler(stream, res, next))
+    .then((registrationArray) => {
+      const [registration] = registrationArray;
+      res.status(200).send(registration);
+    })
     .catch(err => errorHandler500(err, next));
 });
 
@@ -268,19 +271,8 @@ router.post('/rsvp', (req, res, next) => {
       // Retrieve registration.
       if (req.body.rsvp === 'true') {
         return new Registration({ uid: res.locals.user.uid }, req.uow).get()
-          .then((stream) => {
-            // Get user data.
-            let user = null;
-            return new Promise((resolve, reject) => {
-              stream
-                .on('data', (data) => {
-                  user = data;
-                })
-                .on('err', reject)
-                .on('end', () => resolve(user));
-            });
-          })
-          .then((user) => {
+          .then((registrationArray) => {
+            const [user] = registrationArray;
             email = user.email || '';
             const name = user.firstname;
             pin = user.pin || 78;
@@ -330,12 +322,9 @@ router.get('/rsvp', (req, res, next) => {
   }
   new RSVP({ userUID: res.locals.user.uid })
     .get()
-    .then((stream) => {
-      stream
-        .on('data', status => res.status(200)
-          .send(status || { rsvp_status: false }))
-        .on('error', err => errorHandler500(err, next))
-        .on('end', res.end);
+    .then((statusArray) => {
+      const [status] = statusArray;
+      res.status(200).send(status || { rsvp_status: false });
     })
     .catch(err => errorHandler500(err, next));
 });

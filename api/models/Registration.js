@@ -187,51 +187,42 @@ module.exports.Registration = class Registration extends BaseObject {
    * @return {Promise<any>}
    */
   static getStatsCount(uow) {
-    /* TODO (Shane): Does the map work, can this build with the squel.builder,
-      and can you add the where clause that will ensure it
-    only does this for the active hackathon? */
-    const columnNames = {
-      '"coding_experience"': 'coding_experience',
-      '"dietary_restriction"': 'dietary_restriction',
-      '"travel_reimbursement"': 'travel_reimbursement',
-      '"race"': 'race',
-      '"shirt_size"': 'shirt_size',
-      '"gender"': 'gender',
-      '"first_hackathon"': 'first_hackathon',
-      '"veteran"': 'veteran',
-    };
+    const columnNames = [
+      'academic_year',
+      'coding_experience',
+      'dietary_restriction',
+      'travel_reimbursement',
+      'race',
+      'shirt_size',
+      'gender',
+      'first_hackathon',
+      'veteran',
+    ];
+    let query = null;
+    columnNames.entries().forEach((value, index) => {
+      // Add a union for every value but the first
+      if (index === 0) {
+        query = Registration._getSelectQueryForOptionName(value);
+      } else {
+        query = query.union(Registration._getSelectQueryForOptionName(value));
+      }
+    });
+    query = query.toString().concat(';');
+    return uow.query(query, null, { stream: true });
+  }
 
-    // First Column - built as a string
-    let query = squel.select({
+
+  static _getSelectQueryForOptionName(value) {
+    return squel.select({
       autoQuoteTableNames: true,
       autoQuoteFieldNames: false,
     })
       .from(TABLE_NAME)
-      .field('"academic_year"', 'CATEGORY')
-      .field('academic_year', 'OPTION')
+      .field(`"${value}"`, 'CATEGORY')
+      .field(value, 'OPTION')
       .field('COUNT(*)', 'COUNT')
-      .group('academic_year')
-      .toString();
-
-    // Rest of the Columns in the list - built onto the existing string using UNION
-    columnNames.forEach((value, key) => {
-      query = query.concat(' UNION( ')
-        .concat(squel.select({
-          autoQuoteTableNames: true,
-          autoQuoteFieldNames: false,
-        })
-          .from(TABLE_NAME)
-          .field(key, 'CATEGORY')
-          .field(value, 'OPTION')
-          .field('COUNT(*)', 'COUNT')
-          .group(value)
-          .toString())
-        .concat(')');
-    });
-    query = query.concat(';');
-    return uow.query(query, null, { stream: true });
+      .group('academic_year');
   }
-
 
   /**
    *

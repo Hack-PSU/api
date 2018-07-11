@@ -13,6 +13,10 @@ const COLUMN_NAME = 'uid';
 module.exports.TABLE_NAME = TABLE_NAME;
 
 module.exports.Hackathon = class Hackathon extends BaseObject {
+  /**
+   * Returns a Squel Builder that gets the current active hackathon uid
+   * @returns {squel.Select}
+   */
   static getActiveHackathonQuery() {
     return squel.select({
       autoQuoteTableNames: true,

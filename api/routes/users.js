@@ -25,8 +25,8 @@ const router = express.Router();
 const ajv = new Ajv({ allErrors: true });
 
 const upload = storage.upload({
-  storage: StorageFactory.S3Storage({
-    bucket: constants.s3Connection.s3TravelReimbursementBucket,
+  storage: StorageFactory.GCStorage({
+    bucket: constants.GCS.travelReimbursementBucket,
     metadata(req, file, cb) {
       cb(null, {
         fieldName: file.fieldname,
@@ -154,7 +154,7 @@ router.get('/', (req, res, next) => {
 });
 
 /**
- * @api {get} /users/registration Get the registration information for the current user
+ * @api {get} /users/registration Get the most current registration information for the current user
  * @apiVersion 0.2.1
  * @apiName Get user registration information
  * @apiGroup Users
@@ -225,7 +225,7 @@ router.get('/project', (req, res, next) => {
           res.status(200)
             .send(response);
         });
-    });
+    }).catch(err => errorHandler500(err, next));
 });
 /**
  * @api {post} /users/rsvp confirm the RSVP status for the current user and send a email containing their pin
@@ -320,8 +320,7 @@ router.get('/rsvp', (req, res, next) => {
     error.body = { error: 'Could not identify user' };
     return next(error);
   }
-  new RSVP({ userUID: res.locals.user.uid })
-    .get()
+  RSVP.rsvpStatus(res.locals.user.uid, req.uow)
     .then((statusArray) => {
       const [status] = statusArray;
       res.status(200).send(status || { rsvp_status: false });
@@ -472,7 +471,7 @@ router.post('/project', (req, res, next) => {
  * @apiSuccess {Array} Categories
  */
 router.get('/event_categories', (req, res, next) => {
-  Category.getAll()
+  Category.getAll(req.uow)
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });

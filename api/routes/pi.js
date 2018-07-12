@@ -1,14 +1,14 @@
 /* eslint-disable consistent-return */
 const express = require('express');
 const Ajv = require('ajv');
-
-const router = express.Router();
+const squel = require('squel');
 const database = require('../services/database');
 const { errorHandler500 } = require('../services/functions');
 const { Registration } = require('../models/Registration');
-
-
 const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/constants/constants');
+
+const router = express.Router();
+
 
 const ajv = new Ajv({ allErrors: true });
 /** ************* HELPER FUNCTIONS ************** */
@@ -16,6 +16,9 @@ const ajv = new Ajv({ allErrors: true });
 
 /** ************* HELPER MIDDLEWARE ************* */
 router.use((req, res, next) => {
+  if (process.env.APP_ENV === 'debug') {
+    return next();
+  }
   if (!req.headers.apikey ||
     req.headers.apikey !== rediskey) {
     const error = new Error();
@@ -45,7 +48,21 @@ router.get('/registrations', (req, res, next) => {
   const arr = [];
   Registration.getAll(
     req.uow,
-    { fields: ['uid', 'pin', 'firstname', 'lastname', 'shirt_size', 'dietary_restriction'] },
+    {
+      fields: ['uid',
+        // Subtract the base pin for the current hackathon from the retrieved pin.
+        `pin - (${squel.select({
+          autoQuoteTableNames: false,
+          autoQuoteFieldNames: false,
+        }).from('HACKATHON').field('base_pin').where('active = 1')
+          .toString()}) AS pin`,
+        'firstname',
+        'lastname',
+        'shirt_size',
+        'dietary_restriction'],
+      currentHackathon: true,
+      quoteFields: false,
+    },
   ).then((stream) => {
     stream.pipe(res)
       .on('err', err => errorHandler500(err, next))

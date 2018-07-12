@@ -25,12 +25,12 @@ const router = express.Router();
  * @return {string}
  */
 function generateFileName(uid, firstName, lastName) {
-  return `${uid}-${firstName}-${lastName}-HackPSUS2018.pdf`;
+  return `${uid}-${firstName}-${lastName}-HackPSUF2018.pdf`;
 }
 
 const upload = Storage.upload({
-  storage: StorageFactory.S3Storage({
-    bucket: constants.s3Connection.s3BucketName,
+  storage: StorageFactory.GCStorage({
+    bucket: constants.GCS.resumeBucket,
     metadata(req, file, cb) {
       cb(null, {
         fieldName: file.fieldname,
@@ -90,7 +90,7 @@ function storeIP(req, res, next) {
   if (process.env.NODE_ENV !== 'production') {
     return next();
   }
-  database.storeIP(req.uow, req.headers.http_x_forwarded_for, req.headers['user-agent'])
+  database.storeIP(req.uow, req.headers['X-AppEngine-User-IP'], req.headers['user-agent'])
     .finally(next);
 }
 
@@ -130,14 +130,13 @@ router.post('/pre', (req, res, next) => {
  * @apiVersion 0.1.1
  * @apiName Registration
  * @apiGroup Registration
- * @apiParam {Object} data:
  * @apiParamExample {Object} Request-Example: {
 	req.header: {
 		idtoken: <user's idtoken>
 	}
 
  	request.body: {
-			firstName: "Matt",
+firstName: "Matt",
             lastName: "Stewart",
             gender: "Male",
             shirtSize: "L",
@@ -158,14 +157,14 @@ router.post('/pre', (req, res, next) => {
             mlhDCP: true,
             referral: "facebook",
             project: "My project description",
-            resume: https://s3.aws.com/link-to-file
+            resume: <FILE_OBJECT>
     }
  * @apiUse AuthArgumentRequired
- * @apiParam {String} firstname First name of the user
- * @apiParam {String} lastname Last name of the user
+ * @apiParam {String} firstName First name of the user
+ * @apiParam {String} lastName Last name of the user
  * @apiParam {String} gender Gender of the user
- * @apiParam {enum} shirt_size [XS, S, M, L, XL, XXL]
- * @apiParam {String} [dietary_restriction] The dietary restictions for the user
+ * @apiParam {enum} shirtSize [XS, S, M, L, XL, XXL]
+ * @apiParam {String} [dietaryRestriction] The dietary restictions for the user
  * @apiParam {String} [allergies] Any allergies the user might have
  * @apiParam {boolean} travelReimbursement=false
  * @apiParam {boolean} firstHackathon=false Is this the user's first hackathon
@@ -202,6 +201,8 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
   req.body.mlhcoc = req.body.mlhcoc && req.body.mlhcoc === 'true';
 
   req.body.mlhdcp = req.body.mlhdcp && req.body.mlhdcp === 'true';
+
+  req.body.uid = res.locals.uid;
 
   if (!(req.body &&
     validator.validate(req.body.email) &&

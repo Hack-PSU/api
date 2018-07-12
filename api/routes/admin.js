@@ -191,14 +191,9 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
   Registration.getAll(req.uow, {
     count: res.locals.limit,
     limit: res.locals.offset,
+    currentHackathon: true, // TODO: Add ability to set which hackathons needed froms request
   })
-    .then((stream) => {
-      stream
-        .pipe(Stringify())
-        .on('error', err => errorHandler500(err, next))
-        .pipe(res.type('json'))
-        .on('end', res.status(200).end);
-    })
+    .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });
 

@@ -69,4 +69,8 @@ module.exports = {
     subject: 'HackPSU RSVP Confirmation',
     text: fs.readFileSync(path.join(__dirname, 'RSVP_Email.html'), 'utf-8'),
   },
+  GCS: {
+    resumeBucket: process.env.APP_ENV === 'test' ? 'hackpsu-resumes-test' : 'hackpsuf2018-resumes',
+    travelReimbursementBucket: process.env.APP_ENV === 'test' ? 'hackpsu2018-travel-reimbursement-receipts-test' : 'hackpsuf2018-travel-reimbursement-receipts',
+  },
 };

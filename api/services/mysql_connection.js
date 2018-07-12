@@ -1,15 +1,30 @@
 /* eslint-disable no-underscore-dangle */
-module.exports = class MySQLConnection {
-  get connection() {
-    return this._connection;
-  }
+const Mysqlcache = require('mysql-cache');
+const { sqlConnection } = require('../assets/constants/constants');
 
+if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production') {
+  sqlConnection.host = '';
+} else {
+  sqlConnection.socketPath = '';
+}
+
+const mySqlCacheConnection = new Mysqlcache(sqlConnection);
+
+module.exports = class MySQLConnection {
   /**
    *
    * @param connection {MysqlCache}
    */
-  constructor(connection) {
-    this._connection = connection;
+  constructor() {
+    this._connection = mySqlCacheConnection;
+  }
+
+  /**
+   *
+   * @returns {Mysqlcache|MysqlCache}
+   */
+  get connection() {
+    return this._connection;
   }
 
   /**
@@ -35,8 +50,12 @@ module.exports = class MySQLConnection {
     return Promise.resolve();
   }
 
-  get dbConnection() {
-    return this.connection;
+  get hits() {
+    return this.connection.hits;
+  }
+
+  get misses() {
+    return this.connection.misses;
   }
 };
 

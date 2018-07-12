@@ -1,9 +1,5 @@
 const express = require('express');
 const Metrics = require('../services/monitoring');
-const { _dbConnection } = require('../services/factories/uow_factory');
-
-const { connection } = _dbConnection;
-
 
 const router = express.Router();
 
@@ -19,6 +15,7 @@ router.use((req, res, next) => {
 });
 
 router.get('/metrics', (req, res, next) => {
+  const { connection } = req.uow;
   const hitMetrics = new Metrics(
     'mysql_metrics_hits',
     'Cache hit metrics for MySQL database',

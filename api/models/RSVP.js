@@ -1,6 +1,6 @@
 const BaseObject = require('./BaseObject');
 const squel = require('squel');
-const { Hackathon } = require('./Hackathon');
+const { TABLE_NAME: HackathonTableName, Hackathon } = require('./Hackathon');
 const rsvpSchema = require('../assets/schemas/load-schemas')('rsvpSchema');
 
 const TABLE_NAME = 'RSVP';
@@ -69,16 +69,20 @@ module.exports.RSVP = class RSVP extends BaseObject {
     return uow.query(query, null, { stream: true });
   }
 
-  rsvpStatus(userUid) {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+  static rsvpStatus(userUid, uow) {
+    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(TABLE_NAME, 'rsvp')
-      .field('r.pin')
       .field('rsvp.*')
+      .field(`(r.pin - (${squel.select({
+        autoQuoteTableNames: false,
+        autoQuoteFieldNames: false,
+      }).from(HackathonTableName).field('base_pin').where('active = 1')
+        .toString()}))`, 'pin')
       .where('rsvp.user_id = ?', userUid)
       .join('REGISTRATION', 'r', 'r.uid=rsvp.user_id')
       .where('r.hackathon = ?', Hackathon.getActiveHackathonQuery())
       .toParam();
     query.text = query.text.concat(';');
-    return this.uow.query(query);
+    return uow.query(query.text, query.values);
   }
 };

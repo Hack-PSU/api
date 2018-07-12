@@ -32,7 +32,7 @@ module.exports.Project = class Project extends BaseObject {
     // 2) Join with PROJECT_LIST
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from('PROJECT_TEAM', 'pt')
-      .field('pl.project_name')
+      .field('pl.projectName')
       .field('pt.*')
       .field('ta.tableNumber')
       .field('cl.*')
@@ -40,7 +40,7 @@ module.exports.Project = class Project extends BaseObject {
       .join('PROJECT_LIST', 'pl', 'pt.projectID=pl.projectID')
       .join('TABLE_ASSIGNMENTS', 'ta', 'ta.projectID = pl.projectID')
       .join('PROJECT_CATEGORIES', 'pc', 'pc.projectID = pt.projectID')
-      .join('CATEGORY_LIST', 'cl', 'cl.categoryID = pc.categoryID ')
+      .join('CATEGORY_LIST', 'cl', 'cl.uid = pc.categoryID ')
       .toParam();
     query.text = query.text.concat(';');
     return uow.query(query.text, query.values, { stream: true });

@@ -1,20 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 const firebase = require('firebase-admin');
-const { sqlConnection, firebaseDB } = require('../../assets/constants/constants');
+const { firebaseDB } = require('../../assets/constants/constants');
 const MockConnection = require('../mock_connection');
 const MysqlUow = require('../mysql_uow');
-const MysqlConnection = require('../mysql_connection');
 const RtdbUow = require('../rtdb_uow');
-// const mysql = require('mysql');
-const Mysqlcache = require('mysql-cache');
-
-if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production') {
-  sqlConnection.host = '';
-} else {
-  sqlConnection.socketPath = '';
-}
-const dbConnection = new MysqlConnection(new Mysqlcache(sqlConnection));
-module.exports._dbConnection = dbConnection;
 
 const serviceAccount = require('../../config.json');
 
@@ -45,7 +34,7 @@ module.exports.UowFactory = class UowFactory {
         case 'test':
         case 'prod':
         case 'PROD':
-          resolve(new MysqlUow(dbConnection));
+          resolve(new MysqlUow());
           break;
         default:
           reject(new Error('APP_ENV must be set'));

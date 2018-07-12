@@ -1,12 +1,13 @@
 const streamify = require('stream-array');
+const MysqlConnection = require('./mysql_connection');
 
 module.exports = class MysqlUow {
   /**
    *
    * @param connection {MysqlConnection}
    */
-  constructor(connection) {
-    this.connection = connection;
+  constructor() {
+    this.connection = new MysqlConnection();
   }
 
   /**

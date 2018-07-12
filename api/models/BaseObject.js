@@ -139,6 +139,9 @@ module.exports = class BaseObject {
    * @return {Promise<Stream>}
    */
   get(opts) {
+    if (opts && opts.query && opts.query.text && opts.query.values) {
+      return this.uow.query(opts.query.text, opts.query.values);
+    }
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName)
       .fields((opts && opts.fields) || null)
@@ -176,7 +179,10 @@ module.exports = class BaseObject {
    * Updates the object in the database
    * @return {Promise<any>}
    */
-  update() {
+  update(opts) {
+    if (opts && opts.query && opts.query.text && opts.query.values) {
+      return this.uow.query(opts.query.text, opts.query.values);
+    }
     const validation = this.validate();
     if (!validation.result) {
       return new Promise(((resolve, reject) => reject(new Error(validation.error))));
@@ -194,7 +200,10 @@ module.exports = class BaseObject {
    * Deletes the object from the database
    * @return {Promise<any>}
    */
-  delete() {
+  delete(opts) {
+    if (opts && opts.query && opts.query.text && opts.query.values) {
+      return this.uow.query(opts.query.text, opts.query.values);
+    }
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
       .where(`${this.columnName} = ?`, this.id)

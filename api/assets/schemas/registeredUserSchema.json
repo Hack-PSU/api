@@ -30,12 +30,19 @@
       ]
     },
     "dietary_restriction": {
-      "type": "string",
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1,
       "maxLength": 45
     },
     "allergies": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
     },
     "travel_reimbursement": {
       "type": "boolean"
@@ -73,7 +80,10 @@
       "maxLength": 50
     },
     "ethnicity": {
-      "type": "string",
+      "type": [
+        "string",
+        "null"
+      ],
       "maxLength": 150
     },
     "coding_experience": {
@@ -95,6 +105,10 @@
       "maxLength": 150
     },
     "veteran": {
+      "type": [
+        "string",
+        "null"
+      ],
       "enum": [
         "true",
         "false",
@@ -111,13 +125,22 @@
       "type": "boolean"
     },
     "referral": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "projectDesc": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "expectations": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "time": {
       "type": "number"

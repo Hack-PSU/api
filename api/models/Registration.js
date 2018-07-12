@@ -20,7 +20,7 @@ module.exports.Registration = class Registration extends BaseObject {
     this.gender = data.gender || null;
     this.shirt_size = data.shirtSize || null;
     this.dietary_restriction = data.dietaryRestriction || null;
-    this.allergies = data.allergies || '';
+    this.allergies = data.allergies || null;
     this.travel_reimbursement = data.travelReimbursement || false;
     this.first_hackathon = data.firstHackathon || false;
     this.university = data.university || null;
@@ -49,6 +49,16 @@ module.exports.Registration = class Registration extends BaseObject {
 
   get tableName() {
     return TABLE_NAME;
+  }
+
+  get() {
+    const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .from(this.tableName)
+      .where(`${this.columnName}= ?`, this.id)
+      .order('time', false)
+      .toParam();
+    query.text = query.text.concat(';');
+    return super.get({ query });
   }
 
   add() {
@@ -99,8 +109,8 @@ module.exports.Registration = class Registration extends BaseObject {
   static getAll(uow, opts) {
     if (opts && opts.currentHackathon) {
       const query = squel.select({
-        autoQuoteTableNames: true,
-        autoQuoteFieldNames: true,
+        autoQuoteTableNames: opts.quoteFields !== false,
+        autoQuoteFieldNames: opts.quoteFields !== false,
       })
         .from(TABLE_NAME)
         .fields(opts.fields || null)
@@ -224,6 +234,31 @@ module.exports.Registration = class Registration extends BaseObject {
       .group('academic_year');
   }
 
+  update() {
+    const validation = this.validate();
+    if (!validation.result) {
+      return new Promise(((resolve, reject) => reject(new Error(validation.error))));
+    }
+    const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .table(this.tableName)
+      .setFields(this._dbRepresentation)
+      .where(`${this.columnName} = ?`, this.id)
+      .where('hackathon = ?', Hackathon.getActiveHackathonQuery())
+      .toParam();
+    query.text = query.text.concat(';');
+    return super.update({ query });
+  }
+
+  delete() {
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(this.tableName)
+      .where(`${this.columnName} = ?`, this.id)
+      .where('hackathon = ?', Hackathon.getActiveHackathonQuery())
+      .toParam();
+    query.text = query.text.concat(';');
+    return super.delete({ query });
+  }
+
   /**
    *
    * @return {Promise<any>}
@@ -236,6 +271,7 @@ module.exports.Registration = class Registration extends BaseObject {
       .table(TABLE_NAME)
       .set('submitted', true)
       .where('uid = ?', this.uid)
+      .where('hackathon = ?', Hackathon.getActiveHackathonQuery())
       .toParam();
     query.text = query.text.concat(';');
     return this.uow.query(query.text, query.values);

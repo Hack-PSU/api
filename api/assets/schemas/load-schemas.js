@@ -1,3 +1,4 @@
+/* eslint-disable global-require,import/no-dynamic-require */
 const fs = require('fs');
 const _ = require('lodash');
 
@@ -17,7 +18,7 @@ function readJsonFile(filename) {
   if (!fs.existsSync(filePath)) {
     throw new Error('Invalid schema requested.');
   }
-  return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  return require(filePath);
 }
 
 /**

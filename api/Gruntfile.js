@@ -38,8 +38,8 @@ module.exports = (grunt) => {
     },
     env: {
       test: {
-        NODE_ENV: 'test',
-        APP_ENV: 'test',
+        NODE_ENV: `${grunt.option('debug') ? 'debug' : 'test'}`,
+        APP_ENV: `${grunt.option('debug') ? 'debug' : 'test'}`,
         SQL_DATABASE: 'test',
         SQL_HOSTNAME: 'localhost',
       },
@@ -48,6 +48,6 @@ module.exports = (grunt) => {
   grunt.loadNpmTasks('grunt-run');
   grunt.registerTask('default', ['env:test', 'exec:prep', 'exec:sql_proxy', 'run:install', 'run:doc', 'run:test']);
   grunt.registerTask('start', ['env:test', 'exec:prep', 'run:install', 'exec:sql_proxy', 'run:start']);
-  grunt.registerTask('test', ['env:test', 'exec:prep', 'exec:sql_proxy','run:test']);
+  grunt.registerTask('test', ['env:test', 'exec:prep', 'exec:sql_proxy', 'run:test']);
   grunt.registerTask('deploy', ['exec:prep', 'exec:deploy']);
 };

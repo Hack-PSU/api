@@ -209,7 +209,7 @@ module.exports.Registration = class Registration extends BaseObject {
       'veteran',
     ];
     let query = null;
-    columnNames.entries().forEach((value, index) => {
+    columnNames.forEach((value, index) => {
       // Add a union for every value but the first
       if (index === 0) {
         query = Registration._getSelectQueryForOptionName(value);
@@ -231,7 +231,7 @@ module.exports.Registration = class Registration extends BaseObject {
       .field(`"${value}"`, 'CATEGORY')
       .field(value, 'OPTION')
       .field('COUNT(*)', 'COUNT')
-      .group('academic_year');
+      .group(value);
   }
 
   update() {

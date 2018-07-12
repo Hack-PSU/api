@@ -86,6 +86,7 @@ else
 fi
 # private key file
 files["privatekey.aes"]="config.json"
+files["hackpsu-18-serviceaccount.json.aes"]="hackpsu-18-serviceaccount.json"
 
 
 echo "Checking for installation"

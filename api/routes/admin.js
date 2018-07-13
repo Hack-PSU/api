@@ -1,9 +1,7 @@
 /* eslint-disable max-len,no-param-reassign,consistent-return */
 const validator = require('email-validator');
 const Ajv = require('ajv');
-const transform = require('parallel-transform');
 const express = require('express');
-const Stringify = require('streaming-json-stringify');
 const _ = require('lodash');
 const emailObjectSchema = require('../assets/schemas/load-schemas')('emailObjectSchema');
 const authenticator = require('../services/auth');
@@ -793,47 +791,27 @@ router.get('/statistics', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/active_hackathon Get the uid, name, and pin base of the active hackathon
+ * @api {post} /admin/hackathon Get the uid of the active hackathon
  * @apiVersion 0.3.2
  * @apiName active hackathon
  * @apiGroup Admin
- * @apiPermission Exec
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess {Array} Array containing name of active hackathon
- */
-router.get('/active_hackathon', verifyACL(3), (req, res, next) => {
-  Hackathon.getActiveHackathon(req.uow)
-    .then((data) => {
-      res.type('json').status(200).send(data[0]);
-    })
-    .catch(err => errorHandler500(err, next));
-});
-
-/**
- * @api {post} /admin/active_hackathon Get the uid of the active hackathon
- * @apiVersion 0.3.2
- * @apiName active hackathon
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiPermission Tech-Exec
  *
  * @apiUse AuthArgumentRequired
  *
  * @apiSuccess {Array} Array containing uid of active hackathon
  */
-router.post('/add_hackathon', verifyACL(3), (req, res, next) => {
-
-  if(req.body && req.body.name && req.body.startTime && req.body.basePin && req.body.active) {
+router.post('/hackathon', verifyACL(4), (req, res, next) => {
+  if (req.body && req.body.name && req.body.startTime) {
     const hackathon = new Hackathon(req.body, req.uow);
     hackathon.add().then((data) => {
       console.log(data);
-      res.type('json').status(201).send({message: `Added new hackathon with name: ${req.body.name}`});
-    }).catch((err) => errorHandler500(err, next));
+      res.type('json').status(200).send(data);
+    }).catch(err => errorHandler500(err, next));
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = { error: 'Missing one of the following body parameters: name, start_time, base_pin, active'}
+    error.body = { error: 'Missing one of the following body parameters: name, start_time, base_pin, active' };
     next(error);
   }
 });

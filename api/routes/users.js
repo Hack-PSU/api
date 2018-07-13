@@ -14,6 +14,7 @@ const { projectRegistrationSchema, travelReimbursementSchema } =
   require('../assets/schemas/load-schemas')(['projectRegistrationSchema', 'travelReimbursementSchema']);
 const TravelReimbursement = require('../models/TravelReimbursement');
 const { Registration } = require('../models/Registration');
+const { Hackathon } = require('../models/Hackathon');
 const { Project } = require('../models/Project');
 const { RSVP } = require('../models/RSVP');
 const { Category } = require('../models/Category');
@@ -461,7 +462,7 @@ router.post('/project', (req, res, next) => {
 });
 
 /**
- * @api {get} /user/event_categories Get all the event categories
+ * @api {get} /user/event/categories Get all the event categories
  * @apiName Get Event Categories
  * @apiVersion 0.3.2
  * @apiGroup User
@@ -470,9 +471,28 @@ router.post('/project', (req, res, next) => {
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Categories
  */
-router.get('/event_categories', (req, res, next) => {
+router.get('/event/categories', (req, res, next) => {
   Category.getAll(req.uow)
     .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
+});
+
+/**
+ * @api {get} /admin/hackathon/active Get the uid, name, and pin base of the active hackathon
+ * @apiVersion 0.3.2
+ * @apiName active hackathon
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array containing name of active hackathon
+ */
+router.get('/hackathon/active', (req, res, next) => {
+  Hackathon.getActiveHackathon(req.uow)
+    .then((data) => {
+      res.type('json').status(200).send(data[0]);
+    })
     .catch(err => errorHandler500(err, next));
 });
 

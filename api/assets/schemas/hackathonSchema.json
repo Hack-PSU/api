@@ -16,7 +16,7 @@
       "minLength": 1
     },
     "end_time": {
-      "type": "string",
+      "type": ["string", "null"],
       "minLength": 1
     },
     "base_pin": {

@@ -20,6 +20,7 @@ const { PreRegistration } = require('../models/PreRegistration');
 const { RSVP } = require('../models/RSVP');
 const { Attendance } = require('../models/Attendance');
 const { Location } = require('../models/Location');
+const { Hackathon } = require('../models/Hackathon');
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -789,6 +790,52 @@ router.get('/statistics', verifyACL(2), (req, res, next) => {
   Registration.getStatsCount(req.uow)
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
+});
+
+/**
+ * @api {get} /admin/active_hackathon Get the uid, name, and pin base of the active hackathon
+ * @apiVersion 0.3.2
+ * @apiName active hackathon
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array containing name of active hackathon
+ */
+router.get('/active_hackathon', verifyACL(3), (req, res, next) => {
+  Hackathon.getActiveHackathon(req.uow)
+    .then((data) => {
+      res.type('json').status(200).send(data[0]);
+    })
+    .catch(err => errorHandler500(err, next));
+});
+
+/**
+ * @api {post} /admin/active_hackathon Get the uid of the active hackathon
+ * @apiVersion 0.3.2
+ * @apiName active hackathon
+ * @apiGroup Admin
+ * @apiPermission Exec
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array containing uid of active hackathon
+ */
+router.post('/add_hackathon', verifyACL(3), (req, res, next) => {
+
+  if(req.body && req.body.name && req.body.startTime && req.body.basePin && req.body.active) {
+    const hackathon = new Hackathon(req.body, req.uow);
+    hackathon.add().then((data) => {
+      console.log(data);
+      res.type('json').status(201).send({message: `Added new hackathon with name: ${req.body.name}`});
+    }).catch((err) => errorHandler500(err, next));
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = { error: 'Missing one of the following body parameters: name, start_time, base_pin, active'}
+    next(error);
+  }
 });
 
 module.exports = router;

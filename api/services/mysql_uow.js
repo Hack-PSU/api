@@ -1,13 +1,13 @@
+/* eslint-disable no-underscore-dangle */
 const streamify = require('stream-array');
-const MysqlConnection = require('./mysql_connection');
+
 
 module.exports = class MysqlUow {
   /**
    *
-   * @param connection {MysqlConnection}
    */
-  constructor() {
-    this.connection = new MysqlConnection();
+  constructor(connection) {
+    this.connection = connection;
   }
 
   /**
@@ -20,17 +20,28 @@ module.exports = class MysqlUow {
     if (!params) {
       params = {};
     }
-    return this.connection.beginTransaction()
-      .then(() => this.connection.query(query, params))
-      .then((result) => {
-        if (opts && opts.stream) {
-          return streamify(result[0]);
-        }
-        return result[0];
+    return new Promise((resolve, reject) => {
+      this.connection.beginTransaction(() => {
+        this.connection.query(query, params, (err, result) => {
+          if (err) {
+            this.connection.rollback();
+            reject(err);
+          }
+          if (opts && opts.stream) {
+            return resolve(streamify(result));
+          }
+          return resolve(result);
+        });
       });
+    });
   }
 
   complete() {
-    return this.connection.release();
+    return new Promise((resolve) => {
+      this.connection.commit(() => {
+        this.connection.release();
+        resolve(null);
+      });
+    });
   }
 };

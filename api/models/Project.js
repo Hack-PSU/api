@@ -68,7 +68,7 @@ module.exports.Project = class Project extends BaseObject {
       return Promise.reject(new Error(validation.error));
     }
     let prepped = 'CALL ';
-    prepped = prepped.concat(process.env.APP_ENV === 'test' ? 'assignTeam_test' : 'assignTeam');
+    prepped = prepped.concat('assignTeam');
     prepped = prepped.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;');
     const list = [this.project_name, this.team.join(','), this.categories.join(',')];
     return this.uow.query(prepped, list);
@@ -80,7 +80,7 @@ module.exports.Project = class Project extends BaseObject {
    */
   assignTable() {
     let prepped = 'CALL ';
-    prepped = prepped.concat(process.env.APP_ENV === 'test' ? 'assignTable_test' : 'assignTable')
+    prepped = prepped.concat('assignTable')
       .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
     const list = [this.projectId, Math.min(...this.categories.map(c => parseInt(c, 10)))];
     return this.uow.query(prepped, list);

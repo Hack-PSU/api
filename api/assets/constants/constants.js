@@ -2,10 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = {
-  emailKey: {
-    key: process.env.ACCESS_KEY_ID,
-    secret: process.env.SECRET_ACCESS_KEY,
-  },
   sqlConnection: {
     connectionLimit: 1000,
     timeout: 60 * 60 * 1000,
@@ -73,4 +69,5 @@ module.exports = {
     resumeBucket: process.env.APP_ENV === 'test' ? 'hackpsu-resumes-test' : 'hackpsuf2018-resumes',
     travelReimbursementBucket: process.env.APP_ENV === 'test' ? 'hackpsu2018-travel-reimbursement-receipts-test' : 'hackpsuf2018-travel-reimbursement-receipts',
   },
+  SendGridApiKey: process.env.SENDGRID_ACCESS_KEY,
 };

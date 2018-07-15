@@ -1,14 +1,13 @@
 /* eslint-disable max-len,func-names */
 // Collection of utility functions
-const ses = require('node-ses');
 const validator = require('email-validator');
 const request = require('request');
 const Stringify = require('streaming-json-stringify');
-const { promisify } = require('util');
+const { pushNotifKey, SendGridApiKey } = require('../assets/constants/constants');
+const sendgrid = require('@sendgrid/mail');
 
-const { emailKey, pushNotifKey } = require('../assets/constants/constants');
 
-const client = ses.createClient(emailKey);
+sendgrid.setApiKey(SendGridApiKey);
 /**
  * This function substitutes the provided
  * @param {String} html A string of HTML text that forms the body of the email. All substitutables must be formatted as $substitutable$. The HTML MUST contain the $NAME$ substitutable.
@@ -16,7 +15,7 @@ const client = ses.createClient(emailKey);
  * @param {Object} [substitutions] A map of strings with the following format { keyword-to-substitute: string-to-substitute-with, ... }; Example: { date: "09-23-2000" }
  * @return {Promise} return a promised data with a subbed version of the html
  */
-function emailSubstitute (html, name, substitutions) {
+function emailSubstitute(html, name, substitutions) {
   return new Promise(((resolve, reject) => {
     let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
     for (const key in substitutions) {
@@ -30,22 +29,16 @@ function emailSubstitute (html, name, substitutions) {
     }
     return resolve(subbedHTML);
   }));
-};
+}
 
 /**
  * Makes the POST request to the email server URL
  * @param data Contains the options for the POST request. For schema, refer to function createEmailRequest or the SendInBlue API
  * @return {Promise<any>}
  */
-function sendEmail (data) {
-  return new Promise((resolve, reject) => {
-    client.sendEmail(data, (err) => {
-      if (err) {
-        reject(err);
-      } else resolve(data);
-    });
-  });
-};
+function sendEmail(data) {
+  return sendgrid.send(data);
+}
 
 
 /* `from` - email address from which to send (required)
@@ -71,10 +64,10 @@ function createEmailRequest(email, htmlContent, subject, fromEmail) {
     to: email,
     from: emailAddress,
     subject,
-    message: htmlContent,
+    html: htmlContent,
     replyTo: emailAddress,
   };
-};
+}
 
 /**
  *

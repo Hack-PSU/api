@@ -65,26 +65,12 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
   static getCount(uow) {
     return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
   }
-
   /**
+   * Adds a new hackathon. Validates the data and begins a transaction
    *
-   * @param uow
-   * @return {Promise<Stream>}
+   * @return {Promise<ResultSet>}
    */
-  static getActiveHackathon(uow) {
-    const query = squel.select(squelOptions)
-      .field('uid')
-      .field('name')
-      .field('base_pin')
-      .from(TABLE_NAME)
-      .where('active = ?', true)
-      .toParam();
-    query.text = query.text.concat(';');
-    return uow.query(query.text, query.values);
-  }
-
-  add(forceActive = true) {
-    this.active = true;
+  add() {
     const validation = this.validate();
     if (!validation.result) {
       if (process.env.APP_ENV !== 'test') {
@@ -94,6 +80,7 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
       return Promise.reject(new Error(validation.error));
     }
 
+    /** -- Deprecated see ActiveHackathon Class --/
     // Force this hackathon to be the active hackathon
     if (forceActive) {
       return new Promise((resolve, reject) => {
@@ -145,16 +132,19 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
           });
       });
     }
+    **/
+    let RegTableName = 'REGISTRATION';
     const query = squel.insert(squelOptions)
       .into(this.tableName)
       .setFieldsRows([this._dbRepresentation])
       .set(
         'base_pin',
-        squel.select(squelOptions)
-          .from(RegistrationTableName)
+        squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
+          .from(RegTableName)
           .field('MAX(pin)'),
       )
       .toParam();
+    console.log(query);
     return super.add({ query });
   }
 

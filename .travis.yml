@@ -29,10 +29,11 @@ before_deploy:
 - chmod +x ./prepare_deploy.sh
 - ./prepare_deploy.sh prod
 - nodecipher decrypt ./api/hackpsu18-ecc9dc4878c6.json.enc "./api/hackpsu18-ecc9dc4878c6.json" -p ${PKEY_PASS} -a aes-256-cbc-hmac-sha256
+- cd api
 deploy:
   provider: gae
   skip_cleanup: true
   keyfile: hackpsu18-ecc9dc4878c6.json
   project: hackpsu18
-  config: api/app.yaml
+  config: app.yaml
   on: master

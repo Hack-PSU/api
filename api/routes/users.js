@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const Ajv = require('ajv');
 const _ = require('lodash');
+const validator = require('email-validator');
 const {
   errorHandler500, emailSubstitute, createEmailRequest, sendEmail, streamHandler,
 } = require('../services/functions');
@@ -384,7 +385,7 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
  * @apiName Post user project data
  * @apiGroup Users
  * @apiPermission User
- * @apiParam {String} project_name Name of the project
+ * @apiParam {String} projectName Name of the project
  * @apiParam {Array} team Array of team emails
  * @apiParam {Array} categories Array of category IDs the project is submitting for
 
@@ -399,13 +400,15 @@ router.post('/project', (req, res, next) => {
   3) insert project categories
   4) get project id
    */
+  console.log(req.body);
   if (!res.locals.user) {
     const error = new Error();
     error.body = { error: 'Could not find user' };
     error.status = 400;
     return next(error);
   }
-  if (!validateProjectRegistration(req.body)) {
+  const project = new Project(req.body, req.uow);
+  if (!project.validate() || !project.team.map(validator.validate).every(value => value)) {
     const error = new Error();
     error.status = 400;
     error.body = {
@@ -415,7 +418,6 @@ router.post('/project', (req, res, next) => {
   }
   // Valid project
   const uidPromises = req.body.team.map(email => authenticator.getUserId(email));
-  let project = null;
   Promise.all(uidPromises)
     .catch((err) => {
       const error = new Error();
@@ -435,30 +437,35 @@ router.post('/project', (req, res, next) => {
       const { categories } = req.body;
       if (!categories ||
         !Array.isArray(categories) ||
-        categories.length !== categories.filter(value => value.match(/\d+/)).length) {
+        categories.length !== categories.filter(value => value.toString().match(/\d+/)).length) {
         const error = new Error();
         error.body = { result: 'Some categories were not valid. Check and try again' };
         error.status = 400;
         return next(error);
       }
       // Categories array is valid
-      project = new Project({
-        projectName: req.body.projectName,
-        team: Array.from(uids),
-        categories,
-      });
-      return project
-        .add();
+      project.team = Array.from(uids);
+      project.categories = categories;
+      return project.add();
+    })
+    .catch((err) => {
+      if (err.errno === 1452) {
+        // Registration could not be found.
+        err.status = 404;
+        throw err;
+      }
+      throw err;
     })
     .then((result) => {
       if (process.env.APP_ENV === 'debug') {
         console.debug(result);
       }
+      project.projectId = result[1][0].projectID;
       // Project ID returned here.
       // Assign a table now
       return project.assignTable();
     })
-    .then(result => res.status(200).send(result))
+    .then(result => res.status(200).send(result[1][0]))
     .catch(err => errorHandler500(err, next));
 });
 

@@ -4,7 +4,6 @@ require('dotenv').config();
 if (process.env.NODE_ENV === 'production') {
   require('@google-cloud/trace-agent').start();
 }
-
 const http = require('http');
 const express = require('express');
 const path = require('path');
@@ -40,6 +39,7 @@ function normalizePort(val) {
 
 const app = express();
 
+app.set('trust proxy', true);
 app.use((req, res, next) => {
   function complete() {
     if (req.uow) {

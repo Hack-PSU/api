@@ -70,6 +70,22 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
    *
    * @return {Promise<ResultSet>}
    */
+/*
+  static getActiveHackathon(uow) {
+    const query = squel.select(squelOptions)
+      .field('uid')
+      .field('name')
+      .field('base_pin')
+      .from(TABLE_NAME)
+      .where('active = ?', true)
+      .toParam();
+    query.text = query.text.concat(';');
+    return uow.query(query.text, query.values);
+  }
+
+  add() {
+    this.active = true;
+    */
   add() {
     const validation = this.validate();
     if (!validation.result) {
@@ -79,6 +95,32 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
       }
       return Promise.reject(new Error(validation.error));
     }
+  /*
+    // Create a new connection and begin a transaction
+    const activeQuery = squel.update(squelOptions)
+      .table(TABLE_NAME)
+      .set('active', false)
+      .set('end_time', new Date().getTime().toString())
+      .where('active = ?', true)
+      .toParam();
+    const newHackathonQuery = squel.insert(squelOptions)
+      .into(TABLE_NAME)
+      .setFieldsRows([this._dbRepresentation])
+      .set(
+        'base_pin',
+        squel.select({
+          autoQuoteTableNames: false,
+          autoQuoteFieldNames: false,
+        })
+          .from('REGISTRATION FOR UPDATE')
+          .field('MAX(pin)'),
+      )
+      .toParam();
+    const query = {
+      text: activeQuery.text.concat(';').concat(newHackathonQuery.text).concat(';'),
+      values: activeQuery.values.concat(newHackathonQuery.values),
+    };
+    */
 
     /** -- Deprecated see ActiveHackathon Class --/
     // Force this hackathon to be the active hackathon
@@ -148,9 +190,7 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
     return super.add({ query });
   }
 
-
   static generateTestData(uow) {
     throw new Error('Not implemented');
   }
 };
-

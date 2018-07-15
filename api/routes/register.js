@@ -1,39 +1,21 @@
 /* eslint-disable consistent-return,no-param-reassign */
 const express = require('express');
+const validator = require('email-validator');
+const path = require('path');
+const authenticator = require('../services/auth');
+const constants = require('../assets/constants/constants');
+const { errorHandler500 } = require('../services/functions');
+const database = require('../services/database');
+const StorageService = require('../services/storage_service');
+const { STORAGE_TYPES, StorageFactory } = require('../services/factories/storage_factory');
+const { Registration } = require('../models/Registration');
+const { PreRegistration } = require('../models/PreRegistration');
+
+const Storage = new StorageService(STORAGE_TYPES.S3);
 
 const router = express.Router();
-const validator = require('email-validator');
-const authenticator = require('../assets/helpers/auth');
-const constants = require('../assets/helpers/constants');
-const Ajv = require('ajv');
-const path = require('path');
-
-const ajv = new Ajv({ allErrors: true });
-
-const aws = require('aws-sdk');
-const multer = require('multer');
-const multers3 = require('multer-s3');
-const database = require('../assets/helpers/database');
-const RegistrationModel = require('../assets/models/RegistrationModel');
-
-aws.config.update({
-  accessKeyId: constants.s3Connection.accessKeyId,
-  secretAccessKey: constants.s3Connection.secretAccessKey,
-  region: constants.s3Connection.region,
-});
-
-const s3 = new aws.S3();
 
 /** ****************** HELPER FUNCTIONS ********************** */
-
-/**
- *
- * @param data
- */
-function validateRegistration(data) {
-  const validate = ajv.compile(constants.registeredUserSchema);
-  return !!validate(data);
-}
 
 /**
  *
@@ -43,28 +25,22 @@ function validateRegistration(data) {
  * @return {string}
  */
 function generateFileName(uid, firstName, lastName) {
-  return `${uid}-${firstName}-${lastName}-HackPSUS2018.pdf`;
+  return `${uid}-${firstName}-${lastName}-HackPSUF2018.pdf`;
 }
 
-
-const storage = multers3({
-  s3,
-  bucket: constants.s3Connection.s3BucketName,
-  acl: 'public-read',
-  serverSideEncryption: 'AES256',
-  metadata(req, file, cb) {
-    cb(null, {
-      fieldName: file.fieldname,
-      uid: req.body.uid,
-    });
-  },
-  key(req, file, cb) {
-    cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
-  },
-});
-
-
-const upload = multer({
+const upload = Storage.upload({
+  storage: StorageFactory.GCStorage({
+    bucket: constants.GCS.resumeBucket,
+    metadata(req, file, cb) {
+      cb(null, {
+        fieldName: file.fieldname,
+        uid: req.body.uid,
+      });
+    },
+    key(req, file, cb) {
+      cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
+    },
+  }),
   fileFilter(req, file, cb) {
     if (path.extname(file.originalname) !== '.pdf') {
       const error = new Error();
@@ -72,11 +48,8 @@ const upload = multer({
       error.body = 'Only pdfs are allowed';
       return cb(error);
     }
-
     cb(null, true);
   },
-  storage,
-  limits: { fileSize: 1024 * 1024 * 10 }, // limit to 10MB
 });
 
 
@@ -87,25 +60,24 @@ const upload = multer({
  */
 
 function checkAuthentication(req, res, next) {
-  if (req.headers.idtoken) {
-    authenticator.checkAuthentication(req.headers.idtoken)
-      .then((decodedToken) => {
-        res.locals.privilege = decodedToken.privilege;
-        res.locals.uid = decodedToken.uid;
-
-        next();
-      }).catch((err) => {
-        const error = new Error();
-        error.status = 401;
-        error.body = err.message;
-        next(error);
-      });
-  } else {
+  if (!req.headers.idtoken) {
     const error = new Error();
     error.status = 401;
     error.body = { error: 'ID Token must be provided' };
-    next(error);
+    return next(error);
   }
+  authenticator.checkAuthentication(req.headers.idtoken)
+    .then((decodedToken) => {
+      res.locals.privilege = decodedToken.privilege;
+      res.locals.uid = decodedToken.uid;
+      next();
+    })
+    .catch((err) => {
+      const error = new Error();
+      error.status = 401;
+      error.body = err.message;
+      next(error);
+    });
 }
 
 /**
@@ -115,16 +87,11 @@ function checkAuthentication(req, res, next) {
  * @param next
  */
 function storeIP(req, res, next) {
-  if (process.env.NODE_ENV === 'prod') {
-    database.storeIP(req.headers.http_x_forwarded_for, req.headers['user-agent'])
-      .then(() => {
-        next();
-      }).catch(() => {
-        next();
-      });
-  } else {
-    next();
+  if (process.env.NODE_ENV !== 'production') {
+    return next();
   }
+  database.storeIP(req.uow, req.headers['X-AppEngine-User-IP'], req.headers['user-agent'])
+    .finally(next);
 }
 
 
@@ -141,20 +108,20 @@ function storeIP(req, res, next) {
  * @apiUse IllegalArgumentError
  */
 router.post('/pre', (req, res, next) => {
-  if (!(req.body && req.body.email && validator.validate(req.body.email))) {
+  if (!req.body ||
+    !req.body.email ||
+    !validator.validate(req.body.email)) {
     const error = new Error();
     error.body = { error: 'Request body must be set and must be a valid email' };
     error.status = 400;
-    next(error);
-  } else {
-    database.addPreRegistration(req.body.email)
-      .then(() => {
-        res.status(200).send({ status: 'Success' });
-      }).catch((err) => {
-        err.status = err.status || 500;
-        next(err);
-      });
+    return next(error);
   }
+  new PreRegistration({ email: req.body.email }, req.uow)
+    .add()
+    .then(() => {
+      res.status(200).send({ status: 'Success' });
+    })
+    .catch(err => errorHandler500(err, next));
 });
 
 
@@ -163,14 +130,13 @@ router.post('/pre', (req, res, next) => {
  * @apiVersion 0.1.1
  * @apiName Registration
  * @apiGroup Registration
- * @apiParam {Object} data:
  * @apiParamExample {Object} Request-Example: {
 	req.header: {
 		idtoken: <user's idtoken>
 	}
 
  	request.body: {
-			firstName: "Matt",
+firstName: "Matt",
             lastName: "Stewart",
             gender: "Male",
             shirtSize: "L",
@@ -191,14 +157,14 @@ router.post('/pre', (req, res, next) => {
             mlhDCP: true,
             referral: "facebook",
             project: "My project description",
-            resume: https://s3.aws.com/link-to-file
+            resume: <FILE_OBJECT>
     }
  * @apiUse AuthArgumentRequired
- * @apiParam {String} firstname First name of the user
- * @apiParam {String} lastname Last name of the user
+ * @apiParam {String} firstName First name of the user
+ * @apiParam {String} lastName Last name of the user
  * @apiParam {String} gender Gender of the user
- * @apiParam {enum} shirt_size [XS, S, M, L, XL, XXL]
- * @apiParam {String} [dietary_restriction] The dietary restictions for the user
+ * @apiParam {enum} shirtSize [XS, S, M, L, XL, XXL]
+ * @apiParam {String} [dietaryRestriction] The dietary restictions for the user
  * @apiParam {String} [allergies] Any allergies the user might have
  * @apiParam {boolean} travelReimbursement=false
  * @apiParam {boolean} firstHackathon=false Is this the user's first hackathon
@@ -236,39 +202,43 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
 
   req.body.mlhdcp = req.body.mlhdcp && req.body.mlhdcp === 'true';
 
-  if (!(req.body && validateRegistration(req.body) && validator.validate(req.body.email) && req.body.eighteenBeforeEvent && req.body.mlhcoc && req.body.mlhdcp)) {
+  req.body.uid = res.locals.uid;
+
+  if (!(req.body &&
+    validator.validate(req.body.email) &&
+    req.body.eighteenBeforeEvent &&
+    req.body.mlhcoc && req.body.mlhdcp)) {
     console.error('Request body:');
     console.error(req.body);
-    console.error('Registration validation:');
-    console.error(validateRegistration(req.body));
     console.error('Email validation:');
     console.error(validator.validate(req.body.email));
     const error = new Error();
     error.body = { error: 'Reasons for error: Request body must be set, must use valid email, eighteenBeforeEvent mlhcoc and mlhdcp must all be true' };
     error.status = 400;
-    next(error);
-  } else {
-    // Add to database
-    if (req.file) {
-      req.body.resume = `https://s3.${
-        constants.s3Connection.region
-      }.amazonaws.com/${
-        constants.s3Connection.s3BucketName
-      }/${
-        generateFileName(req.body.uid, req.body.firstName, req.body.lastName)}`;
-    }
-    database.addRegistration(new RegistrationModel(req.body))
-      .then(() => {
-        database.setRegistrationSubmitted(req.body.uid);
-        res.status(200).send({ response: 'Success' });
-      }).catch((err) => {
-        const error = new Error();
-        error.body = { error: err.message };
-        error.status = 400;
-        next(error);
-      });
+    return next(error);
   }
+  // Add to database
+  if (req.file) {
+    req.body.resume = `https://s3.${
+      constants.s3Connection.region
+    }.amazonaws.com/${
+      constants.s3Connection.s3BucketName
+    }/${
+      generateFileName(req.body.uid, req.body.firstName, req.body.lastName)}`;
+  }
+  const reg = new Registration(req.body, req.uow);
+  reg
+    .add()
+    .then(() => reg.submit())
+    .then(() => {
+      res.status(200).send({ response: 'Success' });
+    })
+    .catch((err) => {
+      const error = new Error();
+      error.body = { error: err.message };
+      error.status = 400;
+      next(error);
+    });
 });
-
 
 module.exports = router;

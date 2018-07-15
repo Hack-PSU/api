@@ -1,11 +1,14 @@
+/* eslint-disable consistent-return */
 const express = require('express');
 const Ajv = require('ajv');
+const squel = require('squel');
+const database = require('../services/database');
+const { errorHandler500 } = require('../services/functions');
+const { Registration } = require('../models/Registration');
+const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/constants/constants');
 
 const router = express.Router();
-const database = require('../assets/helpers/database');
 
-
-const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/helpers/constants');
 
 const ajv = new Ajv({ allErrors: true });
 /** ************* HELPER FUNCTIONS ************** */
@@ -13,14 +16,17 @@ const ajv = new Ajv({ allErrors: true });
 
 /** ************* HELPER MIDDLEWARE ************* */
 router.use((req, res, next) => {
-  if (req.headers.apikey && req.headers.apikey === rediskey) {
-    next();
-  } else {
+  if (process.env.APP_ENV === 'debug') {
+    return next();
+  }
+  if (!req.headers.apikey ||
+    req.headers.apikey !== rediskey) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Illegal access. Please check the credentials' };
-    next(error);
+    return next(error);
   }
+  next();
 });
 
 
@@ -40,17 +46,30 @@ router.use((req, res, next) => {
  */
 router.get('/registrations', (req, res, next) => {
   const arr = [];
-  database.getRegistrations(null, null, { fields: ['uid', 'pin', 'firstname', 'lastname', 'shirt_size', 'dietary_restriction'] })
-    .on('data', document => arr.push(document))
-    .on('err', (err) => {
-      const error = new Error();
-      error.status = 500;
-      error.body = err.message;
-      next(error);
-    })
-    .on('end', () => {
-      res.status(200).send(arr);
-    });
+  Registration.getAll(
+    req.uow,
+    {
+      fields: ['uid',
+        // Subtract the base pin for the current hackathon from the retrieved pin.
+        `pin - (${squel.select({
+          autoQuoteTableNames: false,
+          autoQuoteFieldNames: false,
+        }).from('HACKATHON').field('base_pin').where('active = 1')
+          .toString()}) AS pin`,
+        'firstname',
+        'lastname',
+        'shirt_size',
+        'dietary_restriction'],
+      currentHackathon: true,
+      quoteFields: false,
+    },
+  ).then((stream) => {
+    stream.pipe(res)
+      .on('err', err => errorHandler500(err, next))
+      .on('end', () => {
+        res.status(200).send(arr);
+      });
+  }).catch(err => errorHandler500(err, next));
 });
 
 /**
@@ -77,23 +96,20 @@ router.get('/registrations', (req, res, next) => {
  */
 router.post('/assignment', (req, res, next) => {
   const validate = ajv.compile(rfidAssignmentSchema);
-  if (req.body && req.body.assignments && validate(req.body.assignments)) {
-    // LEGAL
-    database.addRfidAssignments(req.body.assignments)
-      .then(() => {
-        res.status(200).send({ message: 'success' });
-      }).catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
-  } else {
+  if (!req.body ||
+    !req.body.assignments ||
+    !validate(req.body.assignments)) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Assignments must be provided as a valid Json Array' };
-    next(error);
+    return next(error);
   }
+  // LEGAL
+  database.addRfidAssignments(req.body.assignments, req.uow)
+    .then(() => {
+      res.status(200).send({ message: 'success' });
+    })
+    .catch(err => errorHandler500(err, next));
 });
 
 
@@ -121,24 +137,19 @@ router.post('/assignment', (req, res, next) => {
  */
 router.post('/scans', (req, res, next) => {
   const validate = ajv.compile(rfidScansSchema);
-  if (req.body && req.body.scans && validate(req.body.scans)) {
-    // LEGAL
-    database.addRfidScans(req.body.scans)
-      .then(() => {
-        res.status(200).send({ message: 'success' });
-      }).catch((err) => {
-        const error = new Error();
-        error.status = 500;
-        error.body = err.message;
-        next(error);
-      });
-  } else {
+  if (!req.body ||
+    !req.body.scans ||
+    !validate(req.body.scans)) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Assignments must be provided as a valid Json Array' };
-    next(error);
+    return next(error);
   }
+  // LEGAL
+  database.addRfidScans(req.body.scans, req.uow)
+    .then(() => {
+      res.status(200).send({ message: 'success' });
+    }).catch(err => errorHandler500(err, next));
 });
-
 
 module.exports = router;

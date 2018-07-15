@@ -35,4 +35,6 @@ deploy:
   keyfile: hackpsu18-ecc9dc4878c6.json
   project: hackpsu18
   config: api/app.yaml
-  on: master
+  on:
+    all_branches: true
+    condition: $TRAVIS_BRANCH =~ ^travis|master$

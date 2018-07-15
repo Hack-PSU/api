@@ -47,6 +47,10 @@ module.exports.Registration = class Registration extends BaseObject {
     return registeredUserSchema;
   }
 
+  static getTableName() {
+    return TABLE_NAME
+  }
+
   get tableName() {
     return TABLE_NAME;
   }

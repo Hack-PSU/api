@@ -65,12 +65,12 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
   static getCount(uow) {
     return super.getCount(uow, TABLE_NAME, COLUMN_NAME);
   }
-
   /**
+   * Adds a new hackathon. Validates the data and begins a transaction
    *
-   * @param uow
-   * @return {Promise<Stream>}
+   * @return {Promise<ResultSet>}
    */
+/*
   static getActiveHackathon(uow) {
     const query = squel.select(squelOptions)
       .field('uid')
@@ -85,6 +85,8 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
 
   add() {
     this.active = true;
+    */
+  add() {
     const validation = this.validate();
     if (!validation.result) {
       if (process.env.APP_ENV !== 'test') {
@@ -93,6 +95,7 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
       }
       return Promise.reject(new Error(validation.error));
     }
+  /*
     // Create a new connection and begin a transaction
     const activeQuery = squel.update(squelOptions)
       .table(TABLE_NAME)
@@ -117,6 +120,73 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
       text: activeQuery.text.concat(';').concat(newHackathonQuery.text).concat(';'),
       values: activeQuery.values.concat(newHackathonQuery.values),
     };
+    */
+
+    /** -- Deprecated see ActiveHackathon Class --/
+    // Force this hackathon to be the active hackathon
+    if (forceActive) {
+      return new Promise((resolve, reject) => {
+        // Create a new connection and begin a transaction
+        const { connection } = this.uow;
+        connection.connection.connectAsync()
+          .then(() => {
+            const { pool } = connection.connection;
+            pool.getConnection((err, poolConnection) => {
+              if (err) {
+                return reject(err);
+              }
+              poolConnection.beginTransaction((err) => {
+                if (err) {
+                  return reject(err);
+                }
+                const activeQuery = squel.update(squelOptions)
+                  .table(TABLE_NAME)
+                  .set('active', false)
+                  .set('end_time', new Date().getTime().toString())
+                  .where('active = ?', true)
+                  .toParam();
+                const newHackathonQuery = squel.insert(squelOptions)
+                  .into(TABLE_NAME)
+                  .setFieldsRows([this._dbRepresentation])
+                  .set(
+                    'base_pin',
+                    squel.select()
+                      .from('REGISTRATION')
+                      .field('MAX(pin)'),
+                  )
+                  .toParam();
+                const query = {
+                  text: activeQuery.text.concat(';').concat(newHackathonQuery.text).concat(';'),
+                  values: activeQuery.values.concat(newHackathonQuery.values),
+                };
+                poolConnection.query(query.text, query.values, (err) => {
+                  if (err) {
+                    poolConnection.rollback();
+                    return reject(err);
+                  }
+                  poolConnection.commit(() => poolConnection.release());
+                  return resolve(this._dbRepresentation);
+                });
+                return null;
+              });
+              return null;
+            });
+          });
+      });
+    }
+    **/
+    let RegTableName = 'REGISTRATION';
+    const query = squel.insert(squelOptions)
+      .into(this.tableName)
+      .setFieldsRows([this._dbRepresentation])
+      .set(
+        'base_pin',
+        squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
+          .from(RegTableName)
+          .field('MAX(pin)'),
+      )
+      .toParam();
+    console.log(query);
     return super.add({ query });
   }
 

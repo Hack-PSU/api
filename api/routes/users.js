@@ -19,6 +19,7 @@ const { Hackathon } = require('../models/Hackathon');
 const { Project } = require('../models/Project');
 const { RSVP } = require('../models/RSVP');
 const { Category } = require('../models/Category');
+const { ActiveHackathon } = require('../models/ActiveHackathon');
 
 const storage = new StorageService(STORAGE_TYPES.S3);
 const router = express.Router();
@@ -496,7 +497,7 @@ router.get('/event/categories', (req, res, next) => {
  * @apiSuccess {Array} Array containing name of active hackathon
  */
 router.get('/hackathon/active', (req, res, next) => {
-  Hackathon.getActiveHackathon(req.uow)
+  ActiveHackathon.get(req.uow)
     .then((data) => {
       res.type('json').status(200).send(data[0]);
     })

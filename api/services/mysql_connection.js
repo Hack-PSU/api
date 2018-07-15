@@ -1,27 +1,23 @@
 /* eslint-disable no-underscore-dangle */
-const Mysqlcache = require('mysql-cache');
-const { sqlConnection } = require('../assets/constants/constants');
 
-if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production') {
-  sqlConnection.host = '';
-} else {
-  sqlConnection.socketPath = '';
-}
-
-const mySqlCacheConnection = new Mysqlcache(sqlConnection);
 
 module.exports = class MySQLConnection {
   /**
    *
-   * @param connection {MysqlCache}
    */
   constructor() {
-    this._connection = mySqlCacheConnection;
+    this._connection = null;
+  }
+
+  _connect() {
+    return connectAsync((connection) => {
+      this._connection = connection;
+    });
   }
 
   /**
    *
-   * @returns {Mysqlcache|MysqlCache}
+   * @returns {PoolConnection}
    */
   get connection() {
     return this._connection;
@@ -32,7 +28,14 @@ module.exports = class MySQLConnection {
    * @return {Promise<any>}
    */
   beginTransaction() {
-    return this.connection.connectAsync();
+    let promise;
+    if (!this.connection) {
+      promise = this._connect();
+    } else {
+      promise = Promise.resolve();
+    }
+    return promise
+      .then(() => this.connection.beginTransaction());
   }
 
   /**
@@ -42,20 +45,18 @@ module.exports = class MySQLConnection {
    * @return {Promise<any>}
    */
   query(query, params) {
-    return this.connection.queryAsync(query, params);
+    return new Promise((resolve, reject) => {
+      this.connection.query(query, params, (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(rows);
+      });
+    });
   }
 
   release() {
-    // Resolve directly as 'mysql-cache' handles clearing the pool
     return Promise.resolve();
-  }
-
-  get hits() {
-    return this.connection.hits;
-  }
-
-  get misses() {
-    return this.connection.misses;
   }
 };
 

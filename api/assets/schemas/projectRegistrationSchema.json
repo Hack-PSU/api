@@ -7,8 +7,7 @@
     "team": {
       "type": "array",
       "items": {
-        "type": "string",
-        "format": "email"
+        "type": "string"
       },
       "uniqueItems": true,
       "minItems": 1,
@@ -20,7 +19,7 @@
     }
   },
   "required": [
-    "projectName",
+    "project_name",
     "team",
     "categories"
   ]

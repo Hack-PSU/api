@@ -16,20 +16,6 @@ module.exports = {
     database: process.env.SQL_DATABASE || process.env.RDS_DATABASE || 'my_db',
     port: process.env.SQL_PORT || 3306,
     multipleStatements: true,
-    prettyError: true,
-    caching: true,
-    cacheProvider: 'node-cache',
-    // cacheProviders can be supplied with additional configurations via this variable!
-    cacheProviderSetup: {
-      serverLocation: process.env.REDIS_SERVER || '127.0.0.1:11211',
-      username: process.env.REDIS_USERNAME || 'username',
-      password: process.env.REDIS_PASSWORD || '',
-      options: {
-        retries: 10,
-        retry: 10000,
-        remove: true,
-      },
-    },
     typeCast: function castField(field, useDefaultTypeCasting) {
       // We only want to cast bit fields that have a single-bit in them. If the field
       // has more than one bit, then we cannot assume it is supposed to be a Boolean.

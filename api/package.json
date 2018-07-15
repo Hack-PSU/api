@@ -38,7 +38,6 @@
     "multer-google-storage": "1.2.1",
     "multer-s3": "^2.7.0",
     "mysql": "2.15.0",
-    "mysql-cache": "2.1.2",
     "node-time-uuid": "0.1.5",
     "parallel-transform": "1.1.0",
     "pug": "2.0.3",

@@ -19,6 +19,7 @@ const { RSVP } = require('../models/RSVP');
 const { Attendance } = require('../models/Attendance');
 const { Location } = require('../models/Location');
 const { Hackathon } = require('../models/Hackathon');
+const { ActiveHackathon } = require('../models/ActiveHackathon');
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -791,7 +792,7 @@ router.get('/statistics', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {post} /admin/hackathon Get the uid of the active hackathon
+ * @api {post} /admin/hackathon Add a new non-active hackathon
  * @apiVersion 0.3.2
  * @apiName active hackathon
  * @apiGroup Admin
@@ -799,19 +800,63 @@ router.get('/statistics', verifyACL(2), (req, res, next) => {
  *
  * @apiUse AuthArgumentRequired
  *
- * @apiSuccess {Array} Array containing uid of active hackathon
+ * @apiSuccess (201) {String} Added new non-active hackathon
  */
 router.post('/hackathon', verifyACL(4), (req, res, next) => {
-  if (req.body && req.body.name && req.body.startTime) {
+  if (req.body && req.body.name && req.body.startTime && req.body.endTime) {
     const hackathon = new Hackathon(req.body, req.uow);
     hackathon.add().then((data) => {
-      console.log(data);
-      res.type('json').status(200).send(data);
+      res.type('json').status(200).send({message:'Added new non-active hackathon'});
     }).catch(err => errorHandler500(err, next));
   } else {
     const error = new Error();
     error.status = 400;
-    error.body = { error: 'Missing one of the following body parameters: name, start_time, base_pin, active' };
+    error.body = { error: 'Missing one of the following body parameters: name, startTime, endTime' };
+    next(error);
+  }
+});
+
+/**
+ * @api {post} /admin/hackathon/active Add a new active hackathon
+ * @apiVersion 0.3.2
+ * @apiName active hackathon
+ * @apiGroup Admin
+ * @apiPermission Tech-Exec
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess (201) {String} Added new active hackathon
+ */
+router.post('/hackathon/active', verifyACL(4), (req, res, next) => {
+  if(req.body && req.body.name) {
+    const activeHackathon = new ActiveHackathon(req.body, req.uow);
+    activeHackathon.add().then((data) => {
+      res.type('json').status(200).send({message: 'Added new active hackathon'});
+    }).catch(err => errorHandler500(err, next));
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = { error: 'Missing one of the following body parameters: name, startTime' };
+    next(error);
+  }
+});
+
+router.post('/hackathon/update', verifyACL(4), (req, res, next) => {
+  if (req.body && req.body.uid) {
+    if(req.body.active) {
+      const error = new Error();
+      error.status = 400;
+      error.body = { error: 'Please you /hackathon/update/active to update the active hackathon'};
+      next(error);
+    }
+    const hackathon = new Hackathon(req.body, req.uow);
+    hackathon.update().then((data) => {
+      res.type('json').status(200).send({message:'Updated non-active hackathon'});
+    }).catch(err => errorHandler500(err, next));
+  } else {
+    const error = new Error();
+    error.status = 400;
+    error.body = { error: 'Missing the following body parameter: uid' };
     next(error);
   }
 });

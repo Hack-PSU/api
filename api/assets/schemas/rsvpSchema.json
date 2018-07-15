@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "rsvp_time": {
+      "type": "number"
+    },
+    "rsvp_status": {
+      "type": "boolean"
+    }
+  },
+  "required": ["user_id", "rsvp_time", "rsvp_status"]
+}

@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "properties": {
+    "uid": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 45
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "start_time": {
+      "type": "string",
+      "minLength": 1
+    },
+    "end_time": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "base_pin": {
+      "type": ["number", "null"]
+    }
+  },
+  "required": ["uid", "name", "start_time"]
+}

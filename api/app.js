@@ -1,4 +1,9 @@
-/* eslint-disable import/no-unresolved,no-console */
+/* eslint-disable import/no-unresolved,no-console,global-require */
+require('dotenv').config();
+
+if (process.env.NODE_ENV === 'production') {
+  require('@google-cloud/trace-agent').start();
+}
 const http = require('http');
 const express = require('express');
 const path = require('path');
@@ -6,11 +11,8 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
-const firebase = require('firebase-admin');
-const fs = require('fs');
-const nodecipher = require('node-cipher');
 const cors = require('cors');
-const redisAdapter = require('socket.io-redis');
+const { UowFactory } = require('./services/factories/uow_factory');
 
 /**
  * Normalize a port into a number, string, or false.
@@ -33,34 +35,43 @@ function normalizePort(val) {
   return false;
 }
 
+/** ************ EXPRESS APP ************ */
+
 const app = express();
+
+app.set('trust proxy', true);
+app.use((req, res, next) => {
+  function complete() {
+    if (req.uow) {
+      req.uow.complete();
+    }
+  }
+
+  res.on('finish', complete);
+  res.on('close', complete);
+  next();
+});
+
+app.use((req, res, next) => {
+  UowFactory.create().then((uow) => {
+    req.uow = uow;
+    next();
+  }).catch((err) => {
+    next(err);
+  });
+});
+
+app.use((req, res, next) => {
+  UowFactory.createRTDB().then((uow) => {
+    req.rtdb = uow;
+    next();
+  }).catch(next);
+});
+
 /**
  * Create HTTP server.
  */
 const server = http.createServer(app);
-/**
- * Socket IO listener
- */
-const io = require('socket.io').listen(server, {
-  origin: 'http://localhost:*',
-  path: '/v1/live',
-  handlePreflightRequest(req, res) {
-    const headers = {
-      'Access-Control-Allow-Headers': 'Content-Type, idtoken',
-      'Access-Control-Allow-Origin': req.headers.origin,
-      'Access-Control-Allow-Credentials': true,
-    };
-    res.writeHead(200, headers);
-    res.end();
-  },
-});
-
-io.adapter(redisAdapter({
-  host: 'redis-17891.c44.us-east-1-2.ec2.cloud.redislabs.com',
-  port: 17891,
-  password: process.env.PKEY_PASS,
-})); // TODO: Update
-require('./routes/sockets')(io);
 
 /**
  * Get port from environment and store in Express.
@@ -69,17 +80,18 @@ const port = normalizePort(process.env.PORT || '5000');
 app.set('port', port);
 
 
-const whitelist = /^((https:\/\/)?((.*)\.)?hackpsu.(com|org))$/;
+const whitelist = /^((https:\/\/)?((.*)\.)?hackpsu.(com|org))|(http:\/\/localhost:?\d*)$/;
 const corsOptions = {
   origin: (origin, callback) => {
     if (whitelist.test(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // Allow all cross-origin requests for now
+      callback(null, false); // Allow all cross-origin requests for now
     }
   },
 };
 
+// TODO: Fix CORS
 app.options('/', (req, res, next) => {
   next();
 });
@@ -90,22 +102,8 @@ const register = require('./routes/register');
 const admin = require('./routes/admin');
 const pi = require('./routes/pi');
 const live = require('./routes/live');
+const internal = require('./routes/internal');
 
-nodecipher.decryptSync({
-  input: 'privatekey.aes',
-  output: 'config.json',
-  password: process.env.PKEY_PASS,
-  algorithm: 'aes-256-cbc-hmac-sha256',
-});
-
-const serviceAccount = require('./config.json');
-
-firebase.initializeApp({
-  credential: firebase.credential.cert(serviceAccount),
-  databaseURL: 'https://hackpsu18.firebaseio.com',
-});
-
-fs.unlinkSync('./config.json');
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
 
@@ -116,14 +114,14 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 // don't show the log when it is test
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.APP_ENV !== 'test') {
   // use morgan to log at command line
   app.use(logger('combined')); // 'combined' outputs the Apache style LOGs
 }
 app.use(bodyParser.json({
   limit: '10mb',
 }));
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -132,8 +130,9 @@ app.use('/v1/users', users);
 app.use('/v1/register', register);
 app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 app.use('/v1/admin', admin);
-app.use('/v1/pi', pi);
+app.use('/v1/pi', pi); // Deprecated
 app.use('/v1/live', live);
+app.use('/v1/internal', internal);
 
 
 // catch 404 and forward to error handler
@@ -145,7 +144,7 @@ app.use((req, res, next) => {
 
 // error handler
 app.use((err, req, res, next) => {
-  if (process.env.NODE_ENV !== 'test') {
+  if (process.env.APP_ENV !== 'test') {
     console.error(err);
   }
   // set locals, only providing error in development

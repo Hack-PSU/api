@@ -1,0 +1,23 @@
+{
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "properties": {
+      "rfid_uid": {
+        "type": "string"
+      },
+      "scan_location": {
+        "type": "string"
+      },
+      "scan_time": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "rfid_uid",
+      "scan_location",
+      "scan_time"
+    ]
+  }
+}

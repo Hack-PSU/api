@@ -1,38 +1,16 @@
 /* eslint-disable no-console,max-len */
-const aws = require('aws-sdk');
-const base64 = require('base64-stream');
-const { Readable } = require('stream');
+const database = require('../services/database');
+const authenticator = require('../services/auth');
 
-const constants = require('../assets/helpers/constants');
-const database = require('../assets/helpers/database');
-const authenticator = require('../assets/helpers/auth');
+const { Update: UpdateModel } = require('../models/Update');
+const { Event: EventModel } = require('../models/Event');
 
-const UpdateModel = require('../assets/models/UpdateModel');
-const EventModel = require('../assets/models/EventModel');
+const { sendNotification } = require('../services/functions');
 
-const { sendNotification } = require('../assets/helpers/functions');
-
-aws.config.update({
-  accessKeyId: constants.s3Connection.accessKeyId,
-  secretAccessKey: constants.s3Connection.secretAccessKey,
-  region: constants.s3Connection.region,
-});
-const s3 = new aws.S3();
+// TODO: Deprecated
 
 
 /** ************** HELPER FUNCTIONS *************** */
-/**
- *
- * @param {String} dataString base64 encoded string
- * @return {NodeJS.WritableStream}
- */
-function parseFile(dataString) {
-  const readable = new Readable();
-  readable.push(dataString.split(',')[1]);
-  readable.push(null);
-  return readable.pipe(base64.decode());
-}
-
 module.exports = (io) => {
   const updates = io.of('/updates');
   const events = io.of('/events');
@@ -165,12 +143,12 @@ module.exports = (io) => {
      * @apiGroup Websocket
      * @apiPermission Team Member
      *
-     * @apiParam {string} event_location UID of the location that the event takes place at
-     * @apiParam {number} event_start_time The epoch start time of the event
-     * @apiParam {number} event_end_time The epoch end time of the event
-     * @apiParam {string} event_title Title of the event
-     * @apiParam {string} event_description Description of the event
-     * @apiParam {enum} event_type The type of event. Possible types are: 'food', 'workshop', 'activity'
+     * @apiParam {string} eventLocation UID of the location that the event takes place at
+     * @apiParam {number} eventStartTime The epoch start time of the event
+     * @apiParam {number} eventEndTime The epoch end time of the event
+     * @apiParam {string} eventTitle Title of the event
+     * @apiParam {string} eventDescription Description of the event
+     * @apiParam {enum} eventType The type of event. Possible types are: 'food', 'workshop', 'activity'
      * @apiUse AuthArgumentRequired
      * @apiSuccess {Event} broadcasted on socket room 'event'
      *

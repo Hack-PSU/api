@@ -1,0 +1,13 @@
+cron:
+    - description: "Log mysql metrics"
+      url: /v1/internal/metrics
+      schedule: every 12 hours
+      target: default
+      retry_parameters:
+          min_backoff_seconds: 60
+          job_retry_limit: 5
+          max_doublings: 5
+    - description: "Clear test db"
+      url: /v1/internal/scrub_test
+      schedule: every 24 hours
+      target: default

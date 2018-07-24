@@ -43,7 +43,7 @@ class StorageFactory {
 
   /**
    *
-   * @param opts {Storage.ConfigurationObject}
+   * @param opts {any}
    * @returns {MulterGoogleCloudStorage}
    */
   static GCStorage(opts) {
@@ -53,6 +53,7 @@ class StorageFactory {
       projectId: opts.projectId || process.env.GOOGLE_PROJECT_ID,
       bucket: opts.bucketName || process.env.GOOGLE_STORAGE_BUCKET,
       maxRetries: 10,
+      filename: opts.key || ((req, file, cb) => cb(null, file.fieldname)),
     });
   }
 }

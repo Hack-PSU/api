@@ -10,12 +10,12 @@ const {
 const authenticator = require('../services/auth');
 const StorageService = require('../services/storage_service');
 const { STORAGE_TYPES, StorageFactory } = require('../services/factories/storage_factory');
+const { logger } = require('../services/logging');
 const constants = require('../assets/constants/constants');
 const { projectRegistrationSchema, travelReimbursementSchema } =
   require('../assets/schemas/load-schemas')(['projectRegistrationSchema', 'travelReimbursementSchema']);
 const TravelReimbursement = require('../models/TravelReimbursement');
 const { Registration } = require('../models/Registration');
-const { Hackathon } = require('../models/Hackathon');
 const { Project } = require('../models/Project');
 const { RSVP } = require('../models/RSVP');
 const { Category } = require('../models/Category');
@@ -56,7 +56,7 @@ function validateProjectRegistration(project) {
   const validate = ajv.compile(projectRegistrationSchema);
   if (process.env.APP_ENV === 'test') {
     validate(project);
-    console.error(validate.errors);
+    logger.error(validate.errors);
   }
   return !!validate(project);
 }
@@ -68,7 +68,7 @@ function validateProjectRegistration(project) {
 function validateReimbursement(data) {
   const validate = ajv.compile(travelReimbursementSchema);
   const result = !!validate(data);
-  console.error(validate.errors);
+  logger.error(validate.errors);
   return result;
 }
 
@@ -230,6 +230,7 @@ router.get('/project', (req, res, next) => {
         });
     }).catch(err => errorHandler500(err, next));
 });
+
 /**
  * @api {post} /users/rsvp confirm the RSVP status for the current user and send a email containing their pin
  * @apiVersion 0.1.1
@@ -256,7 +257,7 @@ router.post('/rsvp', (req, res, next) => {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'Could not identify user' };
-    console.error(error);
+    logger.error(error);
     return next(error);
   }
   // RSVP login starts here
@@ -400,7 +401,7 @@ router.post('/project', (req, res, next) => {
   3) insert project categories
   4) get project id
    */
-  console.log(req.body);
+  logger.log(req.body);
   if (!res.locals.user) {
     const error = new Error();
     error.body = { error: 'Could not find user' };
@@ -458,7 +459,7 @@ router.post('/project', (req, res, next) => {
     })
     .then((result) => {
       if (process.env.APP_ENV === 'debug') {
-        console.debug(result);
+        logger.debug(result);
       }
       project.projectId = result[1][0].projectID;
       // Project ID returned here.

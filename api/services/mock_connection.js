@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { logger } = require('../services/logging');
 
 class MockStream {
   constructor() {
@@ -6,7 +7,7 @@ class MockStream {
   }
 
   stream() {
-    console.log(`Streaming data :P ${this.toString()}`);
+    logger.info(`Streaming data :P ${this.toString()}`);
     return this.s;
   }
 }
@@ -18,7 +19,7 @@ module.exports = class MockConnection {
    * @return {Promise<any>}
    */
   beginTransaction(callback) {
-    console.log('Starting transaction');
+    logger.info('Starting transaction');
     this.noop();
     callback();
   }
@@ -28,7 +29,7 @@ module.exports = class MockConnection {
    * @return {Promise<any>}
    */
   rollback(callback) {
-    console.error('Rolling back');
+    logger.error('Rolling back');
     this.noop();
     callback();
   }
@@ -40,13 +41,21 @@ module.exports = class MockConnection {
    * @return {MockStream}
    */
   query(query, params) {
-    console.log(`Query: ${query}\n Params: ${params}`);
+    logger.info(`Query: ${query}\n Params: ${params}`);
     this.noop();
     return new MockStream();
   }
 
   release(callback) {
-    console.log('Connection released');
+    logger.info('Connection released');
+    this.noop();
+    if (callback) {
+      callback();
+    }
+  }
+
+  commit(callback) {
+    logger.info('Query committed.');
     this.noop();
     if (callback) {
       callback();

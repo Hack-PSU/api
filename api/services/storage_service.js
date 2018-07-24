@@ -1,5 +1,6 @@
 /* eslint no-underscore-dangle: [2, { "allowAfterThis": true }] */
 const multer = require('multer');
+const { s3Connection } = require('../assets/constants/constants');
 const { STORAGE_TYPES, StorageFactory } = require('./factories/storage_factory');
 
 module.exports = class StorageService {
@@ -36,5 +37,20 @@ module.exports = class StorageService {
     multerOpts.fileFilter = opts.fileFilter ? opts.fileFilter : null;
     multerOpts.limits = opts.limits ? opts.limits : { fileSize: 1024 * 1024 * 10 };
     return multer(multerOpts);
+  }
+
+  /**
+   *
+   * @param name Name of the file
+   */
+  uploadedFileUrl(name) {
+    switch (this.storage) {
+      case STORAGE_TYPES.S3:
+        return `https://s3.${s3Connection.region}.amazonaws.com/${s3Connection.s3BucketName}/${name}`;
+      case STORAGE_TYPES.GCS:
+        return `https://storage.googleapis.com/${this.storage.bucket}/${name}`;
+      default:
+        return '';
+    }
   }
 };

@@ -21,24 +21,19 @@ const { RSVP } = require('../models/RSVP');
 const { Category } = require('../models/Category');
 const { ActiveHackathon } = require('../models/ActiveHackathon');
 
-const storage = new StorageService(STORAGE_TYPES.S3);
+const storage = new StorageService(STORAGE_TYPES.GCS, {
+  bucketName: constants.GCS.travelReimbursementBucket,
+  key(req, file, cb) {
+    cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
+  },
+});
+// const storage = new StorageService(STORAGE_TYPES.S3);
 const router = express.Router();
 
 
 const ajv = new Ajv({ allErrors: true });
 
 const upload = storage.upload({
-  storage: StorageFactory.GCStorage({
-    bucket: constants.GCS.travelReimbursementBucket,
-    metadata(req, file, cb) {
-      cb(null, {
-        fieldName: file.fieldname,
-      });
-    },
-    key(req, file, cb) {
-      cb(null, generateFileName(req.body.fullName, file));
-    },
-  }),
   fileFilter(req, file, cb) {
     if (path.extname(file.originalname) !== '.jpeg' &&
       path.extname(file.originalname) !== '.png' &&
@@ -327,7 +322,7 @@ router.get('/rsvp', (req, res, next) => {
   RSVP.rsvpStatus(res.locals.user.uid, req.uow)
     .then((statusArray) => {
       const [status] = statusArray;
-      res.status(200).send(status || { rsvp_status: false });
+      res.status(200).send(status);
     })
     .catch(err => errorHandler500(err, next));
 });
@@ -364,10 +359,7 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
   }
   req.body.reimbursementAmount =
     adjustReimbursementPrice(req.body.reimbursementAmount, req.body.groupMembers);
-  req.body.receiptURIs = req.files.map(file =>
-    `https://s3.${constants.s3Connection.region}
-    .amazonaws.com/${constants.s3Connection.s3TravelReimbursementBucket}
-    /${file.key}`)
+  req.body.receiptURIs = req.files.map(({ key }) => storage.uploadedFileUrl(key))
     .join(',');
   new TravelReimbursement(Object.assign(req.body, { uid: res.locals.user.uid }))
     .add()

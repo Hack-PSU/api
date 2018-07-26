@@ -86,7 +86,7 @@ const corsOptions = {
     if (whitelist.test(origin)) {
       callback(null, true);
     } else {
-      callback(null, true);
+      callback(null, false);
     }
   },
 };
@@ -144,6 +144,7 @@ app.use((req, res, next) => {
 // error handler
 app.use((err, req, res, next) => {
   if (process.env.APP_ENV !== 'test') {
+    logger.error(err.body);
     logger.error(err);
   }
   // set locals, only providing error in development

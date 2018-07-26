@@ -9,6 +9,8 @@ module.exports = class StorageService {
       throw new Error('Storage type must be provided.');
     }
 
+    this.storageType = storageType;
+    this.bucket = opts.bucketName;
     switch (storageType) {
       case STORAGE_TYPES.GCS:
         this._storage = StorageFactory.GCStorage(opts);
@@ -19,7 +21,6 @@ module.exports = class StorageService {
       default:
         throw new Error('Illegal storage value.');
     }
-    this._storage = storageType;
   }
 
   get storage() {
@@ -36,6 +37,7 @@ module.exports = class StorageService {
     multerOpts.storage = opts.storage || this.storage;
     multerOpts.fileFilter = opts.fileFilter ? opts.fileFilter : null;
     multerOpts.limits = opts.limits ? opts.limits : { fileSize: 1024 * 1024 * 10 };
+    multerOpts.acl = opts.acl || 'privateRead';
     return multer(multerOpts);
   }
 
@@ -44,11 +46,11 @@ module.exports = class StorageService {
    * @param name Name of the file
    */
   uploadedFileUrl(name) {
-    switch (this.storage) {
+    switch (this.storageType) {
       case STORAGE_TYPES.S3:
         return `https://s3.${s3Connection.region}.amazonaws.com/${s3Connection.s3BucketName}/${name}`;
       case STORAGE_TYPES.GCS:
-        return `https://storage.googleapis.com/${this.storage.bucket}/${name}`;
+        return `https://storage.googleapis.com/${this.bucket}/${name}`;
       default:
         return '';
     }

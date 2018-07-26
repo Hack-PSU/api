@@ -44,6 +44,7 @@ const upload = storage.upload({
     }
     cb(null, true);
   },
+  acl: 'publicRead',
 });
 
 
@@ -85,7 +86,8 @@ function storeIP(req, res, next) {
     return next();
   }
   database.storeIP(req.uow, req.headers['X-AppEngine-User-IP'], req.headers['user-agent'])
-    .finally(next);
+    .then(next)
+    .catch(() => next());
 }
 
 
@@ -226,7 +228,8 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
     .catch((err) => {
       const error = new Error();
       error.body = { error: err.message };
-      error.status = 400;
+      // If duplicate, send 400, else 500.
+      error.status = err.errno === 1062 ? 400 : 500;
       next(error);
     });
 });

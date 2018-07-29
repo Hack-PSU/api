@@ -1,4 +1,4 @@
-/* eslint-disable no-console,max-len */
+/* eslint-disable no-logger,max-len */
 const database = require('../services/database');
 const authenticator = require('../services/auth');
 
@@ -6,6 +6,7 @@ const { Update: UpdateModel } = require('../models/Update');
 const { Event: EventModel } = require('../models/Event');
 
 const { sendNotification } = require('../services/functions');
+const { logger } = require('../services/logging');
 
 // TODO: Deprecated
 
@@ -94,7 +95,7 @@ module.exports = (io) => {
                 .then((result) => {
                   if (update.push_notification) {
                     sendNotification(update.title, update.message)
-                      .catch(err1 => console.error(err1));
+                      .catch(err1 => logger.error(err1));
                   }
                   socket.emit('upload-complete', 'Complete');
                   updates.emit('update', [result]);

@@ -2,7 +2,7 @@
 const multers3 = require('multer-s3');
 const aws = require('aws-sdk');
 const constants = require('../../assets/constants/constants');
-const Storage = require('multer-google-storage');
+const GCSStorageEngine = require('./GCSStorageEngine');
 
 aws.config.update({
   accessKeyId: constants.s3Connection.accessKeyId,
@@ -43,16 +43,23 @@ class StorageFactory {
 
   /**
    *
-   * @param opts {Storage.ConfigurationObject}
+   * @param opts {any}
    * @returns {MulterGoogleCloudStorage}
    */
   static GCStorage(opts) {
-    return Storage.storageEngine({
+    return new GCSStorageEngine({
       autoRetry: true,
       keyFilename: opts.keyFilename || process.env.GOOGLE_APPLICATION_CREDENTIALS,
       projectId: opts.projectId || process.env.GOOGLE_PROJECT_ID,
       bucket: opts.bucketName || process.env.GOOGLE_STORAGE_BUCKET,
       maxRetries: 10,
+      filename: opts.key || ((req, file, cb) => cb(null, file.fieldname)),
+      metadata: {
+        metadata: {
+          'Access-Control-Allow-Origin': process.env.GOOGLE_STORAGE_CORS || '*',
+        },
+        cacheControl: process.env.GOOGLE_STORAGE_CACHE || 'public, max-age=3600',
+      },
     });
   }
 }

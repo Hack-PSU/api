@@ -3,6 +3,7 @@ const BaseObject = require('./BaseObject');
 const squel = require('squel');
 const uuidv4 = require('uuid/v4');
 const hackathonSchema = require('../assets/schemas/load-schemas')('hackathonSchema');
+const { logger } = require('../services/logging');
 
 const TABLE_NAME = 'HACKATHON';
 const COLUMN_NAME = 'uid';
@@ -76,8 +77,8 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
     const validation = this.validate();
     if (!validation.result) {
       if (process.env.APP_ENV !== 'test') {
-        console.warn('Validation failed while adding hackathon.');
-        console.warn(this._dbRepresentation);
+        logger.warn('Validation failed while adding hackathon.');
+        logger.warn(this._dbRepresentation);
       }
       return Promise.reject(new Error(validation.error));
     }
@@ -91,7 +92,6 @@ module.exports.Hackathon = class Hackathon extends BaseObject {
           .field('MAX(pin)'),
       )
       .toParam();
-    console.log(query);
     return super.add({ query });
   }
 

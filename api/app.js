@@ -1,17 +1,17 @@
-/* eslint-disable import/no-unresolved,no-console,global-require */
-require('dotenv').config();
-
+/* eslint-disable import/no-unresolved,no-logger,global-require */
 if (process.env.NODE_ENV === 'production') {
   require('@google-cloud/trace-agent').start();
 }
+require('dotenv').config();
 const http = require('http');
 const express = require('express');
 const path = require('path');
-const logger = require('morgan');
+const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const cors = require('cors');
+const { logger } = require('./services/logging');
 const { UowFactory } = require('./services/factories/uow_factory');
 
 /**
@@ -86,12 +86,11 @@ const corsOptions = {
     if (whitelist.test(origin)) {
       callback(null, true);
     } else {
-      callback(null, false); // Allow all cross-origin requests for now
+      callback(null, false);
     }
   },
 };
 
-// TODO: Fix CORS
 app.options('/', (req, res, next) => {
   next();
 });
@@ -116,7 +115,7 @@ app.set('view engine', 'pug');
 // don't show the log when it is test
 if (process.env.APP_ENV !== 'test') {
   // use morgan to log at command line
-  app.use(logger('combined')); // 'combined' outputs the Apache style LOGs
+  app.use(morgan('combined', { stream: logger.stream })); // 'combined' outputs the Apache style LOGs
 }
 app.use(bodyParser.json({
   limit: '10mb',
@@ -145,7 +144,8 @@ app.use((req, res, next) => {
 // error handler
 app.use((err, req, res, next) => {
   if (process.env.APP_ENV !== 'test') {
-    console.error(err);
+    logger.error(err.body);
+    logger.error(err);
   }
   // set locals, only providing error in development
   res.locals.message = err.message;

@@ -13,6 +13,7 @@ const {
   streamHandler,
   sendEmail,
 } = require('../services/functions');
+const { logger } = require('../services/logging');
 const { Registration } = require('../models/Registration');
 const { PreRegistration } = require('../models/PreRegistration');
 const { RSVP } = require('../models/RSVP');
@@ -673,7 +674,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
         recipient_name: errorEmail.name || null,
         time: new Date().getTime(),
       })) : null)
-        .catch(console.error);
+        .catch(logger.error);
       if (res.locals.failArray.length === 0) {
         return res.status(200)
           .send(resolves); // Full success response
@@ -682,7 +683,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
       res.status(207)
         .send(res.locals.failArray.concat(resolves));
     })
-    .catch(console.error);
+    .catch(logger.error);
 });
 
 /**

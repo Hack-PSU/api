@@ -10,35 +10,30 @@ const {
 const authenticator = require('../services/auth');
 const StorageService = require('../services/storage_service');
 const { STORAGE_TYPES, StorageFactory } = require('../services/factories/storage_factory');
+const { logger } = require('../services/logging');
 const constants = require('../assets/constants/constants');
 const { projectRegistrationSchema, travelReimbursementSchema } =
   require('../assets/schemas/load-schemas')(['projectRegistrationSchema', 'travelReimbursementSchema']);
 const TravelReimbursement = require('../models/TravelReimbursement');
 const { Registration } = require('../models/Registration');
-const { Hackathon } = require('../models/Hackathon');
 const { Project } = require('../models/Project');
 const { RSVP } = require('../models/RSVP');
 const { Category } = require('../models/Category');
 const { ActiveHackathon } = require('../models/ActiveHackathon');
 
-const storage = new StorageService(STORAGE_TYPES.S3);
+const storage = new StorageService(STORAGE_TYPES.GCS, {
+  bucketName: constants.GCS.travelReimbursementBucket,
+  key(req, file, cb) {
+    cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
+  },
+});
+// const storage = new StorageService(STORAGE_TYPES.S3);
 const router = express.Router();
 
 
 const ajv = new Ajv({ allErrors: true });
 
 const upload = storage.upload({
-  storage: StorageFactory.GCStorage({
-    bucket: constants.GCS.travelReimbursementBucket,
-    metadata(req, file, cb) {
-      cb(null, {
-        fieldName: file.fieldname,
-      });
-    },
-    key(req, file, cb) {
-      cb(null, generateFileName(req.body.fullName, file));
-    },
-  }),
   fileFilter(req, file, cb) {
     if (path.extname(file.originalname) !== '.jpeg' &&
       path.extname(file.originalname) !== '.png' &&
@@ -56,7 +51,7 @@ function validateProjectRegistration(project) {
   const validate = ajv.compile(projectRegistrationSchema);
   if (process.env.APP_ENV === 'test') {
     validate(project);
-    console.error(validate.errors);
+    logger.error(validate.errors);
   }
   return !!validate(project);
 }
@@ -68,7 +63,7 @@ function validateProjectRegistration(project) {
 function validateReimbursement(data) {
   const validate = ajv.compile(travelReimbursementSchema);
   const result = !!validate(data);
-  console.error(validate.errors);
+  logger.error(validate.errors);
   return result;
 }
 
@@ -230,6 +225,7 @@ router.get('/project', (req, res, next) => {
         });
     }).catch(err => errorHandler500(err, next));
 });
+
 /**
  * @api {post} /users/rsvp confirm the RSVP status for the current user and send a email containing their pin
  * @apiVersion 0.1.1
@@ -256,7 +252,7 @@ router.post('/rsvp', (req, res, next) => {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'Could not identify user' };
-    console.error(error);
+    logger.error(error);
     return next(error);
   }
   // RSVP login starts here
@@ -326,7 +322,7 @@ router.get('/rsvp', (req, res, next) => {
   RSVP.rsvpStatus(res.locals.user.uid, req.uow)
     .then((statusArray) => {
       const [status] = statusArray;
-      res.status(200).send(status || { rsvp_status: false });
+      res.status(200).send(status);
     })
     .catch(err => errorHandler500(err, next));
 });
@@ -363,10 +359,7 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
   }
   req.body.reimbursementAmount =
     adjustReimbursementPrice(req.body.reimbursementAmount, req.body.groupMembers);
-  req.body.receiptURIs = req.files.map(file =>
-    `https://s3.${constants.s3Connection.region}
-    .amazonaws.com/${constants.s3Connection.s3TravelReimbursementBucket}
-    /${file.key}`)
+  req.body.receiptURIs = req.files.map(({ key }) => storage.uploadedFileUrl(key))
     .join(',');
   new TravelReimbursement(Object.assign(req.body, { uid: res.locals.user.uid }))
     .add()
@@ -400,7 +393,7 @@ router.post('/project', (req, res, next) => {
   3) insert project categories
   4) get project id
    */
-  console.log(req.body);
+  logger.log(req.body);
   if (!res.locals.user) {
     const error = new Error();
     error.body = { error: 'Could not find user' };
@@ -458,7 +451,7 @@ router.post('/project', (req, res, next) => {
     })
     .then((result) => {
       if (process.env.APP_ENV === 'debug') {
-        console.debug(result);
+        logger.debug(result);
       }
       project.projectId = result[1][0].projectID;
       // Project ID returned here.

@@ -2,16 +2,22 @@
 const express = require('express');
 const validator = require('email-validator');
 const path = require('path');
+const { logger } = require('../services/logging');
 const authenticator = require('../services/auth');
-const constants = require('../assets/constants/constants');
+const { HACKATHON_NAME, GCS } = require('../assets/constants/constants');
 const { errorHandler500 } = require('../services/functions');
 const database = require('../services/database');
 const StorageService = require('../services/storage_service');
-const { STORAGE_TYPES, StorageFactory } = require('../services/factories/storage_factory');
+const { STORAGE_TYPES } = require('../services/factories/storage_factory');
 const { Registration } = require('../models/Registration');
 const { PreRegistration } = require('../models/PreRegistration');
 
-const Storage = new StorageService(STORAGE_TYPES.S3);
+const storage = new StorageService(STORAGE_TYPES.GCS, {
+  bucketName: GCS.resumeBucket,
+  key(req, file, cb) {
+    cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
+  },
+});
 
 const router = express.Router();
 
@@ -25,22 +31,10 @@ const router = express.Router();
  * @return {string}
  */
 function generateFileName(uid, firstName, lastName) {
-  return `${uid}-${firstName}-${lastName}-HackPSUF2018.pdf`;
+  return `${uid}-${firstName}-${lastName}-${HACKATHON_NAME}.pdf`;
 }
 
-const upload = Storage.upload({
-  storage: StorageFactory.GCStorage({
-    bucket: constants.GCS.resumeBucket,
-    metadata(req, file, cb) {
-      cb(null, {
-        fieldName: file.fieldname,
-        uid: req.body.uid,
-      });
-    },
-    key(req, file, cb) {
-      cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
-    },
-  }),
+const upload = storage.upload({
   fileFilter(req, file, cb) {
     if (path.extname(file.originalname) !== '.pdf') {
       const error = new Error();
@@ -50,6 +44,7 @@ const upload = Storage.upload({
     }
     cb(null, true);
   },
+  acl: 'publicRead',
 });
 
 
@@ -91,7 +86,8 @@ function storeIP(req, res, next) {
     return next();
   }
   database.storeIP(req.uow, req.headers['X-AppEngine-User-IP'], req.headers['user-agent'])
-    .finally(next);
+    .then(next)
+    .catch(() => next());
 }
 
 
@@ -208,10 +204,10 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
     validator.validate(req.body.email) &&
     req.body.eighteenBeforeEvent &&
     req.body.mlhcoc && req.body.mlhdcp)) {
-    console.error('Request body:');
-    console.error(req.body);
-    console.error('Email validation:');
-    console.error(validator.validate(req.body.email));
+    logger.error('Request body:');
+    logger.error(req.body);
+    logger.error('Email validation:');
+    logger.error(validator.validate(req.body.email));
     const error = new Error();
     error.body = { error: 'Reasons for error: Request body must be set, must use valid email, eighteenBeforeEvent mlhcoc and mlhdcp must all be true' };
     error.status = 400;
@@ -219,12 +215,8 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
   }
   // Add to database
   if (req.file) {
-    req.body.resume = `https://s3.${
-      constants.s3Connection.region
-    }.amazonaws.com/${
-      constants.s3Connection.s3BucketName
-    }/${
-      generateFileName(req.body.uid, req.body.firstName, req.body.lastName)}`;
+    req.body.resume = storage
+      .uploadedFileUrl(generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
   }
   const reg = new Registration(req.body, req.uow);
   reg
@@ -236,7 +228,8 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
     .catch((err) => {
       const error = new Error();
       error.body = { error: err.message };
-      error.status = 400;
+      // If duplicate, send 400, else 500.
+      error.status = err.errno === 1062 ? 400 : 500;
       next(error);
     });
 });

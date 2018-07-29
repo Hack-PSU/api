@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = {
+  HACKATHON_NAME: 'hackpsuF2018',
   sqlConnection: {
     connectionLimit: 1000,
     timeout: 60 * 60 * 1000,

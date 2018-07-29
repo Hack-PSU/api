@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 const streamify = require('stream-array');
-
+const { logger } = require('../services/logging');
 
 module.exports = class MysqlUow {
   /**
@@ -23,6 +23,8 @@ module.exports = class MysqlUow {
     return new Promise((resolve, reject) => {
       this.connection.beginTransaction(() => {
         this.connection.query(query, params, (err, result) => {
+          logger.log(err);
+          logger.log(result);
           if (err) {
             this.connection.rollback();
             reject(err);

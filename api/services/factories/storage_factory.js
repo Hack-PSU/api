@@ -56,9 +56,9 @@ class StorageFactory {
       filename: opts.key || ((req, file, cb) => cb(null, file.fieldname)),
       metadata: {
         metadata: {
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': process.env.GOOGLE_STORAGE_CORS || '*',
         },
-        cacheControl: 'public, max-age=3600',
+        cacheControl: process.env.GOOGLE_STORAGE_CACHE || 'public, max-age=3600',
       },
     });
   }

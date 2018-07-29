@@ -7,7 +7,7 @@ class MockStream {
   }
 
   stream() {
-    logger.info(`Streaming data :P ${this.toString()}`);
+    logger.info(`Streaming data : ${this.toString()}`);
     return this.s;
   }
 }

@@ -6,16 +6,12 @@ module.exports = class GCSStorageEngine {
     cb(null, `${uuid()}_${file.originalname}`);
   }
 
-  getDestination(req, file, cb) {
-    cb(null, '');
-  }
-
   constructor(opts) {
     opts = opts || {};
 
-    this.getFilename = (opts.filename || this.getFilename);
+    this.getFilename = opts.filename || this.getFilename;
 
-    opts.bucket = (opts.bucket || process.env.GCS_BUCKET || null);
+    opts.bucket = opts.bucket || process.env.GCS_BUCKET || null;
     opts.projectId = opts.projectId || process.env.GCLOUD_PROJECT || null;
     opts.keyFilename = opts.keyFilename || process.env.GCS_KEYFILE || null;
 
@@ -35,38 +31,32 @@ module.exports = class GCSStorageEngine {
       projectId: opts.projectId,
       keyFilename: opts.keyFilename,
     });
-
     this.gcsBucket = this.gcobj.bucket(opts.bucket);
-
     this.options = opts;
   }
 
   _handleFile(req, file, cb) {
-    this.getDestination(req, file, (err, destination) => {
+    this.getFilename(req, file, (err, filename) => {
       if (err) {
         return cb(err);
       }
-
-      this.getFilename(req, file, (err, filename) => {
-        if (err) {
-          return cb(err);
-        }
-        const gcFile = this.gcsBucket.file(filename);
-        file.stream.pipe(gcFile.createWriteStream({
-          predefinedAcl: this.options.acl || 'private',
-          metadata: this.options.metadata,
-        }))
-          .on('error', cb)
-          .on('finish', file => cb(null, {
-            path: `https://${this.options.bucket}.storage.googleapis.com/${filename}`,
-            filename,
-          }));
-      });
+      const gcFile = this.gcsBucket.file(filename);
+      return file.stream.pipe(gcFile.createWriteStream({
+        predefinedAcl: this.options.acl || 'private',
+        metadata: this.options.metadata,
+      }))
+        .on('error', cb)
+        .on('finish', () => cb(null, {
+          path: `https://${this.options.bucket}.storage.googleapis.com/${filename}`,
+          filename,
+        }));
     });
   }
 
   _removeFile(req, file, cb) {
     const gcFile = this.gcsBucket.file(file.filename);
-    gcFile.delete();
+    gcFile.delete()
+      .then(data => cb(null, data))
+      .catch(err => cb(err, null));
   }
 };

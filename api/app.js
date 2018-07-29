@@ -1,6 +1,7 @@
 /* eslint-disable import/no-unresolved,no-logger,global-require */
 if (process.env.NODE_ENV === 'production') {
   require('@google-cloud/trace-agent').start();
+  require('@google-cloud/debug-agent').start();
 }
 require('dotenv').config();
 const http = require('http');
@@ -140,11 +141,7 @@ app.use((err, req, res, next) => {
 
   // render the error page
   res.status(err.status || 500);
-  if (err.body) {
-    res.send(err.body);
-  } else {
-    res.render('error');
-  }
+  res.send(err);
   next();
 });
 

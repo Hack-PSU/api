@@ -1,17 +1,6 @@
 const fs = require('fs');
+const path = require('path');
 const { logger } = require('../services/logging');
-
-class MockStream {
-  constructor() {
-    this.s = fs.createReadStream('.dump_text', { encoding: 'utf-8' });
-  }
-
-  stream() {
-    logger.info(`Streaming data : ${this.toString()}`);
-    return this.s;
-  }
-}
-
 
 module.exports = class MockConnection {
   /**
@@ -38,12 +27,13 @@ module.exports = class MockConnection {
    *
    * @param query
    * @param params
-   * @return {MockStream}
+   * @param callback
+   * @return {Promise<MockStream>}
    */
-  query(query, params) {
-    logger.info(`Query: ${query}\n Params: ${params}`);
+  query(query, params, callback) {
+    logger.info(`Query: ${query}\n Params: ${JSON.stringify(params)}`);
     this.noop();
-    return new MockStream();
+    return callback(null, Array.of(fs.readFileSync(path.join(__dirname, './dump_text'), 'utf-8')));
   }
 
   release(callback) {

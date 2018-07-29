@@ -141,8 +141,11 @@ app.use((err, req, res, next) => {
 
   // render the error page
   res.status(err.status || 500);
-  res.send(err);
-  next();
+  if (err.body) {
+    res.send(err.body);
+  } else {
+    res.render('error');
+  }
 });
 
 module.exports = server;

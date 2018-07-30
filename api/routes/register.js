@@ -86,7 +86,7 @@ function storeIP(req, res, next) {
     return next();
   }
   database.storeIP(req.uow, req.headers['X-AppEngine-User-IP'], req.headers['user-agent'])
-    .then(next)
+    .then(() => next())
     .catch(() => next());
 }
 

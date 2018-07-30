@@ -1,7 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 const streamify = require('stream-array');
 
-
 module.exports = class MysqlUow {
   /**
    *

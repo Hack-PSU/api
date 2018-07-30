@@ -7,6 +7,7 @@ const logger = bunyan.createLogger({
   name: 'hackpsu-api',
   streams: [
     { stream: process.stdout, level: 'info' },
+    { stream: process.stderr, level: 'error' },
     loggingBunyan.stream('info'),
   ],
 });

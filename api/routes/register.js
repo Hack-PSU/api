@@ -85,7 +85,7 @@ function storeIP(req, res, next) {
   if (process.env.NODE_ENV !== 'production') {
     return next();
   }
-  database.storeIP(req.uow, req.headers['X-AppEngine-User-IP'], req.headers['user-agent'])
+  database.storeIP(req.uow, req.headers['x-appengine-user-ip'], req.headers['user-agent'])
     .then(() => next())
     .catch(() => next());
 }

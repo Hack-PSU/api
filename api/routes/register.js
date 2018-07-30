@@ -9,6 +9,7 @@ const { errorHandler500 } = require('../services/functions');
 const database = require('../services/database');
 const StorageService = require('../services/storage_service');
 const { STORAGE_TYPES } = require('../services/factories/storage_factory');
+const { emailSubstitute, createEmailRequest, sendEmail } = require("../services/functions");
 const { Registration } = require('../models/Registration');
 const { PreRegistration } = require('../models/PreRegistration');
 
@@ -222,6 +223,15 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
   reg
     .add()
     .then(() => reg.submit())
+    .then(() => {
+      // Generate confirmation email.
+      const html = ''; // TODO: Fill in confirmation HTML
+      return emailSubstitute(html, reg.firstname)
+    })
+    .then((preparedHTML) => {
+      const request = createEmailRequest(reg.email, preparedHTML, 'Thank you for your registration!', '');
+      return sendEmail(request);
+    })
     .then(() => {
       res.status(200).send({ response: 'Success' });
     })

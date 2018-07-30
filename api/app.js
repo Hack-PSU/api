@@ -1,12 +1,12 @@
 /* eslint-disable import/no-unresolved,no-logger,global-require */
 if (process.env.NODE_ENV === 'production') {
   require('@google-cloud/trace-agent').start();
+  require('@google-cloud/debug-agent').start();
 }
 require('dotenv').config();
 const http = require('http');
 const express = require('express');
 const path = require('path');
-const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
@@ -79,7 +79,6 @@ const server = http.createServer(app);
 const port = normalizePort(process.env.PORT || '5000');
 app.set('port', port);
 
-
 const whitelist = /^((https:\/\/)?((.*)\.)?hackpsu.(com|org))|(http:\/\/localhost:?\d*)$/;
 const corsOptions = {
   origin: (origin, callback) => {
@@ -90,10 +89,6 @@ const corsOptions = {
     }
   },
 };
-
-app.options('/', (req, res, next) => {
-  next();
-});
 
 const index = require('./routes/index');
 const users = require('./routes/users');
@@ -111,12 +106,6 @@ app.use(cors(corsOptions));
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
-
-// don't show the log when it is test
-if (process.env.APP_ENV !== 'test') {
-  // use morgan to log at command line
-  app.use(morgan('combined', { stream: logger.stream })); // 'combined' outputs the Apache style LOGs
-}
 app.use(bodyParser.json({
   limit: '10mb',
 }));
@@ -132,7 +121,6 @@ app.use('/v1/admin', admin);
 app.use('/v1/pi', pi); // Deprecated
 app.use('/v1/live', live);
 app.use('/v1/internal', internal);
-
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
@@ -159,6 +147,5 @@ app.use((err, req, res, next) => {
     res.render('error');
   }
 });
-
 
 module.exports = server;

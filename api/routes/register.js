@@ -23,12 +23,11 @@ const storage = new StorageService(STORAGE_TYPES.GCS, {
 
 const router = express.Router();
 
-
-const EMAIL_TEMPLATE_PATH = '../assets/constants/emails/email_template.html';
-const REGISTRATION_EMAIL_BODY = '../assets/constants/emails/registration_email_body.html';
-const emailTemplate = fs.readFileSync(path.join(__dir, EMAIL_TEMPLATE_PATH), 'utf-8');
-const registrationEmailBody = fs.readFileSync(path.join(__dir, REGISTRATION_EMAIL_BODY), 'utf-8');
-const emailHtml = emailTemplate.replace('SUBSTITUTEHERE', registrationEmailBody);
+let EMAIL_TEMPLATE_PATH = '../assets/emails/email_template.html';
+let REGISTRATION_EMAIL_BODY = '../assets/emails/registration_body.html';
+let emailTemplate = fs.readFileSync(path.join(__dirname, EMAIL_TEMPLATE_PATH), 'utf-8');
+let registrationEmailBody = fs.readFileSync(path.join(__dirname, REGISTRATION_EMAIL_BODY), 'utf-8');
+let emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
 
 /** ****************** HELPER FUNCTIONS ********************** */
 

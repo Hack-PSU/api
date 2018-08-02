@@ -2,6 +2,7 @@
 const express = require('express');
 const validator = require('email-validator');
 const path = require('path');
+const fs = require('fs');
 const { logger } = require('../services/logging');
 const authenticator = require('../services/auth');
 const { HACKATHON_NAME, GCS } = require('../assets/constants/constants');
@@ -21,6 +22,13 @@ const storage = new StorageService(STORAGE_TYPES.GCS, {
 });
 
 const router = express.Router();
+
+
+const EMAIL_TEMPLATE_PATH = '../assets/constants/emails/email_template.html';
+const REGISTRATION_EMAIL_BODY = '../assets/constants/emails/registration_email_body.html';
+const emailTemplate = fs.readFileSync(path.join(__dir, EMAIL_TEMPLATE_PATH), 'utf-8');
+const registrationEmailBody = fs.readFileSync(path.join(__dir, REGISTRATION_EMAIL_BODY), 'utf-8');
+const emailHtml = emailTemplate.replace('SUBSTITUTEHERE', registrationEmailBody);
 
 /** ****************** HELPER FUNCTIONS ********************** */
 
@@ -47,7 +55,6 @@ const upload = storage.upload({
   },
   acl: 'publicRead',
 });
-
 
 /** **************** HELPER MIDDLEWARE ************************* */
 
@@ -225,7 +232,7 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
     .then(() => reg.submit())
     .then(() => {
       // Generate confirmation email.
-      const html = ''; // TODO: Fill in confirmation HTML
+      const html = emailHtml;
       return emailSubstitute(html, reg.firstname)
     })
     .then((preparedHTML) => {

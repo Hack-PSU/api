@@ -34,7 +34,7 @@ function emailSubstitute(html, name, substitutions) {
 /**
  * Makes the POST request to the email server URL
  * @param data Contains the options for the POST request. For schema, refer to function createEmailRequest or the SendInBlue API
- * @return {Promise<any>}
+ * @return {Promise}
  */
 function sendEmail(data) {
   return sendgrid.send(data);

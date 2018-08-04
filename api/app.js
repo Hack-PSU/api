@@ -131,14 +131,23 @@ app.use((req, res, next) => {
 
 // error handler
 app.use((err, req, res, next) => {
-  logger.error(err);
-  if (err.body) {
-    logger.error(err.body);
+  if (process.env.APP_ENV !== 'test') {
+    logger.error(err);
+    if (err.body) {
+      logger.error(err.body);
+    }
   }
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   // render the error page
   res.status(err.status || 500);
-  res.send(err);
+  if (err.body) {
+    res.send(err.body);
+  } else {
+    res.render('error');
+  }
 });
 
 module.exports = server;

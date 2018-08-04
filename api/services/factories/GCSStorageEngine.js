@@ -45,7 +45,7 @@ module.exports = class GCSStorageEngine {
         predefinedAcl: this.options.acl || 'private',
         metadata: this.options.metadata,
       }))
-        .on('error', cb)
+        .on('error', (err) => cb(err))
         .on('finish', () => cb(null, {
           path: `https://${this.options.bucket}.storage.googleapis.com/${filename}`,
           filename,

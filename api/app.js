@@ -131,7 +131,7 @@ app.use((req, res, next) => {
 
 // error handler
 app.use((err, req, res, next) => {
-  if (process.env.APP_ENV !== 'test') {
+  if (process.env.NODE_ENV === 'production') {
     logger.error(err);
     if (err.body) {
       logger.error(err.body);

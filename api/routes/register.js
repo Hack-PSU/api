@@ -228,7 +228,9 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
   const reg = new Registration(req.body, req.uow);
   reg
     .add()
-    .then(() => reg.submit())
+    .then(() => {
+      return reg.submit();
+    })
     .then(() => {
       // Generate confirmation email.
       const html = emailHtml;
@@ -244,6 +246,7 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
     .catch((err) => {
       const error = new Error();
       error.body = { error: err.message };
+      logger.error(reg);
       // If duplicate, send 400, else 500.
       error.status = err.errno === 1062 ? 400 : 500;
       next(error);

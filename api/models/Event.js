@@ -5,7 +5,7 @@ const squel = require('squel');
 
 const chance = new Chance();
 const eventSchema = require('../assets/schemas/load-schemas')('eventSchema');
-const HttpError = require('../models/HttpError');
+const HttpError = require('../JSCommon/HttpError');
 
 const TABLE_NAME = 'EVENTS';
 module.exports.TABLE_NAME = TABLE_NAME;

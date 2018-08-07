@@ -4,7 +4,7 @@ const { verifyAuthMiddleware, verifyACL } = require('../services/auth');
 const { errorHandler500, streamHandler, sendNotification } = require('../services/functions');
 const { Update } = require('../models/Update');
 const { Event } = require('../models/Event');
-const HttpError = require('../models/HttpError');
+const HttpError = require('../JSCommon/HttpError');
 const { logger } = require('../services/logging');
 
 const router = express.Router();
@@ -74,7 +74,7 @@ router.post('/updates', verifyACL(2), (req, res, next) => {
   if (!req.body.updateImage) {
     req.body.updateImage = 'https://app.hackpsu.org/assets/images/logo.svg';
   }
-  const update = new Update(req.body, req.rtdb);
+  const update = new Update(req.body, req.rtdb, req.uow);
   update
     .add()
     .then((stream) => {

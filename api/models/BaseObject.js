@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle,no-param-reassign,class-methods-use-this */
 const squel = require('squel');
 const Ajv = require('ajv');
-const HttpError = require('./HttpError');
+const HttpError = require('../JSCommon/HttpError');
 
 const ajv = new Ajv({ allErrors: true });
 

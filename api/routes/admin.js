@@ -4,15 +4,15 @@ const Ajv = require('ajv');
 const express = require('express');
 const _ = require('lodash');
 const emailObjectSchema = require('../assets/schemas/load-schemas')('emailObjectSchema');
-const authenticator = require('../services/auth');
 const database = require('../services/database');
+const { verifyACL, checkAuthentication, elevate, getUserId, verifyAuthMiddleware } = require('../services/auth');
 const {
-  errorHandler500,
-  emailSubstitute,
-  createEmailRequest,
-  streamHandler,
-  sendEmail,
-} = require('../services/functions');
+        errorHandler500,
+        emailSubstitute,
+        createEmailRequest,
+        streamHandler,
+        sendEmail,
+      } = require('../services/functions');
 const { logger } = require('../services/logging');
 const { Registration } = require('../models/Registration');
 const { PreRegistration } = require('../models/PreRegistration');
@@ -33,36 +33,7 @@ const router = express.Router();
 /**
  * Administrator authentication middleware
  */
-router.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'debug') {
-    // Remove if you require idtoken support locally
-    return next();
-  }
-  if (!req.headers.idtoken) {
-    const error = new Error();
-    error.status = 401;
-    error.body = { error: 'ID Token must be provided' };
-    return next(error);
-  }
-  authenticator.checkAuthentication(req.headers.idtoken)
-    .then((decodedToken) => {
-      if (decodedToken.admin === true) {
-        res.locals.privilege = decodedToken.privilege;
-        res.locals.user = decodedToken;
-        return next();
-      }
-      const error = new Error();
-      error.status = 401;
-      error.body = { error: 'You do not have sufficient permissions for this operation' };
-      next(error);
-    })
-    .catch((err) => {
-      const error = new Error();
-      error.status = 401;
-      error.body = err.message;
-      return next(error);
-    });
-});
+router.use(verifyAuthMiddleware);
 
 router.use((req, res, next) => {
   if (!req.query.limit || parseInt(req.query.limit, 10)) {
@@ -126,33 +97,6 @@ function validateEmails(req, res, next) {
   next();
 }
 
-/**
- * This function checks if the current user has the permissions required to access the function
- * @param {Number} level The level of access [1,4] that the function needs
- * @return {Function}
- */
-function verifyACL(level) {
-  return function (req, res, next) {
-    if (process.env.NODE_ENV === 'debug') {
-      // Remove if you require idtoken support locally
-      return next();
-    }
-    if (!res.locals.privilege) {
-      const error = new Error();
-      error.status = 500;
-      error.body = { error: 'Something went wrong while accessing permissions' };
-      return next(error);
-    }
-    if (res.locals.privilege < level) {
-      const error = new Error();
-      error.status = 401;
-      error.body = { error: 'You do not have sufficient permissions for this operation' };
-      return next(error);
-    }
-    next();
-  };
-}
-
 
 /** ********************** ROUTES ******************************** */
 
@@ -190,8 +134,8 @@ router.get('/', (req, res) => {
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
   Registration.getAll(req.uow, {
-    count: res.locals.limit,
-    limit: res.locals.offset,
+    count           : res.locals.limit,
+    limit           : res.locals.offset,
     currentHackathon: true, // TODO: Add ability to set which hackathons needed froms request
   })
     .then(stream => streamHandler(stream, res, next))
@@ -254,11 +198,11 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
     error.body = { error: 'request query must be set and a valid email' };
     return next(error);
   }
-  authenticator.getUserId(req.query.email)
+  getUserId(req.query.email)
     .then((user) => {
       res.status(200)
         .send({
-          uid: user.uid,
+          uid        : user.uid,
           displayName: user.displayName,
         });
     })
@@ -356,7 +300,7 @@ router.get('/attendance_list', verifyACL(2), (req, res, next) => {
 //     next(error);
 //   }).on('end', () => {
 //     Promise.all(arr.map(value => new Promise((resolve, reject) => {
-//       authenticator.getUserData(value.uid)
+//       getUserData(value.uid)
 //         .then((user) => {
 //           value.sign_up_time = new Date(user.metadata.creationTime).getTime();
 //           resolve(value);
@@ -397,7 +341,7 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
     error.body = { message: 'You cannot reduce privileges' };
     return next(error);
   }
-  authenticator.elevate(req.body.uid, privilege)
+  elevate(req.body.uid, privilege)
     .then(() => {
       res.status(200)
         .send({ status: 'Success' });
@@ -483,7 +427,7 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
     return next(error);
   }
   const location = new Location(req.body, req.uow);
-  location.update(req.body.uid, 'uid')
+  location.update()
     .then(() => {
       res.status(200)
         .send({ status: 'Success' });
@@ -513,7 +457,7 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
     return next(error);
   }
   const location = new Location({ uid: req.body.uid }, req.uow);
-  location.delete(req.body.uid)
+  location.delete()
     .then(() => {
       res.status(200)
         .send({ status: 'Success' });
@@ -611,7 +555,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
     const error = new Error();
     error.status = 400;
     error.body = {
-      text: 'All provided emails had illegal format',
+      text : 'All provided emails had illegal format',
       error: res.locals.failArray,
     };
     return next(error);
@@ -638,9 +582,9 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
         )))
       .then(request =>
         ({
-          email: request.to,
+          email   : request.to,
           response: 'success',
-          name: emailObject.name,
+          name    : emailObject.name,
         }))
       .catch((error) => {
         // Else add to the failArray for the partial HTTP success response
@@ -654,25 +598,25 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
         const error = new Error();
         error.status = 500;
         error.body = {
-          text: 'Emails could not be sent',
+          text : 'Emails could not be sent',
           error: res.locals.failArray,
         };
         return next(error);
       }
       database.addEmailsHistory(req.uow, resolves.map(successEmail => ({
-        sender: res.locals.user.uid,
-        recipient: successEmail.email,
-        email_content: req.body.html,
-        subject: req.body.subject,
+        sender        : res.locals.user.uid,
+        recipient     : successEmail.email,
+        email_content : req.body.html,
+        subject       : req.body.subject,
         recipient_name: successEmail.name,
-        time: new Date().getTime(),
+        time          : new Date().getTime(),
       })), res.locals.failArray ? res.locals.failArray.map(errorEmail => ({
-        sender: res.locals.user.uid,
-        recipient: errorEmail.email || null,
-        email_content: req.body.html || null,
-        subject: req.body.subject || null,
+        sender        : res.locals.user.uid,
+        recipient     : errorEmail.email || null,
+        email_content : req.body.html || null,
+        subject       : req.body.subject || null,
         recipient_name: errorEmail.name || null,
-        time: new Date().getTime(),
+        time          : new Date().getTime(),
       })) : null)
         .catch(logger.error);
       if (res.locals.failArray.length === 0) {
@@ -806,9 +750,11 @@ router.get('/statistics', verifyACL(2), (req, res, next) => {
 router.post('/hackathon', verifyACL(4), (req, res, next) => {
   if (req.body && req.body.name && req.body.startTime && req.body.endTime) {
     const hackathon = new Hackathon(req.body, req.uow);
-    hackathon.add().then((data) => {
-      res.type('json').status(200).send({message:'Added new non-active hackathon'});
-    }).catch(err => errorHandler500(err, next));
+    hackathon.add()
+      .then((data) => {
+        res.type('json').status(200).send({ message: 'Added new non-active hackathon' });
+      })
+      .catch(err => errorHandler500(err, next));
   } else {
     const error = new Error();
     error.status = 400;
@@ -829,11 +775,13 @@ router.post('/hackathon', verifyACL(4), (req, res, next) => {
  * @apiSuccess (201) {String} Added new active hackathon
  */
 router.post('/hackathon/active', verifyACL(4), (req, res, next) => {
-  if(req.body && req.body.name) {
+  if (req.body && req.body.name) {
     const activeHackathon = new ActiveHackathon(req.body, req.uow);
-    activeHackathon.add().then((data) => {
-      res.type('json').status(200).send({message: 'Added new active hackathon'});
-    }).catch(err => errorHandler500(err, next));
+    activeHackathon.add()
+      .then((data) => {
+        res.type('json').status(200).send({ message: 'Added new active hackathon' });
+      })
+      .catch(err => errorHandler500(err, next));
   } else {
     const error = new Error();
     error.status = 400;
@@ -844,16 +792,18 @@ router.post('/hackathon/active', verifyACL(4), (req, res, next) => {
 
 router.post('/hackathon/update', verifyACL(4), (req, res, next) => {
   if (req.body && req.body.uid) {
-    if(req.body.active) {
+    if (req.body.active) {
       const error = new Error();
       error.status = 400;
-      error.body = { error: 'Please you /hackathon/update/active to update the active hackathon'};
+      error.body = { error: 'Please you /hackathon/update/active to update the active hackathon' };
       next(error);
     }
     const hackathon = new Hackathon(req.body, req.uow);
-    hackathon.update().then((data) => {
-      res.type('json').status(200).send({message:'Updated non-active hackathon'});
-    }).catch(err => errorHandler500(err, next));
+    hackathon.update()
+      .then((data) => {
+        res.type('json').status(200).send({ message: 'Updated non-active hackathon' });
+      })
+      .catch(err => errorHandler500(err, next));
   } else {
     const error = new Error();
     error.status = 400;

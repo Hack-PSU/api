@@ -4,13 +4,13 @@ const validator = require('email-validator');
 const path = require('path');
 const fs = require('fs');
 const { logger } = require('../services/logging');
-const authenticator = require('../services/auth');
+const { verifyAuthMiddleware } = require('../services/auth');
 const { HACKATHON_NAME, GCS } = require('../assets/constants/constants');
 const { errorHandler500 } = require('../services/functions');
 const database = require('../services/database');
 const StorageService = require('../services/storage_service');
 const { STORAGE_TYPES } = require('../services/factories/storage_factory');
-const { emailSubstitute, createEmailRequest, sendEmail } = require("../services/functions");
+const { emailSubstitute, createEmailRequest, sendEmail } = require('../services/functions');
 const { Registration } = require('../models/Registration');
 const { PreRegistration } = require('../models/PreRegistration');
 
@@ -56,32 +56,6 @@ const upload = storage.upload({
 });
 
 /** **************** HELPER MIDDLEWARE ************************* */
-
-/**
- * Login authentication middleware
- */
-
-function checkAuthentication(req, res, next) {
-  if (!req.headers.idtoken) {
-    const error = new Error();
-    error.status = 401;
-    error.body = { error: 'ID Token must be provided' };
-    return next(error);
-  }
-  authenticator.checkAuthentication(req.headers.idtoken)
-    .then((decodedToken) => {
-      res.locals.privilege = decodedToken.privilege;
-      res.locals.uid = decodedToken.uid;
-      next();
-    })
-    .catch((err) => {
-      const error = new Error();
-      error.status = 401;
-      error.body = err.message;
-      next(error);
-    });
-}
-
 /**
  *
  * @param req
@@ -193,7 +167,7 @@ firstName: "Matt",
  * @apiUse IllegalArgumentError
  */
 
-router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, res, next) => {
+router.post('/', verifyAuthMiddleware, upload.single('resume'), storeIP, (req, res, next) => {
   /** Converting boolean strings to booleans types in req.body */
   req.body.travelReimbursement = req.body.travelReimbursement && req.body.travelReimbursement === 'true';
 
@@ -216,7 +190,8 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
     logger.error('Email validation:');
     logger.error(validator.validate(req.body.email));
     const error = new Error();
-    error.body = { error: 'Reasons for error: Request body must be set, must use valid email, eighteenBeforeEvent mlhcoc and mlhdcp must all be true' };
+    error.body = { error: 'Reasons for error: Request body must be set, must use valid email, ' +
+        'eighteenBeforeEvent mlhcoc and mlhdcp must all be true' };
     error.status = 400;
     return next(error);
   }

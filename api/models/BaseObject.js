@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle,no-param-reassign,class-methods-use-this */
-
 const squel = require('squel');
 const Ajv = require('ajv');
+const HttpError = require('./HttpError');
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -185,7 +185,7 @@ module.exports = class BaseObject {
     }
     const validation = this.validate();
     if (!validation.result) {
-      return new Promise(((resolve, reject) => reject(new Error(validation.error))));
+      return new Promise(((resolve, reject) => reject(new HttpError(validation.error, 400))));
     }
     const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)

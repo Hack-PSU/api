@@ -13,6 +13,7 @@ const { STORAGE_TYPES } = require('../services/factories/storage_factory');
 const { emailSubstitute, createEmailRequest, sendEmail } = require("../services/functions");
 const { Registration } = require('../models/Registration');
 const { PreRegistration } = require('../models/PreRegistration');
+const { findList, addSubscriber } = require('../services/mailchimp');
 
 const storage = new StorageService(STORAGE_TYPES.GCS, {
   bucketName: GCS.resumeBucket,
@@ -119,8 +120,11 @@ router.post('/pre', (req, res, next) => {
     error.status = 400;
     return next(error);
   }
+  const SUBSCRIBER_LIST = 'defaultList';
   new PreRegistration({ email: req.body.email }, req.uow)
     .add()
+    .then(() => findList(SUBSCRIBER_LIST))
+    .then(({ id }) => addSubscriber(req.body.email, id))
     .then(() => {
       res.status(200).send({ status: 'Success' });
     })

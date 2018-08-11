@@ -3,7 +3,7 @@ const Mailchimp = require('mailchimp-api-v3');
 const crypto = require('crypto');
 const { MailchimpApiKey } = require('../assets/constants/constants');
 
-const mailchimp = Mailchimp(MailchimpApiKey);
+const mailchimp = new Mailchimp(MailchimpApiKey);
 
 module.exports.addSubscriber = (email_address, listId) => mailchimp.post(
   `/lists/${listId}/members`,
@@ -27,6 +27,6 @@ module.exports.getSubscriber = (email_id, listId) =>
     .update(email_id)
     .digest('hex')}`);
 
-module.exports.findList = name =>
+module.exports.findList = listName =>
   mailchimp.get('lists')
-    .then(({ lists }) => lists.filter(({ listName }) => listName === name));
+    .then(({ lists }) => Promise.resolve(lists.filter(({ name }) => name === listName)));

@@ -120,15 +120,21 @@ router.post('/pre', (req, res, next) => {
     error.status = 400;
     return next(error);
   }
-  const SUBSCRIBER_LIST = 'defaultList';
+  const SUBSCRIBER_LIST = 'HackPSU Email List';
   new PreRegistration({ email: req.body.email }, req.uow)
     .add()
     .then(() => findList(SUBSCRIBER_LIST))
-    .then(({ id }) => addSubscriber(req.body.email, id))
+    .then(([{ id }]) => {
+      console.log(id);
+      return addSubscriber(req.body.email, id);
+    })
     .then(() => {
       res.status(200).send({ status: 'Success' });
     })
-    .catch(err => errorHandler500(err, next));
+    .catch(err => {
+      console.error(err);
+      return errorHandler500(err, next);
+    });
 });
 
 

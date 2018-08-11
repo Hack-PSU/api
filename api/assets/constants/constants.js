@@ -56,6 +56,6 @@ module.exports = {
     resumeBucket: process.env.APP_ENV === 'test' ? 'hackpsu-resumes-test' : 'hackpsuf2018-resumes',
     travelReimbursementBucket: process.env.APP_ENV === 'test' ? 'hackpsu2018-travel-reimbursement-receipts-test' : 'hackpsuf2018-travel-reimbursement-receipts',
   },
-  SendGridApiKey: process.env.SENDGRID_ACCESS_KEY,
-  MailchimpApiKey: process.env.MAILCHIMP_API_KEY,
+  SendGridApiKey: process.env.SENDGRID_ACCESS_KEY || '',
+  MailchimpApiKey: process.env.MAILCHIMP_API_KEY || '',
 };

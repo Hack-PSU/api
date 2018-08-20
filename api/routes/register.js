@@ -5,14 +5,15 @@ const path = require('path');
 const fs = require('fs');
 const { logger } = require('../services/logging');
 const authenticator = require('../services/auth');
-const { HACKATHON_NAME, GCS } = require('../assets/constants/constants');
+const { HACKATHON_NAME, GCS, MailchimpPreregEmailList: SUBSCRIBER_LIST } = require('../assets/constants/constants');
 const { errorHandler500 } = require('../services/functions');
 const database = require('../services/database');
 const StorageService = require('../services/storage_service');
 const { STORAGE_TYPES } = require('../services/factories/storage_factory');
-const { emailSubstitute, createEmailRequest, sendEmail } = require("../services/functions");
+const { emailSubstitute, createEmailRequest, sendEmail } = require('../services/functions');
 const { Registration } = require('../models/Registration');
 const { PreRegistration } = require('../models/PreRegistration');
+const { findList, addSubscriber } = require('../services/mailchimp');
 
 const storage = new StorageService(STORAGE_TYPES.GCS, {
   bucketName: GCS.resumeBucket,
@@ -23,11 +24,11 @@ const storage = new StorageService(STORAGE_TYPES.GCS, {
 
 const router = express.Router();
 
-let EMAIL_TEMPLATE_PATH = '../assets/emails/email_template.html';
-let REGISTRATION_EMAIL_BODY = '../assets/emails/registration_body.html';
-let emailTemplate = fs.readFileSync(path.join(__dirname, EMAIL_TEMPLATE_PATH), 'utf-8');
-let registrationEmailBody = fs.readFileSync(path.join(__dirname, REGISTRATION_EMAIL_BODY), 'utf-8');
-let emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
+const EMAIL_TEMPLATE_PATH = '../assets/emails/email_template.html';
+const REGISTRATION_EMAIL_BODY = '../assets/emails/registration_body.html';
+const emailTemplate = fs.readFileSync(path.join(__dirname, EMAIL_TEMPLATE_PATH), 'utf-8');
+const registrationEmailBody = fs.readFileSync(path.join(__dirname, REGISTRATION_EMAIL_BODY), 'utf-8');
+const emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
 
 /** ****************** HELPER FUNCTIONS ********************** */
 
@@ -119,12 +120,22 @@ router.post('/pre', (req, res, next) => {
     error.status = 400;
     return next(error);
   }
-  new PreRegistration({ email: req.body.email }, req.uow)
-    .add()
+  let promise = new PreRegistration({ email: req.body.email }, req.uow)
+    .add();
+  if (process.env.APP_ENV !== 'test') {
+    promise = promise
+      .then(() => findList(SUBSCRIBER_LIST))
+      .then(([{ id }]) => addSubscriber(req.body.email, id));
+  }
+  promise
     .then(() => {
-      res.status(200).send({ status: 'Success' });
+      res.status(200)
+        .send({ status: 'Success' });
     })
-    .catch(err => errorHandler500(err, next));
+    .catch((err) => {
+      console.error(err);
+      return errorHandler500(err, next);
+    });
 });
 
 
@@ -228,20 +239,19 @@ router.post('/', checkAuthentication, upload.single('resume'), storeIP, (req, re
   const reg = new Registration(req.body, req.uow);
   reg
     .add()
-    .then(() => {
-      return reg.submit();
-    })
+    .then(() => reg.submit())
     .then(() => {
       // Generate confirmation email.
       const html = emailHtml;
-      return emailSubstitute(html, reg.firstname)
+      return emailSubstitute(html, reg.firstname);
     })
     .then((preparedHTML) => {
       const request = createEmailRequest(reg.email, preparedHTML, 'Thank you for your registration!', '');
       return sendEmail(request);
     })
     .then(() => {
-      res.status(200).send({ response: 'Success' });
+      res.status(200)
+        .send({ response: 'Success' });
     })
     .catch((err) => {
       const error = new Error();

@@ -9,7 +9,7 @@ const {
 } = require('../services/functions');
 const authenticator = require('../services/auth');
 const StorageService = require('../services/storage_service');
-const { STORAGE_TYPES, StorageFactory } = require('../services/factories/storage_factory');
+const { STORAGE_TYPES } = require('../services/factories/storage_factory');
 const { logger } = require('../services/logging');
 const constants = require('../assets/constants/constants');
 const { projectRegistrationSchema, travelReimbursementSchema } =
@@ -20,6 +20,7 @@ const { Project } = require('../models/Project');
 const { RSVP } = require('../models/RSVP');
 const { Category } = require('../models/Category');
 const { ActiveHackathon } = require('../models/ActiveHackathon');
+const HttpError = require('../JSCommon/HttpError');
 
 const storage = new StorageService(STORAGE_TYPES.GCS, {
   bucketName: constants.GCS.travelReimbursementBucket,
@@ -110,17 +111,17 @@ router.use((req, res, next) => {
     error.body = { error: 'ID Token must be provided' };
     return next(error);
   }
-  authenticator.checkAuthentication(req.headers.idtoken)
+  return authenticator.checkAuthentication(req.headers.idtoken)
     .then((decodedToken) => {
       res.locals.user = decodedToken;
       res.locals.uid = decodedToken.uid;
-      next();
+      return next();
     })
     .catch((err) => {
       const error = new Error();
       error.status = 401;
       error.body = err.message;
-      next(error);
+      return next(error);
     });
 });
 
@@ -296,7 +297,12 @@ router.post('/rsvp', (req, res, next) => {
       return res.status(200)
         .send({ message: 'success' });
     })
-    .catch(err => errorHandler500(err, next));
+    .catch((err) => {
+      if (err instanceof HttpError) {
+        return next(err);
+      }
+      return errorHandler500(err, next);
+    });
 });
 
 

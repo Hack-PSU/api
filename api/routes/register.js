@@ -13,6 +13,7 @@ const { STORAGE_TYPES } = require('../services/factories/storage_factory');
 const { emailSubstitute, createEmailRequest, sendEmail } = require('../services/functions');
 const { Registration } = require('../models/Registration');
 const { PreRegistration } = require('../models/PreRegistration');
+const HttpError = require('../JSCommon/HttpError');
 
 const storage = new StorageService(STORAGE_TYPES.GCS, {
   bucketName: GCS.resumeBucket,
@@ -23,11 +24,11 @@ const storage = new StorageService(STORAGE_TYPES.GCS, {
 
 const router = express.Router();
 
-let EMAIL_TEMPLATE_PATH = '../assets/emails/email_template.html';
-let REGISTRATION_EMAIL_BODY = '../assets/emails/registration_body.html';
-let emailTemplate = fs.readFileSync(path.join(__dirname, EMAIL_TEMPLATE_PATH), 'utf-8');
-let registrationEmailBody = fs.readFileSync(path.join(__dirname, REGISTRATION_EMAIL_BODY), 'utf-8');
-let emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
+const EMAIL_TEMPLATE_PATH = '../assets/emails/email_template.html';
+const REGISTRATION_EMAIL_BODY = '../assets/emails/registration_body.html';
+const emailTemplate = fs.readFileSync(path.join(__dirname, EMAIL_TEMPLATE_PATH), 'utf-8');
+const registrationEmailBody = fs.readFileSync(path.join(__dirname, REGISTRATION_EMAIL_BODY), 'utf-8');
+const emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
 
 /** ****************** HELPER FUNCTIONS ********************** */
 
@@ -179,7 +180,7 @@ router.post('/', verifyAuthMiddleware, upload.single('resume'), storeIP, (req, r
 
   req.body.mlhdcp = req.body.mlhdcp && req.body.mlhdcp === 'true';
 
-  req.body.uid = res.locals.uid;
+  req.body.uid = res.locals.user.uid;
 
   if (!(req.body &&
     validator.validate(req.body.email) &&
@@ -190,8 +191,10 @@ router.post('/', verifyAuthMiddleware, upload.single('resume'), storeIP, (req, r
     logger.error('Email validation:');
     logger.error(validator.validate(req.body.email));
     const error = new Error();
-    error.body = { error: 'Reasons for error: Request body must be set, must use valid email, ' +
-        'eighteenBeforeEvent mlhcoc and mlhdcp must all be true' };
+    error.body = {
+      error: 'Reasons for error: Request body must be set, must use valid email, ' +
+        'eighteenBeforeEvent mlhcoc and mlhdcp must all be true',
+    };
     error.status = 400;
     return next(error);
   }
@@ -203,13 +206,11 @@ router.post('/', verifyAuthMiddleware, upload.single('resume'), storeIP, (req, r
   const reg = new Registration(req.body, req.uow);
   reg
     .add()
-    .then(() => {
-      return reg.submit();
-    })
+    .then(() => reg.submit())
     .then(() => {
       // Generate confirmation email.
       const html = emailHtml;
-      return emailSubstitute(html, reg.firstname)
+      return emailSubstitute(html, reg.firstname);
     })
     .then((preparedHTML) => {
       const request = createEmailRequest(reg.email, preparedHTML, 'Thank you for your registration!', '');
@@ -219,6 +220,9 @@ router.post('/', verifyAuthMiddleware, upload.single('resume'), storeIP, (req, r
       res.status(200).send({ response: 'Success' });
     })
     .catch((err) => {
+      if (err instanceof HttpError) {
+        return next(err);
+      }
       const error = new Error();
       error.body = { error: err.message };
       if (process.env.NODE_ENV === 'production') {
@@ -226,7 +230,7 @@ router.post('/', verifyAuthMiddleware, upload.single('resume'), storeIP, (req, r
       }
       // If duplicate, send 400, else 500.
       error.status = err.errno === 1062 ? 400 : 500;
-      next(error);
+      return next(error);
     });
 });
 

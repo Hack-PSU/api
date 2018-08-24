@@ -165,7 +165,7 @@ module.exports = class BaseObject {
         console.warn('Validation failed while adding object.');
         console.warn(this._dbRepresentation);
       }
-      return Promise.reject(new Error(validation.error));
+      return Promise.reject(new HttpError(validation.error, 400));
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)

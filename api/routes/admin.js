@@ -5,7 +5,9 @@ const express = require('express');
 const _ = require('lodash');
 const emailObjectSchema = require('../assets/schemas/load-schemas')('emailObjectSchema');
 const database = require('../services/database');
-const { verifyACL, checkAuthentication, elevate, getUserId, verifyAuthMiddleware } = require('../services/auth');
+const {
+        verifyACL, elevate, getUserId, verifyAuthMiddleware,
+      } = require('../services/auth');
 const {
         errorHandler500,
         emailSubstitute,

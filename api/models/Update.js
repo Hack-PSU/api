@@ -1,9 +1,9 @@
 /* eslint-disable class-methods-use-this */
 const Timeuuid = require('node-time-uuid');
 const BaseObject = require('./BaseObject');
-const { UowFactory } = require('../services/factories/uow_factory');
+const {UowFactory} = require('../services/factories/uow_factory');
 const liveUpdateSchema = require('../assets/schemas/load-schemas')('liveUpdateSchema');
-const { Hackathon } = require('../models/Hackathon');
+const {Hackathon} = require('../models/Hackathon');
 const RtdbUow = require('../services/rtdb_uow');
 
 let REFERENCE = '';
@@ -15,7 +15,7 @@ module.exports.Update = class Update extends BaseObject {
     const query = Hackathon.getActiveHackathonQuery().toParam();
     this.hackathonPromise = sqluow.query(query.text, query.values);
     this.hackathonPromise.then((result) => {
-      REFERENCE = `/updates/${result[0]}`;
+      REFERENCE = `/updates/${result[0].uid}`;
     });
     this.update_title = data.updateTitle || null;
     this.update_text = data.updateText || null;
@@ -36,13 +36,20 @@ module.exports.Update = class Update extends BaseObject {
   static getAll(uow, sqluow) {
     const query = Hackathon.getActiveHackathonQuery().toParam();
     const hackathonPromise = sqluow.query(query.text, query.values);
-    return hackathonPromise.then(() => uow.query(RtdbUow.queries.GET, REFERENCE));
+    return hackathonPromise.then((result) => {
+      console.log(result);
+      REFERENCE = `/updates/${result[0].uid}`;
+      return uow.query(RtdbUow.queries.GET, REFERENCE);
+    });
   }
 
   static getCount(uow, sqluow) {
     const query = Hackathon.getActiveHackathonQuery().toParam();
     const hackathonPromise = sqluow.query(query.text, query.values);
-    return hackathonPromise.then(() => uow.query(RtdbUow.queries.COUNT, REFERENCE));
+    return hackathonPromise.then((result) => {
+      REFERENCE = `/updates/${result[0].uid}`;
+      return uow.query(RtdbUow.queries.COUNT, REFERENCE);
+    });
   }
 
   static generateTestData() {
@@ -52,7 +59,10 @@ module.exports.Update = class Update extends BaseObject {
   static getReference(uow, sqluow) {
     const query = Hackathon.getActiveHackathonQuery().toParam();
     const hackathonPromise = sqluow.query(query.text, query.values);
-    return hackathonPromise.then(() => uow.query(RtdbUow.queries.REF, `${REFERENCE}`));
+    return hackathonPromise.then((result) => {
+      REFERENCE = `/updates/${result[0].uid}`;
+      return uow.query(RtdbUow.queries.REF, REFERENCE);
+    });
   }
 
   add() {

@@ -18,7 +18,7 @@ router.use(verifyAuthMiddleware);
 
 /** ********* UPDATES ******** */
 /**
- * @api {get} /updates/ Get all the updates
+ * @api {get} /live/updates/ Get all the updates
  * @apiVersion 0.3.2
  * @apiName Get Updates
  *
@@ -28,13 +28,13 @@ router.use(verifyAuthMiddleware);
  */
 // TODO: Add test
 router.get('/updates', (req, res, next) => {
-  Update.getAll(req.rtdb)
+  Update.getAll(req.rtdb, req.uow)
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });
 
 /**
- * @api {get} /updates/reference Get the db reference for updates
+ * @api {get} /live/updates/reference Get the db reference for updates
  * @apiVersion 0.3.2
  * @apiName Get Update reference
  *
@@ -43,13 +43,13 @@ router.get('/updates', (req, res, next) => {
  * @apiSuccess {String} The database reference to the current updates.
  */
 router.get('/updates/reference', (req, res, next) => {
-  Update.getReference(req.rtdb)
-    .then((reference) => res.status(200).send({ reference }))
+  Update.getReference(req.rtdb, req.uow)
+    .then(reference => res.status(200).send({ reference }))
     .catch(err => errorHandler500(err, next));
 });
 
 /**
- * @api {post} /updates/ Add a new update
+ * @api {post} /live/updates/ Add a new update
  * @apiVersion 0.3.2
  * @apiName New update
  * @apiGroup Admin
@@ -74,25 +74,28 @@ router.post('/updates', verifyACL(2), (req, res, next) => {
   if (!req.body.updateImage) {
     req.body.updateImage = 'https://app.hackpsu.org/assets/images/logo.svg';
   }
-  const update = new Update(req.body, req.rtdb, req.uow);
-  update
+  const generatedUpdate = new Update(req.body, req.rtdb, req.uow);
+  generatedUpdate
     .add()
-    .then((stream) => {
+    .then((update) => {
       // Send out push notification and pass along stream
-      if (!update.push_notification) {
-        return Promise.resolve(stream);
+      if (!generatedUpdate.push_notification) {
+        return Promise.resolve(update);
       }
-      sendNotification(update.update_title, update.update_text)
-        .catch(error => logger.error(error));
-      return Promise.resolve(stream);
+      return sendNotification(generatedUpdate.update_title, generatedUpdate.update_text)
+        .then(() => update)
+        .catch((error) => {
+          logger.error(error);
+          return update;
+        });
     })
-    .then(stream => streamHandler(stream, res, next))
+    .then(update => res.status(200).send(update))
     .catch(err => errorHandler500(err, next));
 });
 
 /** ********** EVENTS ******** */
 /**
- * @api {get} /events/ Get all the events.
+ * @api {get} /live/events/ Get all the events.
  * @apiVersion 0.3.2
  * @apiName Get events
  *
@@ -108,7 +111,7 @@ router.get('/events', (req, res, next) => {
 });
 
 /**
- * @api {post} /event/ Add a new event.
+ * @api {post} /live/event/ Add a new event.
  * @apiVersion 0.3.2
  * @apiName New Event
  * @apiGroup Admin
@@ -153,7 +156,7 @@ router.post('/event', verifyACL(2), (req, res, next) => {
 
 /**
  /**
- * @api {put} /event/ Update an existing event.
+ * @api {put} /live/event/ Update an existing event.
  * @apiVersion 0.3.2
  * @apiName Update Event
  * @apiGroup Admin
@@ -182,7 +185,7 @@ router.put('/event', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {put} /event/delete Update an existing event.
+ * @api {post} /live/event/delete Delete an existing event.
  * @apiVersion 0.3.2
  * @apiName Update Event
  * @apiGroup Admin

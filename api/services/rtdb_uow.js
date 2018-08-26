@@ -1,5 +1,5 @@
 /* eslint-disable class-methods-use-this,no-underscore-dangle */
-const { Readable } = require('stream');
+const streamable = require('stream-array');
 const _ = require('lodash');
 
 module.exports = class RtdbUow {
@@ -55,19 +55,17 @@ module.exports = class RtdbUow {
       this.db.ref(reference)
         .once('value', (data) => {
           const firebaseData = data.val();
-          const stream = new Readable({ objectMode: true });
-          resolve(stream);
+          let result = [];
           if (firebaseData) {
-            const result = Object
+            result = Object
               .entries(firebaseData)
               .map((pair) => {
                 const r = {};
-                [undefined, r[pair[0]]] = pair;
+                [, r[pair[0]]] = pair;
                 return r;
               });
-            stream.push(result);
           }
-          stream.push(null);
+          resolve(new streamable(result));
         })
         .catch(reject);
     });

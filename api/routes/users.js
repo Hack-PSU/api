@@ -469,7 +469,7 @@ router.post('/project', (req, res, next) => {
 });
 
 /**
- * @api {get} /user/event/categories Get all the event categories
+ * @api {get} /users/event/categories Get all the event categories
  * @apiName Get Event Categories
  * @apiVersion 0.3.2
  * @apiGroup User
@@ -485,7 +485,7 @@ router.get('/event/categories', (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/hackathon/active Get the uid, name, and pin base of the active hackathon
+ * @api {get} /users/hackathon/active Get the uid, name, and pin base of the active hackathon
  * @apiVersion 0.3.2
  * @apiName active hackathon
  * @apiGroup Admin

@@ -14,6 +14,7 @@ const { emailSubstitute, createEmailRequest, sendEmail } = require('../services/
 const { Registration } = require('../models/Registration');
 const { PreRegistration } = require('../models/PreRegistration');
 const HttpError = require('../JSCommon/HttpError');
+const { findList, addSubscriber } = require('../services/mailchimp');
 
 const storage = new StorageService(STORAGE_TYPES.GCS, {
   bucketName: GCS.resumeBucket,
@@ -94,10 +95,17 @@ router.post('/pre', (req, res, next) => {
     error.status = 400;
     return next(error);
   }
-  new PreRegistration({ email: req.body.email }, req.uow)
-    .add()
+  let promise = new PreRegistration({ email: req.body.email }, req.uow)
+    .add();
+  if (process.env.APP_ENV !== 'test') {
+    promise = promise
+      .then(() => findList(SUBSCRIBER_LIST))
+      .then(([{ id }]) => addSubscriber(req.body.email, id));
+  }
+  promise
     .then(() => {
-      res.status(200).send({ status: 'Success' });
+      res.status(200)
+        .send({ status: 'Success' });
     })
     .catch(err => errorHandler500(err, next));
 });

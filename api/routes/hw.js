@@ -46,6 +46,18 @@ router.use((req, res, next) => {
  * @apiSuccess {Array} Contains all data required by the pi
  * @apiUse IllegalArgumentError
  */
+/**
+ * @api {get} /hw/registrations Get all the registration data for the pi
+ * @apiVersion 1.0.0
+ * @apiName Get registration data for pi
+ *
+ * @apiGroup Pi
+ * @apiPermission API Key validation
+ *
+ * @apiUse ApiKeyArgumentRequired
+ * @apiSuccess {Array} Contains all data required by the pi
+ * @apiUse IllegalArgumentError
+ */
 router.get('/registrations', (req, res, next) => {
   const arr = [];
   Registration.getAll(
@@ -96,6 +108,28 @@ router.get('/registrations', (req, res, next) => {
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
+/**
+ * @api {post} /hw/assignment Assign RFID tags ID to users
+ * @apiVersion 1.0.0
+ * @apiName Assign an RFID to a user
+ *
+ * @apiGroup Pi
+ * @apiPermission API Key Validation
+ *
+ * @apiUse ApiKeyArgumentRequired
+ * @apiParam {Array} assignments An array of RFID tags to User uid assignments
+ * @apiParamExample {json} Request-Example:
+ *     [
+ *      {
+ *       "rfid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+ *       "uid": "nbG7b87NB87nB7n98Y7",
+ *       "time": 1239712938120
+ *     },
+ *     { ... }
+ *     ]
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
 router.post('/assignment', (req, res, next) => {
   const validate = ajv.compile(rfidAssignmentSchema);
   if (!req.body ||
@@ -117,6 +151,28 @@ router.post('/assignment', (req, res, next) => {
 
 /**
  * @api {post} /pi/scans Upload scans from the event
+ * @apiVersion 1.0.0
+ * @apiName Submit scans from the event
+ *
+ * @apiGroup Pi
+ * @apiPermission API Key Validation
+ *
+ * @apiUse ApiKeyArgumentRequired
+ * @apiParam {Array} scans An array of scan objects
+ * @apiParamExample {json} Request-Example:
+ *     [
+ *      {
+ *       "rfid_uid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+ *       "scan_location": "nbG7b87NB87nB7n98Y7",
+ *       "scan_time": 1239712938120
+ *     },
+ *     { ... }
+ *     ]
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+/**
+ * @api {post} /hw/scans Upload scans from the event
  * @apiVersion 1.0.0
  * @apiName Submit scans from the event
  *

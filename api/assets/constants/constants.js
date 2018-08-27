@@ -57,4 +57,5 @@ module.exports = {
     travelReimbursementBucket: process.env.APP_ENV === 'test' ? 'hackpsu2018-travel-reimbursement-receipts-test' : 'hackpsuf2018-travel-reimbursement-receipts',
   },
   SendGridApiKey: process.env.SENDGRID_ACCESS_KEY,
+  redisKey: process.env.REDIS_KEY,
 };

@@ -19,8 +19,10 @@ router.use(verifyAuthMiddleware);
 /** ********* UPDATES ******** */
 /**
  * @api {get} /live/updates/ Get all the updates
- * @apiVersion 0.3.2
+ * @apiVersion 1.0.0
  * @apiName Get Updates
+ * @apiGroup Updates
+ * @apiPermission UserPermission
  *
  * @apiUse AuthArgumentRequired
  *
@@ -35,9 +37,10 @@ router.get('/updates', (req, res, next) => {
 
 /**
  * @api {get} /live/updates/reference Get the db reference for updates
- * @apiVersion 0.3.2
+ * @apiVersion 1.0.0
  * @apiName Get Update reference
- *
+ * @apiPermission UserPermission
+ * @apiGroup Updates
  * @apiUse AuthArgumentRequired
  *
  * @apiSuccess {String} The database reference to the current updates.
@@ -50,10 +53,10 @@ router.get('/updates/reference', (req, res, next) => {
 
 /**
  * @api {post} /live/updates/ Add a new update
- * @apiVersion 0.3.2
+ * @apiVersion 1.0.0
  * @apiName New update
- * @apiGroup Admin
- * @apiPermission Team-member
+ * @apiGroup Updates
+ * @apiPermission TeamMemberPermission
  *
  * @apiParam {String} updateTitle - The title of the update
  * @apiParam {String} updateText - The text of the update
@@ -96,8 +99,10 @@ router.post('/updates', verifyACL(2), (req, res, next) => {
 /** ********** EVENTS ******** */
 /**
  * @api {get} /live/events/ Get all the events.
- * @apiVersion 0.3.2
+ * @apiVersion 1.0.0
  * @apiName Get events
+ * @apiGroup Events
+ * @apiPermission UserPermission
  *
  * @apiUse AuthArgumentRequired
  *
@@ -112,10 +117,10 @@ router.get('/events', (req, res, next) => {
 
 /**
  * @api {post} /live/event/ Add a new event.
- * @apiVersion 0.3.2
+ * @apiVersion 1.0.0
  * @apiName New Event
- * @apiGroup Admin
- * @apiPermission Team-member
+ * @apiGroup Events
+ * @apiPermission TeamMemberPermission
  *
  * @apiParam {String} eventLocation - The uid of the location for the event.
  * @apiParam {String} eventStartTime - The unix time for the start of the event.
@@ -155,12 +160,11 @@ router.post('/event', verifyACL(2), (req, res, next) => {
 });
 
 /**
- /**
  * @api {put} /live/event/ Update an existing event.
- * @apiVersion 0.3.2
+ * @apiVersion 1.0.0
  * @apiName Update Event
- * @apiGroup Admin
- * @apiPermission Team-member
+ * @apiGroup Events
+ * @apiPermission TeamMemberPermission
  *
  * @apiParam {String} uid - The uid of the event.
  * @apiParam {String} eventLocation - The uid of the location for the event.
@@ -186,10 +190,10 @@ router.put('/event', verifyACL(2), (req, res, next) => {
 
 /**
  * @api {post} /live/event/delete Delete an existing event.
- * @apiVersion 0.3.2
+ * @apiVersion 1.0.0
  * @apiName Update Event
- * @apiGroup Admin
- * @apiPermission Team-member
+ * @apiGroup Events
+ * @apiPermission TeamMemberPermission
  *
  * @apiParam {String} uid - The uid of the event.
 

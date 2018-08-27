@@ -65,7 +65,7 @@
   },
   "apidoc": {
     "name": "HackPSU RESTful Web API",
-    "version": "0.2.1",
+    "version": "1.0.0",
     "description": "RESTFul API for all HackPSU connections",
     "url": "https://api.hackpsu.org/v1",
     "header": {

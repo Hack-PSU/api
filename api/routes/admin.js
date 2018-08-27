@@ -62,9 +62,6 @@ router.use((req, res, next) => {
  * This function adds the following arrays to the res.locals object:
  *  successArray: Contains all email objects that have follow the schema
  *  failArray:    Contains all the email objects that fail the schema
- * @param req
- * @param res
- * @param next
  */
 function validateEmails(req, res, next) {
   if (!(req.body && req.body.emails && Array.isArray(req.body.emails))) {
@@ -101,18 +98,12 @@ function validateEmails(req, res, next) {
 
 
 /** ********************** ROUTES ******************************** */
-
-router.get('/', (req, res) => {
-  res.status(200)
-    .send({ response: 'authorized' });
-});
-
 /**
- * @api {get} /admin/registered Get registered hackers
- * @apiVersion 0.1.1
- * @apiName Registered Hackers
+ * @api {get} /admin/ Get Authentication Status
+ * @apiVersion 1.0.0
+ * @apiName Get Authentication Status
  * @apiGroup Admin
- * @apiPermission Team Member
+ * @apiPermission TeamMemberPermission
  *
  * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
  *
@@ -120,12 +111,17 @@ router.get('/', (req, res) => {
  *
  * @apiSuccess {Array} Array of registered hackers
  */
+router.get('/', (req, res) => {
+  res.status(200)
+    .send({ response: 'authorized' });
+});
+
 /**
  * @api {get} /admin/registered Get registered hackers
- * @apiVersion 0.2.2
- * @apiName Registered Hackers
- * @apiGroup Admin
- * @apiPermission Team Member
+ * @apiVersion 1.0.0
+ * @apiName Get Registered Hackers
+ * @apiGroup Registration
+ * @apiPermission TeamMemberPermission
  *
  * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
  * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
@@ -146,22 +142,10 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
 
 /**
  * @api {get} /admin/preregistered Get pre-registered hackers
- * @apiVersion 0.1.1
- * @apiName Pre-registered Hackers
- * @apiGroup Admin
- * @apiPermission Team Member
- * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess {Array} Array of registered hackers
- */
-/**
- * @api {get} /admin/preregistered Get pre-registered hackers
- * @apiVersion 0.2.2
- * @apiName Pre-registered Hackers
- * @apiGroup Admin
- * @apiPermission Team Member
+ * @apiVersion 1.0.0
+ * @apiName Get Pre-registered Hackers
+ * @apiGroup Pre-Registration
+ * @apiPermission TeamMemberPermission
  * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
  * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
  *
@@ -181,10 +165,10 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
 
 /**
  * @api {get} /admin/userid Get the uid corresponding to an email
- * @apiVersion 0.2.0
+ * @apiVersion 1.0.0
  * @apiName Get User Id
  * @apiGroup Admin
- * @apiPermission Exec
+ * @apiPermission DirectorPermission
  *
  * @apiUse AuthArgumentRequired
  * @apiParam {string} email The email to query user id by
@@ -213,10 +197,10 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
 
 /**
  * @api {get} /admin/rsvp_list Get list of people who rsvp
- * @apiVersion 0.1.0
+ * @apiVersion 0.4.0
  * @apiName Retrieve RSVP list
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiGroup RSVP
+ * @apiPermission DirectorPermission
 
  * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
  * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
@@ -225,7 +209,21 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
  *
  * @apiSuccess {Array} Array of hackers who RSVP
  */
-router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
+/**
+ * @api {get} /admin/rsvp Get list of people who rsvp
+ * @apiVersion 1.0.0
+ * @apiName Retrieve RSVP list
+ * @apiGroup RSVP
+ * @apiPermission DirectorPermission
+
+ * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+ * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} Array of hackers who RSVP
+ */
+router.get(['/rsvp_list', '/rsvp'], verifyACL(3), (req, res, next) => {
   RSVP.getAll(req.uow, {
     count: res.locals.limit,
     limit: res.locals.offset,
@@ -236,14 +234,23 @@ router.get('/rsvp_list', verifyACL(3), (req, res, next) => {
 
 /**
  * @api {post} /admin/update_registration Update an existing registration
- * @apiVersion 0.3.3
+ * @apiVersion 0.4.0
  * @apiName Update Registration
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiGroup Registration
+ * @apiPermission DirectorPermission
  * @apiParam {Object} registration The updated registration object.
  * @apiUse AuthArgumentRequired
  */
-router.post('/update_registration', verifyACL(3), (req, res, next) => {
+/**
+ * @api {post} /admin/registration/update Update an existing registration
+ * @apiVersion 1.0.0
+ * @apiName Update Registration
+ * @apiGroup Registration
+ * @apiPermission DirectorPermission
+ * @apiParam {Object} registration The updated registration object.
+ * @apiUse AuthArgumentRequired
+ */
+router.post(['/update_registration', '/registration/update'], verifyACL(3), (req, res, next) => {
   if (!req.body || !req.body.registration) {
     const error = new Error();
     error.status = 400;
@@ -273,15 +280,25 @@ router.post('/update_registration', verifyACL(3), (req, res, next) => {
 
 /**
  * @api {get} /admin/attendance_list retrieve the list of people who attended
- * @apiVersion 0.3.2
+ * @apiVersion 0.4.0
  * @apiName Retrieve Attendance List
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiGroup Attendance
+ * @apiPermission DirectorPermission
  *
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array of hackers who attended
  */
-router.get('/attendance_list', verifyACL(2), (req, res, next) => {
+/**
+ * @api {get} /admin/attendance retrieve the list of people who attended
+ * @apiVersion 1.0.0
+ * @apiName Retrieve Attendance List
+ * @apiGroup Attendance
+ * @apiPermission DirectorPermission
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Array of hackers who attended
+ */
+router.get(['/attendance_list', '/attendance'], verifyACL(2), (req, res, next) => {
   Attendance.getAll(req.uow)
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
@@ -316,11 +333,11 @@ router.get('/attendance_list', verifyACL(2), (req, res, next) => {
 
 /**
  * @api {post} /admin/makeadmin Elevate a user's privileges
- * @apiVersion 0.1.1
+ * @apiVersion 1.0.0
  * @apiName Elevate user
  *
  * @apiGroup Admin
- * @apiPermission Exec
+ * @apiPermission DirectorPermission
  *
  * @apiUse AuthArgumentRequired
  * @apiParam {String} uid The UID of the user to elevate privileges
@@ -358,15 +375,25 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
 
 /**
  * @api {get} /admin/location_list Get the list of existing location from the database
- * @apiVersion 0.2.3
+ * @apiVersion 0.4.0
  * @apiName Get Location List
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiGroup Location
+ * @apiPermission DirectorPermission
  *
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array containing all locations in the database
  */
-router.get('/location_list', verifyACL(3), (req, res, next) => {
+/**
+ * @api {get} /admin/location Get the list of existing location from the database
+ * @apiVersion 1.0.0
+ * @apiName Get Location List
+ * @apiGroup Location
+ * @apiPermission DirectorPermission
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Array containing all locations in the database
+ */
+router.get(['/location_list', '/location'], verifyACL(3), (req, res, next) => {
   Location.getAll(req.uow)
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
@@ -374,17 +401,29 @@ router.get('/location_list', verifyACL(3), (req, res, next) => {
 
 /**
  * @api {post} /admin/create_location Insert a new location in to the database
- * @apiVersion 0.2.3
+ * @apiVersion 0.4.0
  * @apiName Create Location
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiGroup Location
+ * @apiPermission DirectorPermission
  *
  * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
-router.post('/create_location', verifyACL(3), (req, res, next) => {
+/**
+ * @api {post} /admin/location Insert a new location in to the database
+ * @apiVersion 1.0.0
+ * @apiName Create Location
+ * @apiGroup Location
+ * @apiPermission DirectorPermission
+ *
+ * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post(['/create_location', '/location'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
     !req.body.locationName ||
     req.body.locationName.length === 0) {
@@ -405,10 +444,10 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
 
 /**
  * @api {post} /admin/update_location Update name of the location associated with the uid in the database
- * @apiVersion 0.2.3
+ * @apiVersion 0.4.0
  * @apiName Update Location
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiGroup Location
+ * @apiPermission DirectorPermission
  *
  * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
  * @apiParam {String} locationName - the new name that is being updated with the name associated with the uid
@@ -416,8 +455,20 @@ router.post('/create_location', verifyACL(3), (req, res, next) => {
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
-
-router.post('/update_location', verifyACL(3), (req, res, next) => {
+/**
+ * @api {post} /admin/location/update Update name of the location associated with the uid in the database
+ * @apiVersion 1.0.0
+ * @apiName Update Location
+ * @apiGroup Location
+ * @apiPermission DirectorPermission
+ *
+ * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
+ * @apiParam {String} locationName - the new name that is being updated with the name associated with the uid
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post(['/update_location', '/location/update'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
     !req.body.uid ||
     !req.body.location_name ||
@@ -439,17 +490,29 @@ router.post('/update_location', verifyACL(3), (req, res, next) => {
 
 /**
  * @api {post} /admin/remove_location Remove the location associated with the uid from the database
- * @apiVersion 0.2.3
+ * @apiVersion 0.4.0
  * @apiName Remove Location
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiGroup Location
+ * @apiPermission DirectorPermission
  *
  * @apiParam {String} uid - the uid of the location that is being selected for removal
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
-router.post('/remove_location', verifyACL(3), (req, res, next) => {
+/**
+ * @api {post} /admin/location/delete Remove the location associated with the uid from the database
+ * @apiVersion 1.0.0
+ * @apiName Remove Location
+ * @apiGroup Location
+ * @apiPermission DirectorPermission
+ *
+ * @apiParam {String} uid - the uid of the location that is being selected for removal
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post(['/remove_location', 'location/delete'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
     !req.body.uid ||
     req.body.uid.length === 0) {
@@ -470,16 +533,26 @@ router.post('/remove_location', verifyACL(3), (req, res, next) => {
 /**
  * @api {get} /admin/extra_credit_list Retrieve the list of class that are providing extra credit
  * @apiName Get Extra Credit Class List
- * @apiVersion 0.3.2
+ * @apiVersion 0.4.0
  *
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiGroup Extra Credit
+ * @apiPermission DirectorPermission
  *
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array containing the list of class offering extra credit
  */
-
-router.get('/extra_credit_list', verifyACL(2), (req, res, next) => {
+/**
+ * @api {get} /admin/extra_credit Retrieve the list of class that are providing extra credit
+ * @apiName Get Extra Credit Class List
+ * @apiVersion 1.0.0
+ *
+ * @apiGroup Extra Credit
+ * @apiPermission DirectorPermission
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Array containing the list of class offering extra credit
+ */
+router.get(['/extra_credit_list', '/extra_credit'], verifyACL(2), (req, res, next) => {
   database.getExtraCreditClassList(req.uow)
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
@@ -488,9 +561,9 @@ router.get('/extra_credit_list', verifyACL(2), (req, res, next) => {
 /**
  * @api {post} /admin/assign_extra_credit setting user with the class they are receiving extra credit
  * @apiName Assign Extra Credit
- * @apiVersion 0.3.2
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiVersion 0.4.0
+ * @apiGroup Extra Credit
+ * @apiPermission DirectorPermission
  *
  * @apiParam {String} uid - the id associated with the student
  * @apiParam {String} cid - the id associated with the class
@@ -498,7 +571,20 @@ router.get('/extra_credit_list', verifyACL(2), (req, res, next) => {
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
-router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
+/**
+ * @api {post} /admin/extra_credit setting user with the class they are receiving extra credit
+ * @apiName Assign Extra Credit
+ * @apiVersion 1.0.0
+ * @apiGroup Extra Credit
+ * @apiPermission DirectorPermission
+ *
+ * @apiParam {String} uid - the id associated with the student
+ * @apiParam {String} cid - the id associated with the class
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
     !req.body.uid ||
     !req.body.cid ||
@@ -518,11 +604,11 @@ router.post('/assign_extra_credit', verifyACL(3), (req, res, next) => {
 
 /**
  * @api {post} /admin/email Send communication email to recipients
- * @apiVersion 0.1.1
+ * @apiVersion 1.0.0
  * @apiName Send communication emails
  *
  * @apiGroup Admin
- * @apiPermission Exec
+ * @apiPermission DirectorPermission
  *
  * @apiUse AuthArgumentRequired
  * @apiParam {Object[]} emails An array of objects with the following schema { email: <email>, name: <name of person>, substitutions: {...} }
@@ -634,10 +720,10 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
 
 /**
  * @api {get} /admin/user_data Get all user data
- * @apiVersion 0.3.2
+ * @apiVersion 1.0.0
  * @apiName Get list of all users
  * @apiGroup Admin
- * @apiPermission Team Member
+ * @apiPermission TeamMemberPermission
  *
  * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
  * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
@@ -654,67 +740,114 @@ router.get('/user_data', verifyACL(2), (req, res, next) => {
 
 /**
  * @api {get} /admin/prereg_count Get a count of Preregistered Users
- * @apiVersion 0.3.2
+ * @apiVersion 0.4.0
  * @apiName get count preregistration
- * @apiGroup Admin
- * @apiPermission Team Member
+ * @apiGroup Pre Registration
+ * @apiPermission TeamMemberPermission
  *
  * @apiUse AuthArgumentRequired
  *
  * @apiSuccess {Array} number of preregistered users
  */
-router.get('/prereg_count', verifyACL(2), (req, res, next) => {
+/**
+ * @api {get} /admin/preregistration/count Get a count of Preregistered Users
+ * @apiVersion 1.0.0
+ * @apiName get count preregistration
+ * @apiGroup Pre Registration
+ * @apiPermission TeamMemberPermission
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} number of preregistered users
+ */
+router.get(['/prereg_count', '/preregistration/count'], verifyACL(2), (req, res, next) => {
   PreRegistration.getCount(req.uow)
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });
 
 /**
+ * @apiDeprecated
  * @api {get} /admin/reg_count Get a count of Registered Users
- * @apiVersion 0.3.2
+ * @apiVersion 0.4.0
  * @apiName get count registration
- * @apiGroup Admin
- * @apiPermission Team Member
+ * @apiGroup Registration
+ * @apiPermission TeamMemberPermission
  *
  * @apiUse AuthArgumentRequired
  *
  * @apiSuccess {Array} number of registered users
  */
-router.get('/reg_count', verifyACL(2), (req, res, next) => {
+/**
+ * @api {get} /admin/registered/count Get a count of Registered Users
+ * @apiVersion 1.0.0
+ * @apiName get count registration
+ * @apiGroup Registration
+ * @apiPermission TeamMemberPermission
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} number of registered users
+ */
+router.get(['/reg_count', '/registered/count'], verifyACL(2), (req, res, next) => {
   Registration.getCount(req.uow)
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });
 
 /**
+ * @apiDeprecated
  * @api {get} /admin/rsvp_count Get a count of users who RSVP'd
- * @apiVersion 0.3.2
- * @apiName get rsvp count
- * @apiGroup Admin
- * @apiPermission Team Member
+ * @apiVersion 0.4.0
+ * @apiName Get RSVP Count
+ * @apiGroup RSVP
+ * @apiPermission TeamMemberPermission
  *
  * @apiUse AuthArgumentRequired
  *
  * @apiSuccess {Array} number of users who rsvp'd
  */
-router.get('/rsvp_count', verifyACL(2), (req, res, next) => {
+/**
+ * @api {get} /admin/rsvp/count Get a count of users who RSVP'd
+ * @apiVersion 1.0.0
+ * @apiName Get RSVP Count
+ * @apiGroup RSVP
+ * @apiPermission TeamMemberPermission
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} number of users who rsvp'd
+ */
+router.get(['/rsvp_count', '/rsvp/count'], verifyACL(2), (req, res, next) => {
   RSVP.getCount(req.uow)
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });
 
 /**
+ * @apiDeprecated
  * @api {get} /admin/user_count Get the count of users in each category
- * @apiVersion 0.3.2
- * @apiName user count
+ * @apiVersion 0.4.0
+ * @apiName Get User Count
  * @apiGroup Admin
- * @apiPermission Team Member
+ * @apiPermission TeamMemberPermission
  *
  * @apiUse AuthArgumentRequired
  *
  * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
  */
-router.get('/user_count', verifyACL(2), (req, res, next) => {
+/**
+ * @api {get} /admin/user/count Get the count of users in each category
+ * @apiVersion 1.0.0
+ * @apiName Get User Count
+ * @apiGroup Users
+ * @apiPermission TeamMemberPermission
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
+ */
+router.get(['/user_count', '/user/count'], verifyACL(2), (req, res, next) => {
   database.getAllUsersCount(req.uow)
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
@@ -722,10 +855,10 @@ router.get('/user_count', verifyACL(2), (req, res, next) => {
 
 /**
  * @api {get} /admin/statistics Get the count of each option for the registration options
- * @apiVersion 0.3.2
- * @apiName stats
+ * @apiVersion 1.0.0
+ * @apiName Get Statistics
  * @apiGroup Admin
- * @apiPermission Team Member
+ * @apiPermission TeamMemberPermission
  *
  * @apiUse AuthArgumentRequired
  *
@@ -740,15 +873,16 @@ router.get('/statistics', verifyACL(2), (req, res, next) => {
 
 /**
  * @api {post} /admin/hackathon Add a new non-active hackathon
- * @apiVersion 0.3.2
- * @apiName active hackathon
- * @apiGroup Admin
- * @apiPermission Tech-Exec
+ * @apiVersion 1.0.0
+ * @apiName Add non-active hackathon
+ * @apiGroup Hackathon
+ * @apiPermission TechnologyAdminPermission
  *
  * @apiUse AuthArgumentRequired
  *
- * @apiSuccess (201) {String} Added new non-active hackathon
+ * @apiSuccess (200) {String} Added new non-active hackathon
  */
+// TODO: Add test for route
 router.post('/hackathon', verifyACL(4), (req, res, next) => {
   if (req.body && req.body.name && req.body.startTime && req.body.endTime) {
     const hackathon = new Hackathon(req.body, req.uow);
@@ -767,15 +901,16 @@ router.post('/hackathon', verifyACL(4), (req, res, next) => {
 
 /**
  * @api {post} /admin/hackathon/active Add a new active hackathon
- * @apiVersion 0.3.2
- * @apiName active hackathon
- * @apiGroup Admin
- * @apiPermission Tech-Exec
+ * @apiVersion 1.0.0
+ * @apiName Add Active hackathon
+ * @apiGroup Hackathon
+ * @apiPermission TechnologyAdminPermission
  *
  * @apiUse AuthArgumentRequired
  *
- * @apiSuccess (201) {String} Added new active hackathon
+ * @apiSuccess (200) {String} Added new active hackathon
  */
+// TODO: Add test for route
 router.post('/hackathon/active', verifyACL(4), (req, res, next) => {
   if (req.body && req.body.name) {
     const activeHackathon = new ActiveHackathon(req.body, req.uow);
@@ -792,12 +927,24 @@ router.post('/hackathon/active', verifyACL(4), (req, res, next) => {
   }
 });
 
+/**
+ * @api {post} /admin/hackathon/update Update non-active hackathon
+ * @apiVersion 1.0.0
+ * @apiName Update non-active hackathon
+ * @apiGroup Hackathon
+ * @apiPermission TechnologyAdminPermission
+ *
+ * @apiUse AuthArgumentRequired
+ *
+ * @apiSuccess (200) {String} Updated non-active hackathon
+ */
+// TODO: Add test for route
 router.post('/hackathon/update', verifyACL(4), (req, res, next) => {
   if (req.body && req.body.uid) {
     if (req.body.active) {
       const error = new Error();
       error.status = 400;
-      error.body = { error: 'Please you /hackathon/update/active to update the active hackathon' };
+      error.body = { error: 'Please use /hackathon/update/active to update the active hackathon' };
       next(error);
     }
     const hackathon = new Hackathon(req.body, req.uow);

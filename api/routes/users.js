@@ -129,10 +129,10 @@ router.use((req, res, next) => {
 /** *********** ROUTING MIDDLEWARE *********** */
 /**
  * @api {get} /users Get the privilege information for the current user
- * @apiVersion 0.1.2
+ * @apiVersion 1.0.0
  * @apiName Get user privilege information
  * @apiGroup Users
- * @apiPermission User
+ * @apiPermission UserPermission
  *
  * @apiUse AuthArgumentRequired
  *
@@ -154,10 +154,10 @@ router.get('/', (req, res, next) => {
 
 /**
  * @api {get} /users/registration Get the most current registration information for the current user
- * @apiVersion 0.2.1
+ * @apiVersion 1.0.0
  * @apiName Get user registration information
- * @apiGroup Users
- * @apiPermission User
+ * @apiGroup Registration
+ * @apiPermission UserPermission
  *
  * @apiUse AuthArgumentRequired
  *
@@ -181,10 +181,10 @@ router.get('/registration', (req, res, next) => {
 
 /**
  * @api {get} /users/project Get the project details and table assignment for the current user
- * @apiVersion 0.4.0
+ * @apiVersion 1.0.0
  * @apiName Get user project data
- * @apiGroup Users
- * @apiPermission User
+ * @apiGroup Project
+ * @apiPermission UserPermission
  *
  * @apiUse AuthArgumentRequired
  *
@@ -229,11 +229,11 @@ router.get('/project', (req, res, next) => {
 
 /**
  * @api {post} /users/rsvp confirm the RSVP status for the current user and send a email containing their pin
- * @apiVersion 0.1.1
+ * @apiVersion 1.0.0
  * @apiName Set RSVP
  *
- * @apiGroup Users
- * @apiPermission User
+ * @apiGroup RSVP
+ * @apiPermission UserPermission
  *
  * @apiParam {String} A value to indicate if the user decide to rsvp ['true', 'false']
  *
@@ -308,11 +308,11 @@ router.post('/rsvp', (req, res, next) => {
 
 /**
  * @api {get} /users/rsvp Get the RSVP status for a user
- * @apiVersion 0.1.1
+ * @apiVersion 1.0.0
  * @apiName get RSVP status
  *
- * @apiGroup Users
- * @apiPermission User
+ * @apiGroup RSVP
+ * @apiPermission UserPermission
  *
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Object} Containing the rsvp status based on the uid
@@ -335,21 +335,21 @@ router.get('/rsvp', (req, res, next) => {
 
 
 /**
- * @api {post} /users/travelReimbursement submit travel reimbursement information
- * @apiVersion 0.2.2
+ * @api {post} /users/reimbursement submit travel reimbursement information
+ * @apiVersion 1.0.0
  * @apiName Travel Reimbursement
- * @apiGroup users
+ * @apiGroup Travel Reimbursement
  * @apiUse AuthArgumentRequired
  * @apiParam {String} fullName first and last names of the user as they would appear on a check.
  * @apiParam {Number} reimbursementAmount the total amount of money they are requesting, as appears on their receipts
  * @apiParam {String} mailingAddress the full postal address of the user
  * @apiParam {enum} groupMembers ["1", "2", "3", "4+"]
  * @apiParam {FILE} [receipt] The receipt files for this user, users can send up to 5 files all under fieldname receipt. (Max size: 5 MB each)
- * @apiPermission valid user credentials
+ * @apiPermission UserPermission
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
-router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next) => {
+router.post('/reimbursement', upload.array('receipt', 5), (req, res, next) => {
   if (!parseInt(req.body.reimbursementAmount, 10)) {
     const error = new Error();
     error.body = { error: 'Reimbursement amount must be a number' };
@@ -380,10 +380,10 @@ router.post('/travelreimbursement', upload.array('receipt', 5), (req, res, next)
 
 /**
  * @api {post} /users/project Post the project details to get the table assignment
- * @apiVersion 0.4.0
+ * @apiVersion 1.0.0
  * @apiName Post user project data
- * @apiGroup Users
- * @apiPermission User
+ * @apiGroup Project
+ * @apiPermission UserPermission
  * @apiParam {String} projectName Name of the project
  * @apiParam {Array} team Array of team emails
  * @apiParam {Array} categories Array of category IDs the project is submitting for
@@ -471,9 +471,9 @@ router.post('/project', (req, res, next) => {
 /**
  * @api {get} /users/event/categories Get all the event categories
  * @apiName Get Event Categories
- * @apiVersion 0.3.2
- * @apiGroup User
- * @apiPermission Authenticated
+ * @apiVersion 1.0.0
+ * @apiGroup Event
+ * @apiPermission UserPermission
  *
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Categories
@@ -486,10 +486,10 @@ router.get('/event/categories', (req, res, next) => {
 
 /**
  * @api {get} /users/hackathon/active Get the uid, name, and pin base of the active hackathon
- * @apiVersion 0.3.2
- * @apiName active hackathon
- * @apiGroup Admin
- * @apiPermission Exec
+ * @apiVersion 1.0.0
+ * @apiName Get Active Hackathon
+ * @apiGroup Hackathon
+ * @apiPermission UserPermission
  *
  * @apiUse AuthArgumentRequired
  *

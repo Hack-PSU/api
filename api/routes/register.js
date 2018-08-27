@@ -76,9 +76,9 @@ function storeIP(req, res, next) {
 /** ******************* ROUTES *************************** */
 /**
  * @api {post} /register/pre Pre-register for HackPSU
- * @apiVersion 0.1.1
- * @apiName Pre-Registration
- * @apiGroup Registration
+ * @apiVersion 1.0.0
+ * @apiName Add Pre-Registration
+ * @apiGroup Pre Registration
  * @apiParam {String} email The email ID to register with
  * @apiPermission None
  *
@@ -105,9 +105,10 @@ router.post('/pre', (req, res, next) => {
 
 /**
  * @api {post} /register/ Register for HackPSU
- * @apiVersion 0.1.1
- * @apiName Registration
+ * @apiVersion 1.0.0
+ * @apiName Add Registration
  * @apiGroup Registration
+ * @apiPermission UserPermission
  * @apiParamExample {Object} Request-Example: {
 	req.header: {
 		idtoken: <user's idtoken>
@@ -162,7 +163,6 @@ firstName: "Matt",
  * @apiParam {String} project A project description that the user is proud of
  * @apiParam {String} expectations What the user expects to get from the hackathon
  * @apiParam {String} veteran=false Is the user a veteran?
- * @apiPermission valid user credentials
  *
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError

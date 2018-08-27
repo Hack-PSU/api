@@ -37,7 +37,6 @@ module.exports.Update = class Update extends BaseObject {
     const query = Hackathon.getActiveHackathonQuery().toParam();
     const hackathonPromise = sqluow.query(query.text, query.values);
     return hackathonPromise.then((result) => {
-      console.log(result);
       REFERENCE = `/updates/${result[0].uid}`;
       return uow.query(RtdbUow.queries.GET, REFERENCE);
     });

@@ -5,7 +5,9 @@ const squel = require('squel');
 const database = require('../services/database');
 const { errorHandler500 } = require('../services/functions');
 const { Registration } = require('../models/Registration');
-const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/constants/constants');
+const { rfidAssignmentSchema, rfidScansSchema } =
+  require('../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
+const { rediskey } = require('../assets/constants/constants');
 
 const router = express.Router();
 
@@ -34,7 +36,7 @@ router.use((req, res, next) => {
 
 /**
  * @api {get} /pi/registrations Get all the registration data for the pi
- * @apiVersion 0.3.0
+ * @apiVersion 1.0.0
  * @apiName Get registration data for pi
  *
  * @apiGroup Pi
@@ -74,7 +76,7 @@ router.get('/registrations', (req, res, next) => {
 
 /**
  * @api {post} /pi/assignment Assign RFID tags ID to users
- * @apiVersion 0.3.0
+ * @apiVersion 1.0.0
  * @apiName Assign an RFID to a user
  *
  * @apiGroup Pi
@@ -115,7 +117,7 @@ router.post('/assignment', (req, res, next) => {
 
 /**
  * @api {post} /pi/scans Upload scans from the event
- * @apiVersion 0.3.0
+ * @apiVersion 1.0.0
  * @apiName Submit scans from the event
  *
  * @apiGroup Pi

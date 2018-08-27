@@ -94,7 +94,7 @@ const index = require('./routes/index');
 const users = require('./routes/users');
 const register = require('./routes/register');
 const admin = require('./routes/admin');
-const hw = require('./routes/hw');
+const scanner = require('./routes/scanner');
 const live = require('./routes/live');
 const internal = require('./routes/internal');
 
@@ -118,7 +118,7 @@ app.use('/v1/users', users);
 app.use('/v1/register', register);
 app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 app.use('/v1/admin', admin);
-app.use(['/v1/pi', '/v1/hw'], hw); // Deprecated
+app.use(['/v1/pi', '/v1/scanner'], scanner); // Deprecated
 app.use('/v1/live', live);
 app.use('/v1/internal', internal);
 

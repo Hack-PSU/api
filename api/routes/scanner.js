@@ -35,8 +35,9 @@ router.use((req, res, next) => {
 /** ************* ROUTES ************************ */
 
 /**
+ * @apiDeprecated use /scanner/registrations
  * @api {get} /pi/registrations Get all the registration data for the pi
- * @apiVersion 1.0.0
+ * @apiVersion 0.4.0
  * @apiName Get registration data for pi
  *
  * @apiGroup Pi
@@ -47,7 +48,7 @@ router.use((req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 /**
- * @api {get} /hw/registrations Get all the registration data for the pi
+ * @api {get} /scanner/registrations Get all the registration data for the pi
  * @apiVersion 1.0.0
  * @apiName Get registration data for pi
  *
@@ -87,8 +88,9 @@ router.get('/registrations', (req, res, next) => {
 });
 
 /**
+ * @apiDeprecated use /scanner/assignment
  * @api {post} /pi/assignment Assign RFID tags ID to users
- * @apiVersion 1.0.0
+ * @apiVersion 0.4.0
  * @apiName Assign an RFID to a user
  *
  * @apiGroup Pi
@@ -109,7 +111,7 @@ router.get('/registrations', (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 /**
- * @api {post} /hw/assignment Assign RFID tags ID to users
+ * @api {post} /scanner/assignment Assign RFID tags ID to users
  * @apiVersion 1.0.0
  * @apiName Assign an RFID to a user
  *
@@ -150,8 +152,9 @@ router.post('/assignment', (req, res, next) => {
 
 
 /**
+ * @apiDeprecated use /scanner/scans
  * @api {post} /pi/scans Upload scans from the event
- * @apiVersion 1.0.0
+ * @apiVersion 0.4.0
  * @apiName Submit scans from the event
  *
  * @apiGroup Pi
@@ -172,7 +175,7 @@ router.post('/assignment', (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 /**
- * @api {post} /hw/scans Upload scans from the event
+ * @api {post} /scanner/scans Upload scans from the event
  * @apiVersion 1.0.0
  * @apiName Submit scans from the event
  *

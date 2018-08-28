@@ -5,7 +5,9 @@ const squel = require('squel');
 const database = require('../services/database');
 const { errorHandler500 } = require('../services/functions');
 const { Registration } = require('../models/Registration');
-const { rediskey, rfidAssignmentSchema, rfidScansSchema } = require('../assets/constants/constants');
+const { rfidAssignmentSchema, rfidScansSchema } =
+  require('../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
+const { rediskey } = require('../assets/constants/constants');
 
 const router = express.Router();
 
@@ -33,8 +35,21 @@ router.use((req, res, next) => {
 /** ************* ROUTES ************************ */
 
 /**
+ * @apiDeprecated use /scanner/registrations
  * @api {get} /pi/registrations Get all the registration data for the pi
- * @apiVersion 0.3.0
+ * @apiVersion 0.4.0
+ * @apiName Get registration data for pi
+ *
+ * @apiGroup Pi
+ * @apiPermission API Key validation
+ *
+ * @apiUse ApiKeyArgumentRequired
+ * @apiSuccess {Array} Contains all data required by the pi
+ * @apiUse IllegalArgumentError
+ */
+/**
+ * @api {get} /scanner/registrations Get all the registration data for the pi
+ * @apiVersion 1.0.0
  * @apiName Get registration data for pi
  *
  * @apiGroup Pi
@@ -73,8 +88,31 @@ router.get('/registrations', (req, res, next) => {
 });
 
 /**
+ * @apiDeprecated use /scanner/assignment
  * @api {post} /pi/assignment Assign RFID tags ID to users
- * @apiVersion 0.3.0
+ * @apiVersion 0.4.0
+ * @apiName Assign an RFID to a user
+ *
+ * @apiGroup Pi
+ * @apiPermission API Key Validation
+ *
+ * @apiUse ApiKeyArgumentRequired
+ * @apiParam {Array} assignments An array of RFID tags to User uid assignments
+ * @apiParamExample {json} Request-Example:
+ *     [
+ *      {
+ *       "rfid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+ *       "uid": "nbG7b87NB87nB7n98Y7",
+ *       "time": 1239712938120
+ *     },
+ *     { ... }
+ *     ]
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+/**
+ * @api {post} /scanner/assignment Assign RFID tags ID to users
+ * @apiVersion 1.0.0
  * @apiName Assign an RFID to a user
  *
  * @apiGroup Pi
@@ -114,8 +152,31 @@ router.post('/assignment', (req, res, next) => {
 
 
 /**
+ * @apiDeprecated use /scanner/scans
  * @api {post} /pi/scans Upload scans from the event
- * @apiVersion 0.3.0
+ * @apiVersion 0.4.0
+ * @apiName Submit scans from the event
+ *
+ * @apiGroup Pi
+ * @apiPermission API Key Validation
+ *
+ * @apiUse ApiKeyArgumentRequired
+ * @apiParam {Array} scans An array of scan objects
+ * @apiParamExample {json} Request-Example:
+ *     [
+ *      {
+ *       "rfid_uid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+ *       "scan_location": "nbG7b87NB87nB7n98Y7",
+ *       "scan_time": 1239712938120
+ *     },
+ *     { ... }
+ *     ]
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+/**
+ * @api {post} /scanner/scans Upload scans from the event
+ * @apiVersion 1.0.0
  * @apiName Submit scans from the event
  *
  * @apiGroup Pi

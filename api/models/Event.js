@@ -5,6 +5,8 @@ const squel = require('squel');
 
 const chance = new Chance();
 const eventSchema = require('../assets/schemas/load-schemas')('eventSchema');
+const { Hackathon } = require('./Hackathon');
+const HttpError = require('../JSCommon/HttpError');
 
 const TABLE_NAME = 'EVENTS';
 module.exports.TABLE_NAME = TABLE_NAME;
@@ -44,6 +46,8 @@ module.exports.Event = class Event extends BaseObject {
       .field('l.location_name')
       .order('event_start_time', true)
       .join('LOCATIONS', 'l', 'event_location=l.uid')
+      .join('HACKATHON', 'h', 'h.uid=e.hackathon')
+      .where('h.active = true')
       .toString()
       .concat(';');
     return uow.query(query, [], { stream: true });
@@ -64,15 +68,16 @@ module.exports.Event = class Event extends BaseObject {
   add() {
     const validation = this.validate();
     if (!validation.result) {
-      return new Promise(((resolve, reject) => reject(new Error(validation.error))));
+      return new Promise(((resolve, reject) => reject(new HttpError(validation.error, 400))));
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([this._dbRepresentation])
+      .set('hackathon', Hackathon.getActiveHackathonQuery())
       .toParam();
     query.text = query.text.concat(';');
     query.text.concat('SELECT location_name FROM LOCATIONS WHERE uid=?;');
     query.values.push(this.event_location);
-    return this.uow.query(query.text, query.values);
+    return super.add({ query });
   }
 };

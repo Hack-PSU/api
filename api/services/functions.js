@@ -79,7 +79,7 @@ function sendNotification(notificationTitle, notificationBody) {
   return new Promise((resolve, reject) => {
     const headers = {
       'Content-Type': 'application/json; charset=utf-8',
-      Authorization: 'Basic '.concat(pushNotifKey.key),
+      Authorization: `Basic ${pushNotifKey.key}`,
     };
 
     const data = {
@@ -98,8 +98,8 @@ function sendNotification(notificationTitle, notificationBody) {
     };
 
     request(options, (err, response, body) => {
-      if (err) {
-        reject(err);
+      if (body && body.errors && body.errors.length > 0) {
+        reject(body.errors);
       } else {
         resolve(body);
       }

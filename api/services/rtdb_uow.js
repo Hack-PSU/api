@@ -1,5 +1,5 @@
 /* eslint-disable class-methods-use-this,no-underscore-dangle */
-const { Readable } = require('stream');
+const streamable = require('stream-array');
 const _ = require('lodash');
 
 module.exports = class RtdbUow {
@@ -43,6 +43,8 @@ module.exports = class RtdbUow {
           .toString());
       case RtdbUow.queries.COUNT:
         return this._count(reference);
+      case RtdbUow.queries.UPDATE:
+        return this._set(data, reference);
       default:
         return Promise.reject(new Error('Illegal query'));
     }
@@ -51,21 +53,19 @@ module.exports = class RtdbUow {
   _get(reference) {
     return new Promise((resolve, reject) => {
       this.db.ref(reference)
-        .once('value', (d) => {
-          const firebaseData = d.val();
-          const stream = new Readable({ objectMode: true });
-          resolve(stream);
+        .once('value', (data) => {
+          const firebaseData = data.val();
+          let result = [];
           if (firebaseData) {
-            const result = Object
+            result = Object
               .entries(firebaseData)
               .map((pair) => {
                 const r = {};
                 [, r[pair[0]]] = pair;
                 return r;
               });
-            stream.push(result);
           }
-          stream.push(null);
+          resolve(new streamable(result));
         })
         .catch(reject);
     });

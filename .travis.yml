@@ -9,9 +9,11 @@ node_js:
 - '8'
 before_install:
 - npm i -g node-cipher
+- npm i -g grunt-cli
 - chmod +x prepare_deploy.sh
 install:
 - cd api && npm install
+- grunt prep
 before_script:
 - cd .. && ./prepare_deploy.sh
 script:
@@ -28,7 +30,7 @@ before_deploy:
 - npm i -g node-cipher
 - cd $TRAVIS_BUILD_DIR
 - chmod +x ./prepare_deploy.sh
-- ./prepare_deploy.sh prod
+- cd api && grunt prep --production && cd ..
 - nodecipher decrypt ./api/hackpsu18-ecc9dc4878c6.json.enc "./api/hackpsu18-ecc9dc4878c6.json" -p ${PKEY_PASS} -a aes-256-cbc-hmac-sha256
 - cd api
 deploy:

@@ -59,4 +59,5 @@ module.exports = {
   SendGridApiKey: process.env.SENDGRID_ACCESS_KEY || '',
   MailchimpApiKey: process.env.MAILCHIMP_API_KEY || '',
   MailchimpPreregEmailList: 'HackPSU Email List',
+  redisKey: process.env.REDIS_KEY,
 };

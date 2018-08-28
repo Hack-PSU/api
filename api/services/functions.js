@@ -98,7 +98,7 @@ function sendNotification(notificationTitle, notificationBody) {
     };
 
     request(options, (err, response, body) => {
-      if (body.errors.length > 0) {
+      if (body && body.errors && body.errors.length > 0) {
         reject(body.errors);
       } else {
         resolve(body);

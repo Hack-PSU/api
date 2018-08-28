@@ -28,7 +28,6 @@ router.use(verifyAuthMiddleware);
  *
  * @apiSuccess {Array} Array of current updates.
  */
-// TODO: Add test
 router.get('/updates', (req, res, next) => {
   Update.getAll(req.rtdb, req.uow)
     .then(stream => streamHandler(stream, res, next))
@@ -66,7 +65,6 @@ router.get('/updates/reference', (req, res, next) => {
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
-// TODO: Add test
 router.post('/updates', verifyACL(2), (req, res, next) => {
   if (!req.body || !req.body.updateTitle) {
     return next(new HttpError('Update title must be provided', 400));
@@ -108,7 +106,6 @@ router.post('/updates', verifyACL(2), (req, res, next) => {
  *
  * @apiSuccess {Array} Array of current events.
  */
-// TODO: Add test
 router.get('/events', (req, res, next) => {
   Event.getAll(req.uow)
     .then(stream => streamHandler(stream, res, next))
@@ -132,7 +129,6 @@ router.get('/events', (req, res, next) => {
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
-// TODO: Add test
 router.post('/event', verifyACL(2), (req, res, next) => {
   if (!req.body || !req.body.eventLocation) {
     return next(new HttpError('Event location must be provided', 400));
@@ -155,7 +151,7 @@ router.post('/event', verifyACL(2), (req, res, next) => {
   const event = new Event(req.body, req.uow);
   event
     .add()
-    .then(stream => streamHandler(stream, res, next))
+    .then(result => res.status(200).send(result))
     .catch(err => errorHandler500(err, next));
 });
 

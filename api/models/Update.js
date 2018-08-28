@@ -1,9 +1,8 @@
 /* eslint-disable class-methods-use-this */
 const Timeuuid = require('node-time-uuid');
 const BaseObject = require('./BaseObject');
-const {UowFactory} = require('../services/factories/uow_factory');
 const liveUpdateSchema = require('../assets/schemas/load-schemas')('liveUpdateSchema');
-const {Hackathon} = require('../models/Hackathon');
+const { Hackathon } = require('../models/Hackathon');
 const RtdbUow = require('../services/rtdb_uow');
 
 let REFERENCE = '';

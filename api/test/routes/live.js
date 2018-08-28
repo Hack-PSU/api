@@ -9,7 +9,6 @@ const server = require('../../app');
 require('../test_helper')();
 
 const should = chai.should();
-const { expect } = chai;
 
 chai.use(chaiHttp);
 

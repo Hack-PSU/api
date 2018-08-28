@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const firebase = require('firebase');
 firebase.initializeApp({
     apiKey: "AIzaSyCpvAPdiIcqKV_NTyt6DZgDUNyjmA6kwzU",

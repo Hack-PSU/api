@@ -1,6 +1,7 @@
 const BaseObject = require('./BaseObject');
 const squel = require('squel');
 const { TABLE_NAME: HackathonTableName, Hackathon } = require('./Hackathon');
+const HttpError = require('../JSCommon/HttpError');
 const rsvpSchema = require('../assets/schemas/load-schemas')('rsvpSchema');
 
 const TABLE_NAME = 'RSVP';
@@ -29,6 +30,27 @@ module.exports.RSVP = class RSVP extends BaseObject {
 
   get id() {
     return this.user_id;
+  }
+
+  add() {
+    const validation = this.validate();
+    if (!validation.result) {
+      if (process.env.APP_ENV !== 'test') {
+        console.warn('Validation failed while adding registration.');
+        console.warn(this._dbRepresentation);
+      }
+      return Promise.reject(new HttpError(validation.error, 400 ));
+    }
+    const query = squel.insert({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .into(this.tableName)
+      .setFieldsRows([this._dbRepresentation])
+      .set('hackathon', Hackathon.getActiveHackathonQuery())
+      .toParam();
+    query.text = query.text.concat(';');
+    return super.add({ query });
   }
 
   /**

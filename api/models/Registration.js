@@ -3,6 +3,7 @@ const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 const squel = require('squel');
 const { Hackathon } = require('./Hackathon');
+const HttpError = require('../JSCommon/HttpError');
 
 const registeredUserSchema = require('../assets/schemas/load-schemas')('registeredUserSchema');
 
@@ -48,7 +49,7 @@ module.exports.Registration = class Registration extends BaseObject {
   }
 
   static getTableName() {
-    return TABLE_NAME
+    return TABLE_NAME;
   }
 
   get tableName() {
@@ -72,7 +73,7 @@ module.exports.Registration = class Registration extends BaseObject {
         console.warn('Validation failed while adding registration.');
         console.warn(this._dbRepresentation);
       }
-      return Promise.reject(new Error(validation.error));
+      return Promise.reject(new HttpError(validation.error, 400 ));
     }
     const query = squel.insert({
       autoQuoteFieldNames: true,

@@ -1,6 +1,9 @@
 const BaseObject = require('./BaseObject');
+const { Hackathon } = require('./Hackathon');
+const HttpError = require('../JSCommon/HttpError');
 const Chance = require('chance');
 const uuidv4 = require('uuid/v4');
+const squel = require('squel');
 
 const preRegisteredSchema = require('../assets/schemas/load-schemas')('preRegisteredSchema');
 
@@ -30,7 +33,43 @@ module.exports.PreRegistration = class PreRegistration extends BaseObject {
    * @return {Promise<Stream>}
    */
   static getAll(uow, opts) {
+    if (opts && opts.currentHackathon) {
+      const query = squel.select({
+        autoQuoteTableNames: opts.quoteFields !== false,
+        autoQuoteFieldNames: opts.quoteFields !== false,
+      })
+        .from(TABLE_NAME)
+        .fields(opts.fields || null)
+        .offset(opts.startAt || null)
+        .limit(opts.count || null)
+        .where('hackathon = ?', Hackathon.getActiveHackathonQuery())
+        .toString()
+        .concat(';');
+      const params = [];
+      return uow.query(query, params, { stream: true });
+    }
     return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  add() {
+    const validation = this.validate();
+    if (!validation.result) {
+      if (process.env.APP_ENV !== 'test') {
+        console.warn('Validation failed while adding registration.');
+        console.warn(this._dbRepresentation);
+      }
+      return Promise.reject(new HttpError(validation.error, 400 ));
+    }
+    const query = squel.insert({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .into(this.tableName)
+      .setFieldsRows([this._dbRepresentation])
+      .set('hackathon', Hackathon.getActiveHackathonQuery())
+      .toParam();
+    query.text = query.text.concat(';');
+    return super.add({ query });
   }
 
   /**

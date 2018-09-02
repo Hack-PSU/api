@@ -75,7 +75,7 @@ describe('TEST: Object CRUD tests', () => {
             if (model.prototype.constructor.name === 'Update') {
               promise = model.getAll(uowrtdb, uow);
             } else {
-              promise = model.getAll(model.useRTDB ? uowrtdb : uow)
+              promise = model.getAll(model.useRTDB ? uowrtdb : uow);
             }
             promise
               .then((result) => {
@@ -185,7 +185,7 @@ describe('TEST: Object CRUD tests', () => {
             if (model.prototype.constructor.name === 'Update') {
               promise = model.getCount(uowrtdb, uow);
             } else {
-              promise = model.getCount(model.useRTDB ? uowrtdb : uow, uow)
+              promise = model.getCount(model.useRTDB ? uowrtdb : uow, uow);
             }
             promise
               .then((result) => {

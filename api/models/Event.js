@@ -46,8 +46,7 @@ module.exports.Event = class Event extends BaseObject {
       .field('l.location_name')
       .order('event_start_time', true)
       .join('LOCATIONS', 'l', 'event_location=l.uid')
-      .join('HACKATHON', 'h', 'h.uid=e.hackathon')
-      .where('h.active = true')
+      .join('HACKATHON', 'h', 'h.uid=e.hackathon and h.active=true')
       .toString()
       .concat(';');
     return uow.query(query, [], { stream: true });

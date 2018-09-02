@@ -1,6 +1,12 @@
+/* assignTeam procedure
+ * 
+ * Generates an association of a project and team member UIDs
+ *
+*/
 CREATE PROCEDURE `assignTeam`(in projectName_param varchar(50), in teamUIDs_param longtext, in projectCategories_param longtext, out projectID_param varchar(45))
 proc_lbl:begin
-
+	set @hackathon_var := (select `uid` from `HACKATHON` where `active` = 1);
+	
     set @pos := 1;
     set @len := locate(',', teamUIDs_param) - @pos;
     set @num := 0;

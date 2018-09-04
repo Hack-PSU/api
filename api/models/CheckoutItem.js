@@ -44,6 +44,10 @@ module.exports.CheckoutItem = class CheckoutItem extends BaseObject {
     return super.getAll(uow, TABLE_NAME, opts);
   }
 
+  /**
+   * This method returns the number of item categories in the database
+   * NOTE: This does not interface with the quantities of the items in any way.
+   */
   static getCount(uow) {
     return super.getCount(uow, TABLE_NAME);
   }

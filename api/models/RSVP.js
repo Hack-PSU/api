@@ -85,7 +85,7 @@ module.exports.RSVP = class RSVP extends BaseObject {
       .offset((opts && opts.startAt) || null)
       .limit((opts && opts.count) || null)
       .join('REGISTRATION', 'r', 'r.uid=rsvp.user_id')
-      .where('r.hackathon = ?', Hackathon.getActiveHackathonQuery())
+      .join(HackathonTableName, 'h', 'r.hackathon=h.uid and h.active=1')
       .toString()
       .concat(';');
     return uow.query(query, null, { stream: true });
@@ -102,7 +102,7 @@ module.exports.RSVP = class RSVP extends BaseObject {
         .toString()}))`, 'pin')
       .where('rsvp.user_id = ?', userUid)
       .join('REGISTRATION', 'r', 'r.uid=rsvp.user_id')
-      .where('r.hackathon = ?', Hackathon.getActiveHackathonQuery())
+      .join(HackathonTableName, 'h', 'rsvp.hackathon=h.uid and h.active=1')
       .toParam();
     query.text = query.text.concat(';');
     return uow.query(query.text, query.values);

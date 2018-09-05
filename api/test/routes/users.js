@@ -152,7 +152,7 @@ describe('get registration', () => {
 // no idtoken
 // non existant user
 // rsvp success
-describe('rsvp user', () => {
+describe('TEST: /v1/rsvp: rsvp user', () => {
   const checkin = true;
   let idToken = null;
   let loggedInUser = null;

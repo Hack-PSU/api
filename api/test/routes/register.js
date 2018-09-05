@@ -8,6 +8,8 @@ const squel = require('squel');
 const Chance = require('chance');
 const firebase = require('firebase');
 const util = require('util');
+const sinon = require('sinon');
+const Mailchimp = require('../../services/mailchimp');
 require('../test_helper')();
 
 const chance = new Chance();

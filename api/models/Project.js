@@ -1,5 +1,6 @@
-const BaseObject = require('./BaseObject');
 const squel = require('squel');
+const BaseObject = require('./BaseObject');
+const Hackathon = require('./Hackathon');
 
 const projectRegistrationSchema = require('../assets/schemas/load-schemas')('projectRegistrationSchema');
 
@@ -41,6 +42,7 @@ module.exports.Project = class Project extends BaseObject {
       .join('TABLE_ASSIGNMENTS', 'ta', 'ta.projectID = pl.projectID')
       .join('PROJECT_CATEGORIES', 'pc', 'pc.projectID = pt.projectID')
       .join('CATEGORY_LIST', 'cl', 'cl.uid = pc.categoryID ')
+      .join(Hackathon.TABLE_NAME, 'h', 'pl.hackathon=h.uid and h.active=1')
       .toParam();
     query.text = query.text.concat(';');
     return uow.query(query.text, query.values, { stream: true });

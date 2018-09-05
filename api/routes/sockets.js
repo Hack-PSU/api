@@ -50,6 +50,7 @@ module.exports = (io) => {
    * On a new connection, the database will be queried and sent to the new connection
    */
   /**
+   * @apiDeprecated
    * @api {socket.io} /live/updates/:connection Get live updates
    * @apiVersion 0.3.1
    * @apiName Get live updates
@@ -70,6 +71,7 @@ module.exports = (io) => {
       });
 
     /**
+     * @apiDeprecated
      * @api {socket.io} /live/updates/:upstream-update Publish live update
      * @apiVersion 0.3.1
      * @apiName Publish live update
@@ -120,6 +122,7 @@ module.exports = (io) => {
 
   /** ******************** CALENDAR EVENTS NAMESPACE ****************** */
   /**
+   * @apiDeprecated
    * @api {socket.io} /live/events/:connection Get calendar events
    * @apiVersion 0.3.1
    * @apiName Get calendar events
@@ -138,6 +141,7 @@ module.exports = (io) => {
       }).catch(err => socket.emit('error', err));
 
     /**
+     * @apiDeprecated
      * @api {socket.io} /live/updates/:upstream-event Create new event
      * @apiVersion 0.3.1
      * @apiName Create new event
@@ -174,6 +178,7 @@ module.exports = (io) => {
 
 
     /**
+     * @apiDeprecated
      * @api {socket.io} /live/updates/:update-event Update event
      * @apiVersion 0.3.1
      * @apiName Update event

@@ -130,7 +130,7 @@ function addRfidScans(uow, scans) {
  * @return {Promise<any>}
  */
 function getAllUsersList(uow) {
-  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
       .from('REGISTRATION', 'r')
       .field('r.uid')
@@ -148,7 +148,10 @@ function getAllUsersList(uow) {
     .left_join('RFID_ASSIGNMENTS', 'f', 'a.uid = f.user_uid')
     .left_join('PRE_REGISTRATION', 'p', 'r.email = p.email')
     .field('r.*')
-    .field('r.pin - (SELECT h.base_pin from HACKATHON h where h.active = 1)', 'pin')
+    .field(`r.pin - (${squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(Hackathon.TABLE_NAME, 'h')
+      .where('active = 1')
+      .toString()})`, 'pin')
     .field('p.uid', 'pre_uid')
     .field('v.user_id')
     .field('f.user_uid')

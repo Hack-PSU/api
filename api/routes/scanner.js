@@ -3,11 +3,11 @@ const express = require('express');
 const Ajv = require('ajv');
 const squel = require('squel');
 const database = require('../services/database');
-const { errorHandler500 } = require('../services/functions');
+const { errorHandler500, streamHandler } = require('../services/functions');
 const { Registration } = require('../models/Registration');
 const { rfidAssignmentSchema, rfidScansSchema } =
   require('../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
-const { rediskey } = require('../assets/constants/constants');
+const { redisKey } = require('../assets/constants/constants');
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ router.use((req, res, next) => {
     return next();
   }
   if (!req.headers.apikey ||
-    req.headers.apikey !== rediskey) {
+    req.headers.apikey !== redisKey) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Illegal access. Please check the credentials' };
@@ -40,7 +40,7 @@ router.use((req, res, next) => {
  * @apiVersion 0.4.0
  * @apiName Get registration data for pi
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -52,7 +52,7 @@ router.use((req, res, next) => {
  * @apiVersion 1.0.0
  * @apiName Get registration data for pi
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -64,27 +64,21 @@ router.get('/registrations', (req, res, next) => {
   Registration.getAll(
     req.uow,
     {
-      fields: ['uid',
+      fields: ['reg.uid',
         // Subtract the base pin for the current hackathon from the retrieved pin.
-        `pin - (${squel.select({
+        `reg.pin - (${squel.select({
           autoQuoteTableNames: false,
           autoQuoteFieldNames: false,
         }).from('HACKATHON').field('base_pin').where('active = 1')
           .toString()}) AS pin`,
-        'firstname',
-        'lastname',
-        'shirt_size',
-        'dietary_restriction'],
+        'reg.firstname',
+        'reg.lastname',
+        'reg.shirt_size',
+        'reg.dietary_restriction'],
       currentHackathon: true,
       quoteFields: false,
     },
-  ).then((stream) => {
-    stream.pipe(res)
-      .on('err', err => errorHandler500(err, next))
-      .on('end', () => {
-        res.status(200).send(arr);
-      });
-  }).catch(err => errorHandler500(err, next));
+  ).then(stream => streamHandler(stream, res, next));
 });
 
 /**
@@ -93,7 +87,7 @@ router.get('/registrations', (req, res, next) => {
  * @apiVersion 0.4.0
  * @apiName Assign an RFID to a user
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key Validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -115,7 +109,7 @@ router.get('/registrations', (req, res, next) => {
  * @apiVersion 1.0.0
  * @apiName Assign an RFID to a user
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key Validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -157,7 +151,7 @@ router.post('/assignment', (req, res, next) => {
  * @apiVersion 0.4.0
  * @apiName Submit scans from the event
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key Validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -179,7 +173,7 @@ router.post('/assignment', (req, res, next) => {
  * @apiVersion 1.0.0
  * @apiName Submit scans from the event
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key Validation
  *
  * @apiUse ApiKeyArgumentRequired

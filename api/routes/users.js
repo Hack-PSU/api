@@ -472,7 +472,7 @@ router.post('/project', (req, res, next) => {
  * @api {get} /users/event/categories Get all the event categories
  * @apiName Get Event Categories
  * @apiVersion 1.0.0
- * @apiGroup Event
+ * @apiGroup Events
  * @apiPermission UserPermission
  *
  * @apiUse AuthArgumentRequired

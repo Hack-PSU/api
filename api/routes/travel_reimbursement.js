@@ -5,6 +5,7 @@ const { verifyAuthMiddleware } = require('../services/auth')
 const StorageService = require('../services/storage_service');
 const { STORAGE_TYPES } = require('../services/factories/storage_factory');
 const { logger } = require('../services/logging');
+const constants = require('../assets/constants/constants');
 const storage = new StorageService(STORAGE_TYPES.GCS, {
   bucketName: constants.GCS.travelReimbursementBucket,
   key(req, file, cb) {
@@ -22,7 +23,10 @@ const upload = storage.upload({
     if (path.extname(file.originalname) !== '.jpeg' &&
       path.extname(file.originalname) !== '.png' &&
       path.extname(file.originalname) !== '.jpg') {
-      return cb(new Error('Only jpeg, jpg, and png are allowed'));
+      const error = new Error();
+      error.status = 400;
+      error.message = 'Only jpeg, jpg, and png are allowed';
+      return cb(error);
     }
     cb(null, true);
   },
@@ -101,6 +105,12 @@ router.use(verifyAuthMiddleware)
  * @apiUse IllegalArgumentError
  */
 router.post('/', upload.array('receipt', 5), (req, res, next) => {
+  if (!req.body) {
+    const error = new Error();
+    error.body = { error: "No body available"}
+    error.status = 400;
+    return next(error);
+  }
   if (!parseInt(req.body.reimbursementAmount, 10)) {
     const error = new Error();
     error.body = { error: 'Reimbursement amount must be a number' };
@@ -108,7 +118,7 @@ router.post('/', upload.array('receipt', 5), (req, res, next) => {
     return next(error);
   }
   req.body.reimbursementAmount = parseInt(req.body.reimbursementAmount, 10);
-  if (!req.body || !validateReimbursement(req.body)) {
+  if (!validateReimbursement(req.body)) {
     const error = new Error();
     error.body = { error: 'Request body must be set and be valid' };
     error.status = 400;

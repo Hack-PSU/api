@@ -133,7 +133,7 @@ router.get('/', (req, res) => {
 router.get('/registered', verifyACL(2), (req, res, next) => {
   Registration.getAll(req.uow, {
     count: res.locals.limit,
-    limit: res.locals.offset,
+    startAt: res.locals.offset,
     currentHackathon: true, // TODO: Add ability to set which hackathons needed froms request
   })
     .then(stream => streamHandler(stream, res, next))
@@ -156,7 +156,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
 router.get('/preregistered', verifyACL(2), (req, res, next) => {
   PreRegistration.getAll(req.uow, {
     count: res.locals.limit,
-    limit: res.locals.offset,
+    startAt: res.locals.offset,
   })
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
@@ -226,7 +226,7 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
 router.get(['/rsvp_list', '/rsvp'], verifyACL(3), (req, res, next) => {
   RSVP.getAll(req.uow, {
     count: res.locals.limit,
-    limit: res.locals.offset,
+    startAt: res.locals.offset,
   })
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));

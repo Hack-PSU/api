@@ -98,4 +98,8 @@ module.exports.CheckoutObject = class CheckoutObject extends BaseObject {
   get tableName() {
     return TABLE_NAME;
   }
+
+  get columnName() {
+    return 'uid';
+  }
 };

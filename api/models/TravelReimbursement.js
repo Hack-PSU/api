@@ -14,7 +14,7 @@ module.exports.TravelReimbursement = class TravelReimbursement extends BaseObjec
     this.group_members = data.groupMembers || null;
     this.user_id = data.uid || null;
     this.receipt_uris = data.receiptURIs || null;
-    this.uid = data.uid || uuidv4().replace(/-/g, '');
+    this.uid = data.uuid || uuidv4().replace(/-/g, '');
   }
 
   static getAll(uow, opts) {

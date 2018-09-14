@@ -1,6 +1,5 @@
 /* eslint-disable consistent-return,no-use-before-define,no-param-reassign,no-new */
 const express = require('express');
-const path = require('path');
 const Ajv = require('ajv');
 const _ = require('lodash');
 const validator = require('email-validator');
@@ -16,12 +15,11 @@ const { RSVP } = require('../models/RSVP');
 const { Category } = require('../models/Category');
 const { ActiveHackathon } = require('../models/ActiveHackathon');
 const HttpError = require('../JSCommon/HttpError');
-const travel_reimbursement = require('./travel_reimbursement')
-const { projectRegistrationSchema } = require('../assets/schemas/load-schemas')(['projectRegistrationSchema'])
+const travelReimbursement = require('./travel_reimbursement');
+const { projectRegistrationSchema } = require('../assets/schemas/load-schemas')(['projectRegistrationSchema']);
 
 // const storage = new StorageService(STORAGE_TYPES.S3);
 const router = express.Router();
-
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -37,10 +35,9 @@ function validateProjectRegistration(project) {
 }
 
 
-
 /** *********** HELPER MIDDLEWARE ***************** */
 
-router.use('/reimbursement', travel_reimbursement)
+router.use(['/reimbursement', '/travelReimbursement'], travelReimbursement);
 
 /**
  * User authentication middleware

@@ -66,7 +66,6 @@ module.exports.CheckoutObject = class CheckoutObject extends BaseObject {
     return uow.query(query.text, query.values, { stream: true });
   }
 
-
   static getCount(uow) {
     return super.getCount(uow, TABLE_NAME);
   }

@@ -93,7 +93,7 @@ const corsOptions = {
 const index = require('./routes/index');
 const users = require('./routes/users');
 const register = require('./routes/register');
-const admin = require('./routes/admin');
+const admin = require('./routes/admin/admin');
 const scanner = require('./routes/scanner');
 const live = require('./routes/live');
 const internal = require('./routes/internal');
@@ -131,12 +131,12 @@ app.use((req, res, next) => {
 
 // error handler
 app.use((err, req, res, next) => {
-  if (process.env.NODE_ENV === 'production') {
+  // if (process.env.NODE_ENV === 'production') {
     logger.error(err);
     if (err.body) {
       logger.error(err.body);
     }
-  }
+  // }
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

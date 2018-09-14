@@ -1,18 +1,24 @@
+/* eslint-disable max-len */
 const express = require('express');
+const path = require('path');
+const Ajv = require('ajv');
+
 const { travelReimbursementSchema } = require('../assets/schemas/load-schemas')(['travelReimbursementSchema']);
-const TravelReimbursement = require('../models/TravelReimbursement');
-const { verifyAuthMiddleware } = require('../services/auth')
+const { TravelReimbursement } = require('../models/TravelReimbursement');
+const { verifyAuthMiddleware } = require('../services/auth');
 const StorageService = require('../services/storage_service');
 const { STORAGE_TYPES } = require('../services/factories/storage_factory');
 const { logger } = require('../services/logging');
 const constants = require('../assets/constants/constants');
+const { errorHandler500 } = require('../services/functions');
 
 const storage = new StorageService(STORAGE_TYPES.GCS, {
   bucketName: constants.GCS.travelReimbursementBucket,
   key(req, file, cb) {
-    cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
+    cb(null, generateFileName(req.body.fullName, file));
   },
 });
+const ajv = new Ajv({ allErrors: true });
 
 const router = express.Router();
 
@@ -26,7 +32,7 @@ const upload = storage.upload({
       path.extname(file.originalname) !== '.jpg') {
       return cb(new Error('Only jpeg, jpg, and png are allowed'));
     }
-    cb(null, true);
+    return cb(null, true);
   },
   limits: { fileSize: 1024 * 1024 * 5 }, // limit to 5MB
 });
@@ -71,21 +77,10 @@ function adjustReimbursementPrice(price, groupMembers) {
   return price;
 }
 
-/**
- *
- * @param fullName
- * @param file
- * @returns {string}
- */
-function generateFileName(fullName, file) {
-  return `${fullName}-receipt-${file.originalname}`;
-}
-
-
 /** *********** ROUTING MIDDLEWARE *********** */
 
-//maybes changes
-router.use(verifyAuthMiddleware)
+// maybes changes
+router.use(verifyAuthMiddleware);
 
 /**
  * @api {post} /users/reimbursement submit travel reimbursement information
@@ -110,17 +105,17 @@ router.post('/', upload.array('receipt', 5), (req, res, next) => {
     return next(error);
   }
   req.body.reimbursementAmount = parseInt(req.body.reimbursementAmount, 10);
-  if (!req.body || !validateReimbursement(req.body)) {
-    const error = new Error();
-    error.body = { error: 'Request body must be set and be valid' };
-    error.status = 400;
-    return next(error);
-  }
+  // if (!req.body || !validateReimbursement(req.body)) {
+  //   const error = new Error();
+  //   error.body = { error: 'Request body must be set and be valid' };
+  //   error.status = 400;
+  //   return next(error);
+  // }
   req.body.reimbursementAmount =
     adjustReimbursementPrice(req.body.reimbursementAmount, req.body.groupMembers);
-  req.body.receiptURIs = req.files.map(({ key }) => storage.uploadedFileUrl(key))
+  req.body.receiptURIs = req.files.map(({ filename }) => storage.uploadedFileUrl(filename))
     .join(',');
-  new TravelReimbursement(Object.assign(req.body, { uid: res.locals.user.uid }))
+  return new TravelReimbursement(Object.assign(req.body, { uid: res.locals.user.uid }), req.uow)
     .add()
     .then(() => {
       res.status(200)
@@ -128,7 +123,12 @@ router.post('/', upload.array('receipt', 5), (req, res, next) => {
           amount: req.body.reimbursementAmount,
         });
     })
-    .catch(error => errorHandler500(error, next));
+    .catch((err) => {
+      const error = new Error();
+      error.status = err.status || 500;
+      error.body = err.message || err;
+      return next(error);
+    });
 });
 
 module.exports = router;

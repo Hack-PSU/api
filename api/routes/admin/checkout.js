@@ -165,3 +165,5 @@ router.get('/items/availability', verifyACL(2), (req, res, next) => {
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });
+
+module.exports = router;

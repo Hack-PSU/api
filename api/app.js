@@ -131,12 +131,12 @@ app.use((req, res, next) => {
 
 // error handler
 app.use((err, req, res, next) => {
-  // if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production') {
     logger.error(err);
     if (err.body) {
       logger.error(err.body);
     }
-  // }
+  }
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

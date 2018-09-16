@@ -13,7 +13,7 @@ const Mailchimp = require('../../services/mailchimp');
 require('../test_helper')();
 
 const chance = new Chance();
-const standardAccessUid = 'CgnrzbSsqDZru1KbhTLI5AUdhZB2';
+const standardAccessUid = 'N79Hnh4eq8Wapxvhn8jaX2I0kSq2';
 
 const sqlOptions = require('../../assets/constants/constants').sqlConnection;
 

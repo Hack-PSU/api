@@ -3,26 +3,26 @@ const validator = require('email-validator');
 const Ajv = require('ajv');
 const express = require('express');
 const _ = require('lodash');
-const emailObjectSchema = require('../assets/schemas/load-schemas')('emailObjectSchema');
-const database = require('../services/database');
+const emailObjectSchema = require('../../assets/schemas/load-schemas')('emailObjectSchema');
+const database = require('../../services/database');
 const {
-        verifyACL, elevate, getUserId, verifyAuthMiddleware,
-      } = require('../services/auth');
+  verifyACL, elevate, getUserId, verifyAuthMiddleware,
+} = require('../../services/auth');
 const {
-        errorHandler500,
-        emailSubstitute,
-        createEmailRequest,
-        streamHandler,
-        sendEmail,
-      } = require('../services/functions');
-const { logger } = require('../services/logging');
-const { Registration } = require('../models/Registration');
-const { PreRegistration } = require('../models/PreRegistration');
-const { RSVP } = require('../models/RSVP');
-const { Attendance } = require('../models/Attendance');
-const { Location } = require('../models/Location');
-const { Hackathon } = require('../models/Hackathon');
-const { ActiveHackathon } = require('../models/ActiveHackathon');
+  errorHandler500,
+  emailSubstitute,
+  createEmailRequest,
+  streamHandler,
+  sendEmail,
+} = require('../../services/functions');
+const { logger } = require('../../services/logging');
+const { Registration } = require('../../models/Registration');
+const { PreRegistration } = require('../../models/PreRegistration');
+const { RSVP } = require('../../models/RSVP');
+const { Attendance } = require('../../models/Attendance');
+const { Location } = require('../../models/Location');
+const { Hackathon } = require('../../models/Hackathon');
+const { ActiveHackathon } = require('../../models/ActiveHackathon');
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -132,8 +132,8 @@ router.get('/', (req, res) => {
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
   Registration.getAll(req.uow, {
-    count           : res.locals.limit,
-    limit           : res.locals.offset,
+    count: res.locals.limit,
+    limit: res.locals.offset,
     currentHackathon: true, // TODO: Add ability to set which hackathons needed froms request
   })
     .then(stream => streamHandler(stream, res, next))
@@ -188,7 +188,7 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
     .then((user) => {
       res.status(200)
         .send({
-          uid        : user.uid,
+          uid: user.uid,
           displayName: user.displayName,
         });
     })
@@ -643,7 +643,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
     const error = new Error();
     error.status = 400;
     error.body = {
-      text : 'All provided emails had illegal format',
+      text: 'All provided emails had illegal format',
       error: res.locals.failArray,
     };
     return next(error);
@@ -670,9 +670,9 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
         )))
       .then(request =>
         ({
-          email   : request.to,
+          email: request.to,
           response: 'success',
-          name    : emailObject.name,
+          name: emailObject.name,
         }))
       .catch((error) => {
         // Else add to the failArray for the partial HTTP success response
@@ -686,25 +686,25 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
         const error = new Error();
         error.status = 500;
         error.body = {
-          text : 'Emails could not be sent',
+          text: 'Emails could not be sent',
           error: res.locals.failArray,
         };
         return next(error);
       }
       database.addEmailsHistory(req.uow, resolves.map(successEmail => ({
-        sender        : res.locals.user.uid,
-        recipient     : successEmail.email,
-        email_content : req.body.html,
-        subject       : req.body.subject,
+        sender: res.locals.user.uid,
+        recipient: successEmail.email,
+        email_content: req.body.html,
+        subject: req.body.subject,
         recipient_name: successEmail.name,
-        time          : new Date().getTime(),
+        time: new Date().getTime(),
       })), res.locals.failArray ? res.locals.failArray.map(errorEmail => ({
-        sender        : res.locals.user.uid,
-        recipient     : errorEmail.email || null,
-        email_content : req.body.html || null,
-        subject       : req.body.subject || null,
+        sender: res.locals.user.uid,
+        recipient: errorEmail.email || null,
+        email_content: req.body.html || null,
+        subject: req.body.subject || null,
         recipient_name: errorEmail.name || null,
-        time          : new Date().getTime(),
+        time: new Date().getTime(),
       })) : null)
         .catch(logger.error);
       if (res.locals.failArray.length === 0) {

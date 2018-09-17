@@ -33,7 +33,7 @@ module.exports = {
   },
   firebaseDB: {
     debug: 'https://hackpsu18-debug.firebaseio.com/',
-    test: 'https://hackpsu18-test.firebaseio.com/',
+    test: 'https://hackpsu18-staging.firebaseio.com/',
     prod: 'https://hackpsu18.firebaseio.com/',
   },
   pushNotifKey: {

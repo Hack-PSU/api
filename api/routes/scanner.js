@@ -8,9 +8,9 @@ const { Registration } = require('../models/Registration');
 const { rfidAssignmentSchema, rfidScansSchema } =
   require('../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
 const { redisKey } = require('../assets/constants/constants');
+const { Location } = require('../models/Location');
 
 const router = express.Router();
-
 
 const ajv = new Ajv({ allErrors: true });
 /** ************* HELPER FUNCTIONS ************** */
@@ -22,7 +22,7 @@ router.use((req, res, next) => {
     return next();
   }
   if (!req.headers.apikey ||
-    req.headers.apikey !== redisKey) {
+      req.headers.apikey !== redisKey) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Illegal access. Please check the credentials' };
@@ -30,7 +30,6 @@ router.use((req, res, next) => {
   }
   next();
 });
-
 
 /** ************* ROUTES ************************ */
 
@@ -60,7 +59,6 @@ router.use((req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.get('/registrations', (req, res, next) => {
-  const arr = [];
   Registration.getAll(
     req.uow,
     {
@@ -137,13 +135,12 @@ router.post('/assignment', (req, res, next) => {
     return next(error);
   }
   // LEGAL
-  database.addRfidAssignments(req.body.assignments, req.uow)
+  database.addRfidAssignments(req.uow, req.body.assignments)
     .then(() => {
       res.status(200).send({ message: 'success' });
     })
     .catch(err => errorHandler500(err, next));
 });
-
 
 /**
  * @apiDeprecated use /scanner/scans
@@ -193,18 +190,41 @@ router.post('/assignment', (req, res, next) => {
 router.post('/scans', (req, res, next) => {
   const validate = ajv.compile(rfidScansSchema);
   if (!req.body ||
-    !req.body.scans ||
-    !validate(req.body.scans)) {
+      !req.body.scans ||
+      !validate(req.body.scans)) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Assignments must be provided as a valid Json Array' };
     return next(error);
   }
   // LEGAL
-  database.addRfidScans(req.body.scans, req.uow)
+  database.addRfidScans(req.uow, req.body.scans)
     .then(() => {
       res.status(200).send({ message: 'success' });
     }).catch(err => errorHandler500(err, next));
+});
+
+/**
+ * @api {get} /scanner/location Get the list of existing location from the database
+ * @apiVersion 1.0.0
+ * @apiName Get Location List (Scanner)
+ * @apiGroup Scanner
+ * @apiPermission API Key Validation
+ * @apiParam {Number} timestamp Optional parameter that returns the locations relevant
+ * to the timestamp
+ *
+ * @apiSuccess {Array} Array containing all locations in the database
+ */
+router.get('/location', (req, res, next) => {
+  let promise;
+  if (req.query.timestamp) {
+    promise = Location.getActiveLocations(req.uow, req.query.timestamp);
+  } else {
+    promise = Location.getAll(req.uow);
+  }
+  promise
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 module.exports = router;

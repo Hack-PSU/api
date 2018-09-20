@@ -98,7 +98,11 @@ describe('TEST: Database service', () => {
 
   describe('TEST: Add RFID Assignments', () => {
     it('Succeeds', async () => {
-      const assignments = [{}, {}, {}];
+      const assignments = [{ rfid: '', uid: '', time: Date.now() }, {
+        rfid: '',
+        uid: '',
+        time: Date.now()
+      }, { rfid: '', uid: '', time: Date.now() }];
       const result = await database.addRfidAssignments(uow, assignments);
       expect(result).to.be.an('array');
     });

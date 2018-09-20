@@ -6,7 +6,8 @@
   },
   "private": true,
   "scripts": {
-    "start": "nodemon ./bin/www",
+    "start": "node ./bin/www",
+    "watch": "nodemon ./bin/www",
     "test": "mocha --exit --timeout 20000 --recursive",
     "prod": "APP_ENV=prod node ./bin/www",
     "apidoc": "apidoc -i ./routes -o doc/",

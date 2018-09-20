@@ -34,9 +34,10 @@ module.exports.UowFactory = class UowFactory {
     return new Promise((resolve, reject) => {
       switch (process.env.APP_ENV) {
         case 'DEBUG':
-        case 'debug':
+        // case 'debug':
           resolve(new MysqlUow(new MockConnection()));
           break;
+        case 'debug':
         case 'TEST':
         case 'test':
         case 'prod':

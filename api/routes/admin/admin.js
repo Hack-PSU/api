@@ -275,7 +275,7 @@ router.post(['/update_registration', '/registration/update'], verifyACL(3), (req
 });
 
 /**
- * @api {get} /admin/attendance_list retrieve the list of people who attended
+ * @api {get} /admin/attendance_list Retrieve the list of people who attended
  * @apiVersion 0.4.0
  * @apiName Retrieve Attendance List
  * @apiGroup Attendance
@@ -285,7 +285,7 @@ router.post(['/update_registration', '/registration/update'], verifyACL(3), (req
  * @apiSuccess {Array} Array of hackers who attended
  */
 /**
- * @api {get} /admin/attendance retrieve the list of people who attended
+ * @api {get} /admin/attendance Retrieve the list of people who attended
  * @apiVersion 1.0.0
  * @apiName Retrieve Attendance List
  * @apiGroup Attendance
@@ -332,10 +332,10 @@ router.get(['/attendance_list', '/attendance'], verifyACL(2), (req, res, next) =
  * @apiVersion 1.0.0
  * @apiName Assign an RFID to a user (Admin)
  *
- * @apiGroup Scanner
+ * @apiGroup Admin
  * @apiPermission TeamMemberPermission
  *
- * @apiUse ApiKeyArgumentRequired
+ * @apiUse AuthArgumentRequired
  * @apiParam {Array} assignments An array of RFID tags to User uid assignments
  * @apiParamExample {json} Request-Example:
  *     [
@@ -488,26 +488,21 @@ router.post(['/create_location', '/location'], verifyACL(3), (req, res, next) =>
  * @apiGroup Location
  * @apiPermission DirectorPermission
  *
- * @apiParam {String} uid - the uid that is having the name of the location associated with this id
- *   changed
- * @apiParam {String} locationName - the new name that is being updated with the name associated
- *   with the uid
+ * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
+ * @apiParam {String} locationName - the new name that is being updated with the name associated with the uid
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
 /**
- * @api {post} /admin/location/update Update name of the location associated with the uid in the
- *   database
+ * @api {post} /admin/location/update Update name of the location associated with the uid in the database
  * @apiVersion 1.0.0
  * @apiName Update Location
  * @apiGroup Location
  * @apiPermission DirectorPermission
  *
- * @apiParam {String} uid - the uid that is having the name of the location associated with this id
- *   changed
- * @apiParam {String} locationName - the new name that is being updated with the name associated
- *   with the uid
+ * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
+ * @apiParam {String} locationName - the new name that is being updated with the name associated with the uid
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError

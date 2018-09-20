@@ -213,7 +213,6 @@ router.post('/scans', (req, res, next) => {
  * @apiParam {Number} timestamp Optional parameter that returns the locations relevant
  * to the timestamp
  *
- * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array containing all locations in the database
  */
 router.get('/location', (req, res, next) => {

@@ -330,7 +330,7 @@ router.get(['/attendance_list', '/attendance'], verifyACL(2), (req, res, next) =
 /**
  * @api {post} /admin/assignment Assign RFID tags ID to users
  * @apiVersion 1.0.0
- * @apiName Assign an RFID to a user
+ * @apiName Assign an RFID to a user (Admin)
  *
  * @apiGroup Scanner
  * @apiPermission TeamMemberPermission

@@ -207,15 +207,23 @@ router.post('/scans', (req, res, next) => {
 /**
  * @api {get} /scanner/location Get the list of existing location from the database
  * @apiVersion 1.0.0
- * @apiName Get Location List
+ * @apiName Get Location List (Scanner)
  * @apiGroup Scanner
  * @apiPermission API Key Validation
+ * @apiParam {Number} timestamp Optional parameter that returns the locations relevant
+ * to the timestamp
  *
  * @apiUse AuthArgumentRequired
  * @apiSuccess {Array} Array containing all locations in the database
  */
 router.get('/location', (req, res, next) => {
-  Location.getAll(req.uow)
+  let promise;
+  if (req.query.timestamp) {
+    promise = Location.getActiveLocations(req.uow, req.query.timestamp);
+  } else {
+    promise = Location.getAll(req.uow);
+  }
+  promise
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });

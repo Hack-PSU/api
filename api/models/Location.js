@@ -1,7 +1,9 @@
 const BaseObject = require('./BaseObject');
 const Chance = require('chance');
+const squel = require('squel');
 
 const chance = new Chance();
+const { TABLE_NAME: eventsTableName } = require('./Event');
 const locationSchema = require('../assets/schemas/load-schemas')('locationSchema');
 
 const TABLE_NAME = 'LOCATIONS';
@@ -33,6 +35,19 @@ module.exports.Location = class Location extends BaseObject {
    */
   static getAll(uow, opts) {
     return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  static getActiveLocations(uow, timestamp = Date.now()) {
+    const BUFFER_TIME = 30 * 60 * 1000;
+    const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true})
+      .from(TABLE_NAME, 'locations')
+      .field('locations.*')
+      .join(eventsTableName, 'events', 'locations.uid = events.event_location')
+      .where('events.event_start_time <= ?', timestamp + BUFFER_TIME)
+      .where('events.event_end_time >= ?', timestamp - BUFFER_TIME)
+      .group('locations.uid')
+      .toParam();
+    return uow.query(query.text, query.values, { stream: true });
   }
 
   static getCount(uow) {

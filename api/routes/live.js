@@ -96,7 +96,7 @@ router.post('/updates', verifyACL(2), (req, res, next) => {
 
 /** ********** EVENTS ******** */
 /**
- * @api {get} /live/events/ Get all the events.
+ * @api {get} /live/events/ Get all the events
  * @apiVersion 1.0.0
  * @apiName Get events
  * @apiGroup Events
@@ -113,7 +113,7 @@ router.get('/events', (req, res, next) => {
 });
 
 /**
- * @api {post} /live/event/ Add a new event.
+ * @api {post} /live/event/ Add a new event
  * @apiVersion 1.0.0
  * @apiName New Event
  * @apiGroup Events
@@ -156,7 +156,7 @@ router.post('/event', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {put} /live/event/ Update an existing event.
+ * @api {put} /live/event/ Update an existing event
  * @apiVersion 1.0.0
  * @apiName Update Event
  * @apiGroup Events
@@ -185,7 +185,7 @@ router.put('/event', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {post} /live/event/delete Delete an existing event.
+ * @api {post} /live/event/delete Delete an existing event
  * @apiVersion 1.0.0
  * @apiName Update Event
  * @apiGroup Events

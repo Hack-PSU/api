@@ -5,7 +5,6 @@ const PreRegistration = require('../models/PreRegistration');
 const Registration = require('../models/Registration');
 const RSVP = require('../models/RSVP');
 
-
 /**
  * Returns a list of extra credit classes available.
  * @return {Promise<Stream>} Return the list of all class in the database
@@ -71,7 +70,6 @@ function storeIP(uow, ipAddress, userAgent) {
   return uow.query(query.text, query.values);
 }
 
-
 /**
  *
  * @param successes
@@ -105,7 +103,12 @@ function addEmailsHistory(uow, successes, fails) {
 function addRfidAssignments(uow, assignments) {
   const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
     .into('RFID_ASSIGNMENTS')
-    .setFieldsRows(assignments)
+    .setFieldsRows(assignments.map(assignment => ({
+      rfid_uid: assignment.rfid,
+      user_uid: assignment.uid,
+      time: assignment.time,
+      hackathon: Hackathon.Hackathon.getActiveHackathonQuery(),
+    })))
     .toParam();
   query.text = query.text.concat(';');
   return uow.query(query.text, query.values);
@@ -121,7 +124,10 @@ function addRfidAssignments(uow, assignments) {
 function addRfidScans(uow, scans) {
   const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
     .into('RFID_SCANS')
-    .setFieldsRows(scans)
+    .setFieldsRows(scans.map(scan => Object.assign(
+      scan,
+      { hackathon: Hackathon.Hackathon.getActiveHackathonQuery() },
+    )))
     .toParam();
   query.text = query.text.concat(';');
   return uow.query(query.text, query.values);
@@ -186,7 +192,6 @@ function getAllUsersCount(uow) {
   query = query.concat(';');
   return uow.query(query, null, { stream: true });
 }
-
 
 module.exports = {
   writePiMessage,

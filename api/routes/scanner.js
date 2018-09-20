@@ -8,6 +8,7 @@ const { Registration } = require('../models/Registration');
 const { rfidAssignmentSchema, rfidScansSchema } =
   require('../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
 const { redisKey } = require('../assets/constants/constants');
+const { Location } = require('../models/Location');
 
 const router = express.Router();
 
@@ -201,6 +202,22 @@ router.post('/scans', (req, res, next) => {
     .then(() => {
       res.status(200).send({ message: 'success' });
     }).catch(err => errorHandler500(err, next));
+});
+
+/**
+ * @api {get} /scanner/location Get the list of existing location from the database
+ * @apiVersion 1.0.0
+ * @apiName Get Location List
+ * @apiGroup Scanner
+ * @apiPermission API Key Validation
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiSuccess {Array} Array containing all locations in the database
+ */
+router.get('/location', (req, res, next) => {
+  Location.getAll(req.uow)
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 module.exports = router;

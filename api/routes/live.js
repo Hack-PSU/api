@@ -11,6 +11,35 @@ const router = express.Router();
 
 /** *********** HELPER FUNCTIONS ************* */
 
+/** *********** UNAUTHENTICATED ROUTES ******* */
+/**
+ * @api {get} /live/events/ Get all the events
+ * @apiVersion 1.0.0
+ * @apiName Get events
+ * @apiGroup Events
+ *
+ * @apiSuccess {Array} Array of current events.
+ */
+router.get('/events', (req, res, next) => {
+  Event.getAll(req.uow)
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
+});
+
+/**
+ * @api {get} /live/updates/reference Get the db reference for updates
+ * @apiVersion 1.0.0
+ * @apiName Get Update reference
+ * @apiGroup Updates
+ *
+ * @apiSuccess {String} The database reference to the current updates.
+ */
+router.get('/updates/reference', (req, res, next) => {
+  Update.getReference(req.rtdb, req.uow)
+    .then(reference => res.status(200).send({ reference }))
+    .catch(err => errorHandler500(err, next));
+});
+
 
 /** ************ ROUTING MIDDLEWARE ********************** */
 
@@ -31,22 +60,6 @@ router.use(verifyAuthMiddleware);
 router.get('/updates', (req, res, next) => {
   Update.getAll(req.rtdb, req.uow)
     .then(stream => streamHandler(stream, res, next))
-    .catch(err => errorHandler500(err, next));
-});
-
-/**
- * @api {get} /live/updates/reference Get the db reference for updates
- * @apiVersion 1.0.0
- * @apiName Get Update reference
- * @apiPermission UserPermission
- * @apiGroup Updates
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess {String} The database reference to the current updates.
- */
-router.get('/updates/reference', (req, res, next) => {
-  Update.getReference(req.rtdb, req.uow)
-    .then(reference => res.status(200).send({ reference }))
     .catch(err => errorHandler500(err, next));
 });
 
@@ -95,22 +108,6 @@ router.post('/updates', verifyACL(2), (req, res, next) => {
 });
 
 /** ********** EVENTS ******** */
-/**
- * @api {get} /live/events/ Get all the events
- * @apiVersion 1.0.0
- * @apiName Get events
- * @apiGroup Events
- * @apiPermission UserPermission
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess {Array} Array of current events.
- */
-router.get('/events', (req, res, next) => {
-  Event.getAll(req.uow)
-    .then(stream => streamHandler(stream, res, next))
-    .catch(err => errorHandler500(err, next));
-});
 
 /**
  * @api {post} /live/event/ Add a new event

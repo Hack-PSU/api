@@ -130,7 +130,7 @@ router.get('/', (req, res) => {
 router.get('/registered', verifyACL(2), (req, res, next) => {
   Registration.getAll(req.uow, {
     count: res.locals.limit,
-    limit: res.locals.offset,
+    startAt: res.locals.offset,
     currentHackathon: true, // TODO: Add ability to set which hackathons needed froms request
   })
     .then(stream => streamHandler(stream, res, next))
@@ -153,7 +153,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
 router.get('/preregistered', verifyACL(2), (req, res, next) => {
   PreRegistration.getAll(req.uow, {
     count: res.locals.limit,
-    limit: res.locals.offset,
+    startAt: res.locals.offset,
   })
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
@@ -431,7 +431,10 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array containing all locations in the database
  */
 router.get(['/location_list', '/location'], verifyACL(3), (req, res, next) => {
-  Location.getAll(req.uow)
+  Location.getAll(req.uow, {
+    count: res.locals.limit,
+    startAt: res.locals.offset,
+  })
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });

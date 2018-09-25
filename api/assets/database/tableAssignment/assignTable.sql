@@ -15,6 +15,7 @@
  *	If the query does not successfully return, the selected table will deadlock
  *
 */
+DELIMITER $$
 CREATE PROCEDURE `assignTable`(in projectID_param char(36), in categoryID_param int(11), out tableNumber_param int(11))
 begin
 	--Get the current hackathon ID
@@ -31,4 +32,4 @@ begin
     end if;
 	--NOP to release the lock on the table
     update TABLE_SUPPORT set tableID = tableNumber_param where tableID = tableNumber_param and hackathon = @hackathon_var; 
-end
+end$$

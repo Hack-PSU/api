@@ -13,6 +13,7 @@
  *  45000: duplicate user detected; one user may only be in one project
  *
 */
+DELIMITER $$
 CREATE PROCEDURE `assignTeam`(in projectName_param varchar(50), in teamUIDs_param longtext, in projectCategories_param longtext, out projectID_param varchar(45))
 proc_lbl:begin
 	--Get the active hackathon UID
@@ -115,4 +116,4 @@ proc_lbl:begin
         set @len := @n - @pos;
     end while;
     
-end
+end$$

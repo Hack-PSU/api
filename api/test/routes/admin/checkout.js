@@ -1,6 +1,7 @@
 /* eslint-disable no-undef,import/no-extraneous-dependencies */
 process.env.APP_ENV = 'test';
 const chai = require('chai');
+const util = require('util');
 const chaiHttp = require('chai-http');
 const server = require('../../../app');
 const firebase = require('firebase');

@@ -4,8 +4,9 @@ const chai = require('chai');
 const util = require('util');
 const chaiHttp = require('chai-http');
 const server = require('../../../app');
+const squel = require('squel');
 const firebase = require('firebase');
-const CheckoutObject = require('../../../models/CheckoutObject');
+const { CheckoutObject, TABLE_NAME: CheckoutTableName } = require('../../../models/CheckoutObject');
 const { Hackathon } = require('../../../models/Hackathon');
 const sql = require('mysql');
 require('../../test_helper')();
@@ -51,7 +52,7 @@ function loginAdmin() {
 
 describe('INTEGRATION TESTS: /v1/admin/checkout', () => {
   afterEach((done) => {
-    firebase.auth.signOut();
+    firebase.auth().signOut();
     if (listener) {
       listener();
     }
@@ -60,6 +61,8 @@ describe('INTEGRATION TESTS: /v1/admin/checkout', () => {
 
   describe('POST: /', () => {
     const ENDPOINT = '/v1/admin/checkout';
+    let loggedInUser;
+
     it('it should fail on malformed body', (done) => {
       // GIVEN: Administrator making a request
       loginAdmin()
@@ -80,7 +83,6 @@ describe('INTEGRATION TESTS: /v1/admin/checkout', () => {
 
     it('it should succeed on good response', (done) => {
       // GIVEN: Administrator making a request
-      let loggedInUser;
       loginAdmin()
         .then((user) => {
           loggedInUser = user;
@@ -104,6 +106,21 @@ describe('INTEGRATION TESTS: /v1/admin/checkout', () => {
             });
         });
     });
+
+    after((done) => {
+      const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+        .from(CheckoutTableName)
+        .where('item_id = 1')
+        .where('user_id = ?', loggedInUser.uid)
+        .toParam();
+      connection.query(query.text, query.values, (err) => {
+        if (err) {
+          done(err);
+        } else {
+          done();
+        }
+      });
+    });
   });
 
   describe('POST: /return', () => {
@@ -114,14 +131,14 @@ describe('INTEGRATION TESTS: /v1/admin/checkout', () => {
       loginAdmin()
         .then((user) => {
           addedCheckoutObject = new CheckoutObject({
-            itemId: 1,
+            itemId: '1',
             userId: user.uid,
             checkoutTime: new Date().getTime(),
-            hackathon: Hackathon.getActiveHackathonQuery(),
-          });
+          }, null);
           const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-            .into(CheckoutObject.TABLE_NAME)
+            .into(CheckoutTableName)
             .setFieldsRows([addedCheckoutObject._dbRepresentation])
+            .set('hackathon', Hackathon.getActiveHackathonQuery())
             .toString();
           connection.query(query, [], (err, results) => {
             if (err) {
@@ -174,7 +191,7 @@ describe('INTEGRATION TESTS: /v1/admin/checkout', () => {
 
     after((done) => {
       const query = squel.delete({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-        .from(CheckoutObject.TABLE_NAME)
+        .from(CheckoutTableName)
         .where('uid = ?', addedCheckoutObject.uid)
         .toParam();
       connection.query(query.text, query.values, (err) => {

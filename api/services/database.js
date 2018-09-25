@@ -1,7 +1,9 @@
 const squel = require('squel');
 const uuidv4 = require('uuid/v4');
 const Hackathon = require('../models/Hackathon');
-
+const PreRegistration = require('../models/PreRegistration');
+const Registration = require('../models/Registration');
+const RSVP = require('../models/RSVP');
 
 /**
  * Returns a list of extra credit classes available.
@@ -68,7 +70,6 @@ function storeIP(uow, ipAddress, userAgent) {
   return uow.query(query.text, query.values);
 }
 
-
 /**
  *
  * @param successes
@@ -102,7 +103,12 @@ function addEmailsHistory(uow, successes, fails) {
 function addRfidAssignments(uow, assignments) {
   const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
     .into('RFID_ASSIGNMENTS')
-    .setFieldsRows(assignments)
+    .setFieldsRows(assignments.map(assignment => ({
+      rfid_uid: assignment.rfid,
+      user_uid: assignment.uid,
+      time: assignment.time,
+      hackathon: Hackathon.Hackathon.getActiveHackathonQuery(),
+    })))
     .toParam();
   query.text = query.text.concat(';');
   return uow.query(query.text, query.values);
@@ -118,7 +124,10 @@ function addRfidAssignments(uow, assignments) {
 function addRfidScans(uow, scans) {
   const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
     .into('RFID_SCANS')
-    .setFieldsRows(scans)
+    .setFieldsRows(scans.map(scan => Object.assign(
+      scan,
+      { hackathon: Hackathon.Hackathon.getActiveHackathonQuery() },
+    )))
     .toParam();
   query.text = query.text.concat(';');
   return uow.query(query.text, query.values);
@@ -130,32 +139,24 @@ function addRfidScans(uow, scans) {
  * @return {Promise<any>}
  */
 function getAllUsersList(uow) {
-  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-    .from(squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
-      .from('REGISTRATION', 'r')
-      .field('r.uid')
-      .join(Hackathon.TABLE_NAME, 'h', 'r.hackathon = h.uid and h.active = 1')
-      .union(squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
-        .from('RSVP', 'rsvp')
-        .field('rsvp.user_id')
-        .join(Hackathon.TABLE_NAME, 'h', 'rsvp.hackathon = h.uid and h.active = 1'))
-      .union(squel.select(({ autoQuoteTableNames: true, autoQuoteFieldNames: true }))
-        .from('RFID_ASSIGNMENTS', 'rfid')
-        .field('rfid.user_uid')
-        .join(Hackathon.TABLE_NAME, 'h', 'rfid.hackathon = h.uid and h.active = 1')), 'a')
-    .left_join('REGISTRATION', 'r', 'a.uid = r.uid')
-    .left_join('RSVP', 'v', 'a.uid = v.user_id')
-    .left_join('RFID_ASSIGNMENTS', 'f', 'a.uid = f.user_uid')
-    .left_join('PRE_REGISTRATION', 'p', 'r.email = p.email')
-    .field('r.*')
-    .field(`r.pin - (${squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .field('base_pin')
-      .from(Hackathon.TABLE_NAME, 'h')
-      .where('active = 1')
-      .toString()})`, 'pin')
-    .field('p.uid', 'pre_uid')
-    .field('v.user_id')
-    .field('f.user_uid')
+  let query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
+    .field('pre_reg.uid', 'pre_uid')
+    .field('reg.*')
+    .field('reg.pin - hackathon.base_pin', 'pin')
+    .field('hackathon.name')
+    .field('hackathon.start_time')
+    .field('hackathon.end_time')
+    .field('hackathon.base_pin')
+    .field('hackathon.active')
+    .field('rsvp.user_id')
+    .field('rsvp.rsvp_time')
+    .field('rsvp.rsvp_status')
+    .field('rfid.user_uid')
+    .from(PreRegistration.TABLE_NAME, 'pre_reg')
+    .right_join(Registration.TABLE_NAME, 'reg', 'pre_reg.email = reg.email')
+    .join(Hackathon.TABLE_NAME, 'hackathon', 'reg.hackathon = hackathon.uid and hackathon.active = 1')
+    .left_join(RSVP.TABLE_NAME, 'rsvp', 'reg.uid = rsvp.user_id AND rsvp.hackathon = hackathon.uid')
+    .left_join('RFID_ASSIGNMENTS', 'rfid', 'reg.uid = rfid.user_uid AND hackathon.uid = rfid.hackathon')
     .toString();
   query = query.concat(';');
   return uow.query(query, null, { stream: true });
@@ -191,7 +192,6 @@ function getAllUsersCount(uow) {
   query = query.concat(';');
   return uow.query(query, null, { stream: true });
 }
-
 
 module.exports = {
   writePiMessage,

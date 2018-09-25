@@ -3,7 +3,8 @@ const validator = require('email-validator');
 const Ajv = require('ajv');
 const express = require('express');
 const _ = require('lodash');
-const emailObjectSchema = require('../../assets/schemas/load-schemas')('emailObjectSchema');
+const { emailObjectSchema, rfidAssignmentSchema } =
+  require('../../assets/schemas/load-schemas')(['emailObjectSchema', 'rfidAssignmentSchema']);
 const database = require('../../services/database');
 const {
   verifyACL, elevate, getUserId, verifyAuthMiddleware,
@@ -175,8 +176,8 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
  */
 router.get('/userid', verifyACL(3), (req, res, next) => {
   if (!req.query ||
-    !req.query.email ||
-    !validator.validate(req.query.email)) {
+      !req.query.email ||
+      !validator.validate(req.query.email)) {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'request query must be set and a valid email' };
@@ -257,8 +258,8 @@ router.post(['/update_registration', '/registration/update'], verifyACL(3), (req
   }
   const updatedRegistration = new Registration(req.body.registration, req.uow);
   if (!updatedRegistration.mlh_coc ||
-    !updatedRegistration.mlh_dcp ||
-    !updatedRegistration.eighteenBeforeEvent) {
+      !updatedRegistration.mlh_dcp ||
+      !updatedRegistration.eighteenBeforeEvent) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Must agree to MLH terms and be over eighteen' };
@@ -277,7 +278,7 @@ router.post(['/update_registration', '/registration/update'], verifyACL(3), (req
 });
 
 /**
- * @api {get} /admin/attendance_list retrieve the list of people who attended
+ * @api {get} /admin/attendance_list Retrieve the list of people who attended
  * @apiVersion 0.4.0
  * @apiName Retrieve Attendance List
  * @apiGroup Attendance
@@ -287,7 +288,7 @@ router.post(['/update_registration', '/registration/update'], verifyACL(3), (req
  * @apiSuccess {Array} Array of hackers who attended
  */
 /**
- * @api {get} /admin/attendance retrieve the list of people who attended
+ * @api {get} /admin/attendance Retrieve the list of people who attended
  * @apiVersion 1.0.0
  * @apiName Retrieve Attendance List
  * @apiGroup Attendance
@@ -330,6 +331,46 @@ router.get(['/attendance_list', '/attendance'], verifyACL(2), (req, res, next) =
 // });
 
 /**
+ * @api {post} /admin/assignment Assign RFID tags ID to users
+ * @apiVersion 1.0.0
+ * @apiName Assign an RFID to a user (Admin)
+ *
+ * @apiGroup Admin
+ * @apiPermission TeamMemberPermission
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiParam {Array} assignments An array of RFID tags to User uid assignments
+ * @apiParamExample {json} Request-Example:
+ *     [
+ *      {
+ *       "rfid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+ *       "uid": "nbG7b87NB87nB7n98Y7",
+ *       "time": 1239712938120
+ *     },
+ *     { ... }
+ *     ]
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post('/assignment', verifyACL(2), (req, res, next) => {
+  const validate = ajv.compile(rfidAssignmentSchema);
+  if (!req.body ||
+      !req.body.assignments ||
+      !validate(req.body.assignments)) {
+    const error = new Error();
+    error.status = 400;
+    error.body = { message: 'Assignments must be provided as a valid Json Array' };
+    return next(error);
+  }
+  // LEGAL
+  database.addRfidAssignments(req.uow, req.body.assignments)
+    .then(() => {
+      res.status(200).send({ message: 'success' });
+    })
+    .catch(err => errorHandler500(err, next));
+});
+
+/**
  * @api {post} /admin/makeadmin Elevate a user's privileges
  * @apiVersion 1.0.0
  * @apiName Elevate user
@@ -339,8 +380,7 @@ router.get(['/attendance_list', '/attendance'], verifyACL(2), (req, res, next) =
  *
  * @apiUse AuthArgumentRequired
  * @apiParam {String} uid The UID of the user to elevate privileges
- * @apiParam {Number} privilege [Default = 1] The privilege level to set to {1: Volunteer, 2: Team
- *   Member, 3: Exec, 4: Tech-Exec}
+ * @apiParam {Number} privilege [Default = 1] The privilege level to set to {1: Volunteer, 2: Team Member, 3: Exec, 4: Tech-Exec}
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
@@ -393,7 +433,10 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array containing all locations in the database
  */
 router.get(['/location_list', '/location'], verifyACL(3), (req, res, next) => {
-  Location.getAll(req.uow)
+  Location.getAll(req.uow, {
+    count: res.locals.limit,
+    startAt: res.locals.offset,
+  })
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });
@@ -405,8 +448,7 @@ router.get(['/location_list', '/location'], verifyACL(3), (req, res, next) => {
  * @apiGroup Location
  * @apiPermission DirectorPermission
  *
- * @apiParam {String} locationName - the name of the new location that is to be inserted into the
- *   database
+ * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
@@ -418,16 +460,15 @@ router.get(['/location_list', '/location'], verifyACL(3), (req, res, next) => {
  * @apiGroup Location
  * @apiPermission DirectorPermission
  *
- * @apiParam {String} locationName - the name of the new location that is to be inserted into the
- *   database
+ * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
 router.post(['/create_location', '/location'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
-    !req.body.locationName ||
-    req.body.locationName.length === 0) {
+      !req.body.locationName ||
+      req.body.locationName.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = 'Require a name for the location';
@@ -443,43 +484,37 @@ router.post(['/create_location', '/location'], verifyACL(3), (req, res, next) =>
 });
 
 /**
- * @api {post} /admin/update_location Update name of the location associated with the uid in the
- *   database
+ * @api {post} /admin/update_location Update name of the location associated with the uid in the database
  * @apiVersion 0.4.0
  * @apiName Update Location
  * @apiGroup Location
  * @apiPermission DirectorPermission
  *
- * @apiParam {String} uid - the uid that is having the name of the location associated with this id
- *   changed
- * @apiParam {String} locationName - the new name that is being updated with the name associated
- *   with the uid
+ * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
+ * @apiParam {String} locationName - the new name that is being updated with the name associated with the uid
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
 /**
- * @api {post} /admin/location/update Update name of the location associated with the uid in the
- *   database
+ * @api {post} /admin/location/update Update name of the location associated with the uid in the database
  * @apiVersion 1.0.0
  * @apiName Update Location
  * @apiGroup Location
  * @apiPermission DirectorPermission
  *
- * @apiParam {String} uid - the uid that is having the name of the location associated with this id
- *   changed
- * @apiParam {String} locationName - the new name that is being updated with the name associated
- *   with the uid
+ * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
+ * @apiParam {String} locationName - the new name that is being updated with the name associated with the uid
  * @apiUse AuthArgumentRequired
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */
 router.post(['/update_location', '/location/update'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
-    !req.body.uid ||
-    !req.body.location_name ||
-    req.body.location_name.length === 0 ||
-    req.body.uid.length === 0) {
+      !req.body.uid ||
+      !req.body.location_name ||
+      req.body.location_name.length === 0 ||
+      req.body.uid.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = 'Require the uid and/or name for the location';
@@ -520,8 +555,8 @@ router.post(['/update_location', '/location/update'], verifyACL(3), (req, res, n
  */
 router.post(['/remove_location', 'location/delete'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
-    !req.body.uid ||
-    req.body.uid.length === 0) {
+      !req.body.uid ||
+      req.body.uid.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = 'Require the uid for the location';
@@ -565,8 +600,7 @@ router.get(['/extra_credit_list', '/extra_credit'], verifyACL(2), (req, res, nex
 });
 
 /**
- * @api {post} /admin/assign_extra_credit setting user with the class they are receiving extra
- *   credit
+ * @api {post} /admin/assign_extra_credit setting user with the class they are receiving extra credit
  * @apiName Assign Extra Credit
  * @apiVersion 0.4.0
  * @apiGroup Extra Credit
@@ -593,9 +627,9 @@ router.get(['/extra_credit_list', '/extra_credit'], verifyACL(2), (req, res, nex
  */
 router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
-    !req.body.uid ||
-    !req.body.cid ||
-    !parseInt(req.body.cid, 10)) {
+      !req.body.uid ||
+      !req.body.cid ||
+      !parseInt(req.body.cid, 10)) {
     const error = new Error();
     error.status = 400;
     error.body = 'Need a proper id for the class or the hacker (int)';
@@ -618,12 +652,10 @@ router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, 
  * @apiPermission DirectorPermission
  *
  * @apiUse AuthArgumentRequired
- * @apiParam {Object[]} emails An array of objects with the following schema { email: <email>,
- *   name: <name of person>, substitutions: {...} } Substitutions is a map { keyword:
- *   substitute-text }
+ * @apiParam {Object[]} emails An array of objects with the following schema { email: <email>, name: <name of person>, substitutions: {...} }
+ *                   Substitutions is a map { keyword: substitute-text }
  * @apiParam {String} subject The subject of the email to send
- * @apiParam {String} html The HTML/text email to send. Make sure that all words that need to be
- *   substituted have matching substitutes in each object in the emails array
+ * @apiParam {String} html The HTML/text email to send. Make sure that all words that need to be substituted have matching substitutes in each object in the emails array
  *
  * @apiParamExample {Object} Request-Example:
  *                  {
@@ -638,17 +670,17 @@ router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, 
  *                        },
  *                        {...},
  *                        ...],
- *                    fromEmail: "Email address send from and reply to. *NOTE: email are case
- *   sensitive" subject: "generic email", html: "<html><head><body>.....</body></head></html>"
+ *                    fromEmail: "Email address send from and reply to. *NOTE: email are case sensitive"
+ *                    subject: "generic email",
+ *                    html: "<html><head><body>.....</body></head></html>"
  *                  }
  * @apiSuccess (200) {Object[]} Responses All responses from the emails sent
- * @apiSuccess (207) {Object[]} Partial-Success An array of success responses as well as failure
- *   objects
+ * @apiSuccess (207) {Object[]} Partial-Success An array of success responses as well as failure objects
  */
 router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
   // Validation
   if (!res.locals.successArray ||
-    res.locals.successArray.length === 0) {
+      res.locals.successArray.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = {
@@ -658,7 +690,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
     return next(error);
   }
   if (!req.body.subject ||
-    typeof req.body.subject !== 'string') {
+      typeof req.body.subject !== 'string') {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'Email subject must be provided' };
@@ -843,8 +875,7 @@ router.get(['/rsvp_count', '/rsvp/count'], verifyACL(2), (req, res, next) => {
  *
  * @apiUse AuthArgumentRequired
  *
- * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP,
- *   Scans)
+ * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
  */
 /**
  * @api {get} /admin/user/count Get the count of users in each category
@@ -855,8 +886,7 @@ router.get(['/rsvp_count', '/rsvp/count'], verifyACL(2), (req, res, next) => {
  *
  * @apiUse AuthArgumentRequired
  *
- * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP,
- *   Scans)
+ * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
  */
 router.get(['/user_count', '/user/count'], verifyACL(2), (req, res, next) => {
   database.getAllUsersCount(req.uow)

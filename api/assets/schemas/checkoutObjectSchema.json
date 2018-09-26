@@ -2,7 +2,7 @@
   "type": "object",
   "properties": {
     "uid": {
-      "type": "number",
+      "type": ["number", "null"],
       "min": 1
     },
     "item_id": {
@@ -17,7 +17,7 @@
       "type": "number"
     },
     "return_time": {
-      "type": "number"
+      "type": ["number", "null"]
     },
     "hackathon": {
       "type": "string",
@@ -25,10 +25,8 @@
     }
   },
   "required": [
-    "uid",
     "item_id",
     "user_id",
-    "checkout_time",
-    "hackathon"
+    "checkout_time"
   ]
 }

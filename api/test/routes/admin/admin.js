@@ -2,11 +2,11 @@
 process.env.APP_ENV = 'test';
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const server = require('../../app');
+const server = require('../../../app');
 const firebase = require('firebase');
 const admin = require('firebase-admin');
 const Chance = require('chance');
-require('../test_helper')();
+require('../../test_helper')();
 
 const chance = new Chance();
 

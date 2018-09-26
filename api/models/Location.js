@@ -38,7 +38,7 @@ module.exports.Location = class Location extends BaseObject {
   }
 
     /**
-    * This query selects locations that are "relevant" to the 
+    * This query selects locations that are "relevant" to the
     * timestamp parameter
     * The query selects locations based on events that match the timestamp
     * based on the following conditions:

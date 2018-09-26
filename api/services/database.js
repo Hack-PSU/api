@@ -123,11 +123,9 @@ function addRfidAssignments(uow, assignments) {
 // TODO: Possibly migrate to Scans model?
 function addRfidScans(uow, scans) {
   const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-    .into('RFID_SCANS')
-    .setFieldsRows(scans.map(scan => Object.assign(
-      scan,
-      { hackathon: Hackathon.Hackathon.getActiveHackathonQuery() },
-    )))
+    .into('SCANS')
+    .setFieldsRows(scans)
+    .set('hackathon', Hackathon.Hackathon.getActiveHackathonQuery())
     .toParam();
   query.text = query.text.concat(';');
   return uow.query(query.text, query.values);

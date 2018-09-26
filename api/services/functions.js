@@ -114,6 +114,13 @@ function errorHandler500(err, handler) {
   handler(error);
 }
 
+function standardErrorHandler(err, handler) {
+  const error = new Error();
+  error.status = err.status || 500;
+  error.body = { message: err.message } || err;
+  handler(error);
+}
+
 function streamHandler(stream, res, next) {
   stream.pipe(Stringify())
     .pipe(res.type('json').status(200))
@@ -122,6 +129,7 @@ function streamHandler(stream, res, next) {
 }
 module.exports = {
   errorHandler500,
+  standardErrorHandler,
   streamHandler,
   emailSubstitute,
   sendEmail,

@@ -4,7 +4,12 @@ const Ajv = require('ajv');
 const _ = require('lodash');
 const validator = require('email-validator');
 const {
-  errorHandler500, emailSubstitute, createEmailRequest, sendEmail, streamHandler,
+  errorHandler500,
+  emailSubstitute,
+  createEmailRequest,
+  sendEmail,
+  streamHandler,
+  standardErrorHandler,
 } = require('../services/functions');
 const authenticator = require('../services/auth');
 const { logger } = require('../services/logging');
@@ -296,7 +301,6 @@ router.post('/project', (req, res, next) => {
   3) insert project categories
   4) get project id
    */
-  logger.log(req.body);
   if (!res.locals.user) {
     const error = new Error();
     error.body = { error: 'Could not find user' };
@@ -304,11 +308,12 @@ router.post('/project', (req, res, next) => {
     return next(error);
   }
   const project = new Project(req.body, req.uow);
-  if (!project.validate() || !project.team.map(validator.validate).every(value => value)) {
+  if (project.validate().error || !project.team.map(validator.validate).every(value => value)) {
     const error = new Error();
     error.status = 400;
     error.body = {
       result: 'Some properties were not as expected. Make sure you provide a list of team members and categories',
+      validation: project.validate().error,
     };
     return next(error);
   }
@@ -327,12 +332,12 @@ router.post('/project', (req, res, next) => {
     .then((records) => {
       const uids = new Set(records.map(r => r.uid));
       // uids contains an array of uids
-      if (!uids.has(res.locals.user.uid)) {
-        uids.add(res.locals.user.uid);
-      }
+      uids.add(res.locals.user.uid);
+      logger.info(Array.from(uids));
       const { categories } = req.body;
       if (!categories ||
         !Array.isArray(categories) ||
+        categories.length === 0 || // TODO: Check that this is valid behavior
         categories.length !== categories.filter(value => value.toString().match(/\d+/)).length) {
         const error = new Error();
         error.body = { result: 'Some categories were not valid. Check and try again' };
@@ -345,9 +350,11 @@ router.post('/project', (req, res, next) => {
       return project.add();
     })
     .catch((err) => {
+      logger.error(err);
       if (err.errno === 1452) {
         // Registration could not be found.
         err.status = 404;
+        err.message = 'Registration could not be found';
         throw err;
       }
       throw err;
@@ -361,8 +368,11 @@ router.post('/project', (req, res, next) => {
       // Assign a table now
       return project.assignTable();
     })
-    .then(result => res.status(200).send(result[1][0]))
-    .catch(err => errorHandler500(err, next));
+    .then(result => {
+      logger.info(result);
+      return res.status(200).send(result[1][0]);
+    })
+    .catch(err => standardErrorHandler(err, next));
 });
 
 /**

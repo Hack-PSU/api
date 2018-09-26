@@ -126,7 +126,7 @@ describe('TEST: Database service', () => {
   describe('TEST: Get all users count', () => {
     it('Succeeds', async () => {
       const result = await database.getAllUsersCount(uow);
-      expect(result).to.be.a.ReadableStream;
+      expect(result).to.deep.equal([{}, {}]);
     });
   });
 });

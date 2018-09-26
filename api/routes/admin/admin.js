@@ -890,7 +890,7 @@ router.get(['/rsvp_count', '/rsvp/count'], verifyACL(2), (req, res, next) => {
  */
 router.get(['/user_count', '/user/count'], verifyACL(2), (req, res, next) => {
   database.getAllUsersCount(req.uow)
-    .then(stream => streamHandler(stream, res, next))
+    .then(response => res.status(200).send(response[0]))
     .catch(err => errorHandler500(err, next));
 });
 

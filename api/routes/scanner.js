@@ -194,7 +194,7 @@ router.post('/scans', (req, res, next) => {
       !validate(req.body.scans)) {
     const error = new Error();
     error.status = 400;
-    error.body = { message: 'Assignments must be provided as a valid Json Array' };
+    error.body = { message: 'Scans must be provided as a valid Json Array', reason: validate.errors };
     return next(error);
   }
   // LEGAL

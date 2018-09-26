@@ -123,11 +123,9 @@ function addRfidAssignments(uow, assignments) {
 // TODO: Possibly migrate to Scans model?
 function addRfidScans(uow, scans) {
   const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-    .into('RFID_SCANS')
-    .setFieldsRows(scans.map(scan => Object.assign(
-      scan,
-      { hackathon: Hackathon.Hackathon.getActiveHackathonQuery() },
-    )))
+    .into('SCANS')
+    .setFieldsRows(scans)
+    .set('hackathon', Hackathon.Hackathon.getActiveHackathonQuery())
     .toParam();
   query.text = query.text.concat(';');
   return uow.query(query.text, query.values);
@@ -168,29 +166,26 @@ function getAllUsersList(uow) {
  * @return {Promise<any>}
  */
 function getAllUsersCount(uow) {
-  const preregColumnName = 'p.uid';
-  const reg_column_name = 'r.uid';
-  const rsvp_column_name = 'rsvp.user_id';
-  const rfidscan_column_name = 'rfid.user_uid';
-  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-    .from('PRE_REGISTRATION', 'p')
-    .field(`COUNT(${preregColumnName})`, 'pre_count')
-    .join(Hackathon.TABLE_NAME, 'h', 'p.hackathon = h.uid AND h.active = 1')
-    .union(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from('REGISTRATION', 'r')
-      .field(`COUNT(${reg_column_name})`, 'reg_count')
-      .join(Hackathon.TABLE_NAME, 'h', 'r.hackathon = h.uid AND h.active = 1'))
-    .union(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from('RSVP', 'rsvp')
-      .field(`COUNT(${rsvp_column_name})`, 'rsvp_count')
-      .join(Hackathon.TABLE_NAME, 'h', 'rsvp.hackathon = h.uid AND h.active = 1'))
-    .union(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+      .from(PreRegistration.TABLE_NAME, 'prereg')
+      .field('COUNT(prereg.uid)', 'pre_count')
+      .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = prereg.hackathon AND hackathon.active = 1'), 'a')
+    .join(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+      .from(Registration.TABLE_NAME, 'registration')
+      .field('COUNT(registration.uid)', 'reg_count')
+      .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = registration.hackathon AND hackathon.active = 1'), 'b')
+    .join(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+      .from(RSVP.TABLE_NAME, 'rsvp')
+      .field('COUNT(rsvp.user_id)', 'rsvp_count')
+      .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = rsvp.hackathon AND hackathon.active = 1'), 'c')
+    .join(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from('RFID_ASSIGNMENTS', 'rfid')
-      .field(`COUNT(${rfidscan_column_name})`, 'rfidscan_count')
-      .join(Hackathon.TABLE_NAME, 'h', 'rfid.hackathon = h.uid AND h.active = 1'))
+      .field('COUNT(rfid.user_uid)', 'checkin_count')
+      .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = rfid.hackathon AND hackathon.active = 1'), 'd')
     .toString();
   query = query.concat(';');
-  return uow.query(query, null, { stream: true });
+  return uow.query(query, null, { stream: false });
 }
 
 module.exports = {

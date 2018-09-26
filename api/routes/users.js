@@ -350,12 +350,19 @@ router.post('/project', (req, res, next) => {
       return project.add();
     })
     .catch((err) => {
-      logger.error(err);
-      if (err.errno === 1452) {
-        // Registration could not be found.
-        err.status = 404;
-        err.message = 'Registration could not be found';
-        throw err;
+      switch (err.errno) {
+        case 1452:
+          // Registration could not be found.
+          err.status = 404;
+          err.message = 'Registration could not be found';
+          break;
+        case 1644:
+          // Already submitted
+          err.status = 400;
+          err.message = 'Submission already exists';
+          break;
+        default:
+          break;
       }
       throw err;
     })
@@ -368,10 +375,7 @@ router.post('/project', (req, res, next) => {
       // Assign a table now
       return project.assignTable();
     })
-    .then(result => {
-      logger.info(result);
-      return res.status(200).send(result[1][0]);
-    })
+    .then(result => res.status(200).send(result[1][0]))
     .catch(err => standardErrorHandler(err, next));
 });
 

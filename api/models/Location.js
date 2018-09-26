@@ -37,14 +37,14 @@ module.exports.Location = class Location extends BaseObject {
     return super.getAll(uow, TABLE_NAME, opts);
   }
 
-    /**
+  /**
     * This query selects locations that are "relevant" to the
     * timestamp parameter
     * The query selects locations based on events that match the timestamp
     * based on the following conditions:
     * 1) The event has started or is starting within 30 minutes
     * 2) The event has not ended or ended within the last 30 minutes
-    /*/
+    / */
   static getActiveLocations(uow, timestamp = Date.now()) {
     const BUFFER_TIME = 30 * 60 * 1000;
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })

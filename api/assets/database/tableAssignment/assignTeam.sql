@@ -1,3 +1,4 @@
+use test;
 /* assignTeam procedure
  * 
  * Generates an association of a project and team member UIDs local to the active hackathon UID
@@ -24,6 +25,9 @@ proc_lbl:begin
 	-- Prep for looping
     set @pos := 1;
     set @len := locate(',', teamUIDs_param) - @pos;
+    if @len = -1 then
+		set @len := char_length(teamUIDs_param);
+    end if;
     set @num := 0;
 	
 	-- Process out all team member UIDs and make sure they aren't in another team yet
@@ -67,6 +71,10 @@ proc_lbl:begin
 	-- Prep to loop again, this time associating 
     set @pos := 1;
     set @len := locate(',', teamUIDs_param) - @pos;
+    -- Special case for one team member
+    if @len = -1 then
+		set @len := char_length(teamUIDs_param);
+    end if;
     set @num := 0;
 	
 	-- Loop over all team members again, inserting all associations to the project this time
@@ -92,6 +100,10 @@ proc_lbl:begin
 	-- Prep to loop again
     set @pos := 1;
     set @len := locate(',', projectCategories_param) - @pos;
+	-- Special case for one team member
+    if @len = -1 then
+		set @len := char_length(projectCategories_param);
+    end if;
     set @num := 0;
 	
 	-- Loop over all categories, making associations to the project with each

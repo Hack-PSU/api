@@ -1,5 +1,5 @@
 /* assignTeam procedure
- * 
+ *
  * Generates an association of a project and team member UIDs local to the active hackathon UID
  * Does not register a table for the project
  * Please run from within a transaction
@@ -14,7 +14,9 @@
  *  45000: duplicate user detected; one user may only be in one project
  *
 */
-CREATE DEFINER=`hackpsudev`@`%` PROCEDURE `assignTeam`(in projectName_param varchar(50), in teamUIDs_param longtext, in projectCategories_param longtext, out projectID_param varchar(45))
+DROP PROCEDURE IF EXISTS `assignTeam`;
+DELIMITER $$
+CREATE PROCEDURE `assignTeam`(in projectName_param varchar(50), in teamUIDs_param longtext, in projectCategories_param longtext, out projectID_param varchar(45))
 proc_lbl:begin
 	-- Validate input
 	IF LENGTH(TRIM(teamUIDs_param)) = 0 OR teamUIDs_param IS NULL THEN
@@ -131,5 +133,4 @@ proc_lbl:begin
         -- an empty string, which removes @nextVarlen + 1 characters)
         SET @loopList = INSERT(@loopList,1,@nextVarlen + 1,'');
     end LOOP;
-
-end
+end$$

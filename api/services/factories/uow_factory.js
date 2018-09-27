@@ -1,11 +1,10 @@
 /* eslint-disable no-underscore-dangle */
 const mysql = require('mysql');
 const firebase = require('firebase-admin');
-const { firebaseDB } = require('../../assets/constants/constants');
+const { firebaseDB, sqlConnection } = require('../../assets/constants/constants');
 const MockConnection = require('../mock_connection');
 const MysqlUow = require('../mysql_uow');
 const RtdbUow = require('../rtdb_uow');
-const { sqlConnection } = require('../../assets/constants/constants');
 const serviceAccount = require('../../config.json');
 
 const admin = firebase.initializeApp({

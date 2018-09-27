@@ -79,14 +79,16 @@ module.exports.CheckoutObject = class CheckoutObject extends BaseObject {
       autoQuoteFieldNames: true,
     })
       .from(TABLE_NAME)
-      .fields(['uid',
-        'checkout_time',
-        'return_time',
-        'hackathon',
-        'i.*',
-        'u.uid',
-        'u.firstname',
-        'u.lastname'])
+      .fields({
+        'checkout_data.uid': 'checkout_uid',
+        'checkout_data.checkout_time': 'checkout_time',
+        'checkout_data.return_time': 'return_time',
+        'checkout_data.hackathon': 'checkout_hackathon',
+        'u.uid': 'user_uid',
+        'u.firstname': 'user_firstname',
+        'u.lastname': 'user_lastname',
+      })
+      .field('i.*')
       .join('CHECKOUT_ITEMS', 'i', 'item_id=i.uid')
       .join(Registration.TABLE_NAME, 'u', 'user_id=u.uid')
       .where(`uid=${this.uid}`)

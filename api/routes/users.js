@@ -117,7 +117,7 @@ router.get('/registration', (req, res, next) => {
     return next(error);
   }
   new Registration({ uid: res.locals.user.uid }, req.uow)
-    .get()
+    .getCurrent()
     .then((registrationArray) => {
       const [registration] = registrationArray;
       res.status(200).send(registration);

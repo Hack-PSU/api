@@ -4,9 +4,10 @@ const Ajv = require('ajv');
 const squel = require('squel');
 const database = require('../services/database');
 const { errorHandler500, streamHandler } = require('../services/functions');
+const HttpError = require('../JSCommon/HttpError');
 const { Registration } = require('../models/Registration');
 const { rfidAssignmentSchema, rfidScansSchema } =
-  require('../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
+        require('../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
 const { redisKey } = require('../assets/constants/constants');
 const { Location } = require('../models/Location');
 
@@ -22,7 +23,7 @@ router.use((req, res, next) => {
     return next();
   }
   if (!req.headers.apikey ||
-      req.headers.apikey !== redisKey) {
+    req.headers.apikey !== redisKey) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Illegal access. Please check the credentials' };
@@ -136,8 +137,20 @@ router.post('/assignment', (req, res, next) => {
   }
   // LEGAL
   database.addRfidAssignments(req.uow, req.body.assignments)
-    .then(() => {
-      res.status(200).send({ message: 'success' });
+    .then((resolutions) => {
+      // Handle any errors.
+      const status = resolutions.filter(resolve => resolve).length === 0 ? 200 : 207;
+      res.status(status).send(resolutions.map((resolve, index) => {
+        if (resolve) {
+          if (resolve.errno === 1452) {
+            // Foreign Key Failed. Probably an invalid user id, location, or hackathon.
+            return new HttpError('Invalid data', 400);
+          }
+          return new HttpError('Something went wrong', 500);
+        }
+        delete req.body.scans[index].hackathon;
+        return req.body.scans[index];
+      }));
     })
     .catch(err => errorHandler500(err, next));
 });
@@ -190,18 +203,34 @@ router.post('/assignment', (req, res, next) => {
 router.post('/scans', (req, res, next) => {
   const validate = ajv.compile(rfidScansSchema);
   if (!req.body ||
-      !req.body.scans ||
-      !validate(req.body.scans)) {
+    !req.body.scans ||
+    !validate(req.body.scans)) {
     const error = new Error();
     error.status = 400;
-    error.body = { message: 'Scans must be provided as a valid Json Array', reason: validate.errors };
+    error.body = {
+      message: 'Scans must be provided as a valid Json Array',
+      reason: validate.errors,
+    };
     return next(error);
   }
   // LEGAL
   database.addRfidScans(req.uow, req.body.scans)
-    .then(() => {
-      res.status(200).send({ message: 'success' });
-    }).catch(err => errorHandler500(err, next));
+    .then((resolutions) => {
+      // Handle any errors.
+      const status = resolutions.filter(resolve => resolve).length === 0 ? 200 : 207;
+      res.status(status).send(resolutions.map((resolve, index) => {
+        if (resolve) {
+          if (resolve.errno === 1452) {
+            // Foreign Key Failed. Probably an invalid user id, location, or hackathon.
+            return new HttpError('Invalid data', 400);
+          }
+          return new HttpError('Something went wrong', 500);
+        }
+        delete req.body.scans[index].hackathon;
+        return req.body.scans[index];
+      }));
+    })
+    .catch(err => errorHandler500(err, next));
 });
 
 /**

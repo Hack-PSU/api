@@ -35,6 +35,14 @@ module.exports = class MysqlUow {
     });
   }
 
+  commit() {
+    return new Promise((resolve) => {
+      this.connection.commit(() => {
+        resolve(null);
+      });
+    });
+  }
+
   complete() {
     return new Promise((resolve) => {
       this.connection.commit(() => {

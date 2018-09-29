@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "properties": {
+    "uid": {
+      "type": ["number", "null"],
+      "min": 1
+    },
+    "item_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "user_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "checkout_time": {
+      "type": "number"
+    },
+    "return_time": {
+      "type": ["number", "null"]
+    },
+    "hackathon": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "item_id",
+    "user_id",
+    "checkout_time"
+  ]
+}

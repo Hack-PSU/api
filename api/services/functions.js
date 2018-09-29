@@ -79,7 +79,7 @@ function sendNotification(notificationTitle, notificationBody) {
   return new Promise((resolve, reject) => {
     const headers = {
       'Content-Type': 'application/json; charset=utf-8',
-      Authorization: 'Basic '.concat(pushNotifKey.key),
+      Authorization: `Basic ${pushNotifKey.key}`,
     };
 
     const data = {
@@ -98,8 +98,8 @@ function sendNotification(notificationTitle, notificationBody) {
     };
 
     request(options, (err, response, body) => {
-      if (err) {
-        reject(err);
+      if (body && body.errors && body.errors.length > 0) {
+        reject(body.errors);
       } else {
         resolve(body);
       }
@@ -114,6 +114,13 @@ function errorHandler500(err, handler) {
   handler(error);
 }
 
+function standardErrorHandler(err, handler) {
+  const error = new Error();
+  error.status = err.status || 500;
+  error.body = { message: err.message } || err;
+  handler(error);
+}
+
 function streamHandler(stream, res, next) {
   stream.pipe(Stringify())
     .pipe(res.type('json').status(200))
@@ -122,6 +129,7 @@ function streamHandler(stream, res, next) {
 }
 module.exports = {
   errorHandler500,
+  standardErrorHandler,
   streamHandler,
   emailSubstitute,
   sendEmail,

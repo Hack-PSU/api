@@ -33,7 +33,7 @@ module.exports = {
   },
   firebaseDB: {
     debug: 'https://hackpsu18-debug.firebaseio.com/',
-    test: 'https://hackpsu18-test.firebaseio.com/',
+    test: 'https://hackpsu18-staging.firebaseio.com/',
     prod: 'https://hackpsu18.firebaseio.com/',
   },
   pushNotifKey: {
@@ -56,5 +56,8 @@ module.exports = {
     resumeBucket: process.env.APP_ENV === 'test' ? 'hackpsu-resumes-test' : 'hackpsuf2018-resumes',
     travelReimbursementBucket: process.env.APP_ENV === 'test' ? 'hackpsu2018-travel-reimbursement-receipts-test' : 'hackpsuf2018-travel-reimbursement-receipts',
   },
-  SendGridApiKey: process.env.SENDGRID_ACCESS_KEY,
+  SendGridApiKey: process.env.SENDGRID_ACCESS_KEY || '',
+  MailchimpApiKey: process.env.MAILCHIMP_API_KEY || '',
+  MailchimpPreregEmailList: 'HackPSU Email List',
+  redisKey: process.env.REDIS_KEY,
 };

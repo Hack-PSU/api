@@ -98,7 +98,11 @@ describe('TEST: Database service', () => {
 
   describe('TEST: Add RFID Assignments', () => {
     it('Succeeds', async () => {
-      const assignments = [{}, {}, {}];
+      const assignments = [{ rfid: '', uid: '', time: Date.now() }, {
+        rfid: '',
+        uid: '',
+        time: Date.now()
+      }, { rfid: '', uid: '', time: Date.now() }];
       const result = await database.addRfidAssignments(uow, assignments);
       expect(result).to.be.an('array');
     });
@@ -122,7 +126,7 @@ describe('TEST: Database service', () => {
   describe('TEST: Get all users count', () => {
     it('Succeeds', async () => {
       const result = await database.getAllUsersCount(uow);
-      expect(result).to.be.a.ReadableStream;
+      expect(result).to.deep.equal([{}, {}]);
     });
   });
 });

@@ -11,6 +11,7 @@ process.env.SQL_DATABASE = 'test';
 
 const MysqlUow = require('../services/mysql_uow');
 const RtdbUow = require('../services/rtdb_uow');
+const { Update } = require('../models/Update');
 
 const modelFiles = fs.readdirSync('./models')
   .map(a => a.replace(/\.js/g, ''))
@@ -70,7 +71,13 @@ describe('TEST: Object CRUD tests', () => {
       describe(`TEST: Get all ${model.name}`, () => {
         it(`gets all objects of type ${model.name}`, (done) => {
           try {
-            model.getAll(model.useRTDB ? uowrtdb : uow)
+            let promise;
+            if (model.prototype.constructor.name === 'Update') {
+              promise = model.getAll(uowrtdb, uow);
+            } else {
+              promise = model.getAll(model.useRTDB ? uowrtdb : uow);
+            }
+            promise
               .then((result) => {
                 expect(result).to.be.a.ReadableStream;
                 done();
@@ -88,7 +95,11 @@ describe('TEST: Object CRUD tests', () => {
       describe(`TEST: Add new ${model.name}`, () => {
         let obj;
         it('fails validation', (done) => {
-          obj = new model({ }, uow);
+          if (model.prototype.constructor.name === 'Update') {
+            obj = new model({}, uowrtdb, uow);
+          } else {
+            obj = new model({}, uow);
+          }
           try {
             obj.add()
               .then(() => {
@@ -168,9 +179,15 @@ describe('TEST: Object CRUD tests', () => {
       });
 
       describe(`TEST: Get count for ${model.name}`, () => {
-        it(`gets all objects of type ${model.name}`, (done) => {
+        it(`gets count for objects of type ${model.name}`, (done) => {
           try {
-            model.getCount(model.useRTDB ? uowrtdb : uow)
+            let promise;
+            if (model.prototype.constructor.name === 'Update') {
+              promise = model.getCount(uowrtdb, uow);
+            } else {
+              promise = model.getCount(model.useRTDB ? uowrtdb : uow, uow);
+            }
+            promise
               .then((result) => {
                 expect(result).to.be.a.ReadableStream;
                 done();

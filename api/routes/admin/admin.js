@@ -369,19 +369,19 @@ router.post('/assignment', verifyACL(2), (req, res, next) => {
       // Handle any errors.
       const status = resolutions.filter(resolve => resolve).length === 0 ? 200 : 207;
       res.status(status).send(resolutions.map((resolve, index) => {
+        delete req.body.assignments[index].hackathon;
         if (resolve) {
           if (resolve.errno === 1452) {
             // Foreign Key Failed. Probably an invalid user id, location, or hackathon.
-            return new HttpError('Invalid data', 400);
+            return new HttpError({ message: 'Invalid data', scan: req.body.assignments[index] }, 400);
           }
           if (resolve.errno === 1062) {
             // Duplicate data detected
-            return new HttpError('Duplicates detected', 409);
+            return new HttpError({ message: 'Duplicates detected', scan: req.body.assignments[index] }, 409);
           }
-          return new HttpError('Something went wrong', 500);
+          return new HttpError({ message: 'Something went wrong detected', scan: req.body.assignments[index] }, 500);
         }
-        delete req.body.scans[index].hackathon;
-        return req.body.scans[index];
+        return req.body.assignments[index];
       }));
     })
     .catch(err => errorHandler500(err, next));

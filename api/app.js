@@ -84,8 +84,10 @@ const corsOptions = {
   origin: (origin, callback) => {
     if (whitelist.test(origin)) {
       callback(null, true);
-    } else {
+    } else if (process.env.APP_ENV === 'prod') {
       callback(null, false);
+    } else {
+      callback(null, true);
     }
   },
 };
@@ -93,7 +95,7 @@ const corsOptions = {
 const index = require('./routes/index');
 const users = require('./routes/users');
 const register = require('./routes/register');
-const admin = require('./routes/admin');
+const admin = require('./routes/admin/admin');
 const scanner = require('./routes/scanner');
 const live = require('./routes/live');
 const internal = require('./routes/internal');

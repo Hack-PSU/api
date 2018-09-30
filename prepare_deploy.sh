@@ -85,7 +85,11 @@ else
     files["gcs_config_staging.json.aes"]="gcs_config.json"
 fi
 # private key file
-files["privatekey.aes"]="config.json"
+if [ "$1" = "prod" ]; then
+    files["privatekey.aes"]="config.json"
+else
+    files["privatekey.staging.aes"]="config.json"
+fi
 files["hackpsu-18-serviceaccount.json.aes"]="hackpsu-18-serviceaccount.json"
 
 

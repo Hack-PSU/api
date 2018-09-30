@@ -25,6 +25,7 @@ const { Location } = require('../../models/Location');
 const { Hackathon } = require('../../models/Hackathon');
 const { ActiveHackathon } = require('../../models/ActiveHackathon');
 const checkout = require('./checkout');
+const HttpError = require('../../JSCommon/HttpError');
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -364,8 +365,24 @@ router.post('/assignment', verifyACL(2), (req, res, next) => {
   }
   // LEGAL
   database.addRfidAssignments(req.uow, req.body.assignments)
-    .then(() => {
-      res.status(200).send({ message: 'success' });
+    .then((resolutions) => {
+      // Handle any errors.
+      const status = resolutions.filter(resolve => resolve).length === 0 ? 200 : 207;
+      res.status(status).send(resolutions.map((resolve, index) => {
+        if (resolve) {
+          if (resolve.errno === 1452) {
+            // Foreign Key Failed. Probably an invalid user id, location, or hackathon.
+            return new HttpError('Invalid data', 400);
+          }
+          if (resolve.errno === 1062) {
+            // Duplicate data detected
+            return new HttpError('Duplicates detected', 400);
+          }
+          return new HttpError('Something went wrong', 500);
+        }
+        delete req.body.scans[index].hackathon;
+        return req.body.scans[index];
+      }));
     })
     .catch(err => errorHandler500(err, next));
 });

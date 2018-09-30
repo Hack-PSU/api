@@ -27,6 +27,7 @@ function assignExtraCredit(uow, uid, cid) {
   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .into('EXTRA_CREDIT_ASSIGNMENT')
     .setFieldsRows([{ class_uid: cid, user_uid: uid }])
+    .set('hackathon', Hackathon.Hackathon.getActiveHackathonQuery())
     .toParam();
   query.text = query.text.concat(';');
   return uow.query(query.text, query.values);

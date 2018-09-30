@@ -84,8 +84,10 @@ const corsOptions = {
   origin: (origin, callback) => {
     if (whitelist.test(origin)) {
       callback(null, true);
-    } else {
+    } else if (process.env.APP_ENV === 'prod') {
       callback(null, false);
+    } else {
+      callback(null, true);
     }
   },
 };

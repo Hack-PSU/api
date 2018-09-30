@@ -66,6 +66,18 @@ module.exports.Registration = class Registration extends BaseObject {
     return super.get({ query });
   }
 
+  getCurrent() {
+    const query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
+      .from(this.tableName, 'registration')
+      .field('registration.*')
+      .field('registration.pin - hackathon.base_pin', 'pin')
+      .where(`registration.${this.columnName}= ?`, this.id)
+      .join(HackathonTableName, 'hackathon', 'hackathon = hackathon.uid and hackathon.active = 1')
+      .toParam();
+    query.text = query.text.concat(';');
+    return super.get({ query });
+  }
+
   add() {
     const validation = this.validate();
     if (!validation.result) {

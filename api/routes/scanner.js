@@ -148,7 +148,7 @@ router.post('/assignment', (req, res, next) => {
           }
           if (resolve.errno === 1062) {
             // Duplicate data detected
-            return new HttpError('Duplicates detected', 400);
+            return new HttpError('Duplicates detected', 409);
           }
           return new HttpError('Something went wrong', 500);
         }
@@ -230,7 +230,7 @@ router.post('/scans', (req, res, next) => {
           }
           if (resolve.errno === 1062) {
             // Duplicate data detected
-            return new HttpError('Duplicates detected', 400);
+            return new HttpError('Duplicates detected', 409);
           }
           return new HttpError('Something went wrong', 500);
         }

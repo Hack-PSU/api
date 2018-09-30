@@ -99,37 +99,47 @@ function addEmailsHistory(uow, successes, fails) {
  *
  * @param uow
  * @param assignments
- * @return {Promise<any>}
+ * @return {Promise<any[]>}
  */
 function addRfidAssignments(uow, assignments) {
-  const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-    .into('RFID_ASSIGNMENTS')
-    .setFieldsRows(assignments.map(assignment => ({
+  const promises = assignments.map((assignment) => {
+    const insertAssignment = {
       rfid_uid: assignment.rfid,
       user_uid: assignment.uid,
       time: assignment.time,
       hackathon: Hackathon.Hackathon.getActiveHackathonQuery(),
-    })))
-    .toParam();
-  query.text = query.text.concat(';');
-  return uow.query(query.text, query.values);
+    };
+    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .into('RFID_ASSIGNMENTS')
+      .setFields(insertAssignment)
+      .toParam();
+    return uow.query(query.text, query.values)
+      .then(() => uow.commit())
+      .catch(error => error);
+  });
+  return Promise.all(promises);
 }
 
 /**
  *
  * @param uow
  * @param scans
- * @return {Promise<any>}
+ * @return {Promise<any[]>}
  */
 // TODO: Possibly migrate to Scans model?
 function addRfidScans(uow, scans) {
-  const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-    .into('SCANS')
-    .setFieldsRows(scans)
-    .set('hackathon', Hackathon.Hackathon.getActiveHackathonQuery())
-    .toParam();
-  query.text = query.text.concat(';');
-  return uow.query(query.text, query.values);
+  const promises = scans.map((scan) => {
+    scan.hackathon = Hackathon.Hackathon.getActiveHackathonQuery();
+    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .into('SCANS')
+      .setFields(scan)
+      .toParam();
+    query.text = query.text.concat(';');
+    return uow.query(query.text, query.values)
+      .then(() => uow.commit())
+      .catch(error => error);
+  });
+  return Promise.all(promises);
 }
 
 /**

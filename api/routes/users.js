@@ -1,50 +1,32 @@
 /* eslint-disable consistent-return,no-use-before-define,no-param-reassign,no-new */
 const express = require('express');
-const path = require('path');
 const Ajv = require('ajv');
 const _ = require('lodash');
 const validator = require('email-validator');
 const {
-  errorHandler500, emailSubstitute, createEmailRequest, sendEmail, streamHandler,
+  errorHandler500,
+  emailSubstitute,
+  createEmailRequest,
+  sendEmail,
+  streamHandler,
+  standardErrorHandler,
 } = require('../services/functions');
 const authenticator = require('../services/auth');
-const StorageService = require('../services/storage_service');
-const { STORAGE_TYPES } = require('../services/factories/storage_factory');
 const { logger } = require('../services/logging');
 const constants = require('../assets/constants/constants');
-const { projectRegistrationSchema, travelReimbursementSchema } =
-  require('../assets/schemas/load-schemas')(['projectRegistrationSchema', 'travelReimbursementSchema']);
-const TravelReimbursement = require('../models/TravelReimbursement');
 const { Registration } = require('../models/Registration');
 const { Project } = require('../models/Project');
 const { RSVP } = require('../models/RSVP');
 const { Category } = require('../models/Category');
 const { ActiveHackathon } = require('../models/ActiveHackathon');
 const HttpError = require('../JSCommon/HttpError');
+const travelReimbursement = require('./travel_reimbursement');
+const { projectRegistrationSchema } = require('../assets/schemas/load-schemas')(['projectRegistrationSchema']);
 
-const storage = new StorageService(STORAGE_TYPES.GCS, {
-  bucketName: constants.GCS.travelReimbursementBucket,
-  key(req, file, cb) {
-    cb(null, generateFileName(req.body.uid, req.body.firstName, req.body.lastName));
-  },
-});
 // const storage = new StorageService(STORAGE_TYPES.S3);
 const router = express.Router();
 
-
 const ajv = new Ajv({ allErrors: true });
-
-const upload = storage.upload({
-  fileFilter(req, file, cb) {
-    if (path.extname(file.originalname) !== '.jpeg' &&
-      path.extname(file.originalname) !== '.png' &&
-      path.extname(file.originalname) !== '.jpg') {
-      return cb(new Error('Only jpeg, jpg, and png are allowed'));
-    }
-    cb(null, true);
-  },
-  limits: { fileSize: 1024 * 1024 * 5 }, // limit to 5MB
-});
 
 /** *********** HELPER FUNCTIONS ************* */
 
@@ -57,47 +39,11 @@ function validateProjectRegistration(project) {
   return !!validate(project);
 }
 
-/**
- *
- * @param data
- */
-function validateReimbursement(data) {
-  const validate = ajv.compile(travelReimbursementSchema);
-  const result = !!validate(data);
-  logger.error(validate.errors);
-  return result;
-}
-
-/**
- *
- * @param price {Number}
- * @param groupMembers {String}
- */
-function adjustReimbursementPrice(price, groupMembers) {
-  if ((groupMembers === '1' || groupMembers === '0') && price > 50) {
-    return 50;
-  } else if (groupMembers === '2' && price > 60) {
-    return 60;
-  } else if (groupMembers === '3' && price > 70) {
-    return 70;
-  } else if (price > 70) {
-    return 70;
-  }
-
-  return price;
-}
-
-/**
- *
- * @param fullName
- * @param file
- * @returns {string}
- */
-function generateFileName(fullName, file) {
-  return `${fullName}-receipt-${file.originalname}`;
-}
 
 /** *********** HELPER MIDDLEWARE ***************** */
+
+router.use(['/reimbursement', '/travelReimbursement'], travelReimbursement);
+
 /**
  * User authentication middleware
  */
@@ -171,7 +117,7 @@ router.get('/registration', (req, res, next) => {
     return next(error);
   }
   new Registration({ uid: res.locals.user.uid }, req.uow)
-    .get()
+    .getCurrent()
     .then((registrationArray) => {
       const [registration] = registrationArray;
       res.status(200).send(registration);
@@ -335,50 +281,6 @@ router.get('/rsvp', (req, res, next) => {
 
 
 /**
- * @api {post} /users/reimbursement submit travel reimbursement information
- * @apiVersion 1.0.0
- * @apiName Travel Reimbursement
- * @apiGroup Travel Reimbursement
- * @apiUse AuthArgumentRequired
- * @apiParam {String} fullName first and last names of the user as they would appear on a check.
- * @apiParam {Number} reimbursementAmount the total amount of money they are requesting, as appears on their receipts
- * @apiParam {String} mailingAddress the full postal address of the user
- * @apiParam {enum} groupMembers ["1", "2", "3", "4+"]
- * @apiParam {FILE} [receipt] The receipt files for this user, users can send up to 5 files all under fieldname receipt. (Max size: 5 MB each)
- * @apiPermission UserPermission
- * @apiSuccess {String} Success
- * @apiUse IllegalArgumentError
- */
-router.post('/reimbursement', upload.array('receipt', 5), (req, res, next) => {
-  if (!parseInt(req.body.reimbursementAmount, 10)) {
-    const error = new Error();
-    error.body = { error: 'Reimbursement amount must be a number' };
-    error.status = 400;
-    return next(error);
-  }
-  req.body.reimbursementAmount = parseInt(req.body.reimbursementAmount, 10);
-  if (!req.body || !validateReimbursement(req.body)) {
-    const error = new Error();
-    error.body = { error: 'Request body must be set and be valid' };
-    error.status = 400;
-    return next(error);
-  }
-  req.body.reimbursementAmount =
-    adjustReimbursementPrice(req.body.reimbursementAmount, req.body.groupMembers);
-  req.body.receiptURIs = req.files.map(({ key }) => storage.uploadedFileUrl(key))
-    .join(',');
-  new TravelReimbursement(Object.assign(req.body, { uid: res.locals.user.uid }))
-    .add()
-    .then(() => {
-      res.status(200)
-        .send({
-          amount: req.body.reimbursementAmount,
-        });
-    })
-    .catch(error => errorHandler500(error, next));
-});
-
-/**
  * @api {post} /users/project Post the project details to get the table assignment
  * @apiVersion 1.0.0
  * @apiName Post user project data
@@ -399,7 +301,6 @@ router.post('/project', (req, res, next) => {
   3) insert project categories
   4) get project id
    */
-  logger.log(req.body);
   if (!res.locals.user) {
     const error = new Error();
     error.body = { error: 'Could not find user' };
@@ -407,11 +308,12 @@ router.post('/project', (req, res, next) => {
     return next(error);
   }
   const project = new Project(req.body, req.uow);
-  if (!project.validate() || !project.team.map(validator.validate).every(value => value)) {
+  if (project.validate().error || !project.team.map(validator.validate).every(value => value)) {
     const error = new Error();
     error.status = 400;
     error.body = {
       result: 'Some properties were not as expected. Make sure you provide a list of team members and categories',
+      validation: project.validate().error,
     };
     return next(error);
   }
@@ -430,12 +332,12 @@ router.post('/project', (req, res, next) => {
     .then((records) => {
       const uids = new Set(records.map(r => r.uid));
       // uids contains an array of uids
-      if (!uids.has(res.locals.user.uid)) {
-        uids.add(res.locals.user.uid);
-      }
+      uids.add(res.locals.user.uid);
+      logger.info(Array.from(uids));
       const { categories } = req.body;
       if (!categories ||
         !Array.isArray(categories) ||
+        categories.length === 0 || // TODO: Check that this is valid behavior
         categories.length !== categories.filter(value => value.toString().match(/\d+/)).length) {
         const error = new Error();
         error.body = { result: 'Some categories were not valid. Check and try again' };
@@ -448,10 +350,19 @@ router.post('/project', (req, res, next) => {
       return project.add();
     })
     .catch((err) => {
-      if (err.errno === 1452) {
-        // Registration could not be found.
-        err.status = 404;
-        throw err;
+      switch (err.errno) {
+        case 1452:
+          // Registration could not be found.
+          err.status = 404;
+          err.message = 'Registration could not be found';
+          break;
+        case 1644:
+          // Already submitted
+          err.status = 400;
+          err.message = 'Submission already exists';
+          break;
+        default:
+          break;
       }
       throw err;
     })
@@ -465,14 +376,14 @@ router.post('/project', (req, res, next) => {
       return project.assignTable();
     })
     .then(result => res.status(200).send(result[1][0]))
-    .catch(err => errorHandler500(err, next));
+    .catch(err => standardErrorHandler(err, next));
 });
 
 /**
  * @api {get} /users/event/categories Get all the event categories
  * @apiName Get Event Categories
  * @apiVersion 1.0.0
- * @apiGroup Event
+ * @apiGroup Events
  * @apiPermission UserPermission
  *
  * @apiUse AuthArgumentRequired

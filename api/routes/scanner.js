@@ -3,14 +3,15 @@ const express = require('express');
 const Ajv = require('ajv');
 const squel = require('squel');
 const database = require('../services/database');
-const { errorHandler500 } = require('../services/functions');
+const { errorHandler500, streamHandler } = require('../services/functions');
+const HttpError = require('../JSCommon/HttpError');
 const { Registration } = require('../models/Registration');
 const { rfidAssignmentSchema, rfidScansSchema } =
-  require('../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
-const { rediskey } = require('../assets/constants/constants');
+        require('../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
+const { redisKey } = require('../assets/constants/constants');
+const { Location } = require('../models/Location');
 
 const router = express.Router();
-
 
 const ajv = new Ajv({ allErrors: true });
 /** ************* HELPER FUNCTIONS ************** */
@@ -22,7 +23,7 @@ router.use((req, res, next) => {
     return next();
   }
   if (!req.headers.apikey ||
-    req.headers.apikey !== rediskey) {
+    req.headers.apikey !== redisKey) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Illegal access. Please check the credentials' };
@@ -30,7 +31,6 @@ router.use((req, res, next) => {
   }
   next();
 });
-
 
 /** ************* ROUTES ************************ */
 
@@ -40,7 +40,7 @@ router.use((req, res, next) => {
  * @apiVersion 0.4.0
  * @apiName Get registration data for pi
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -52,7 +52,7 @@ router.use((req, res, next) => {
  * @apiVersion 1.0.0
  * @apiName Get registration data for pi
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -60,31 +60,24 @@ router.use((req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.get('/registrations', (req, res, next) => {
-  const arr = [];
   Registration.getAll(
     req.uow,
     {
-      fields: ['uid',
+      fields: ['reg.uid',
         // Subtract the base pin for the current hackathon from the retrieved pin.
-        `pin - (${squel.select({
+        `reg.pin - (${squel.select({
           autoQuoteTableNames: false,
           autoQuoteFieldNames: false,
         }).from('HACKATHON').field('base_pin').where('active = 1')
           .toString()}) AS pin`,
-        'firstname',
-        'lastname',
-        'shirt_size',
-        'dietary_restriction'],
+        'reg.firstname',
+        'reg.lastname',
+        'reg.shirt_size',
+        'reg.dietary_restriction'],
       currentHackathon: true,
       quoteFields: false,
     },
-  ).then((stream) => {
-    stream.pipe(res)
-      .on('err', err => errorHandler500(err, next))
-      .on('end', () => {
-        res.status(200).send(arr);
-      });
-  }).catch(err => errorHandler500(err, next));
+  ).then(stream => streamHandler(stream, res, next));
 });
 
 /**
@@ -93,7 +86,7 @@ router.get('/registrations', (req, res, next) => {
  * @apiVersion 0.4.0
  * @apiName Assign an RFID to a user
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key Validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -115,7 +108,7 @@ router.get('/registrations', (req, res, next) => {
  * @apiVersion 1.0.0
  * @apiName Assign an RFID to a user
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key Validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -143,13 +136,28 @@ router.post('/assignment', (req, res, next) => {
     return next(error);
   }
   // LEGAL
-  database.addRfidAssignments(req.body.assignments, req.uow)
-    .then(() => {
-      res.status(200).send({ message: 'success' });
+  database.addRfidAssignments(req.uow, req.body.assignments)
+    .then((resolutions) => {
+      // Handle any errors.
+      const status = resolutions.filter(resolve => resolve).length === 0 ? 200 : 207;
+      res.status(status).send(resolutions.map((resolve, index) => {
+        delete req.body.assignments[index].hackathon;
+        if (resolve) {
+          if (resolve.errno === 1452) {
+            // Foreign Key Failed. Probably an invalid user id, location, or hackathon.
+            return new HttpError({ message: 'Invalid data', scan: req.body.assignments[index] }, 400);
+          }
+          if (resolve.errno === 1062) {
+            // Duplicate data detected
+            return new HttpError({ message: 'Duplicates detected', scan: req.body.assignments[index] }, 409);
+          }
+          return new HttpError({ message: 'Something went wrong detected', scan: req.body.assignments[index] }, 500);
+        }
+        return null;
+      }));
     })
     .catch(err => errorHandler500(err, next));
 });
-
 
 /**
  * @apiDeprecated use /scanner/scans
@@ -157,7 +165,7 @@ router.post('/assignment', (req, res, next) => {
  * @apiVersion 0.4.0
  * @apiName Submit scans from the event
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key Validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -179,7 +187,7 @@ router.post('/assignment', (req, res, next) => {
  * @apiVersion 1.0.0
  * @apiName Submit scans from the event
  *
- * @apiGroup Pi
+ * @apiGroup Scanner
  * @apiPermission API Key Validation
  *
  * @apiUse ApiKeyArgumentRequired
@@ -203,14 +211,57 @@ router.post('/scans', (req, res, next) => {
     !validate(req.body.scans)) {
     const error = new Error();
     error.status = 400;
-    error.body = { message: 'Assignments must be provided as a valid Json Array' };
+    error.body = {
+      message: 'Scans must be provided as a valid Json Array',
+      reason: validate.errors,
+    };
     return next(error);
   }
   // LEGAL
-  database.addRfidScans(req.body.scans, req.uow)
-    .then(() => {
-      res.status(200).send({ message: 'success' });
-    }).catch(err => errorHandler500(err, next));
+  database.addRfidScans(req.uow, req.body.scans)
+    .then((resolutions) => {
+      // Handle any errors.
+      const status = resolutions.filter(resolve => resolve).length === 0 ? 200 : 207;
+      res.status(status).send(resolutions.map((resolve, index) => {
+        delete req.body.scans[index].hackathon;
+        if (resolve) {
+          if (resolve.errno === 1452) {
+            // Foreign Key Failed. Probably an invalid user id, location, or hackathon.
+            return new HttpError({ message: 'Invalid data', scan: req.body.scans[index] }, 400);
+          }
+          if (resolve.errno === 1062) {
+            // Duplicate data detected
+            return new HttpError({ message: 'Duplicates detected', scan: req.body.scans[index] }, 409);
+          }
+          return new HttpError({ message: 'Something went wrong', scan: req.body.scans[index] }, 500);
+        }
+        return null;
+      }));
+    })
+    .catch(err => errorHandler500(err, next));
+});
+
+/**
+ * @api {get} /scanner/location Get the list of existing location from the database
+ * @apiVersion 1.0.0
+ * @apiName Get Location List (Scanner)
+ * @apiGroup Scanner
+ * @apiPermission API Key Validation
+ * @apiParam {Number} timestamp Optional parameter that returns the locations relevant
+ * to the timestamp
+ *
+ * @apiSuccess {Array} Array containing all locations in the database
+ */
+router.get('/location', (req, res, next) => {
+  let promise;
+  if (req.query.timestamp) {
+    promise = Location.getActiveLocations(req.uow, req.query.timestamp);
+  } else {
+    promise = Location.getAll(req.uow);
+  }
+  promise
+    .then(stream => streamHandler(stream, res, next))
+    .catch(err => errorHandler500(err, next));
 });
 
 module.exports = router;

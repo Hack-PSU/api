@@ -1,20 +1,24 @@
 const uuidv4 = require('uuid/v4');
+const squel = require('squel');
 const BaseObject = require('./BaseObject');
 const travelReimbursementSchema = require('../assets/schemas/load-schemas')('travelReimbursementSchema');
+const HttpError = require('../JSCommon/HttpError');
+const { Hackathon } = require('./Hackathon');
+const { logger } = require('../services/logging');
 
 const TABLE_NAME = 'TRAVEL_REIMBURSEMENT';
 module.exports.TABLE_NAME = TABLE_NAME;
 
 module.exports.TravelReimbursement = class TravelReimbursement extends BaseObject {
   constructor(data, uow) {
-    super(uow, travelReimbursementSchema, TABLE_NAME);
+    super(uow);
     this.fullname = data.fullName || null;
     this.reimbursement_amount = data.reimbursementAmount || 0;
     this.mailing_address = data.mailingAddress || null;
     this.group_members = data.groupMembers || null;
     this.user_id = data.uid || null;
     this.receipt_uris = data.receiptURIs || null;
-    this.uid = data.uid || uuidv4().replace(/-/g, '');
+    this.uid = data.uuid || uuidv4().replace(/-/g, '');
   }
 
   static getAll(uow, opts) {
@@ -29,7 +33,32 @@ module.exports.TravelReimbursement = class TravelReimbursement extends BaseObjec
     throw new Error('Not implemented');
   }
 
+  add() {
+    const validation = this.validate();
+    if (!validation.result) {
+      if (process.env.APP_ENV !== 'test') {
+        logger.warn('Validation failed while adding travel reimbursement.');
+        logger.warn(this._dbRepresentation);
+      }
+      return Promise.reject(new HttpError(validation.error, 400));
+    }
+    const query = squel.insert({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .into(this.tableName)
+      .setFieldsRows([this._dbRepresentation])
+      .set('hackathon', Hackathon.getActiveHackathonQuery())
+      .toParam();
+    query.text = query.text.concat(';');
+    return super.add({ query });
+  }
+
   get schema() {
     return travelReimbursementSchema;
+  }
+
+  get tableName() {
+    return TABLE_NAME;
   }
 };

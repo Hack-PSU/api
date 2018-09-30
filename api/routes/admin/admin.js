@@ -3,32 +3,33 @@ const validator = require('email-validator');
 const Ajv = require('ajv');
 const express = require('express');
 const _ = require('lodash');
-const emailObjectSchema = require('../assets/schemas/load-schemas')('emailObjectSchema');
-const database = require('../services/database');
+const { emailObjectSchema, rfidAssignmentSchema } =
+  require('../../assets/schemas/load-schemas')(['emailObjectSchema', 'rfidAssignmentSchema']);
+const database = require('../../services/database');
 const {
-        verifyACL, elevate, getUserId, verifyAuthMiddleware,
-      } = require('../services/auth');
+  verifyACL, elevate, getUserId, verifyAuthMiddleware,
+} = require('../../services/auth');
 const {
-        errorHandler500,
-        emailSubstitute,
-        createEmailRequest,
-        streamHandler,
-        sendEmail,
-      } = require('../services/functions');
-const { logger } = require('../services/logging');
-const { Registration } = require('../models/Registration');
-const { PreRegistration } = require('../models/PreRegistration');
-const { RSVP } = require('../models/RSVP');
-const { Attendance } = require('../models/Attendance');
-const { Location } = require('../models/Location');
-const { Hackathon } = require('../models/Hackathon');
-const { ActiveHackathon } = require('../models/ActiveHackathon');
+  errorHandler500,
+  emailSubstitute,
+  createEmailRequest,
+  streamHandler,
+  sendEmail,
+} = require('../../services/functions');
+const { logger } = require('../../services/logging');
+const { Registration } = require('../../models/Registration');
+const { PreRegistration } = require('../../models/PreRegistration');
+const { RSVP } = require('../../models/RSVP');
+const { Attendance } = require('../../models/Attendance');
+const { Location } = require('../../models/Location');
+const { Hackathon } = require('../../models/Hackathon');
+const { ActiveHackathon } = require('../../models/ActiveHackathon');
+const checkout = require('./checkout');
+const HttpError = require('../../JSCommon/HttpError');
 
 const ajv = new Ajv({ allErrors: true });
 
-
 const router = express.Router();
-
 
 /** **************** HELPER MIDDLEWARE ************************* */
 
@@ -57,6 +58,7 @@ router.use((req, res, next) => {
   return next();
 });
 
+router.use('/checkout', checkout);
 
 /**
  * This function adds the following arrays to the res.locals object:
@@ -96,7 +98,6 @@ function validateEmails(req, res, next) {
   next();
 }
 
-
 /** ********************** ROUTES ******************************** */
 /**
  * @api {get} /admin/ Get Authentication Status
@@ -132,8 +133,8 @@ router.get('/', (req, res) => {
  */
 router.get('/registered', verifyACL(2), (req, res, next) => {
   Registration.getAll(req.uow, {
-    count           : res.locals.limit,
-    limit           : res.locals.offset,
+    count: res.locals.limit,
+    startAt: res.locals.offset,
     currentHackathon: true, // TODO: Add ability to set which hackathons needed froms request
   })
     .then(stream => streamHandler(stream, res, next))
@@ -156,12 +157,11 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
 router.get('/preregistered', verifyACL(2), (req, res, next) => {
   PreRegistration.getAll(req.uow, {
     count: res.locals.limit,
-    limit: res.locals.offset,
+    startAt: res.locals.offset,
   })
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });
-
 
 /**
  * @api {get} /admin/userid Get the uid corresponding to an email
@@ -177,8 +177,8 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
  */
 router.get('/userid', verifyACL(3), (req, res, next) => {
   if (!req.query ||
-    !req.query.email ||
-    !validator.validate(req.query.email)) {
+      !req.query.email ||
+      !validator.validate(req.query.email)) {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'request query must be set and a valid email' };
@@ -188,7 +188,7 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
     .then((user) => {
       res.status(200)
         .send({
-          uid        : user.uid,
+          uid: user.uid,
           displayName: user.displayName,
         });
     })
@@ -226,7 +226,7 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
 router.get(['/rsvp_list', '/rsvp'], verifyACL(3), (req, res, next) => {
   RSVP.getAll(req.uow, {
     count: res.locals.limit,
-    limit: res.locals.offset,
+    startAt: res.locals.offset,
   })
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
@@ -259,8 +259,8 @@ router.post(['/update_registration', '/registration/update'], verifyACL(3), (req
   }
   const updatedRegistration = new Registration(req.body.registration, req.uow);
   if (!updatedRegistration.mlh_coc ||
-    !updatedRegistration.mlh_dcp ||
-    !updatedRegistration.eighteenBeforeEvent) {
+      !updatedRegistration.mlh_dcp ||
+      !updatedRegistration.eighteenBeforeEvent) {
     const error = new Error();
     error.status = 400;
     error.body = { message: 'Must agree to MLH terms and be over eighteen' };
@@ -279,7 +279,7 @@ router.post(['/update_registration', '/registration/update'], verifyACL(3), (req
 });
 
 /**
- * @api {get} /admin/attendance_list retrieve the list of people who attended
+ * @api {get} /admin/attendance_list Retrieve the list of people who attended
  * @apiVersion 0.4.0
  * @apiName Retrieve Attendance List
  * @apiGroup Attendance
@@ -289,7 +289,7 @@ router.post(['/update_registration', '/registration/update'], verifyACL(3), (req
  * @apiSuccess {Array} Array of hackers who attended
  */
 /**
- * @api {get} /admin/attendance retrieve the list of people who attended
+ * @api {get} /admin/attendance Retrieve the list of people who attended
  * @apiVersion 1.0.0
  * @apiName Retrieve Attendance List
  * @apiGroup Attendance
@@ -330,6 +330,62 @@ router.get(['/attendance_list', '/attendance'], verifyACL(2), (req, res, next) =
 //       });
 //   });
 // });
+
+/**
+ * @api {post} /admin/assignment Assign RFID tags ID to users
+ * @apiVersion 1.0.0
+ * @apiName Assign an RFID to a user (Admin)
+ *
+ * @apiGroup Admin
+ * @apiPermission TeamMemberPermission
+ *
+ * @apiUse AuthArgumentRequired
+ * @apiParam {Array} assignments An array of RFID tags to User uid assignments
+ * @apiParamExample {json} Request-Example:
+ *     [
+ *      {
+ *       "rfid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+ *       "uid": "nbG7b87NB87nB7n98Y7",
+ *       "time": 1239712938120
+ *     },
+ *     { ... }
+ *     ]
+ * @apiSuccess {String} Success
+ * @apiUse IllegalArgumentError
+ */
+router.post('/assignment', verifyACL(2), (req, res, next) => {
+  const validate = ajv.compile(rfidAssignmentSchema);
+  if (!req.body ||
+      !req.body.assignments ||
+      !validate(req.body.assignments)) {
+    const error = new Error();
+    error.status = 400;
+    error.body = { message: 'Assignments must be provided as a valid Json Array' };
+    return next(error);
+  }
+  // LEGAL
+  database.addRfidAssignments(req.uow, req.body.assignments)
+    .then((resolutions) => {
+      // Handle any errors.
+      const status = resolutions.filter(resolve => resolve).length === 0 ? 200 : 207;
+      res.status(status).send(resolutions.map((resolve, index) => {
+        delete req.body.assignments[index].hackathon;
+        if (resolve) {
+          if (resolve.errno === 1452) {
+            // Foreign Key Failed. Probably an invalid user id, location, or hackathon.
+            return new HttpError({ message: 'Invalid data', scan: req.body.assignments[index] }, 400);
+          }
+          if (resolve.errno === 1062) {
+            // Duplicate data detected
+            return new HttpError({ message: 'Duplicates detected', scan: req.body.assignments[index] }, 409);
+          }
+          return new HttpError({ message: 'Something went wrong detected', scan: req.body.assignments[index] }, 500);
+        }
+        return req.body.assignments[index];
+      }));
+    })
+    .catch(err => errorHandler500(err, next));
+});
 
 /**
  * @api {post} /admin/makeadmin Elevate a user's privileges
@@ -394,7 +450,10 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array containing all locations in the database
  */
 router.get(['/location_list', '/location'], verifyACL(3), (req, res, next) => {
-  Location.getAll(req.uow)
+  Location.getAll(req.uow, {
+    count: res.locals.limit,
+    startAt: res.locals.offset,
+  })
     .then(stream => streamHandler(stream, res, next))
     .catch(err => errorHandler500(err, next));
 });
@@ -425,8 +484,8 @@ router.get(['/location_list', '/location'], verifyACL(3), (req, res, next) => {
  */
 router.post(['/create_location', '/location'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
-    !req.body.locationName ||
-    req.body.locationName.length === 0) {
+      !req.body.locationName ||
+      req.body.locationName.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = 'Require a name for the location';
@@ -440,7 +499,6 @@ router.post(['/create_location', '/location'], verifyACL(3), (req, res, next) =>
     })
     .catch(errorHandler500);
 });
-
 
 /**
  * @api {post} /admin/update_location Update name of the location associated with the uid in the database
@@ -470,10 +528,10 @@ router.post(['/create_location', '/location'], verifyACL(3), (req, res, next) =>
  */
 router.post(['/update_location', '/location/update'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
-    !req.body.uid ||
-    !req.body.location_name ||
-    req.body.location_name.length === 0 ||
-    req.body.uid.length === 0) {
+      !req.body.uid ||
+      !req.body.location_name ||
+      req.body.location_name.length === 0 ||
+      req.body.uid.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = 'Require the uid and/or name for the location';
@@ -514,8 +572,8 @@ router.post(['/update_location', '/location/update'], verifyACL(3), (req, res, n
  */
 router.post(['/remove_location', 'location/delete'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
-    !req.body.uid ||
-    req.body.uid.length === 0) {
+      !req.body.uid ||
+      req.body.uid.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = 'Require the uid for the location';
@@ -586,9 +644,9 @@ router.get(['/extra_credit_list', '/extra_credit'], verifyACL(2), (req, res, nex
  */
 router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
-    !req.body.uid ||
-    !req.body.cid ||
-    !parseInt(req.body.cid, 10)) {
+      !req.body.uid ||
+      !req.body.cid ||
+      !parseInt(req.body.cid, 10)) {
     const error = new Error();
     error.status = 400;
     error.body = 'Need a proper id for the class or the hacker (int)';
@@ -639,17 +697,17 @@ router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, 
 router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
   // Validation
   if (!res.locals.successArray ||
-    res.locals.successArray.length === 0) {
+      res.locals.successArray.length === 0) {
     const error = new Error();
     error.status = 400;
     error.body = {
-      text : 'All provided emails had illegal format',
+      text: 'All provided emails had illegal format',
       error: res.locals.failArray,
     };
     return next(error);
   }
   if (!req.body.subject ||
-    typeof req.body.subject !== 'string') {
+      typeof req.body.subject !== 'string') {
     const error = new Error();
     error.status = 400;
     error.body = { error: 'Email subject must be provided' };
@@ -670,9 +728,9 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
         )))
       .then(request =>
         ({
-          email   : request.to,
+          email: request.to,
           response: 'success',
-          name    : emailObject.name,
+          name: emailObject.name,
         }))
       .catch((error) => {
         // Else add to the failArray for the partial HTTP success response
@@ -686,25 +744,25 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
         const error = new Error();
         error.status = 500;
         error.body = {
-          text : 'Emails could not be sent',
+          text: 'Emails could not be sent',
           error: res.locals.failArray,
         };
         return next(error);
       }
       database.addEmailsHistory(req.uow, resolves.map(successEmail => ({
-        sender        : res.locals.user.uid,
-        recipient     : successEmail.email,
-        email_content : req.body.html,
-        subject       : req.body.subject,
+        sender: res.locals.user.uid,
+        recipient: successEmail.email,
+        email_content: req.body.html,
+        subject: req.body.subject,
         recipient_name: successEmail.name,
-        time          : new Date().getTime(),
+        time: new Date().getTime(),
       })), res.locals.failArray ? res.locals.failArray.map(errorEmail => ({
-        sender        : res.locals.user.uid,
-        recipient     : errorEmail.email || null,
-        email_content : req.body.html || null,
-        subject       : req.body.subject || null,
+        sender: res.locals.user.uid,
+        recipient: errorEmail.email || null,
+        email_content: req.body.html || null,
+        subject: req.body.subject || null,
         recipient_name: errorEmail.name || null,
-        time          : new Date().getTime(),
+        time: new Date().getTime(),
       })) : null)
         .catch(logger.error);
       if (res.locals.failArray.length === 0) {
@@ -849,7 +907,7 @@ router.get(['/rsvp_count', '/rsvp/count'], verifyACL(2), (req, res, next) => {
  */
 router.get(['/user_count', '/user/count'], verifyACL(2), (req, res, next) => {
   database.getAllUsersCount(req.uow)
-    .then(stream => streamHandler(stream, res, next))
+    .then(response => res.status(200).send(response[0]))
     .catch(err => errorHandler500(err, next));
 });
 
@@ -962,4 +1020,3 @@ router.post('/hackathon/update', verifyACL(4), (req, res, next) => {
 });
 
 module.exports = router;
-

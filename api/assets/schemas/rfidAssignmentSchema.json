@@ -15,8 +15,8 @@
       }
     },
     "required": [
-      "rfid_uid",
-      "user_uid",
+      "rfid",
+      "uid",
       "time"
     ]
   }

@@ -29,9 +29,9 @@ module.exports.CheckoutItem = class CheckoutItem extends BaseObject {
   static getAllAvailable(uow) {
     const query = squel.select({
       autoQuoteTableNames: true,
-      autoQuoteFieldNames: true,
+      autoQuoteFieldNames: false,
     })
-      .fields(['i.quantity - COUNT(c.uid) AS available', 'i.*'])
+      .fields(['i.quantity - SUM(ISNULL(c.return_time)) AS available', 'i.*'])
       .from(CheckoutData.TABLE_NAME, 'c')
       .join(TABLE_NAME, 'i', 'c.item_id=i.uid')
       .join(Hackathon.TABLE_NAME, 'h', 'c.hackathon=h.uid and h.active=1')

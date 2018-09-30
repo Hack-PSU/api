@@ -2,7 +2,7 @@
 const BaseObject = require('./BaseObject');
 const Chance = require('chance');
 const squel = require('squel');
-const { Hackathon } = require('./Hackathon');
+const { Hackathon, TABLE_NAME: HackathonTableName } = require('./Hackathon');
 const HttpError = require('../JSCommon/HttpError');
 
 const registeredUserSchema = require('../assets/schemas/load-schemas')('registeredUserSchema');
@@ -66,6 +66,18 @@ module.exports.Registration = class Registration extends BaseObject {
     return super.get({ query });
   }
 
+  getCurrent() {
+    const query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
+      .from(this.tableName, 'registration')
+      .field('registration.*')
+      .field('registration.pin - hackathon.base_pin', 'pin')
+      .where(`registration.${this.columnName}= ?`, this.id)
+      .join(HackathonTableName, 'hackathon', 'hackathon = hackathon.uid and hackathon.active = 1')
+      .toParam();
+    query.text = query.text.concat(';');
+    return super.get({ query });
+  }
+
   add() {
     const validation = this.validate();
     if (!validation.result) {
@@ -117,11 +129,11 @@ module.exports.Registration = class Registration extends BaseObject {
         autoQuoteTableNames: opts.quoteFields !== false,
         autoQuoteFieldNames: opts.quoteFields !== false,
       })
-        .from(TABLE_NAME)
+        .from(TABLE_NAME, 'reg')
         .fields(opts.fields || null)
         .offset(opts.startAt || null)
         .limit(opts.count || null)
-        .where('hackathon = ?', Hackathon.getActiveHackathonQuery())
+        .join(HackathonTableName, 'hackathon', 'hackathon.active = 1 and reg.hackathon = hackathon.uid')
         .toString()
         .concat(';');
       const params = [];

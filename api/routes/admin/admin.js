@@ -4,7 +4,7 @@ const Ajv = require('ajv');
 const express = require('express');
 const _ = require('lodash');
 const { emailObjectSchema, rfidAssignmentSchema } =
-  require('../../assets/schemas/load-schemas')(['emailObjectSchema', 'rfidAssignmentSchema']);
+        require('../../assets/schemas/load-schemas')(['emailObjectSchema', 'rfidAssignmentSchema']);
 const database = require('../../services/database');
 const {
   verifyACL, elevate, getUserId, verifyAuthMiddleware,
@@ -726,12 +726,13 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
           req.body.subject,
           req.body.fromEmail,
         )))
-      .then(request =>
-        ({
-          email: request.to,
+      .then(() => (
+        {
+          email: emailObject.email,
           response: 'success',
           name: emailObject.name,
-        }))
+        }
+      ))
       .catch((error) => {
         // Else add to the failArray for the partial HTTP success response
         res.locals.failArray.push(_.assign(emailObject, error));
@@ -739,7 +740,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
       }));
   Promise.all(promises)
     .then((resolution) => {
-      const resolves = resolution.filter(result => result !== null);
+      const resolves = resolution.filter(result => result);
       if (resolves.length === 0) {
         const error = new Error();
         error.status = 500;
@@ -764,7 +765,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
         recipient_name: errorEmail.name || null,
         time: new Date().getTime(),
       })) : null)
-        .catch(logger.error);
+        .catch(error => logger.error(error));
       if (res.locals.failArray.length === 0) {
         return res.status(200)
           .send(resolves); // Full success response
@@ -773,7 +774,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
       res.status(207)
         .send(res.locals.failArray.concat(resolves));
     })
-    .catch(logger.error);
+    .catch(error => logger.error(error));
 });
 
 /**

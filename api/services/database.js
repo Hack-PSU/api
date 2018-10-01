@@ -178,6 +178,7 @@ function getAllUsersList(uow) {
  */
 function getAllUsersCount(uow) {
   let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .distinct()
     .from(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(PreRegistration.TABLE_NAME, 'prereg')
       .field('COUNT(prereg.uid)', 'pre_count')

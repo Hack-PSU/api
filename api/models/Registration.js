@@ -248,6 +248,7 @@ module.exports.Registration = class Registration extends BaseObject {
       .field(`"${value}"`, 'CATEGORY')
       .field(value, 'OPTION')
       .field('COUNT(*)', 'COUNT')
+      .join(HackathonTableName, 'hackathon', `hackathon.uid = ${TABLE_NAME}.hackathon and hackathon.active = 1`)
       .group(value);
   }
 

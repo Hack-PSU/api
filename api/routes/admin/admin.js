@@ -529,8 +529,8 @@ router.post(['/create_location', '/location'], verifyACL(3), (req, res, next) =>
 router.post(['/update_location', '/location/update'], verifyACL(3), (req, res, next) => {
   if (!req.body ||
       !req.body.uid ||
-      !req.body.location_name ||
-      req.body.location_name.length === 0 ||
+      !req.body.locationName ||
+      req.body.locationName.length === 0 ||
       req.body.uid.length === 0) {
     const error = new Error();
     error.status = 400;

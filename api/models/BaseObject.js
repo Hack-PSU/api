@@ -85,7 +85,7 @@ module.exports = class BaseObject {
 
   set disallowedProperties(arr) {
     if (this._disallowedProperties) {
-      this._disallowedProperties.push(arr);
+      this._disallowedProperties = this._disallowedProperties.concat(arr);
     } else {
       this._disallowedProperties = arr;
     }

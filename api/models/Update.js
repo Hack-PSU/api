@@ -69,6 +69,8 @@ module.exports.Update = class Update extends BaseObject {
       return Promise.reject(new Error(validation.error));
     }
     const uid = new Timeuuid().toString();
+    console.log(this._dbRepresentation);
+    console.log(this.disallowedProperties);
     return this.hackathonPromise.then(() => this.uow.query(RtdbUow.queries.SET, `${REFERENCE}/${uid}`, this._dbRepresentation));
   }
 

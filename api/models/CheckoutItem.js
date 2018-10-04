@@ -27,14 +27,22 @@ module.exports.CheckoutItem = class CheckoutItem extends BaseObject {
   }
 
   static getAllAvailable(uow) {
+    const subquery = squel.select({
+      autoQuoteTableNames: false,
+      autoQuoteFieldNames: false,
+    })
+      .from(CheckoutData.TABLE_NAME, 'c')
+      .field('COUNT(uid)')
+      .where('c.item_id=i.uid')
+      .toString();
     const query = squel.select({
       autoQuoteTableNames: true,
       autoQuoteFieldNames: false,
     })
-      .fields(['i.quantity - SUM(ISNULL(c.return_time)) AS available', 'i.*'])
+      .fields([`i.quantity - (${subquery}) AS available`, 'i.*'])
       .from(CheckoutData.TABLE_NAME, 'c')
-      .join(TABLE_NAME, 'i', 'c.item_id=i.uid')
-      .join(Hackathon.TABLE_NAME, 'h', 'c.hackathon=h.uid and h.active=1')
+      .left_join(TABLE_NAME, 'i', 'c.item_id=i.uid')
+      .left_join(Hackathon.TABLE_NAME, 'h', 'c.hackathon=h.uid and h.active=1')
       .group('i.uid')
       .toParam();
     return uow.query(query.text, query.values, { stream: true });

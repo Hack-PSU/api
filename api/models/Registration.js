@@ -144,6 +144,30 @@ module.exports.Registration = class Registration extends BaseObject {
 
   /**
    *
+   * This method should be migrated to RFID Assignments model
+   */
+  static getAllRfidAssignments(uow, opts) {
+    if (opts && opts.currentHackathon) {
+      const query = squel.select({
+        autoQuoteTableNames: opts.quoteFields !== false,
+        autoQuoteFieldNames: opts.quoteFields !== false,
+      })
+        .from(TABLE_NAME, 'reg')
+        .fields(opts.fields || null)
+        .offset(opts.startAt || null)
+        .limit(opts.count || null)
+        .join(HackathonTableName, 'hackathon', 'hackathon.active = 1 and reg.hackathon = hackathon.uid')
+        .left_join('RFID_ASSIGNMENTS', 'rfid', 'rfid.user_uid = reg.uid and rfid.hackathon = reg.hackathon')
+        .toString()
+        .concat(';');
+      const params = [];
+      return uow.query(query, params, { stream: true });
+    }
+    return super.getAll(uow, TABLE_NAME, opts);
+  }
+
+  /**
+   *
    * @param uow
    * @param opts
    * @return {Promise<Stream>}

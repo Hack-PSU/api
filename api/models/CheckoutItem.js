@@ -40,8 +40,8 @@ module.exports.CheckoutItem = class CheckoutItem extends BaseObject {
       autoQuoteFieldNames: false,
     })
       .fields([`i.quantity - (${subquery}) AS available`, 'i.*'])
-      .from(CheckoutData.TABLE_NAME, 'c')
-      .left_join(TABLE_NAME, 'i', 'c.item_id=i.uid')
+      .from(TABLE_NAME, 'i')
+      .left_join(CheckoutData.TABLE_NAME, 'c', 'c.item_id=i.uid')
       .left_join(Hackathon.TABLE_NAME, 'h', 'c.hackathon=h.uid and h.active=1')
       .group('i.uid')
       .toParam();

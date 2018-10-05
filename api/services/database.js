@@ -149,6 +149,7 @@ function addRfidScans(uow, scans) {
  */
 function getAllUsersList(uow) {
   let query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
+    .distinct()
     .field('pre_reg.uid', 'pre_uid')
     .field('reg.*')
     .field('reg.pin - hackathon.base_pin', 'pin')
@@ -180,8 +181,7 @@ function getAllUsersCount(uow) {
   let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
     .from(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(PreRegistration.TABLE_NAME, 'prereg')
-      .field('COUNT(prereg.uid)', 'pre_count')
-      .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = prereg.hackathon AND hackathon.active = 1'), 'a')
+      .field('COUNT(prereg.uid)', 'pre_count'), 'a')
     .join(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(Registration.TABLE_NAME, 'registration')
       .field('COUNT(registration.uid)', 'reg_count')

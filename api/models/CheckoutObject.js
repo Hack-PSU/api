@@ -63,7 +63,7 @@ module.exports.CheckoutObject = class CheckoutObject extends BaseObject {
       .join('CHECKOUT_ITEMS', 'i', 'item_id=i.uid')
       .join(Registration.TABLE_NAME, 'u', 'user_id=u.uid');
     if (opts && opts.currentHackathon) {
-      query = query.join(Hackathon.TABLE_NAME, 'h', 'checkout_data.hackathon=h.uid and h.active=1');
+      query = query.join(Hackathon.TABLE_NAME, 'h', 'checkout_data.hackathon=h.uid and h.active=1 and u.hackathon=h.uid');
     }
     query = query.toParam();
     return uow.query(query.text, query.values, { stream: true });

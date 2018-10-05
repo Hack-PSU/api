@@ -60,7 +60,7 @@ router.use((req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 router.get('/registrations', (req, res, next) => {
-  Registration.getAll(
+  Registration.getAllRfidAssignments(
     req.uow,
     {
       fields: ['reg.uid',
@@ -73,7 +73,9 @@ router.get('/registrations', (req, res, next) => {
         'reg.firstname',
         'reg.lastname',
         'reg.shirt_size',
-        'reg.dietary_restriction'],
+        'reg.dietary_restriction',
+        'rfid.rfid_uid',
+      ],
       currentHackathon: true,
       quoteFields: false,
     },

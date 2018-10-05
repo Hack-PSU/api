@@ -85,7 +85,7 @@ module.exports = class BaseObject {
 
   set disallowedProperties(arr) {
     if (this._disallowedProperties) {
-      this._disallowedProperties.push(arr);
+      this._disallowedProperties = this._disallowedProperties.concat(arr);
     } else {
       this._disallowedProperties = arr;
     }
@@ -209,6 +209,12 @@ module.exports = class BaseObject {
       .where(`${this.columnName} = ?`, this.id)
       .toParam();
     query.text = query.text.concat(';');
-    return this.uow.query(query.text, query.values);
+    return this.uow.query(query.text, query.values)
+      .catch((err) => {
+        if (err.errno === 1217) { // Foreign key validation failed
+          throw new HttpError({ message: 'Cannot delete as this object is referenced elsewhere', err }, 400);
+        }
+        throw err;
+      });
   }
 };

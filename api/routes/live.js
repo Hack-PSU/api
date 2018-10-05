@@ -1,7 +1,9 @@
 /* eslint-disable consistent-return */
 const express = require('express');
 const { verifyAuthMiddleware, verifyACL } = require('../services/auth');
-const { errorHandler500, streamHandler, sendNotification } = require('../services/functions');
+const {
+  errorHandler500, streamHandler, sendNotification, standardErrorHandler,
+} = require('../services/functions');
 const { Update } = require('../models/Update');
 const { Event } = require('../models/Event');
 const HttpError = require('../JSCommon/HttpError');
@@ -202,7 +204,7 @@ router.post('/event/delete', verifyACL(2), (req, res, next) => {
   const event = new Event({ uid: req.body.uid }, req.uow);
   event.delete()
     .then(() => res.status(200).send({ message: 'Success' }))
-    .catch(err => errorHandler500(err, next));
+    .catch(err => standardErrorHandler(err, next));
 });
 
 module.exports = router;

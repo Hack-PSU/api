@@ -3,7 +3,7 @@ import * as multer from 'multer';
 import { Constants } from '../assets/constants/constants';
 import { STORAGE_TYPES, StorageFactory } from './factories/storage_factory';
 
-module.exports = class StorageService {
+export class StorageService {
   private storageType: any;
   private bucket: string;
   private storageInternal: any;
@@ -59,4 +59,4 @@ module.exports = class StorageService {
         return '';
     }
   }
-};
+}

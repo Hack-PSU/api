@@ -107,7 +107,7 @@ export default abstract class BaseObject {
    * @param columnName
    * @returns {Promise<Stream>}
    */
-  public static getCount(uow, tableName, columnName) {
+  public static getCount(uow, tableName, columnName?) {
     const query  = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(tableName)
       .field(`COUNT(${columnName || 'uid'})`, 'count')
@@ -118,9 +118,9 @@ export default abstract class BaseObject {
   }
 
   /*********** PROPERTIES *************/
-  private uow: IUow;
+  protected uow: IUow;
   // In a sub-class, make sure this array also includes all super properties
-  private readonly disallowedPropertiesInternal: Set<string>;
+  protected readonly disallowedPropertiesInternal: Set<string>;
 
   protected constructor(uow: IUow) {
     this.uow                          = uow;

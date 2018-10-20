@@ -40,6 +40,7 @@ export interface IUowOpts {
   query?: squel.ParamString;
   startAt?: number;
   count?: number;
+  currentHackathon?: boolean
 }
 
 export interface IQueryOpts {

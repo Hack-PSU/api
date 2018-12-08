@@ -1,1 +1,1 @@
-export { IStorageService } from './svc/services/storage.service';
+export { IStorageService } from './svc/storage.service';

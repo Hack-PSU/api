@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as multer from 'multer';
-import { GcsStorageEngine } from '../../engines/gcs-storage.engine';
-import { IFileUploadLimits } from '../../storage-types';
+import { GcsStorageEngine } from '../engines/gcs-storage.engine';
+import { IFileUploadLimits } from '../storage-types';
 import { IStorageService } from './storage.service';
 
 const MAX_FILENUM = 20;
@@ -24,7 +24,7 @@ export class IGoogleStorageService implements IStorageService {
     fieldName: string,
     fileFilter: (file: IStorageService.IFile) => boolean = () => true,
     readMultipleFiles: boolean = false,
-    gcsOptions: GcsStorageEngine.IGCSStorageEngineOpts,
+    gcsOptions: GCSStorageEngine.IGcsStorageEngineOpts,
     fileLimits: IFileUploadLimits,
   ) {
     this.fieldName = fieldName;
@@ -74,5 +74,4 @@ export class IGoogleStorageService implements IStorageService {
       callback(error, false);
     }
   }
-
 }

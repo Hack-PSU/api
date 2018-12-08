@@ -2,11 +2,10 @@ import { MysqlError, PoolConnection } from 'mysql';
 
 /* eslint-disable no-underscore-dangle */
 import * as streamify from 'stream-array';
-import { HttpError } from '../../JSCommon/HttpError';
-import { logger } from '../logging';
-import { ICacheService } from './cache/cache';
-import { MockConnection } from './mock_connection';
-import { IQueryOpts, IUow } from './uow';
+import { HttpError } from '../../../JSCommon/HttpError';
+import { logger } from '../../logging';
+import { ICacheService } from '../cache/cache';
+import { IQueryOpts, IUow } from './uow.service';
 
 export enum SQL_ERRORS {
   DUPLICATE_KEY = 1062,
@@ -21,17 +20,16 @@ export class MysqlUow implements IUow {
    * @param {MysqlError} error
    */
   private static SQLErrorHandler(error: MysqlError) {
-    if (error.errno === SQL_ERRORS.DUPLICATE_KEY) { // Duplicate key
-      throw new HttpError(
-        { message: 'duplicate objects not allowed', error }, 400);
-    }
-    if (error.errno === SQL_ERRORS.FOREIGN_KEY_INSERT_FAILURE) { // Foreign key validation failed
-      throw new HttpError(
-        { message: 'object depends on non-existent dependency', error }, 400);
-    }
-    if (error.errno === SQL_ERRORS.FOREIGN_KEY_DELETE_FAILURE) { // Foreign key validation failed
-      throw new HttpError(
-        { message: 'cannot delete as this object is referenced elsewhere', error }, 400);
+    switch (error.errno) {
+      case SQL_ERRORS.DUPLICATE_KEY:
+        throw new HttpError(
+          { message: 'duplicate objects not allowed', error }, 400);
+      case SQL_ERRORS.FOREIGN_KEY_INSERT_FAILURE:
+        throw new HttpError(
+          { message: 'object depends on non-existent dependency', error }, 400);
+      case SQL_ERRORS.FOREIGN_KEY_DELETE_FAILURE:
+        throw new HttpError(
+          { message: 'cannot delete as this object is referenced elsewhere', error }, 400);
     }
     // TODO: Handle other known SQL errors here
     throw error;
@@ -91,7 +89,7 @@ export class MysqlUow implements IUow {
         });
       });
     })
-      // Gracefully convert MySQL errors to HTTP Errors
+    // Gracefully convert MySQL errors to HTTP Errors
       .catch((err: MysqlError) => MysqlUow.SQLErrorHandler(err));
   }
 

@@ -7,7 +7,7 @@ import {
   QueryFunction,
   QueryOptions,
 } from 'mysql';
-import { logger } from '../logging';
+import { logger } from '../../logging';
 
 export class MockConnection implements PoolConnection {
 

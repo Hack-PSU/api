@@ -1,7 +1,10 @@
-import { ICacheService } from './cache';
+import { ICacheService } from './cache.service';
 
 const DEFAULT_SIZE = 100;
 
+/**
+ * In memory LRU Cache implementation
+ */
 export class MemCacheImpl implements ICacheService {
 
   public static instance() {

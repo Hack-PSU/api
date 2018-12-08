@@ -1,5 +1,4 @@
-import { MysqlUow } from './mysql_uow';
-
+import { MysqlUow } from './svc/mysql-uow.service';
 const squel = require('squel');
 const uuidv4 = require('uuid/v4');
 const Hackathon = require('../../models/Hackathon');
@@ -7,6 +6,7 @@ const PreRegistration = require('../../models/PreRegistration');
 const Registration = require('../../models/Registration');
 const RSVP = require('../../models/RSVP');
 
+// TODO: Migrate all of these to model classes
 /**
  * Returns a list of extra credit classes available.
  * @return {Promise<Stream>} Return the list of all class in the database

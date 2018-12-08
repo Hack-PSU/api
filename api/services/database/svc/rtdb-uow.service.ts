@@ -1,8 +1,7 @@
 import * as firebase from 'firebase';
-import { logger } from '../logging';
-import { IUow } from './uow';
-import * as _ from 'lodash';
 import * as Streamable from 'stream-array';
+import { logger } from '../../logging';
+import { IUow } from './uow.service';
 
 export class RtdbUow implements IUow {
   private db: firebase.database.Database;

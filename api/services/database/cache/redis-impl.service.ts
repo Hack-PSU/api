@@ -1,4 +1,4 @@
-import { ICacheService } from './cache';
+import { ICacheService } from './cache.service';
 
 interface IRedisOpts {
   host: string;
@@ -16,7 +16,7 @@ export class RedisCacheImpl implements ICacheService {
 
   /**
    * Initialize the in memory cache
-   * @param {number} size Size of the cache
+   * @param redisOpts Connection details for redis
    */
   public static init(redisOpts: IRedisOpts) {
     RedisCacheImpl.instanceInternal = new RedisCacheImpl(redisOpts);
@@ -27,7 +27,6 @@ export class RedisCacheImpl implements ICacheService {
   public useCache: boolean;
 
   private constructor(redisOpts: IRedisOpts) {
-
     // TODO: Setup connection
   }
 
@@ -43,6 +42,7 @@ export class RedisCacheImpl implements ICacheService {
     if (!this.useCache) {
       return Promise.resolve();
     }
+    // TODO: Implement
     return Promise.resolve();
   }
 

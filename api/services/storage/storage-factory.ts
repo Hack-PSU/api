@@ -2,7 +2,7 @@
 import * as aws from 'aws-sdk';
 import * as multers3 from 'multer-s3';
 
-import { GCSStorageEngine } from './GCSStorageEngine';
+import { GcsStorageEngine } from './engines/gcs-storage.engine';
 
 aws.config.update({
   accessKeyId: constants.s3Connection.accessKeyId,
@@ -45,7 +45,7 @@ export class StorageFactory {
    * @returns {MulterGoogleCloudStorage}
    */
   public static GCStorage(opts) {
-    return new GCSStorageEngine({
+    return new GcsStorageEngine({
       autoRetry: true,
       bucket: opts.bucketName || process.env.GOOGLE_STORAGE_BUCKET,
       filename: opts.key || ((req, file, cb) => cb(null, file.fieldname)),

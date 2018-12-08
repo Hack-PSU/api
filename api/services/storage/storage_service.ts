@@ -1,12 +1,16 @@
 /* eslint no-underscore-dangle: [2, { "allowAfterThis": true }] */
 import * as multer from 'multer';
-import { Constants } from '../assets/constants/constants';
-import { STORAGE_TYPES, StorageFactory } from './factories/storage_factory';
+import { Constants } from '../../assets/constants/constants';
+import { STORAGE_TYPES, StorageFactory } from './storage-factory';
 
+/**
+ * @Deprecated
+ */
 export class StorageService {
   private storageType: any;
   private bucket: string;
   private storageInternal: any;
+
   constructor(storageType, opts) {
     if (!storageType) {
       throw new Error('Storage type must be provided.');

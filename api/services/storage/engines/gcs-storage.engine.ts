@@ -2,13 +2,13 @@ import * as Storage from '@google-cloud/storage';
 import * as express from 'express';
 import * as multer from 'multer';
 
-export class GCSStorageEngine implements multer.StorageEngine {
+export class GcsStorageEngine implements multer.StorageEngine {
   private gcobj: Storage.Storage;
   private gcsBucket: Storage.Bucket;
   private readonly filenameGenerator: (req: express.Request, file: any) => string;
   private metadata: Storage.WriteStreamOptions;
 
-  constructor(opts: GCSStorageEngine.IGCSStorageEngineOpts) {
+  constructor(opts: GCSStorageEngine.IGcsStorageEngineOpts) {
     if (!opts) {
       throw new Error('Cannot pass null options');
     }
@@ -56,7 +56,7 @@ export class GCSStorageEngine implements multer.StorageEngine {
 
 declare global {
   namespace GCSStorageEngine {
-    interface IGCSStorageEngineOpts {
+    interface IGcsStorageEngineOpts {
       /*
        GCS Bucket to use
        */

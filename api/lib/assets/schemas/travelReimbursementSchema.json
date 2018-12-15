@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "fullname": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "reimbursement_amount": {
+      "type": "number"
+    },
+    "mailing_address": {
+      "type": "string"
+    },
+    "group_members": {
+      "enum": [
+        "1",
+        "2",
+        "3",
+        "4+"
+      ]
+    }
+  },
+  "required": [
+    "fullname",
+    "reimbursement_amount",
+    "mailing_address",
+    "group_members"
+  ]
+}

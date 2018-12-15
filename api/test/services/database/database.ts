@@ -1,5 +1,5 @@
 /* eslint-disable global-require */
-const database = require('../../../services/database');
+const database = require('../../../lib/services/database');
 const chai = require('chai');
 const sinon = require('sinon');
 const MysqlUow = require('../../services/mysql_uow');

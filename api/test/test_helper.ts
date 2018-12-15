@@ -1,6 +1,6 @@
 const firebase = require('firebase');
 const admin = require('firebase-admin');
-const serviceAccount = require('../config.json');
+const serviceAccount = require('../lib/config.json');
 
 let initialized = false;
 // Initialize Firebase

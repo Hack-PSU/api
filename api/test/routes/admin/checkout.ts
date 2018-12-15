@@ -3,14 +3,14 @@ process.env.APP_ENV = 'test';
 const chai = require('chai');
 const util = require('util');
 const chaiHttp = require('chai-http');
-const server = require('../../../app');
+const server = require('../../../lib/app');
 const squel = require('squel');
 const firebase = require('firebase');
-const { CheckoutObject, TABLE_NAME: CheckoutTableName } = require('../../../models/CheckoutObject');
-const { Hackathon } = require('../../../models/Hackathon');
+const { CheckoutObject, TABLE_NAME: CheckoutTableName } = require('../../../lib/models/CheckoutObject');
+const { Hackathon } = require('../../../lib/models/Hackathon');
 const sql = require('mysql');
 require('../../test_helper')();
-const { sqlConnection } = require('../../../assets/constants/constants');
+const { sqlConnection } = require('../../../lib/assets/constants/constants');
 
 const connection = sql.createConnection(sqlConnection);
 util.promisify(connection.connect);

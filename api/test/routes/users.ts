@@ -4,14 +4,14 @@ const sql = require('mysql');
 const firebase = require('firebase');
 const Chance = require('chance');
 require('../test_helper')();
-const server = require('../../app');
-const { RSVP } = require('../../models/RSVP');
-const { UowFactory } = require('../../services/factories/uow_factory');
-const { Registration } = require('../../models/Registration');
+const server = require('../../lib/app');
+const { RSVP } = require('../../lib/models/RSVP');
+const { UowFactory } = require('../../lib/services/factories/uow_factory');
+const { Registration } = require('../../lib/models/Registration');
 
 const chance = new Chance();
 
-const sqlOptions = require('../../assets/constants/constants').sqlConnection;
+const sqlOptions = require('../../lib/assets/constants/constants').sqlConnection;
 
 const connection = sql.createConnection(sqlOptions);
 const standardAccessUid = 'CgnrzbSsqDZru1KbhTLI5AUdhZB2';

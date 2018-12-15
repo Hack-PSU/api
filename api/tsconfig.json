@@ -5,13 +5,26 @@
       "es6-collections",
       "node"
     ],
-    "lib": ["es2017.object", "es2016"],
+    "lib": [
+      "es2017.object",
+      "es2016"
+    ],
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
     "emitDecoratorMetadata": true,
+    "pretty": true,
+    "baseUrl": "./lib",
+    "outDir": "./dist",
     "experimentalDecorators": true,
     "removeComments": false,
-    "noImplicitAny": false
-  }
+    "noImplicitAny": false,
+    "esModuleInterop": true
+  },
+  "include": [
+    "lib/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

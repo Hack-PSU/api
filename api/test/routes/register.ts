@@ -2,20 +2,20 @@
 process.env.APP_ENV = 'test';
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const server = require('../../app');
+const server = require('../../lib/app');
 const sql = require('mysql');
 const squel = require('squel');
 const Chance = require('chance');
 const firebase = require('firebase');
 const util = require('util');
 const sinon = require('sinon');
-const Mailchimp = require('../../services/mailchimp');
+// const Mailchimp = require('../../services/communication/email-list/mailchimp.service');
 require('../test_helper')();
 
 const chance = new Chance();
 const standardAccessUid = 'N79Hnh4eq8Wapxvhn8jaX2I0kSq2';
 
-const sqlOptions = require('../../assets/constants/constants').sqlConnection;
+const sqlOptions = require('../../lib/assets/constants/constants').sqlConnection;
 
 const connection = sql.createConnection(sqlOptions);
 util.promisify(connection.connect);

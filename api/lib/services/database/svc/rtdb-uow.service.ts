@@ -1,7 +1,17 @@
 import * as firebase from 'firebase';
 import * as Streamable from 'stream-array';
+import { Environment, Util } from '../../../JSCommon/util';
 import { logger } from '../../logging/logging';
 import { IUow } from './uow.service';
+
+export enum RtdbQueryType {
+  COUNT,
+  DELETE,
+  GET,
+  REF,
+  SET,
+  UPDATE,
+}
 
 export class RtdbUow implements IUow {
   private db: firebase.database.Database;
@@ -13,16 +23,6 @@ export class RtdbUow implements IUow {
     this.db = database;
   }
 
-  static get queries() {
-    return Object.freeze({
-      COUNT: 4,
-      GET: 0,
-      REF: 3,
-      SET: 1,
-      UPDATE: 2,
-    });
-  }
-
   /**
    *
    * @param query {enum} GET, SET, REF
@@ -30,30 +30,30 @@ export class RtdbUow implements IUow {
    * @param [data] {Object} Data if query is SET
    * @returns {Promise<DataSnapshot>}
    */
-  public query(query, reference, data) {
-    if (process.env.APP_ENV === 'debug') {
+  public query<T>(query: RtdbQueryType, reference: string, data: any): Promise<T> {
+    if (Util.getCurrentEnv() === Environment.DEBUG) {
       logger.info(query, reference, data);
     }
     this.db.goOnline();
     switch (query) {
-      case RtdbUow.queries.GET:
-        return this._get(reference);
-      case RtdbUow.queries.SET:
-        return this._set(data, reference);
-      case RtdbUow.queries.REF:
+      case RtdbQueryType.GET:
+        return this._get<T>(reference);
+      case RtdbQueryType.SET:
+        return this._set<T>(data, reference);
+      case RtdbQueryType.REF:
         return Promise.resolve(this.db.ref(reference)
-          .toString());
-      case RtdbUow.queries.COUNT:
-        return this._count(reference);
-      case RtdbUow.queries.UPDATE:
-        return this._set(data, reference);
+          .toString() as unknown as T);
+      case RtdbQueryType.COUNT:
+        return this._count<T>(reference);
+      case RtdbQueryType.UPDATE:
+        return this._set<T>(data, reference);
       default:
         return Promise.reject(new Error('Illegal query'));
     }
   }
 
-  public _get(reference) {
-    return new Promise((resolve, reject) => {
+  public _get<T>(reference) {
+    return new Promise<T>((resolve, reject) => {
       this.db.ref(reference)
         .once('value', (data) => {
           const firebaseData = data.val();
@@ -73,8 +73,8 @@ export class RtdbUow implements IUow {
     });
   }
 
-  public _count(reference) {
-    return new Promise((resolve) => {
+  public _count<T>(reference) {
+    return new Promise<T>((resolve) => {
       let count = 0;
       this.db.ref(reference)
         .on('child_added', () => {
@@ -82,7 +82,7 @@ export class RtdbUow implements IUow {
         });
       this.db.ref(reference)
         .once('value', () => {
-          resolve(count);
+          resolve(count as unknown as T);
         });
     });
   }
@@ -91,8 +91,8 @@ export class RtdbUow implements IUow {
     return Promise.resolve();
   }
 
-  public _set(data, reference) {
-    return new Promise((resolve, reject) => {
+  public _set<T>(data, reference) {
+    return new Promise<T>((resolve, reject) => {
       if (!data) {
         reject(new Error('opts.data must be provided'));
         return;
@@ -104,7 +104,7 @@ export class RtdbUow implements IUow {
           } else {
             const returnObject = {};
             returnObject[snapshot.key] = snapshot.val();
-            resolve(returnObject);
+            resolve(returnObject as T);
           }
         },           true)
         .catch(reject);

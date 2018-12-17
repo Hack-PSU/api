@@ -67,12 +67,12 @@ function sendEmail(email) {
     if (emails.indexOf(email) !== -1) {
       resolve();
     } else {
-      firebase.auth().signInWithEmailAndPassword('admin@email.com', 'password')
+      firebase.auth().signInWithEmailAndPassword('firebase@email.com', 'password')
         .then((user) => {
           user.getIdToken(true)
             .then((idtoken) => {
               const options = {
-                uri: 'https://api.hackpsu.org/v1/admin/email',
+                uri: 'https://api.hackpsu.org/v1/firebase/email',
                 method: 'POST',
                 headers: {
                   idtoken,

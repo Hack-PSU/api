@@ -6,7 +6,9 @@
   ],
   "jsRules": {},
   "rules": {
-    "variable-name": false
+    "variable-name": false,
+    "no-submodule-imports": false,
+    "max-line-length": false
   },
   "rulesDirectory": []
 }

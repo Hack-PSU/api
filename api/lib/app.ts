@@ -9,6 +9,7 @@ import * as helmet from 'helmet';
 import { HttpError } from './JSCommon/errors';
 import { IHackpsuRequest } from './JSCommon/hackpsu-request';
 import { Environment, Util } from './JSCommon/util';
+import { ParentRouter, ResponseBody } from './router/router-types';
 import { logger } from './services/logging/logging';
 
 // Setup cloud specific trace and debug
@@ -17,14 +18,7 @@ if (Util.getCurrentEnv() === Environment.PRODUCTION) {
   debugAgent.start();
 }
 
-export class App {
-
-  public static registerRouter(route: string, router: express.Router) {
-    this.registeredRoutes.set(route, router);
-  }
-
-  private static registeredRoutes: Map<string, express.Router> = new Map<string, express.Router>();
-
+export class App extends ParentRouter {
   private static notFoundHandler(next: NextFunction) {
     next(new HttpError('Not Found', 404));
   }
@@ -40,7 +34,8 @@ export class App {
     // render the error page
     response.status(error.status || 500);
     if (error.body) {
-      response.send(error.body);
+      const res = new ResponseBody('Error', error.status || 500, error.body);
+      response.send(res);
     } else {
       response.render('error');
     }
@@ -49,6 +44,7 @@ export class App {
   public app: express.Application;
 
   constructor() {
+    super();
     this.app = express();
     this.config();
   }
@@ -161,7 +157,7 @@ export class App {
 
   private routerConfig() {
     App.registeredRoutes.forEach((router, key) => {
-      this.app.use(key, router);
+      this.app.use(key, router.router);
     });
     this.app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 

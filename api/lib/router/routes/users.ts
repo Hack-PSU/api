@@ -3,7 +3,7 @@ import * as Ajv from 'ajv';
 import * as validator from 'email-validator';
 import * as express from 'express';
 import * as _ from 'lodash';
-import { checkAuthentication } from '../services/auth/auth';
+import { checkAuthentication } from '../../services/auth/firebase-auth';
 import {
   createEmailRequest,
   emailSubstitute,
@@ -12,25 +12,25 @@ import {
   standardErrorHandler,
   streamHandler,
 } from '../services/functions';
-import { logger } from '../services/logging/logging';
+import { logger } from '../../services/logging/logging';
 
-import { Constants } from '../assets/constants/constants';
+import { Constants } from '../../assets/constants/constants';
 
-import { Registration } from '../models/Registration';
+import { Registration } from '../../models/Registration';
 
 import { Project } from '../models/Project';
 
-import { RSVP } from '../models/RSVP';
+import { RSVP } from '../../models/RSVP';
 
-import { Category } from '../models/Category';
+import { Category } from '../../models/Category';
 
-import { ActiveHackathon } from '../models/ActiveHackathon';
+import { ActiveHackathon } from '../../models/ActiveHackathon';
 
-import HttpError from '../JSCommon/errors';
+import HttpError from '../../JSCommon/errors';
 
 import travelReimbursement from './travel_reimbursement';
 
-import assets from '../assets/schemas/load-schemas';
+import assets from '../../assets/schemas/load-schemas';
 
 const { projectRegistrationSchema } = assets(
   ['projectRegistrationSchema']);

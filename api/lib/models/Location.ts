@@ -2,7 +2,7 @@ import * as Chance from 'chance';
 import * as squel from 'squel';
 import assets from '../assets/schemas/load-schemas';
 import BaseObject from './BaseObject';
-import { TABLE_NAME as eventsTableName } from './Event';
+import { TABLE_NAME as eventsTableName } from './event/Event';
 
 const locationSchema = assets('locationSchema');
 

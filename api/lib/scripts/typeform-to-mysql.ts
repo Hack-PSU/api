@@ -248,14 +248,14 @@ function sendEmail(email, name) {
         if (emails.indexOf(email) !== -1) {
             resolve();
         } else {
-            firebase.auth().signInWithEmailAndPassword("admin@email.com", "password")
+            firebase.auth().signInWithEmailAndPassword("firebase@email.com", "password")
                 .then((user) => {
                     console.log(user);
                     user.getIdToken(true)
                         .then((idtoken) => {
                             console.log(idtoken);
                             const options = {
-                                uri: 'https://api.hackpsu.org/v1/admin/email',
+                                uri: 'https://api.hackpsu.org/v1/firebase/email',
                                 method: 'POST',
                                 headers: {
                                     idtoken: idtoken,

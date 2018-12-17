@@ -1,3 +1,4 @@
+import { Provider, ReflectiveInjector } from 'injection-js';
 import * as Stringify from 'streaming-json-stringify';
 import { HttpError } from './errors';
 
@@ -49,10 +50,19 @@ export class Util {
     }
     return false;
   }
+
+  /**
+   * Returns an instance from the Dependency Framework of the
+   * requested type.
+   */
+  public static getInstance(type: Provider[]) {
+    return ReflectiveInjector.resolveAndCreate(type).get(type);
+  }
 }
 
 export enum Environment {
   STAGING,
   TEST,
   PRODUCTION,
+  DEBUG,
 }

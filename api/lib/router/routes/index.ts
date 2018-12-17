@@ -1,8 +1,7 @@
 import express from 'express';
-import { App } from '../app';
-import { IHackpsuRequest } from '../JSCommon/hackpsu-request';
-import { IExpressController } from './router-types/express-controller';
-import { ResponseBody } from './router-types/response-body';
+import { IExpressController, ResponseBody } from '..';
+import { App } from '../../app';
+import { IHackpsuRequest } from '../../JSCommon/hackpsu-request';
 
 class IndexController implements IExpressController {
 
@@ -28,4 +27,4 @@ class IndexController implements IExpressController {
   }
 }
 
-App.registerRouter('/', new IndexController().router);
+App.registerRouter('/', new IndexController(), 1);

@@ -1,12 +1,12 @@
 /* eslint-disable no-logger,max-len */
-const database = require('../services/database');
-const authenticator = require('../services/auth/auth');
+const database = require('../../services/database');
+const authenticator = require('../../services/auth/firebase-auth');
 
-const { Update: UpdateModel } = require('../models/Update');
-const { Event: EventModel } = require('../models/Event');
+const { Update: UpdateModel } = require('../../models/update/Update');
+const { Event: EventModel } = require('../../models/event/Event');
 
 const { sendNotification } = require('../services/functions');
-const { logger } = require('../services/logging/logging');
+const { logger } = require('../../services/logging/logging');
 
 // TODO: Deprecated
 
@@ -216,7 +216,7 @@ module.exports = (io) => {
     //   const { idtoken } = socket.handshake.headers;
     //   authenticator.checkAuthentication(idtoken)
     //     .then((decodedToken) => {
-    //       if (decodedToken.admin && parseInt(decodedToken.privilege, 10) >= 2) {
+    //       if (decodedToken.firebase && parseInt(decodedToken.privilege, 10) >= 2) {
     //         const uid = message;
     //         database.updateEvent(uid, event)
     //           .then(() => events.emit('event-updated', Object.assign(event, uid)))

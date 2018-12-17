@@ -2,14 +2,14 @@
 const express = require('express');
 const Ajv = require('ajv');
 const squel = require('squel');
-const database = require('../services/database');
+const database = require('../../services/database');
 const { errorHandler500, streamHandler } = require('../services/functions');
-const HttpError = require('../JSCommon/errors');
-const { Registration } = require('../models/Registration');
+const HttpError = require('../../JSCommon/errors');
+const { Registration } = require('../../models/Registration');
 const { rfidAssignmentSchema, rfidScansSchema } =
-        require('../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
-const { redisKey } = require('../assets/constants/constants');
-const { Location } = require('../models/Location');
+        require('../../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
+const { redisKey } = require('../../assets/constants/constants');
+const { Location } = require('../../models/Location');
 
 const router = express.Router();
 

@@ -1,6 +1,8 @@
+import { Injectable } from 'injection-js';
 import { MysqlError, PoolConnection } from 'mysql';
 
 /* eslint-disable no-underscore-dangle */
+import { Stream } from 'stream';
 import * as streamify from 'stream-array';
 import { HttpError } from '../../../JSCommon/errors';
 import { logger } from '../../logging/logging';
@@ -13,6 +15,7 @@ export enum SQL_ERRORS {
   FOREIGN_KEY_INSERT_FAILURE = 1452,
 }
 
+@Injectable()
 export class MysqlUow implements IUow {
 
   /**
@@ -35,16 +38,10 @@ export class MysqlUow implements IUow {
     throw error;
   }
 
-  private readonly connection: PoolConnection;
-  private readonly cacheService: ICacheService;
-
   /**
    *
    */
-  constructor(connection: PoolConnection, cacheService: ICacheService) {
-    this.connection = connection;
-    this.cacheService = cacheService;
-  }
+  constructor(private connection: PoolConnection, private cacheService: ICacheService) {}
 
   /**
    * @param query The query string to query with.
@@ -53,20 +50,22 @@ export class MysqlUow implements IUow {
    * @param opts
    * @return {Promise<any>}
    */
-  public query(
+  public query<T>(
     query: string,
     params: any[] = [],
     opts: IQueryOpts = { stream: false, cache: false },
   ) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise<T | Stream>(async (resolve, reject) => {
       if (opts.cache) { // Check cache
         try {
-          const result = await this.cacheService.get(query);
-          if (result != null) {
+          const result: T = await this.cacheService.get(query);
+          if (result !== null) {
             if (opts.stream) {
-              return resolve(streamify(result));
+              resolve(streamify(result));
+              return;
             }
-            return resolve(result);
+            resolve(result);
+            return;
           }
         } catch (err) {
           // Error checking cache. Fallback silently.
@@ -74,18 +73,21 @@ export class MysqlUow implements IUow {
         }
       }
       this.connection.beginTransaction(() => {
-        this.connection.query(query, params, (err, result) => {
+        this.connection.query(query, params, (err: MysqlError, result: T) => {
           if (err) {
             this.connection.rollback();
             reject(err);
+            return;
           }
           // Add result to cache
           this.cacheService.set(query, result)
             .catch((cacheError) => logger.error(cacheError));
           if (opts.stream) {
-            return resolve(streamify(result));
+            resolve(streamify(result));
+            return;
           }
-          return resolve(result);
+          resolve(result);
+          return;
         });
       });
     })

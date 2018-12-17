@@ -31,7 +31,7 @@ function loginRegular() {
 }
 
 function loginAdmin() {
-  return login('admin@email.com', 'password');
+  return login('firebase@email.com', 'password');
 }
 
 describe('INTEGRATION TESTS: /v1/live', () => {

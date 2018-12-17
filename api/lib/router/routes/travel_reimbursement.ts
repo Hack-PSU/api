@@ -1,12 +1,12 @@
 /* eslint-disable max-len */
 const express = require('express');
 const path = require('path');
-const { TravelReimbursement } = require('../models/TravelReimbursement');
-const { verifyAuthMiddleware } = require('../services/auth/auth');
-const StorageService = require('../services/storage/storage_service');
-const { STORAGE_TYPES } = require('../services/storage/storage-factory');
-const HttpError = require('../JSCommon/errors');
-const constants = require('../assets/constants/constants');
+const { TravelReimbursement } = require('../../models/TravelReimbursement');
+const { verifyAuthMiddleware } = require('../../services/auth/firebase-auth');
+const StorageService = require('../../services/storage/storage_service');
+const { STORAGE_TYPES } = require('../../services/storage/storage-factory');
+const HttpError = require('../../JSCommon/errors');
+const constants = require('../../assets/constants/constants');
 
 const storage = new StorageService(STORAGE_TYPES.GCS, {
   bucketName: constants.GCS.travelReimbursementBucket,

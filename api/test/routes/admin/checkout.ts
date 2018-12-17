@@ -47,10 +47,10 @@ function loginRegular() {
 }
 
 function loginAdmin() {
-  return login('admin@email.com', 'password');
+  return login('firebase@email.com', 'password');
 }
 
-describe('INTEGRATION TESTS: /v1/admin/checkout', () => {
+describe('INTEGRATION TESTS: /v1/firebase/checkout', () => {
   afterEach((done) => {
     firebase.auth().signOut();
     if (listener) {
@@ -60,7 +60,7 @@ describe('INTEGRATION TESTS: /v1/admin/checkout', () => {
   });
 
   describe('POST: /', () => {
-    const ENDPOINT = '/v1/admin/checkout';
+    const ENDPOINT = '/v1/firebase/checkout';
     let loggedInUser;
 
     it('it should fail on malformed body', (done) => {
@@ -124,7 +124,7 @@ describe('INTEGRATION TESTS: /v1/admin/checkout', () => {
   });
 
   describe('POST: /return', () => {
-    const ENDPOINT = '/v1/admin/checkout/return';
+    const ENDPOINT = '/v1/firebase/checkout/return';
     let addedCheckoutObject = null;
     before((done) => {
       // Add new checkout instance.
@@ -205,7 +205,7 @@ describe('INTEGRATION TESTS: /v1/admin/checkout', () => {
   });
 
   describe('GET: /', () => {
-    const ENDPOINT = '/v1/admin/checkout';
+    const ENDPOINT = '/v1/firebase/checkout';
     it('it should return a list of checked out items', (done) => {
       // GIVEN: Administrator makes a request
       loginAdmin()

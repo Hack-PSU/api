@@ -33,7 +33,7 @@ function loginRegular() {
 }
 
 function loginAdmin() {
-  return login('admin@email.com', 'password');
+  return login('firebase@email.com', 'password');
 }
 
 
@@ -49,7 +49,7 @@ describe('test get registered hackers', () => {
   describe('No auth failure', () => {
     it('it should reject with an unauthorized message', (done) => {
       chai.request(server)
-        .get('/v1/admin/registered')
+        .get('/v1/firebase/registered')
         .end((err, res) => {
           res.should.have.status(401);
           err.response.body.should.be.a('object');
@@ -64,7 +64,7 @@ describe('test get registered hackers', () => {
         user.getIdToken(true)
           .then((idToken) => {
             chai.request(server)
-              .get('/v1/admin/registered')
+              .get('/v1/firebase/registered')
               .set('content-type', 'application/json')
               .set('idtoken', idToken)
               .end((err, res) => {
@@ -77,13 +77,13 @@ describe('test get registered hackers', () => {
       }).catch(err => done(err));
     });
   });
-  describe('admin auth success', () => {
+  describe('firebase auth success', () => {
     it('it should accept and return an array of registered hackers', (done) => {
       loginAdmin().then((user) => {
         user.getIdToken(true)
           .then((idToken) => {
             chai.request(server)
-              .get('/v1/admin/registered')
+              .get('/v1/firebase/registered')
               .set('content-type', 'application/json')
               .set('idtoken', idToken)
               .end((err, res) => {
@@ -107,7 +107,7 @@ describe('test user id', () => {
   describe('un-authenticated user tries to get user id', () => {
     it('it should reject un-authenticated user with and unauthenticated message', (done) => {
       chai.request(server)
-        .get('/v1/admin/userid')
+        .get('/v1/firebase/userid')
         .query({ email: 'test@email.com' })
         .end((err, res) => {
           res.should.have.status(401);
@@ -123,7 +123,7 @@ describe('test user id', () => {
         user.getIdToken(true)
           .then((idToken) => {
             chai.request(server)
-              .get('/v1/admin/userid')
+              .get('/v1/firebase/userid')
               .set('content-type', 'application/json')
               .set('idtoken', idToken)
               .query({ email: 'test@email.com' })
@@ -137,13 +137,13 @@ describe('test user id', () => {
       }).catch(err => done(err));
     });
   });
-  describe('admin auth success', () => {
+  describe('firebase auth success', () => {
     it('it should accept and return an userid associated with the email', (done) => {
       loginAdmin().then((user) => {
         user.getIdToken(true)
           .then((idToken) => {
             chai.request(server)
-              .get('/v1/admin/userid')
+              .get('/v1/firebase/userid')
               .set('content-type', 'application/json')
               .set('idtoken', idToken)
               .query({ email: 'test@email.com' })
@@ -158,17 +158,17 @@ describe('test user id', () => {
   });
 });
 
-describe('test make admin', () => {
+describe('test make firebase', () => {
   afterEach(() => {
     firebase.auth().signOut();
     if (listener) {
       listener();
     }
   });
-  describe('un-authenticated tries to make admin', () => {
+  describe('un-authenticated tries to make firebase', () => {
     it('it should error out with not authenticated error', (done) => {
       chai.request(server)
-        .post('/v1/admin/makeadmin')
+        .post('/v1/firebase/makeadmin')
         .set('content-type', 'application/json')
         .send({ uid: 'ykdPNZkuXXYLkmv4MmLeGnoSF8g2' })
         .end((err, res) => {
@@ -179,14 +179,14 @@ describe('test make admin', () => {
         });
     });
   });
-  describe('user tries to make admin', () => {
+  describe('user tries to make firebase', () => {
     describe('user does not provide uid', () => {
       it('it should reject with lack of permissions', (done) => {
         loginRegular().then((user) => {
           user.getIdToken(true)
             .then((idToken) => {
               chai.request(server)
-                .post('/v1/admin/makeadmin')
+                .post('/v1/firebase/makeadmin')
                 .set('content-type', 'application/json')
                 .set('idtoken', idToken)
                 .end((err, res) => {
@@ -199,13 +199,13 @@ describe('test make admin', () => {
         }).catch(err => done(err));
       });
     });
-    describe('user provides admin uid', () => {
+    describe('user provides firebase uid', () => {
       it('it should reject with lack of permissions', (done) => {
         loginRegular().then((user) => {
           user.getIdToken(true)
             .then((idToken) => {
               chai.request(server)
-                .post('/v1/admin/makeadmin')
+                .post('/v1/firebase/makeadmin')
                 .set('content-type', 'application/json')
                 .set('idtoken', idToken)
                 .send({ uid: 'gsOwfFcUHKfmRHTsmI7N1k7Ocie2' })
@@ -225,7 +225,7 @@ describe('test make admin', () => {
           user.getIdToken(true)
             .then((idToken) => {
               chai.request(server)
-                .post('/v1/admin/makeadmin')
+                .post('/v1/firebase/makeadmin')
                 .set('content-type', 'application/json')
                 .set('idtoken', idToken)
                 .send({ uid: 'ykdPNZkuXXYLkmv4MmLeGnoSF8g2' })
@@ -240,7 +240,7 @@ describe('test make admin', () => {
       });
     });
   });
-  describe.skip('admin tries to make admin', () => {
+  describe.skip('firebase tries to make firebase', () => {
     let genUid = null;
     after((done) => {
       if (genUid) {
@@ -262,13 +262,13 @@ describe('test make admin', () => {
         done();
       }).catch(error => done(error));
     });
-    describe('admin success', () => {
+    describe('firebase success', () => {
       it('it should succeed', (done) => {
         loginAdmin().then((user) => {
           user.getIdToken(true)
             .then((idToken) => {
               chai.request(server)
-                .post('/v1/admin/makeadmin')
+                .post('/v1/firebase/makeadmin')
                 .set('content-type', 'application/json')
                 .set('idtoken', idToken)
                 .send({ uid: genUid, privilege: 4 })
@@ -282,13 +282,13 @@ describe('test make admin', () => {
         }).catch(err => done(err));
       });
     });
-    describe('admin failures', () => {
+    describe('firebase failures', () => {
       it('it should fail due to improper inputs', (done) => {
         loginAdmin().then((user) => {
           user.getIdToken(true)
             .then((idToken) => {
               chai.request(server)
-                .post('/v1/admin/makeadmin')
+                .post('/v1/firebase/makeadmin')
                 .set('content-type', 'application/json')
                 .set('idtoken', idToken)
                 .send({ privilege: 4 })
@@ -394,7 +394,7 @@ describe.skip('test send emails', () => {
   describe('unauthenticated tries to send emails', () => {
     it('it should error out with not authenticated error', (done) => {
       chai.request(server)
-        .post('/v1/admin/email')
+        .post('/v1/firebase/email')
         .send(buildGoodInput())
         .end((err, res) => {
           res.should.have.status(401);
@@ -411,7 +411,7 @@ describe.skip('test send emails', () => {
           user.getIdToken(true)
             .then((idToken) => {
               chai.request(server)
-                .post('/v1/admin/email')
+                .post('/v1/firebase/email')
                 .send(buildGoodInput())
                 .set('idtoken', idToken)
                 .end((err, res) => {
@@ -424,15 +424,15 @@ describe.skip('test send emails', () => {
         }).catch(err => done(err));
     });
   });
-  describe('admin tries to send bad email', () => {
-    describe('admin uses bad email ids', () => {
+  describe('firebase tries to send bad email', () => {
+    describe('firebase uses bad email ids', () => {
       it('it should error the bad emails', (done) => {
         loginAdmin()
           .then((user) => {
             user.getIdToken(true)
               .then((idToken) => {
                 chai.request(server)
-                  .post('/v1/admin/email')
+                  .post('/v1/firebase/email')
                   .send(buildBadInput(['email']))
                   .set('idtoken', idToken)
                   .end((err, res) => {
@@ -449,14 +449,14 @@ describe.skip('test send emails', () => {
           }).catch(err => done(err));
       });
     });
-    describe('admin uses bad subject', () => {
+    describe('firebase uses bad subject', () => {
       it('it should error all emails', (done) => {
         loginAdmin()
           .then((user) => {
             user.getIdToken(true)
               .then((idToken) => {
                 chai.request(server)
-                  .post('/v1/admin/email')
+                  .post('/v1/firebase/email')
                   .send(buildBadInput(['subject']))
                   .set('idtoken', idToken)
                   .end((err, res) => {
@@ -469,14 +469,14 @@ describe.skip('test send emails', () => {
           }).catch(err => done(err));
       });
     });
-    describe('admin sends good email', () => {
+    describe('firebase sends good email', () => {
       it('it should succeed', (done) => {
         loginAdmin()
           .then((user) => {
             user.getIdToken(true)
               .then((idToken) => {
                 chai.request(server)
-                  .post('/v1/admin/email')
+                  .post('/v1/firebase/email')
                   .set('idtoken', idToken)
                   .send(buildGoodInput())
                   .end((err, res) => {

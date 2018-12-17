@@ -4,11 +4,11 @@ const Ajv = require('ajv');
 const express = require('express');
 const _ = require('lodash');
 const { emailObjectSchema, rfidAssignmentSchema } =
-        require('../../assets/schemas/load-schemas')(['emailObjectSchema', 'rfidAssignmentSchema']);
-const database = require('../../services/database');
+        require('../../../assets/schemas/load-schemas')(['emailObjectSchema', 'rfidAssignmentSchema']);
+const database = require('../../../services/database');
 const {
   verifyACL, elevate, getUserId, verifyAuthMiddleware,
-} = require('../../services/auth/auth');
+} = require('../../../services/auth/firebase-auth');
 const {
   errorHandler500,
   emailSubstitute,
@@ -16,16 +16,16 @@ const {
   streamHandler,
   sendEmail,
 } = require('../../services/functions');
-const { logger } = require('../../services/logging/logging');
-const { Registration } = require('../../models/Registration');
-const { PreRegistration } = require('../../models/PreRegistration');
-const { RSVP } = require('../../models/RSVP');
-const { Attendance } = require('../../models/Attendance');
-const { Location } = require('../../models/Location');
-const { Hackathon } = require('../../models/Hackathon');
-const { ActiveHackathon } = require('../../models/ActiveHackathon');
+const { logger } = require('../../../services/logging/logging');
+const { Registration } = require('../../../models/Registration');
+const { PreRegistration } = require('../../../models/PreRegistration');
+const { RSVP } = require('../../../models/RSVP');
+const { Attendance } = require('../../../models/Attendance');
+const { Location } = require('../../../models/Location');
+const { Hackathon } = require('../../../models/Hackathon');
+const { ActiveHackathon } = require('../../../models/ActiveHackathon');
 const checkout = require('./checkout');
-const HttpError = require('../../JSCommon/errors');
+const HttpError = require('../../../JSCommon/errors');
 
 const ajv = new Ajv({ allErrors: true });
 
@@ -100,7 +100,7 @@ function validateEmails(req, res, next) {
 
 /** ********************** ROUTES ******************************** */
 /**
- * @api {get} /admin/ Get Authentication Status
+ * @api {get} /firebase/ Get Authentication Status
  * @apiVersion 1.0.0
  * @apiName Get Authentication Status
  * @apiGroup Admin
@@ -118,7 +118,7 @@ router.get('/', (req, res) => {
 });
 
 /**
- * @api {get} /admin/registered Get registered hackers
+ * @api {get} /firebase/registered Get registered hackers
  * @apiVersion 1.0.0
  * @apiName Get Registered Hackers
  * @apiGroup Registration
@@ -142,7 +142,7 @@ router.get('/registered', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/preregistered Get pre-registered hackers
+ * @api {get} /firebase/preregistered Get pre-registered hackers
  * @apiVersion 1.0.0
  * @apiName Get Pre-registered Hackers
  * @apiGroup Pre-Registration
@@ -164,7 +164,7 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/userid Get the uid corresponding to an email
+ * @api {get} /firebase/userid Get the uid corresponding to an email
  * @apiVersion 1.0.0
  * @apiName Get User Id
  * @apiGroup Admin
@@ -196,7 +196,7 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/rsvp_list Get list of people who rsvp
+ * @api {get} /firebase/rsvp_list Get list of people who rsvp
  * @apiVersion 0.4.0
  * @apiName Retrieve RSVP list
  * @apiGroup RSVP
@@ -210,7 +210,7 @@ router.get('/userid', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array of hackers who RSVP
  */
 /**
- * @api {get} /admin/rsvp Get list of people who rsvp
+ * @api {get} /firebase/rsvp Get list of people who rsvp
  * @apiVersion 1.0.0
  * @apiName Retrieve RSVP list
  * @apiGroup RSVP
@@ -233,7 +233,7 @@ router.get(['/rsvp_list', '/rsvp'], verifyACL(3), (req, res, next) => {
 });
 
 /**
- * @api {post} /admin/update_registration Update an existing registration
+ * @api {post} /firebase/update_registration Update an existing registration
  * @apiVersion 0.4.0
  * @apiName Update Registration
  * @apiGroup Registration
@@ -242,7 +242,7 @@ router.get(['/rsvp_list', '/rsvp'], verifyACL(3), (req, res, next) => {
  * @apiUse AuthArgumentRequired
  */
 /**
- * @api {post} /admin/registration/update Update an existing registration
+ * @api {post} /firebase/registration/update Update an existing registration
  * @apiVersion 1.0.0
  * @apiName Update Registration
  * @apiGroup Registration
@@ -279,7 +279,7 @@ router.post(['/update_registration', '/registration/update'], verifyACL(3), (req
 });
 
 /**
- * @api {get} /admin/attendance_list Retrieve the list of people who attended
+ * @api {get} /firebase/attendance_list Retrieve the list of people who attended
  * @apiVersion 0.4.0
  * @apiName Retrieve Attendance List
  * @apiGroup Attendance
@@ -289,7 +289,7 @@ router.post(['/update_registration', '/registration/update'], verifyACL(3), (req
  * @apiSuccess {Array} Array of hackers who attended
  */
 /**
- * @api {get} /admin/attendance Retrieve the list of people who attended
+ * @api {get} /firebase/attendance Retrieve the list of people who attended
  * @apiVersion 1.0.0
  * @apiName Retrieve Attendance List
  * @apiGroup Attendance
@@ -332,7 +332,7 @@ router.get(['/attendance_list', '/attendance'], verifyACL(2), (req, res, next) =
 // });
 
 /**
- * @api {post} /admin/assignment Assign RFID tags ID to users
+ * @api {post} /firebase/assignment Assign RFID tags ID to users
  * @apiVersion 1.0.0
  * @apiName Assign an RFID to a user (Admin)
  *
@@ -388,7 +388,7 @@ router.post('/assignment', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {post} /admin/makeadmin Elevate a user's privileges
+ * @api {post} /firebase/makeadmin Elevate a user's privileges
  * @apiVersion 1.0.0
  * @apiName Elevate user
  *
@@ -430,7 +430,7 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/location_list Get the list of existing location from the database
+ * @api {get} /firebase/location_list Get the list of existing location from the database
  * @apiVersion 0.4.0
  * @apiName Get Location List
  * @apiGroup Location
@@ -440,7 +440,7 @@ router.post('/makeadmin', verifyACL(3), (req, res, next) => {
  * @apiSuccess {Array} Array containing all locations in the database
  */
 /**
- * @api {get} /admin/location Get the list of existing location from the database
+ * @api {get} /firebase/location Get the list of existing location from the database
  * @apiVersion 1.0.0
  * @apiName Get Location List
  * @apiGroup Location
@@ -459,7 +459,7 @@ router.get(['/location_list', '/location'], verifyACL(3), (req, res, next) => {
 });
 
 /**
- * @api {post} /admin/create_location Insert a new location in to the database
+ * @api {post} /firebase/create_location Insert a new location in to the database
  * @apiVersion 0.4.0
  * @apiName Create Location
  * @apiGroup Location
@@ -471,7 +471,7 @@ router.get(['/location_list', '/location'], verifyACL(3), (req, res, next) => {
  * @apiUse IllegalArgumentError
  */
 /**
- * @api {post} /admin/location Insert a new location in to the database
+ * @api {post} /firebase/location Insert a new location in to the database
  * @apiVersion 1.0.0
  * @apiName Create Location
  * @apiGroup Location
@@ -501,7 +501,7 @@ router.post(['/create_location', '/location'], verifyACL(3), (req, res, next) =>
 });
 
 /**
- * @api {post} /admin/update_location Update name of the location associated with the uid in the database
+ * @api {post} /firebase/update_location Update name of the location associated with the uid in the database
  * @apiVersion 0.4.0
  * @apiName Update Location
  * @apiGroup Location
@@ -514,7 +514,7 @@ router.post(['/create_location', '/location'], verifyACL(3), (req, res, next) =>
  * @apiUse IllegalArgumentError
  */
 /**
- * @api {post} /admin/location/update Update name of the location associated with the uid in the database
+ * @api {post} /firebase/location/update Update name of the location associated with the uid in the database
  * @apiVersion 1.0.0
  * @apiName Update Location
  * @apiGroup Location
@@ -547,7 +547,7 @@ router.post(['/update_location', '/location/update'], verifyACL(3), (req, res, n
 });
 
 /**
- * @api {post} /admin/remove_location Remove the location associated with the uid from the database
+ * @api {post} /firebase/remove_location Remove the location associated with the uid from the database
  * @apiVersion 0.4.0
  * @apiName Remove Location
  * @apiGroup Location
@@ -559,7 +559,7 @@ router.post(['/update_location', '/location/update'], verifyACL(3), (req, res, n
  * @apiUse IllegalArgumentError
  */
 /**
- * @api {post} /admin/location/delete Remove the location associated with the uid from the database
+ * @api {post} /firebase/location/delete Remove the location associated with the uid from the database
  * @apiVersion 1.0.0
  * @apiName Remove Location
  * @apiGroup Location
@@ -589,7 +589,7 @@ router.post(['/remove_location', 'location/delete'], verifyACL(3), (req, res, ne
 });
 
 /**
- * @api {get} /admin/extra_credit_list Retrieve the list of class that are providing extra credit
+ * @api {get} /firebase/extra_credit_list Retrieve the list of class that are providing extra credit
  * @apiName Get Extra Credit Class List
  * @apiVersion 0.4.0
  *
@@ -600,7 +600,7 @@ router.post(['/remove_location', 'location/delete'], verifyACL(3), (req, res, ne
  * @apiSuccess {Array} Array containing the list of class offering extra credit
  */
 /**
- * @api {get} /admin/extra_credit Retrieve the list of class that are providing extra credit
+ * @api {get} /firebase/extra_credit Retrieve the list of class that are providing extra credit
  * @apiName Get Extra Credit Class List
  * @apiVersion 1.0.0
  *
@@ -617,7 +617,7 @@ router.get(['/extra_credit_list', '/extra_credit'], verifyACL(2), (req, res, nex
 });
 
 /**
- * @api {post} /admin/assign_extra_credit setting user with the class they are receiving extra credit
+ * @api {post} /firebase/assign_extra_credit setting user with the class they are receiving extra credit
  * @apiName Assign Extra Credit
  * @apiVersion 0.4.0
  * @apiGroup Extra Credit
@@ -630,7 +630,7 @@ router.get(['/extra_credit_list', '/extra_credit'], verifyACL(2), (req, res, nex
  * @apiUse IllegalArgumentError
  */
 /**
- * @api {post} /admin/extra_credit setting user with the class they are receiving extra credit
+ * @api {post} /firebase/extra_credit setting user with the class they are receiving extra credit
  * @apiName Assign Extra Credit
  * @apiVersion 1.0.0
  * @apiGroup Extra Credit
@@ -661,7 +661,7 @@ router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, 
 });
 
 /**
- * @api {post} /admin/email Send communication email to recipients
+ * @api {post} /firebase/email Send communication email to recipients
  * @apiVersion 1.0.0
  * @apiName Send communication emails
  *
@@ -778,7 +778,7 @@ router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/user_data Get all user data
+ * @api {get} /firebase/user_data Get all user data
  * @apiVersion 1.0.0
  * @apiName Get list of all users
  * @apiGroup Admin
@@ -798,7 +798,7 @@ router.get('/user_data', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/prereg_count Get a count of Preregistered Users
+ * @api {get} /firebase/prereg_count Get a count of Preregistered Users
  * @apiVersion 0.4.0
  * @apiName get count preregistration
  * @apiGroup Pre Registration
@@ -809,7 +809,7 @@ router.get('/user_data', verifyACL(2), (req, res, next) => {
  * @apiSuccess {Array} number of preregistered users
  */
 /**
- * @api {get} /admin/preregistration/count Get a count of Preregistered Users
+ * @api {get} /firebase/preregistration/count Get a count of Preregistered Users
  * @apiVersion 1.0.0
  * @apiName get count preregistration
  * @apiGroup Pre Registration
@@ -827,7 +827,7 @@ router.get(['/prereg_count', '/preregistration/count'], verifyACL(2), (req, res,
 
 /**
  * @apiDeprecated
- * @api {get} /admin/reg_count Get a count of Registered Users
+ * @api {get} /firebase/reg_count Get a count of Registered Users
  * @apiVersion 0.4.0
  * @apiName get count registration
  * @apiGroup Registration
@@ -838,7 +838,7 @@ router.get(['/prereg_count', '/preregistration/count'], verifyACL(2), (req, res,
  * @apiSuccess {Array} number of registered users
  */
 /**
- * @api {get} /admin/registered/count Get a count of Registered Users
+ * @api {get} /firebase/registered/count Get a count of Registered Users
  * @apiVersion 1.0.0
  * @apiName get count registration
  * @apiGroup Registration
@@ -856,7 +856,7 @@ router.get(['/reg_count', '/registered/count'], verifyACL(2), (req, res, next) =
 
 /**
  * @apiDeprecated
- * @api {get} /admin/rsvp_count Get a count of users who RSVP'd
+ * @api {get} /firebase/rsvp_count Get a count of users who RSVP'd
  * @apiVersion 0.4.0
  * @apiName Get RSVP Count
  * @apiGroup RSVP
@@ -867,7 +867,7 @@ router.get(['/reg_count', '/registered/count'], verifyACL(2), (req, res, next) =
  * @apiSuccess {Array} number of users who rsvp'd
  */
 /**
- * @api {get} /admin/rsvp/count Get a count of users who RSVP'd
+ * @api {get} /firebase/rsvp/count Get a count of users who RSVP'd
  * @apiVersion 1.0.0
  * @apiName Get RSVP Count
  * @apiGroup RSVP
@@ -885,7 +885,7 @@ router.get(['/rsvp_count', '/rsvp/count'], verifyACL(2), (req, res, next) => {
 
 /**
  * @apiDeprecated
- * @api {get} /admin/user_count Get the count of users in each category
+ * @api {get} /firebase/user_count Get the count of users in each category
  * @apiVersion 0.4.0
  * @apiName Get User Count
  * @apiGroup Admin
@@ -896,7 +896,7 @@ router.get(['/rsvp_count', '/rsvp/count'], verifyACL(2), (req, res, next) => {
  * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
  */
 /**
- * @api {get} /admin/user/count Get the count of users in each category
+ * @api {get} /firebase/user/count Get the count of users in each category
  * @apiVersion 1.0.0
  * @apiName Get User Count
  * @apiGroup Users
@@ -913,7 +913,7 @@ router.get(['/user_count', '/user/count'], verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/statistics Get the count of each option for the registration options
+ * @api {get} /firebase/statistics Get the count of each option for the registration options
  * @apiVersion 1.0.0
  * @apiName Get Statistics
  * @apiGroup Admin
@@ -931,7 +931,7 @@ router.get('/statistics', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {post} /admin/hackathon Add a new non-active hackathon
+ * @api {post} /firebase/hackathon Add a new non-active hackathon
  * @apiVersion 1.0.0
  * @apiName Add non-active hackathon
  * @apiGroup Hackathon
@@ -959,7 +959,7 @@ router.post('/hackathon', verifyACL(4), (req, res, next) => {
 });
 
 /**
- * @api {post} /admin/hackathon/active Add a new active hackathon
+ * @api {post} /firebase/hackathon/active Add a new active hackathon
  * @apiVersion 1.0.0
  * @apiName Add Active hackathon
  * @apiGroup Hackathon
@@ -987,7 +987,7 @@ router.post('/hackathon/active', verifyACL(4), (req, res, next) => {
 });
 
 /**
- * @api {post} /admin/hackathon/update Update non-active hackathon
+ * @api {post} /firebase/hackathon/update Update non-active hackathon
  * @apiVersion 1.0.0
  * @apiName Update non-active hackathon
  * @apiGroup Hackathon

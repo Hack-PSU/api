@@ -1,9 +1,9 @@
 const express = require('express');
 const { streamHandler, errorHandler500 } = require('../../services/functions');
-const { CheckoutObject } = require('../../models/CheckoutObject');
-const { CheckoutItem } = require('../../models/CheckoutItem');
-const { verifyACL } = require('../../services/auth/auth');
-const HttpError = require('../../JSCommon/errors');
+const { CheckoutObject } = require('../../../models/CheckoutObject');
+const { CheckoutItem } = require('../../../models/CheckoutItem');
+const { verifyACL } = require('../../../services/auth/firebase-auth');
+const HttpError = require('../../../JSCommon/errors');
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ const router = express.Router();
 /** ***************** ROUTES ***************** */
 
 /**
- * @api {post} /admin/checkout Create a new checkout request
+ * @api {post} /firebase/checkout Create a new checkout request
  * @apiVersion 1.0.0
  * @apiName Create new Item Checkout
  * @apiGroup Item Checkout
@@ -49,7 +49,7 @@ router.post('/', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {post} /admin/checkout/return Return a checked out item
+ * @api {post} /firebase/checkout/return Return a checked out item
  * @apiVersion 1.0.0
  * @apiName Return checkout out item
  * @apiGroup Item Checkout
@@ -83,7 +83,7 @@ router.post('/return', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/checkout/ Get all checked out items
+ * @api {get} /firebase/checkout/ Get all checked out items
  * @apiVersion 1.0.0
  * @apiName Get list of checkout
  * @apiGroup Item Checkout
@@ -103,7 +103,7 @@ router.get('/', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/checkout/items Get all items available for checkout
+ * @api {get} /firebase/checkout/items Get all items available for checkout
  * @apiVersion 1.0.0
  * @apiName Get items for checkout
  * @apiGroup Item Checkout
@@ -122,7 +122,7 @@ router.get('/items', verifyACL(2), (req, res, next) => {
 });
 
 /**
- * @api {post} /admin/checkout/items Add new item for checkout
+ * @api {post} /firebase/checkout/items Add new item for checkout
  * @apiVersion 1.0.0
  * @apiName Add new item for checkout
  * @apiGroup Item Checkout
@@ -150,7 +150,7 @@ router.post('/items', verifyACL(3), (req, res, next) => {
 });
 
 /**
- * @api {get} /admin/checkout/items/availability Get availability for items
+ * @api {get} /firebase/checkout/items/availability Get availability for items
  * @apiVersion 1.0.0
  * @apiName Get availability for checkout items
  * @apiGroup Item Checkout

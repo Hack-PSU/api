@@ -23,7 +23,7 @@
 
 /**
  * @apiDefine UserPermission Regular logged in user
- * A logged in user with or without admin privilege
+ * A logged in user with or without firebase privilege
  */
 /**
  * @apiDefine AdminPermission Administrator

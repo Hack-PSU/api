@@ -142,6 +142,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
         const reference = `/updates/${result[0].uid}`;
         return from(this.rtdb.query<string>(RtdbQueryType.REF, reference, null));
       }),
+      map(result => ({ result: 'Success', data: result })),
     )
       .toPromise();
   }

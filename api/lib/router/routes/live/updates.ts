@@ -1,15 +1,23 @@
 import express from 'express';
-import { Inject, ReflectiveInjector } from 'injection-js';
+import { Inject, Injectable } from 'injection-js';
+import { RouteNotImplementedError } from '../../../JSCommon/errors';
 import { IHackpsuRequest } from '../../../JSCommon/hackpsu-request';
 import { Util } from '../../../JSCommon/util';
-import { Event } from '../../../models/event/Event';
+import { IUpdateDataMapper } from '../../../models/update';
+import { Update } from '../../../models/update/Update';
+import { UpdateDataMapperImpl } from '../../../models/update/UpdateDataMapperImpl';
 import { IAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations } from '../../../services/auth/RBAC/rbac-types';
+import { logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from './live';
 
+@Injectable()
 class UpdatesController extends LiveController {
-  constructor(@Inject('FirebaseAuthService') private authService: IAuthService) {
+  constructor(
+    @Inject('FirebaseAuthService') private authService: IAuthService,
+    @Inject('UpdateDataMapperImpl') private dataMapper: IUpdateDataMapper,
+  ) {
     super();
   }
 
@@ -20,131 +28,89 @@ class UpdatesController extends LiveController {
     app.use(this.authService.authenticationMiddleware);
     // Authenticated routes
     app
+      .get(
+        '/',
+        this.authService.verifyAcl(Util.getInstance([UpdateDataMapperImpl]), AclOperations.READ),
+        this.getUpdateHandler,
+      )
       .post(
         '/',
-        this.authService.verifyAcl(Event.inst, AclOperations.CREATE),
-        this.postEventHandler,
+        this.authService.verifyAcl(Util.getInstance([UpdateDataMapperImpl]), AclOperations.CREATE),
+        this.postUpdateHandler,
       )
-      .put('/', this.authService.verifyAcl(Event.inst, AclOperations.UPDATE), this.putEventHandler)
-      .post('/delete', this.deleteEventHandler);
+      .put(
+        '/',
+        this.authService.verifyAcl(Util.getInstance([UpdateDataMapperImpl]), AclOperations.UPDATE),
+        this.putEventHandler,
+      )
+      .post(
+        '/delete',
+        this.authService.verifyAcl(Util.getInstance([UpdateDataMapperImpl]), AclOperations.DELETE),
+        this.deleteEventHandler,
+      );
   }
 
-  /**
-   * Delete an event
-   * @api {post} /live/event/delete Delete an existing event
-   * @apiVersion 1.0.0
-   * @apiName Update Event
-   * @apiGroup Events
-   * @apiPermission TeamMemberPermission
-   *
-   * @apiParam {String} uid - The uid of the event.
-
-   * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
-   * @apiUse IllegalArgumentError
-   */
   private deleteEventHandler(
     request: IHackpsuRequest,
     response: express.Response,
     next: express.NextFunction,
   ) {
-    if (!request.body || !request.body.uid) {
-      return next(new HttpError('Event uid must be provided', 400));
-    }
-    const event = new Event({ uid: request.body.uid }, request.uow);
-    event.delete()
-      .then(() => {
-        const res = new ResponseBody('Success', 200, event);
-        return this.sendResponse(response, res);
-      })
-      .catch(err => Util.standardErrorHandler(err, next));
+    next(new RouteNotImplementedError('Update deletion is not supported at this time'));
   }
 
-  /**
-   * Updates an existing event
-   * @api {put} /live/event/ Update an existing event
-   * @apiVersion 1.0.0
-   * @apiName Update Event
-   * @apiGroup Events
-   * @apiPermission >= TeamMemberPermission
-   *
-   * @apiParam {String} uid - The uid of the event.
-   * @apiParam {String} eventLocation - The uid of the location for the event.
-   * @apiParam {String} eventStartTime - The unix time for the start of the event.
-   * @apiParam {String} eventEndTime - The unix time for the start of the event.
-   * @apiParam {String} eventTitle - The title of the event.
-   * @apiParam {String} eventDescription - The description of the event.
-   * @apiParam {Enum} eventType - The type of the event. Accepted values: ["food","workshop","activity"]
-   * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
-   * @apiUse IllegalArgumentError
-   */
   private putEventHandler(
     request: IHackpsuRequest,
     response: express.Response,
     next: express.NextFunction,
   ) {
-    if (!request.body || !request.body.event) {
-      return next(new HttpError('No event provided to update', 400));
-    }
-    const event = new Event(request.body, request.uow);
-    event.update()
-      .then(() => {
-        const res = new ResponseBody('Success', 200, { event });
-        return this.sendResponse(response, res);
-      })
-      .catch(err => errorHandler500(err, next));
+    next(new RouteNotImplementedError('Update editing is not supported at this time'));
   }
 
   /**
-   * Create a new event
-   * @api {post} /live/event/ Add a new event
+   * @api {post} /live/updates/ Add a new update
    * @apiVersion 1.0.0
-   * @apiName New Event
-   * @apiGroup Events
-   * @apiPermission >= TeamMemberPermission
+   * @apiName New update
+   * @apiGroup Updates
+   * @apiPermission TeamMemberPermission
    *
-   * @apiParam {String} eventLocation - The uid of the location for the event.
-   * @apiParam {String} eventStartTime - The unix time for the start of the event.
-   * @apiParam {String} eventEndTime - The unix time for the start of the event.
-   * @apiParam {String} eventTitle - The title of the event.
-   * @apiParam {String} eventDescription - The description of the event.
-   * @apiParam {Enum} eventType - The type of the event. Accepted values: ["food","workshop","activity"]
+   * @apiParam {String} updateTitle - The title of the update
+   * @apiParam {String} updateText - The text of the update
+   * @apiParam {String} [updateImage] - The url of the image part of the update.
+   * @apiParam {Boolean} [pushNotification] - Whether to send out a push notification with this update.
    * @apiUse AuthArgumentRequired
    * @apiSuccess {String} Success
    * @apiUse IllegalArgumentError
    */
-  private postEventHandler(
+  private async postUpdateHandler(
     request: IHackpsuRequest,
     response: express.Response,
     next: express.NextFunction,
   ) {
-    if (!request.body.eventLocation) {
-      return next(new HttpError('Event location must be provided', 400));
+    if (!request.body || !request.body.updateTitle) {
+      return next(new HttpError('Update title must be provided', 400));
     }
-    if (!request.body.eventStartTime) {
-      return next(new HttpError('Event start time must be provided', 400));
+    if (!request.body.updateText) {
+      return next(new HttpError('Update message must be provided', 400));
     }
-    if (!request.body.eventEndTime) {
-      return next(new HttpError('Event end time must be provided', 400));
+    if (!request.body.updateImage) {
+      request.body.updateImage = 'https://app.hackpsu.org/assets/images/logo.svg';
     }
-    if (!request.body.eventTitle) {
-      return next(new HttpError('Event title must be provided', 400));
+    const generatedUpdate = new Update(request.body);
+    try {
+      const update = await this.dataMapper.insert(generatedUpdate);
+      // Send out push notification and pass along stream
+      if (generatedUpdate.push_notification) {
+        try {
+          await sendNotification(generatedUpdate.update_title, generatedUpdate.update_text);
+        } catch (error) {
+          logger.error(error);
+        }
+      }
+      const res = new ResponseBody('Success', 200, update);
+      return this.sendResponse(response, res);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
     }
-    if (!request.body.eventDescription) {
-      return next(new HttpError('Event description must be provided', 400));
-    }
-    if (!request.body.eventType) {
-      return next(new HttpError('Event type must be provided', 400));
-    }
-    const event = new Event(request.body, request.uow);
-    event
-      .add()
-      .then(result => {
-        const res = new ResponseBody('Success', 200, { event, result });
-        return this.sendResponse(response, res);
-      })
-      .catch(err => errorHandler500(err, next));
   }
 
   /**
@@ -156,19 +122,44 @@ class UpdatesController extends LiveController {
    *
    * @apiSuccess {String} The database reference to the current updates.
    */
-  private getUpdateReferenceHandler(
+  private async getUpdateReferenceHandler(
     request: IHackpsuRequest,
     response: express.Response,
     next: express.NextFunction,
   ) {
-    Event.getAll(request.uow)
-      .then(stream => {
-        const res = new ResponseBody('Success', 200, stream);
-        return this.sendResponse(response, res);
-      })
-      .catch(err => errorHandler500(err, next));
+    try {
+      const reference = await this.dataMapper.getReference();
+      const res = new ResponseBody('Success', 200, reference);
+      return this.sendResponse(response, res);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /live/updates/ Get all the updates
+   * @apiVersion 1.0.0
+   * @apiName Get Updates
+   * @apiGroup Updates
+   * @apiPermission UserPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {Array} Array of current updates.
+   */
+  private async getUpdateHandler(
+    request: IHackpsuRequest,
+    response: express.Response,
+    next: express.NextFunction,
+  ) {
+    try {
+      const stream = await this.dataMapper.getAll();
+      const res = new ResponseBody('Success', 200, stream);
+      return this.sendResponse(response, res);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 }
 
-const injector = ReflectiveInjector.resolveAndCreate([EventsController]);
-LiveController.registerRouter('/events', injector.get(EventsController));
+LiveController.registerRouter('/events', Util.getInstance([UpdatesController]));

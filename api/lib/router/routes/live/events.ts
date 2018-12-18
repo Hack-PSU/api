@@ -1,19 +1,20 @@
 import express from 'express';
-import { Inject, ReflectiveInjector } from 'injection-js';
+import { Inject, Injectable } from 'injection-js';
 import { IHackpsuRequest } from '../../../JSCommon/hackpsu-request';
 import { Util } from '../../../JSCommon/util';
+import { IEventDataMapper } from '../../../models/event';
 import { Event } from '../../../models/event/Event';
 import { EventDataMapperImpl } from '../../../models/event/EventDataMapperImpl';
 import { IAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations } from '../../../services/auth/RBAC/rbac-types';
-import { IDataMapper } from '../../../services/database';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from './live';
 
+@Injectable()
 class EventsController extends LiveController {
   constructor(
     @Inject('FirebaseAuthService') private authService: IAuthService,
-    @Inject('UpdateDataMapperImpl') private dataMapper: IDataMapper,
+    @Inject('EventDataMapperImpl') private dataMapper: IEventDataMapper,
   ) {
     super();
   }
@@ -55,7 +56,7 @@ class EventsController extends LiveController {
    * @apiSuccess {String} Success
    * @apiUse IllegalArgumentError
    */
-  private deleteEventHandler(
+  private async deleteEventHandler(
     request: IHackpsuRequest,
     response: express.Response,
     next: express.NextFunction,
@@ -63,13 +64,13 @@ class EventsController extends LiveController {
     if (!request.body || !request.body.uid) {
       return next(new HttpError('Event uid must be provided', 400));
     }
-    const event = new Event({ uid: request.body.uid });
-    this.dataMapper.delete(event)
-      .then(() => {
-        const res = new ResponseBody('Success', 200, event);
-        return this.sendResponse(response, res);
-      })
-      .catch(err => Util.standardErrorHandler(err, next));
+    try {
+      await this.dataMapper.delete(request.body.uid);
+      const res = new ResponseBody('Success', 200, request.body.uid);
+      return this.sendResponse(response, res);
+    } catch (error) {
+      Util.standardErrorHandler(error, next);
+    }
   }
 
   /**
@@ -91,7 +92,7 @@ class EventsController extends LiveController {
    * @apiSuccess {String} Success
    * @apiUse IllegalArgumentError
    */
-  private putEventHandler(
+  private async putEventHandler(
     request: IHackpsuRequest,
     response: express.Response,
     next: express.NextFunction,
@@ -100,12 +101,13 @@ class EventsController extends LiveController {
       return next(new HttpError('No event provided to update', 400));
     }
     const event = new Event(request.body);
-    this.dataMapper.update(event)
-      .then(() => {
-        const res = new ResponseBody('Success', 200, { event });
-        return this.sendResponse(response, res);
-      })
-      .catch(err => errorHandler500(err, next));
+    try {
+      await this.dataMapper.update(event);
+      const res = new ResponseBody('Success', 200, { event });
+      return this.sendResponse(response, res);
+    } catch (error) {
+      errorHandler500(error, next);
+    }
   }
 
   /**
@@ -126,7 +128,7 @@ class EventsController extends LiveController {
    * @apiSuccess {String} Success
    * @apiUse IllegalArgumentError
    */
-  private postEventHandler(
+  private async postEventHandler(
     request: IHackpsuRequest,
     response: express.Response,
     next: express.NextFunction,
@@ -150,13 +152,13 @@ class EventsController extends LiveController {
       return next(new HttpError('Event type must be provided', 400));
     }
     const event = new Event(request.body);
-    this.dataMapper.insert(event)
-      .add()
-      .then(result => {
-        const res = new ResponseBody('Success', 200, { event, result });
-        return this.sendResponse(response, res);
-      })
-      .catch(err => errorHandler500(err, next));
+    try {
+      const result = await this.dataMapper.insert(event);
+      const res = new ResponseBody('Success', 200, { event, result });
+      return this.sendResponse(response, res);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 
   /**
@@ -168,19 +170,19 @@ class EventsController extends LiveController {
    *
    * @apiSuccess {Array} Array of current events.
    */
-  private getEventHandler(
+  private async getEventHandler(
     request: IHackpsuRequest,
     response: express.Response,
     next: express.NextFunction,
   ) {
-    this.dataMapper.getAll()
-      .then(stream => {
-        const res = new ResponseBody('Success', 200, stream);
-        return this.sendResponse(response, res);
-      })
-      .catch(err => errorHandler500(err, next));
+    try {
+      const stream = await this.dataMapper.getAll();
+      const res = new ResponseBody('Success', 200, stream);
+      return this.sendResponse(response, res);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 }
 
-const injector = ReflectiveInjector.resolveAndCreate([EventsController]);
-LiveController.registerRouter('/events', injector.get(EventsController));
+LiveController.registerRouter('/events', Util.getInstance([EventsController]));

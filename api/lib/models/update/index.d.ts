@@ -14,6 +14,8 @@ export interface IUpdateDataMapper extends IDataMapper {
   getAll(): Promise<IDbResult<Stream>>;
 
   getCount(): Promise<IDbResult<number>>;
+
+  getReference(): Promise<IDbResult<string>>;
 }
 
 export type UpdateIdType = string;

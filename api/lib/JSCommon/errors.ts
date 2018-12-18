@@ -22,3 +22,14 @@ export function EmailReplacementError(message, key, value) {
 }
 
 EmailReplacementError.prototype = Object.create(Error.prototype);
+
+export function RouteNotImplementedError(message) {
+  this.name = 'RouteNotImplementedError';
+  this.message = message || 'Route not implemented';
+  this.body = { message };
+  const error = new Error(message);
+  error.name = this.name;
+  this.stack = error.stack;
+}
+
+RouteNotImplementedError.prototype = Object.create(Error.prototype);

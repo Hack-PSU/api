@@ -4,7 +4,7 @@ import * as Stringify from 'streaming-json-stringify';
 import { IExpressController } from '.';
 import { ResponseBody } from './response-body';
 
-export class ParentRouter {
+export abstract class ParentRouter {
   public static registerRouter(route: string, router: IExpressController, version: number = 1) {
     this.registeredRoutes.set(`v${version}/route`, router);
   }

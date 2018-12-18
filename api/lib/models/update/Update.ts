@@ -22,12 +22,12 @@ export class Update extends BaseObject {
     throw new Error('Not implemented');
   }
 
-  private update_title: string;
-  private update_text: string;
-  private update_image: string;
-  private update_time: number;
-  private push_notification: boolean;
-  private uid: string;
+  public update_title: string;
+  public update_text: string;
+  public update_image: string;
+  public update_time: number;
+  public push_notification: boolean;
+  public uid: string;
 
   constructor(data: any) {
     super();

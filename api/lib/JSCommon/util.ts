@@ -12,6 +12,7 @@ export class Util {
       case 'PROD': return Environment.PRODUCTION;
       case 'STAGING': return Environment.STAGING;
       case 'TEST': return Environment.TEST;
+      case 'DEBUG': return Environment.DEBUG;
       default: throw new Error('Invalid environment variable read');
     }
   }
@@ -30,7 +31,7 @@ export class Util {
     stream.pipe(Stringify())
       .pipe(res.type('json').status(200))
       .on('end', res.end)
-      .on('error', err => errorHandler500(err, next));
+      .on('error', err => Util.errorHandler500(err, next));
   }
 
   /**
@@ -56,7 +57,8 @@ export class Util {
    * requested type.
    */
   public static getInstance(type: Provider[]) {
-    return ReflectiveInjector.resolveAndCreate(type).get(type);
+    const injector = ReflectiveInjector.resolveAndCreate(type);
+    return injector.get(type[type.length - 1]);
   }
 }
 

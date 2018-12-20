@@ -1,12 +1,12 @@
-import { Injectable } from 'injection-js';
+import { Inject, Injectable } from 'injection-js';
 import { MysqlError, PoolConnection } from 'mysql';
-
-/* eslint-disable no-underscore-dangle */
-import { Stream } from 'stream';
-import * as streamify from 'stream-array';
+import { from, Observable } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
+import { ReadableStream, Stream } from 'ts-stream';
 import { HttpError } from '../../../JSCommon/errors';
 import { logger } from '../../logging/logging';
 import { ICacheService } from '../cache/cache';
+import { IConnectionFactory } from '../connection/connection-factory';
 import { IQueryOpts, IUow } from './uow.service';
 
 export enum SQL_ERRORS {
@@ -38,10 +38,24 @@ export class MysqlUow implements IUow {
     throw error;
   }
 
+  // private connection: PoolConnection;
+  private connectionPromise: Observable<PoolConnection>;
+
   /**
    *
    */
-  constructor(private connection: PoolConnection, private cacheService: ICacheService) {}
+  constructor(
+    @Inject('IConnectionFactory') private connectionFactory: IConnectionFactory,
+    @Inject('ICacheService') private cacheService: ICacheService,
+  ) {
+    this.connectionPromise = from(this.connectionFactory.getConnection())
+      .pipe(
+        catchError((error) => {
+          logger.error(error);
+          throw error;
+        }),
+      );
+  }
 
   /**
    * @param query The query string to query with.
@@ -55,60 +69,66 @@ export class MysqlUow implements IUow {
     params: any[] = [],
     opts: IQueryOpts = { stream: false, cache: false },
   ) {
-    return new Promise<T | Stream>(async (resolve, reject) => {
-      if (opts.cache) { // Check cache
-        try {
-          const result: T = await this.cacheService.get(query);
-          if (result !== null) {
-            if (opts.stream) {
-              resolve(streamify(result));
-              return;
+    return this.connectionPromise
+      .pipe(
+        switchMap((connection: PoolConnection) => {
+          return from(new Promise<T | ReadableStream<T>>(async (resolve, reject) => {
+            if (opts.cache) { // Check cache
+              try {
+                const result: T = await this.cacheService.get(query);
+                if (result !== null) {
+                  if (opts.stream) {
+                    this.complete(connection);
+                    return resolve(Stream.from<T>([result]));
+                  }
+                  this.complete(connection);
+                  return resolve(result);
+                }
+              } catch (err) {
+                // Error checking cache. Fallback silently.
+                logger.error(err);
+              }
             }
-            resolve(result);
-            return;
-          }
-        } catch (err) {
-          // Error checking cache. Fallback silently.
-          logger.error(err);
-        }
-      }
-      this.connection.beginTransaction(() => {
-        this.connection.query(query, params, (err: MysqlError, result: T) => {
-          if (err) {
-            this.connection.rollback();
-            reject(err);
-            return;
-          }
-          // Add result to cache
-          this.cacheService.set(query, result)
-            .catch((cacheError) => logger.error(cacheError));
-          if (opts.stream) {
-            resolve(streamify(result));
-            return;
-          }
-          resolve(result);
-          return;
-        });
-      });
-    })
-    // Gracefully convert MySQL errors to HTTP Errors
+            connection.beginTransaction(() => {
+              connection.query(query, params, (err: MysqlError, result: T) => {
+                if (err) {
+                  connection.rollback();
+                  throw err;
+                }
+                // Add result to cache
+                this.cacheService.set(query, result)
+                  .catch((cacheError) => logger.error(cacheError));
+                if (opts.stream) {
+                  this.complete(connection);
+                  return resolve(Stream.from([result]));
+                }
+                this.complete(connection);
+                return resolve(result);
+              });
+            });
+          }));
+        }),
+      )
+      .toPromise()
+      // Gracefully convert MySQL errors to HTTP Errors
       .catch((err: MysqlError) => MysqlUow.SQLErrorHandler(err));
   }
 
-  public commit() {
-    return new Promise((resolve) => {
-      this.connection.commit(() => {
-        resolve(null);
+  public commit(connection: PoolConnection) {
+    return new Promise<any>((resolve) => {
+      connection.commit(() => {
+        return resolve(null);
       });
     });
   }
 
-  public complete() {
-    return new Promise((resolve) => {
-      this.connection.commit(() => {
-        this.connection.release();
-        resolve(null);
+  public complete(connection: PoolConnection) {
+    return new Promise<any>((resolve) => {
+      connection.commit(() => {
+        connection.release();
+        return resolve(null);
       });
     });
+
   }
 }

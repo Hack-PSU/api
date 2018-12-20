@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: [2, { "allowAfterThis": true }] */
-import * as multer from 'multer';
+import multer from 'multer';
 import { Constants } from '../../assets/constants/constants';
 import { STORAGE_TYPES, StorageFactory } from './storage-factory';
 

@@ -2,7 +2,7 @@ import { Inject, ReflectiveInjector } from 'injection-js';
 import Timeuuid from 'node-time-uuid';
 import { from, Observable } from 'rxjs';
 import { map, shareReplay, switchMap } from 'rxjs/operators';
-import { Stream } from 'stream';
+import { Stream } from 'ts-stream';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { RBAC } from '../../services/auth/RBAC/rbac';
@@ -77,12 +77,12 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
       ).toPromise();
   }
 
-  public getAll(): Promise<IDbResult<Stream>> {
+  public getAll(): Promise<IDbResult<Stream<Update>>> {
     return this.hackathonObservable
       .pipe(
         switchMap((result) => {
           const reference = `/updates/${result[0].uid}`;
-          return from(this.rtdb.query<Stream>(RtdbQueryType.GET, reference, null));
+          return from(this.rtdb.query<Stream<Update>>(RtdbQueryType.GET, reference, null));
         }),
         map((data) => ({ result: 'Success', data })),
       ).toPromise();

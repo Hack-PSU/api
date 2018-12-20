@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as multer from 'multer';
+import multer from 'multer';
 import { GcsStorageEngine } from '../engines/gcs-storage.engine';
 import { IFileUploadLimits } from '../storage-types';
 import { IStorageService } from './storage.service';

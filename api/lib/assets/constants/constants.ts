@@ -14,7 +14,7 @@ export class Constants {
     multipleStatements: true,
     // Required for GCP
     password: Util.readEnv('SQL_PASSWORD', 'secret') || Util.readEnv('RDS_PASSWORD', 'secret'),
-    port: Util.readEnv('SQL_PORT', '3306'),
+    port: parseInt(Util.readEnv('SQL_PORT', '3306'), 10),
     socketPath: `/cloudsql/${Util.readEnv('INSTANCE_CONNECTION_NAME', '')}`,
     timeout: 60 * 60 * 1000,
     typeCast: function castField(field, useDefaultTypeCasting) {
@@ -34,9 +34,10 @@ export class Constants {
   };
 
   public static readonly firebaseDB = {
-    debug: 'https://hackpsu18-debug.firebaseio.com/',
+    debug: 'https://hackpsu18-staging.firebaseio.com/',
     prod: 'https://hackpsu18.firebaseio.com/',
-    test: 'https://hackpsu18-staging.firebaseio.com/',
+    staging: 'https://hackpsu18-staging.firebaseio.com',
+    test: 'https://hackpsu18-test.firebaseio.com/',
   };
 
   public static readonly pushNotifKey = {

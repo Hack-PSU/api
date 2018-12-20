@@ -1,4 +1,4 @@
-import * as Storage from '@google-cloud/storage';
+import Storage from '@google-cloud/storage';
 import * as express from 'express';
 import * as multer from 'multer';
 
@@ -12,7 +12,7 @@ export class GcsStorageEngine implements multer.StorageEngine {
     if (!opts) {
       throw new Error('Cannot pass null options');
     }
-    this.gcobj = storage({
+    this.gcobj = Storage({
       keyFilename: opts.keyFilename,
       projectId: opts.projectId,
     });

@@ -42,7 +42,13 @@ export class Role {
     if (this.name !== role.name) {
       throw new Error('Cannot merge different roles');
     }
-    this._capability = new Set([...this._capability, ...role.capability]);
-    this._inherits = new Set([...this._inherits, ...role.inherits]);
+    this._capability = (!this.capability && !role.capability) ?
+      undefined :
+      new Set([...(this.capability ? this.capability : []), ...(role.capability ? role.capability : [])]);
+    this._inherits = (!this.inherits && !role.inherits) ?
+      undefined :
+      new Set(
+        [...(this.inherits ? this.inherits : []), ...(role.inherits ? role.inherits : [])],
+      );
   }
 }

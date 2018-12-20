@@ -18,21 +18,21 @@ export interface IUow {
    * @param {IQueryOpts} opts Options to modify behavior
    * @returns {Promise<any>}
    */
-  query(query: string | number, params: string | string[], opts: IQueryOpts): Promise<any>;
+  query<T>(query: string | number, params: string | string[], opts: IQueryOpts): Promise<any>;
 
   /**
    * Commit a previously started transaction to the database.
    * Does nothing if a transaction is not active
    * @returns {Promise<any>}
    */
-  commit(): Promise<any>;
+  commit(param?: any): Promise<any>;
 
   /**
    * Commits a previously started transaction to the database
    * and perform any cleanup as needed
    * @returns {Promise<any>}
    */
-  complete(): Promise<any>;
+  complete(param?: any): Promise<any>;
 }
 
 export interface IUowOpts {

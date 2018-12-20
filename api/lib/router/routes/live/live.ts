@@ -4,7 +4,8 @@ import { IExpressController } from '../..';
 import { ParentRouter } from '../../router-types';
 
 @Injectable()
-export class LiveController extends ParentRouter implements IExpressController {
+export default class LiveController extends ParentRouter implements IExpressController {
+  protected static baseRoute = 'live/';
   public router: express.Router;
   constructor() {
     super();

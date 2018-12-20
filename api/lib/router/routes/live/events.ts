@@ -1,45 +1,63 @@
 import express from 'express';
 import { Inject, Injectable } from 'injection-js';
-import { IHackpsuRequest } from '../../../JSCommon/hackpsu-request';
+import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IEventDataMapper } from '../../../models/event';
 import { Event } from '../../../models/event/Event';
 import { EventDataMapperImpl } from '../../../models/event/EventDataMapperImpl';
-import { IAuthService } from '../../../services/auth/auth-types/';
-import { AclOperations } from '../../../services/auth/RBAC/rbac-types';
+import { IAuthService, RBAC } from '../../../services/auth/auth-types/';
+import { FirebaseAuthService } from '../../../services/auth/firebase-auth';
+import { AclOperations, IAcl, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
+import { FirebaseService } from '../../../services/common/firebase/firebase.service';
+import { MemCacheServiceImpl } from '../../../services/database/cache/memcache-impl.service';
+import { IConnectionFactory } from '../../../services/database/connection/connection-factory';
+import { SqlConnectionFactory } from '../../../services/database/connection/sql-connection-factory';
+import { MysqlUow } from '../../../services/database/svc/mysql-uow.service';
 import { ResponseBody } from '../../router-types';
-import { LiveController } from './live';
+import LiveController from './live';
 
 @Injectable()
-class EventsController extends LiveController {
+export default class EventsController extends LiveController {
+
+  protected static baseRoute: string = 'events/';
+
   constructor(
-    @Inject('FirebaseAuthService') private authService: IAuthService,
-    @Inject('EventDataMapperImpl') private dataMapper: IEventDataMapper,
+    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IEventDataMapper') private readonly dataMapper: IEventDataMapper,
+    @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
+    // TODO: Decide if this needs to be a different instance
   ) {
     super();
+    this.routes(this.router);
   }
 
   public routes(app: express.Router): void {
+    if (!this.authService) {
+      return;
+    }
+    if (!this.dataMapper) {
+      return;
+    }
     // Unauthenticated route
-    app.get('/', this.getEventHandler);
+    app.get('/', (req, res, next) => this.getEventHandler(req, res, next));
     // Use authentication
-    app.use(this.authService.authenticationMiddleware);
+    app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
     app
       .post(
         '/',
-        this.authService.verifyAcl(Util.getInstance([EventDataMapperImpl]), AclOperations.CREATE),
-        this.postEventHandler,
+        this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
+        (req, res, next) => this.postEventHandler(req, res, next),
       )
       .put(
         '/',
-        this.authService.verifyAcl(Util.getInstance([EventDataMapperImpl]), AclOperations.UPDATE),
-        this.putEventHandler,
+        this.authService.verifyAcl(this.aclPerm, AclOperations.UPDATE),
+        (req, res, next) => this.putEventHandler(req, res, next),
       )
       .post(
         '/delete',
-        this.authService.verifyAcl(Util.getInstance([EventDataMapperImpl]), AclOperations.DELETE),
-        this.deleteEventHandler,
+        this.authService.verifyAcl(this.aclPerm, AclOperations.DELETE),
+        (req, res, next) => this.deleteEventHandler(req, res, next),
       );
   }
 
@@ -57,7 +75,7 @@ class EventsController extends LiveController {
    * @apiUse IllegalArgumentError
    */
   private async deleteEventHandler(
-    request: IHackpsuRequest,
+    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
@@ -93,7 +111,7 @@ class EventsController extends LiveController {
    * @apiUse IllegalArgumentError
    */
   private async putEventHandler(
-    request: IHackpsuRequest,
+    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
@@ -103,10 +121,10 @@ class EventsController extends LiveController {
     const event = new Event(request.body);
     try {
       await this.dataMapper.update(event);
-      const res = new ResponseBody('Success', 200, { event });
+      const res = new ResponseBody('Success', 200, { result: 'Success', data: event });
       return this.sendResponse(response, res);
     } catch (error) {
-      errorHandler500(error, next);
+      Util.errorHandler500(error, next);
     }
   }
 
@@ -129,7 +147,7 @@ class EventsController extends LiveController {
    * @apiUse IllegalArgumentError
    */
   private async postEventHandler(
-    request: IHackpsuRequest,
+    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
@@ -154,7 +172,7 @@ class EventsController extends LiveController {
     const event = new Event(request.body);
     try {
       const result = await this.dataMapper.insert(event);
-      const res = new ResponseBody('Success', 200, { event, result });
+      const res = new ResponseBody('Success', 200, { result: 'Success', data: { event, result } });
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -171,7 +189,7 @@ class EventsController extends LiveController {
    * @apiSuccess {Array} Array of current events.
    */
   private async getEventHandler(
-    request: IHackpsuRequest,
+    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
@@ -184,5 +202,18 @@ class EventsController extends LiveController {
     }
   }
 }
-
-LiveController.registerRouter('/events', Util.getInstance([EventsController]));
+LiveController.registerRouter(
+  'events',
+  Util.getInstance(
+    [
+      { provide: 'IAcl', useClass: RBAC },
+      { provide: 'FirebaseService', useValue: FirebaseService.instance },
+      { provide: 'IAuthService', useClass: FirebaseAuthService },
+      { provide: 'IConnectionFactory', useClass: SqlConnectionFactory },
+      { provide: 'ICacheService', useClass: MemCacheServiceImpl },
+      { provide: 'MysqlUow', useClass: MysqlUow },
+      { provide: 'IEventDataMapper', useClass: EventDataMapperImpl },
+      EventsController,
+    ],
+  ),
+);

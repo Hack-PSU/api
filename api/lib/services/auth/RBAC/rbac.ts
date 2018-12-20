@@ -8,11 +8,8 @@ export class RBAC implements IAcl {
 
   private readonly roles: Map<string, Role>;
 
-  constructor(roles: Role[]) {
+  constructor() {
     this.roles = new Map<string, Role>();
-    roles.forEach(role => {
-      roles[role.name] = role;
-    });
   }
 
   public registerRBAC(role: Role) {

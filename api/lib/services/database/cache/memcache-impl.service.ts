@@ -1,3 +1,4 @@
+import { Injectable } from 'injection-js';
 import { ICacheService } from './cache.service';
 
 const DEFAULT_SIZE = 100;
@@ -5,24 +6,23 @@ const DEFAULT_SIZE = 100;
 /**
  * In memory LRU Cache implementation
  */
-export class MemCacheImpl implements ICacheService {
+@Injectable()
+export class MemCacheServiceImpl implements ICacheService {
 
-  public static instance() {
-    if (!MemCacheImpl.instanceInternal) {
-      MemCacheImpl.init();
-    }
-    return MemCacheImpl.instanceInternal;
-  }
+  // public static instance() {
+  //   if (!MemCacheServiceImpl.instanceInternal) {
+  //     MemCacheServiceImpl.init();
+  //   }
+  //   return MemCacheServiceImpl.instanceInternal;
+  // }
 
-  /**
-   * Initialize the in memory cache
-   * @param {number} size Size of the cache
-   */
-  public static init(size = DEFAULT_SIZE) {
-    MemCacheImpl.instanceInternal = new MemCacheImpl(size);
-  }
-
-  private static instanceInternal: MemCacheImpl;
+  // /**
+  //  * Initialize the in memory cache
+  //  * @param {number} size Size of the cache
+  //  */
+  // public static init(size = DEFAULT_SIZE) {
+  //   MemCacheServiceImpl.instanceInternal = new MemCacheServiceImpl();
+  // }
 
   public useCache: boolean;
 
@@ -32,9 +32,9 @@ export class MemCacheImpl implements ICacheService {
   /**
    * Private constructor for singleton
    */
-  private constructor(size = DEFAULT_SIZE) {
+  public constructor() {
     this.cache = new Map();
-    this.size = size;
+    this.size = DEFAULT_SIZE;
   }
 
   public get(key: string): Promise<any> {

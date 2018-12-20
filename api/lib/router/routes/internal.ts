@@ -1,21 +1,20 @@
-import express, { NextFunction, Response } from 'express';
+import express, { NextFunction, Response, Request } from 'express';
 import { IExpressController } from '..';
 import { App } from '../../app';
-import { IHackpsuRequest } from '../../JSCommon/hackpsu-request';
+import { HttpError } from '../../JSCommon/errors';
+import { ParentRouter } from '../router-types';
 
 // const Metrics = require('../../services/logging/monitoring');
 
-class InternalController implements IExpressController {
-
+class InternalController extends ParentRouter implements IExpressController {
+  protected static baseRoute = 'internal/';
   private static internalVerifier(
-    request: IHackpsuRequest,
+    request: Request,
     response: Response,
     next: NextFunction,
   ) {
     if (!request.headers['x-appengine-cron']) {
-      const error = new HttpError();
-      error.status = 401;
-      error.message = 'You cannot call internal URLs';
+      const error = new HttpError('You cannot call internal URLs', 401);
       return next(error);
     }
     return next();
@@ -24,6 +23,7 @@ class InternalController implements IExpressController {
   public router: express.Router;
 
   constructor() {
+    super();
     this.router = express.Router();
     this.routes(this.router);
   }
@@ -33,4 +33,4 @@ class InternalController implements IExpressController {
   }
 }
 
-App.registerRouter('/', new InternalController().router, 1);
+App.registerRouter('/', new InternalController(), 1);

@@ -1,19 +1,20 @@
-import { Inject, ReflectiveInjector } from 'injection-js';
+import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Stream } from 'stream';
+import squel = require('squel');
+import { Stream } from 'ts-stream';
+import { EventIdType, IEventDataMapper } from '.';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
-import { RBAC } from '../../services/auth/RBAC/rbac';
-import { IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
-import { IUowOpts } from '../../services/database/svc/uow.service';
+import { IUow, IUowOpts } from '../../services/database/svc/uow.service';
 import { logger } from '../../services/logging/logging';
 import { Event } from './Event';
-import { EventIdType, IEventDataMapper } from './index';
 
+@Injectable()
 export class EventDataMapperImpl extends GenericDataMapper implements IEventDataMapper, IAclPerm {
   public readonly CREATE: string = 'event:create';
   public readonly DELETE: string = 'event:delete';
@@ -23,8 +24,8 @@ export class EventDataMapperImpl extends GenericDataMapper implements IEventData
   protected pkColumnName = 'uid';
   protected tableName = 'EVENTS';
 
-  constructor(@Inject('MysqlUow') private sql: MysqlUow) {
-    super(ReflectiveInjector.resolveAndCreate([RBAC]).get(RBAC));
+  constructor(@Inject('IAcl') acl: IAcl, @Inject('MysqlUow') private sql: MysqlUow) {
+    super(acl);
     super.addRBAC(
       ['event:create', 'event:update', 'event:delete'],
       [AuthLevel.TEAM_MEMBER, AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
@@ -68,7 +69,7 @@ export class EventDataMapperImpl extends GenericDataMapper implements IEventData
       .toPromise();
   }
 
-  public getAll(): Promise<IDbResult<Stream>> {
+  public getAll(): Promise<IDbResult<Stream<Event>>> {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName, 'event')
       .field('event.*')
@@ -78,9 +79,9 @@ export class EventDataMapperImpl extends GenericDataMapper implements IEventData
       .join('HACKATHON', 'h', 'h.uid=event.hackathon and h.active=true')
       .toString()
       .concat(';');
-    return from(this.sql.query<Stream>(query, [], { stream: true, cache: true }))
+    return from(this.sql.query<Event>(query, [], { stream: true, cache: true }))
       .pipe(
-        map((event: Stream) => ({ result: 'Success', data: event })),
+        map((event: Stream<Event>) => ({ result: 'Success', data: event })),
       )
       .toPromise();
   }
@@ -112,7 +113,7 @@ export class EventDataMapperImpl extends GenericDataMapper implements IEventData
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, query.params, { stream: true, cache: true }),
+      this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
     ).toPromise();
@@ -132,7 +133,7 @@ export class EventDataMapperImpl extends GenericDataMapper implements IEventData
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, query.params, { stream: true, cache: true }),
+      this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
     ).toPromise();

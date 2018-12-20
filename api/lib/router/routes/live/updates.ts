@@ -1,57 +1,72 @@
 import express from 'express';
 import { Inject, Injectable } from 'injection-js';
-import { RouteNotImplementedError } from '../../../JSCommon/errors';
-import { IHackpsuRequest } from '../../../JSCommon/hackpsu-request';
+import { HttpError, RouteNotImplementedError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IUpdateDataMapper } from '../../../models/update';
 import { Update } from '../../../models/update/Update';
 import { UpdateDataMapperImpl } from '../../../models/update/UpdateDataMapperImpl';
-import { IAuthService } from '../../../services/auth/auth-types/';
-import { AclOperations } from '../../../services/auth/RBAC/rbac-types';
+import { IAuthService, RBAC } from '../../../services/auth/auth-types/';
+import { FirebaseAuthService } from '../../../services/auth/firebase-auth';
+import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
+import { FirebaseService } from '../../../services/common/firebase/firebase.service';
+import { IPushNotifService } from '../../../services/communication/push-notification';
+import { OnesignalService } from '../../../services/communication/push-notification/onesignal.service';
+import { MemCacheServiceImpl } from '../../../services/database/cache/memcache-impl.service';
+import { RtdbConnectionFactory } from '../../../services/database/connection/rtdb-connection-factory';
+import { SqlConnectionFactory } from '../../../services/database/connection/sql-connection-factory';
+import { MysqlUow } from '../../../services/database/svc/mysql-uow.service';
+import { RtdbUow } from '../../../services/database/svc/rtdb-uow.service';
 import { logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
-import { LiveController } from './live';
+import LiveController from './live';
 
 @Injectable()
-class UpdatesController extends LiveController {
+export default class UpdatesController extends LiveController {
+  protected static baseRoute = 'updates/';
+
   constructor(
-    @Inject('FirebaseAuthService') private authService: IAuthService,
-    @Inject('UpdateDataMapperImpl') private dataMapper: IUpdateDataMapper,
+    @Inject('IAuthService') private authService: IAuthService,
+    @Inject('IUpdateDataMapper') private dataMapper: IUpdateDataMapper,
+    @Inject('IUpdateDataMapper') private acl: IAclPerm,
+    @Inject('IPushNotifService') private notificationService: IPushNotifService,
   ) {
     super();
   }
 
   public routes(app: express.Router): void {
+    if (!this.authService || !this.dataMapper || !this.acl || !this.notificationService) {
+      return;
+    }
     // Unauthenticated route
-    app.get('/reference', this.getUpdateReferenceHandler);
+    app.get('/reference', (req, res, next) => this.getUpdateReferenceHandler(req, res, next));
     // Use authentication
-    app.use(this.authService.authenticationMiddleware);
+    app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
     app
       .get(
         '/',
-        this.authService.verifyAcl(Util.getInstance([UpdateDataMapperImpl]), AclOperations.READ),
-        this.getUpdateHandler,
+        this.authService.verifyAcl(this.acl, AclOperations.READ),
+        (req, res, next) => this.getUpdateHandler(req, res, next),
       )
       .post(
         '/',
-        this.authService.verifyAcl(Util.getInstance([UpdateDataMapperImpl]), AclOperations.CREATE),
-        this.postUpdateHandler,
+        this.authService.verifyAcl(this.acl, AclOperations.CREATE),
+        (req, res, next) => this.postUpdateHandler(req, res, next),
       )
       .put(
         '/',
-        this.authService.verifyAcl(Util.getInstance([UpdateDataMapperImpl]), AclOperations.UPDATE),
-        this.putEventHandler,
+        this.authService.verifyAcl(this.acl, AclOperations.UPDATE),
+        (req, res, next) => this.putEventHandler(req, res, next),
       )
       .post(
         '/delete',
-        this.authService.verifyAcl(Util.getInstance([UpdateDataMapperImpl]), AclOperations.DELETE),
-        this.deleteEventHandler,
+        this.authService.verifyAcl(this.acl, AclOperations.DELETE),
+        (req, res, next) => this.deleteEventHandler(req, res, next),
       );
   }
 
   private deleteEventHandler(
-    request: IHackpsuRequest,
+    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
@@ -59,7 +74,7 @@ class UpdatesController extends LiveController {
   }
 
   private putEventHandler(
-    request: IHackpsuRequest,
+    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
@@ -82,7 +97,7 @@ class UpdatesController extends LiveController {
    * @apiUse IllegalArgumentError
    */
   private async postUpdateHandler(
-    request: IHackpsuRequest,
+    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
@@ -101,7 +116,10 @@ class UpdatesController extends LiveController {
       // Send out push notification and pass along stream
       if (generatedUpdate.push_notification) {
         try {
-          await sendNotification(generatedUpdate.update_title, generatedUpdate.update_text);
+          await this.notificationService.sendNotification(
+            generatedUpdate.update_title,
+            generatedUpdate.update_text,
+          );
         } catch (error) {
           logger.error(error);
         }
@@ -123,7 +141,7 @@ class UpdatesController extends LiveController {
    * @apiSuccess {String} The database reference to the current updates.
    */
   private async getUpdateReferenceHandler(
-    request: IHackpsuRequest,
+    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
@@ -148,7 +166,7 @@ class UpdatesController extends LiveController {
    * @apiSuccess {Array} Array of current updates.
    */
   private async getUpdateHandler(
-    request: IHackpsuRequest,
+    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
@@ -161,5 +179,21 @@ class UpdatesController extends LiveController {
     }
   }
 }
-
-LiveController.registerRouter('/events', Util.getInstance([UpdatesController]));
+LiveController.registerRouter(
+  'updates',
+  Util.getInstance(
+    [
+      { provide: 'IAcl', useClass: RBAC },
+      { provide: 'FirebaseService', useValue: FirebaseService.instance },
+      { provide: 'IAuthService', useClass: FirebaseAuthService },
+      { provide: 'IUpdateDataMapper', useClass: UpdateDataMapperImpl },
+      { provide: 'IConnectionFactory', useClass: SqlConnectionFactory },
+      { provide: 'IPushNotifService', useClass: OnesignalService },
+      { provide: 'IRtdbFactory', useClass: RtdbConnectionFactory },
+      { provide: 'ICacheService', useClass: MemCacheServiceImpl },
+      { provide: 'MysqlUow', useClass: MysqlUow },
+      { provide: 'RtdbUow', useClass: RtdbUow },
+      UpdatesController,
+    ],
+  ),
+);

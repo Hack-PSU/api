@@ -1,3 +1,4 @@
+import fs from 'fs';
 import {
   Connection,
   ConnectionConfig,
@@ -7,6 +8,7 @@ import {
   QueryFunction,
   QueryOptions,
 } from 'mysql';
+import path from 'path';
 import { logger } from '../../logging/logging';
 
 export class MockConnection implements PoolConnection {

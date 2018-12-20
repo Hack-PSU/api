@@ -3,18 +3,21 @@ import * as firebase from 'firebase-admin';
 import { Inject, Injectable } from 'injection-js';
 import 'reflect-metadata';
 import { HttpError } from '../../JSCommon/errors';
-import { IHackpsuRequest } from '../../JSCommon/hackpsu-request';
 import { Environment, Util } from '../../JSCommon/util';
+import { FirebaseService } from '../common/firebase/firebase.service';
 import { logger } from '../logging/logging';
-import { AuthLevel, IAuthService, RBAC } from './auth-types/';
+import { AuthLevel, IAuthService } from './auth-types/';
 import { AclOperations, IAcl, IAclPerm } from './RBAC/rbac-types';
 
 @Injectable()
 export class FirebaseAuthService implements IAuthService {
   private admin: firebase.auth.Auth;
 
-  constructor(@Inject('RBAC') private acl: IAcl) {
-    this.admin = firebase.auth();
+  constructor(
+    @Inject('FirebaseService') private firebaseService: FirebaseService,
+    @Inject('IAcl') private acl: IAcl,
+  ) {
+    this.admin = firebaseService.admin.auth();
   }
 
   /**
@@ -65,10 +68,10 @@ export class FirebaseAuthService implements IAuthService {
    * NOTE: This function requires that response.locals.user is set.
    * @param {IAclPerm} permission The operation permission for the object e.g. event:create
    * @param {AclOperations} requestedOp The requested operation to perform
-   * @returns {(request: IHackpsuRequest, response: e.Response, next: e.NextFunction) => void}
+   * @returns {(request: Request, response: e.Response, next: e.NextFunction) => void}
    */
   public verifyAcl(permission: IAclPerm, requestedOp: AclOperations) {
-    return (request: IHackpsuRequest, response: Response, next: NextFunction) => {
+    return (request: Request, response: Response, next: NextFunction) => {
       // Remove if you require idtoken support locally
       if (Util.getCurrentEnv() === Environment.DEBUG) {
         return next();
@@ -118,33 +121,34 @@ export class FirebaseAuthService implements IAuthService {
   }
 }
 
-/**
- * Makes the provided UID an administrator with the provided privilege level
- * @param uid
- * @param privilege
- * @return {Promise<void>}
- */
-export function elevate(uid, privilege) {
-  return admin.auth().setCustomUserClaims(uid, { admin: true, privilege });
-}
-
-/**
- * Retrieve the userID base on the email provided
- *  @param email
- *  @return Promise{firebase.auth.UserRecord}
- */
-export function getUserId(email) {
-  return admin.auth().getUserByEmail(email);
-}
-
-/**
- *
- * @param uid
- * @return {Promise<firebase.auth.UserRecord>}
- */
-export function getUserData(uid) {
-  return admin.auth().getUser(uid);
-}
+//
+// /**
+//  * Makes the provided UID an administrator with the provided privilege level
+//  * @param uid
+//  * @param privilege
+//  * @return {Promise<void>}
+//  */
+// export function elevate(uid, privilege) {
+//   return admin.auth().setCustomUserClaims(uid, { admin: true, privilege });
+// }
+//
+// /**
+//  * Retrieve the userID base on the email provided
+//  *  @param email
+//  *  @return Promise{firebase.auth.UserRecord}
+//  */
+// export function getUserId(email) {
+//   return admin.auth().getUserByEmail(email);
+// }
+//
+// /**
+//  *
+//  * @param uid
+//  * @return {Promise<firebase.auth.UserRecord>}
+//  */
+// export function getUserData(uid) {
+//   return admin.auth().getUser(uid);
+// }
 
 // /**
 //  * This function checks if the current user has the permissions required to access the function

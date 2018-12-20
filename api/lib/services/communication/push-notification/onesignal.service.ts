@@ -1,3 +1,4 @@
+import { Injectable } from 'injection-js';
 import * as request from 'request';
 import { Constants } from '../../../assets/constants/constants';
 import { IPushNotifService } from './push-notif.service';
@@ -6,14 +7,15 @@ const CONTENT_TYPE = 'application/json; charset=utf-8';
 const APP_URL = 'https://app.hackpsu.org';
 const ONESIGNAL_URL = 'https://onesignal.com/api/v1/notifications';
 
+@Injectable()
 export class OnesignalService implements IPushNotifService {
 
   private readonly authorization;
   private readonly appId: string;
 
-  constructor(apiKey?: string, appId?: string) {
-    this.appId = appId || Constants.pushNotifKey.app_id;
-    this.authorization = `Basic ${apiKey || Constants.pushNotifKey.key}`;
+  constructor() {
+    this.appId = Constants.pushNotifKey.app_id;
+    this.authorization = `Basic ${Constants.pushNotifKey.key}`;
   }
 
   public sendNotification(notificationTitle: string, notificationBody: string) {
@@ -38,7 +40,7 @@ export class OnesignalService implements IPushNotifService {
     };
 
     return new Promise((resolve, reject) => {
-      request(options, (err, response, body) => {
+      request.post(options, (err, response, body) => {
         if (body && body.errors && body.errors.length > 0) {
           reject(body.errors);
         } else {

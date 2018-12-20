@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle,no-param-reassign,class-methods-use-this */
-
+import ajv from 'ajv';
+const ajvValidator = new ajv();
 /**
  * @Abstract
  * @type {BaseObject}
@@ -104,9 +105,9 @@ export default abstract class BaseObject {
    */
   public validate(): { result: boolean, error: string } {
     if (this.schema) {
-      const validate = ajv.compile(this.schema);
+      const validate = ajvValidator.compile(this.schema);
       const result = validate(this) as boolean;
-      return { result, error: result ? null : ajv.errorsText(validate.errors) };
+      return { result, error: result ? null : ajvValidator.errorsText(validate.errors) };
     }
     return { result: true, error: null };
   }

@@ -1,4 +1,4 @@
-import { Stream } from 'stream';
+import { Stream } from 'ts-stream';
 import { IDataMapper, IDbResult } from '../../services/database';
 import { Update } from './Update';
 
@@ -11,7 +11,7 @@ export interface IUpdateDataMapper extends IDataMapper {
 
   delete(id: UpdateIdType): Promise<IDbResult<void>>;
 
-  getAll(): Promise<IDbResult<Stream>>;
+  getAll(): Promise<IDbResult<Stream<Update>>>;
 
   getCount(): Promise<IDbResult<number>>;
 

@@ -1,7 +1,9 @@
-import * as firebase from 'firebase';
-import * as Streamable from 'stream-array';
+import * as firebase from 'firebase-admin';
+import { Inject, Injectable } from 'injection-js';
+import Stream from 'ts-stream';
 import { Environment, Util } from '../../../JSCommon/util';
 import { logger } from '../../logging/logging';
+import { IRtdbFactory } from '../connection/rtdb-factory';
 import { IUow } from './uow.service';
 
 export enum RtdbQueryType {
@@ -13,14 +15,11 @@ export enum RtdbQueryType {
   UPDATE,
 }
 
+@Injectable()
 export class RtdbUow implements IUow {
   private db: firebase.database.Database;
-  /**
-   *
-   * @param database {firebase.database}
-   */
-  constructor(database) {
-    this.db = database;
+  constructor(@Inject('IRtdbFactory') private databaseFactory: IRtdbFactory) {
+    this.db = databaseFactory.getDatabase();
   }
 
   /**
@@ -57,7 +56,7 @@ export class RtdbUow implements IUow {
       this.db.ref(reference)
         .once('value', (data) => {
           const firebaseData = data.val();
-          let result = [];
+          let result: any = [];
           if (firebaseData) {
             result = Object
               .entries(firebaseData)
@@ -67,7 +66,7 @@ export class RtdbUow implements IUow {
                 return r;
               });
           }
-          resolve(new Streamable(result));
+          resolve(Stream.from(result) as unknown as T);
         })
         .catch(reject);
     });

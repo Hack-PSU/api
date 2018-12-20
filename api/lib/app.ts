@@ -1,15 +1,22 @@
-/* eslint-disable import/no-unresolved,no-logger,global-require */
+import dotenv from 'dotenv';
+dotenv.config();
 import * as debugAgent from '@google-cloud/debug-agent';
 import * as traceAgent from '@google-cloud/trace-agent';
 import * as bodyParser from 'body-parser';
-import * as cookieParser from 'cookie-parser';
-import * as cors from 'cors';
-import express, { NextFunction, Response } from 'express';
-import * as helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import express, { NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
+import * as path from 'path';
 import { HttpError } from './JSCommon/errors';
-import { IHackpsuRequest } from './JSCommon/hackpsu-request';
 import { Environment, Util } from './JSCommon/util';
 import { ParentRouter, ResponseBody } from './router/router-types';
+import {
+  EventsController,
+  IndexController,
+  LiveController,
+  UpdatesController,
+} from './router/routes/controllers';
 import { logger } from './services/logging/logging';
 
 // Setup cloud specific trace and debug
@@ -19,12 +26,12 @@ if (Util.getCurrentEnv() === Environment.PRODUCTION) {
 }
 
 export class App extends ParentRouter {
-  private static notFoundHandler(next: NextFunction) {
+  private static notFoundHandler(request, response, next: NextFunction) {
     next(new HttpError('Not Found', 404));
   }
 
   private static errorHandler(error: HttpError, response: Response) {
-    if (Util.getCurrentEnv() === Environment.PRODUCTION) {
+    if (Util.getCurrentEnv() === Environment.PRODUCTION || Util.getCurrentEnv() === Environment.DEBUG) {
       logger.error(error);
     }
     // set locals, only providing error in development
@@ -33,12 +40,8 @@ export class App extends ParentRouter {
 
     // render the error page
     response.status(error.status || 500);
-    if (error.body) {
-      const res = new ResponseBody('Error', error.status || 500, error.body);
-      response.send(res);
-    } else {
-      response.render('error');
-    }
+    const res = new ResponseBody('Error', error.status || 500, error.body);
+    response.send(res);
   }
 
   public app: express.Application;
@@ -54,7 +57,7 @@ export class App extends ParentRouter {
     this.app.set('trust proxy', true);
 
     // Setup database handlers
-    this.uowConfig();
+    // this.uowConfig();
 
     // Setup CORS and other security options
     this.securityConfig();
@@ -101,32 +104,35 @@ export class App extends ParentRouter {
     this.app.use(cookieParser());
   }
 
-  /**
-   * Sets up connections to the database in the form of
-   * units of work.
-   * Each request gets one unit of work with the database,
-   * and this gets closed out once the request completes
-   */
-  private uowConfig() {
+  // /**
+  //  * Sets up connections to the database in the form of
+  //  * units of work.
+  //  * Each request gets one unit of work with the database,
+  //  * and this gets closed out once the request completes
+  //  */
+  // private uowConfig() {
+  //
+  //   // TODO: Create MySQL DB UOW
+  //
+  //   // TODO: Create Realtime DB UOW
+  //   // this.uowCleanupConfig();
+  // }
 
-    // TODO: Create MySQL DB UOW
-
-    // TODO: Create Realtime DB UOW
-    this.uowCleanupConfig();
-  }
-
-  /**
-   * Sets up the cleanup for a UOW on a connected request.
-   * Once the request completes, this will cleanup any pending
-   * connections
-   */
-  private uowCleanupConfig() {
-    this.app.use((request: IHackpsuRequest, response: Response, next: NextFunction) => {
-      const complete = async () => request.uow.complete();
-      response.on('finish', complete);
-      response.on('close', complete);
-    });
-  }
+  // /**
+  //  * Sets up the cleanup for a UOW on a connected request.
+  //  * Once the request completes, this will cleanup any pending
+  //  * connections
+  //  */
+  // private uowCleanupConfig() {
+  //   this.app.use((request: Request, response: Response, next: NextFunction) => {
+  //     if (request.uow) {
+  //       const complete = async () => request.uow.complete();
+  //       response.on('finish', complete);
+  //       response.on('close', complete);
+  //     }
+  //     next();
+  //   });
+  // }
 
   /**
    * Setup CORS and other security related configurations
@@ -156,16 +162,20 @@ export class App extends ParentRouter {
   }
 
   private routerConfig() {
+    App.registerRouter('', new IndexController());
+    App.registerRouter('live', Util.getInstance([LiveController]));
+    // LiveController.registerRouter('live/events', Util.getInstance([EventsController]));
     App.registeredRoutes.forEach((router, key) => {
       this.app.use(key, router.router);
     });
+    this.app.use('', new IndexController().router);
     this.app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 
     // ERROR HANDLERS
     this.app.use(App.notFoundHandler);
     this.app.use((
       error: HttpError,
-      request: IHackpsuRequest,
+      request: Request,
       response: Response,
       next: NextFunction,
     ) => {
@@ -173,4 +183,5 @@ export class App extends ParentRouter {
     });
   }
 }
+
 export default new App().app;

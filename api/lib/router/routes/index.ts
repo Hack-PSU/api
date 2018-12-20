@@ -1,15 +1,17 @@
 import express from 'express';
+import { Injectable } from 'injection-js';
+import 'reflect-metadata';
 import { IExpressController, ResponseBody } from '..';
-import { App } from '../../app';
-import { IHackpsuRequest } from '../../JSCommon/hackpsu-request';
+import { ParentRouter } from '../router-types';
 
-class IndexController implements IExpressController {
+@Injectable()
+export class IndexController extends ParentRouter implements IExpressController {
 
-  private static indexHandler(request: IHackpsuRequest, response: express.Response) {
+  private static indexHandler(request: express.Request, response: express.Response) {
     const r: ResponseBody = new ResponseBody(
       'Welcome to the HackPSU API!',
       200,
-      {},
+      { result: 'Success', data: {} },
     );
     response.status(200)
       .set('content-type', 'application/json')
@@ -18,13 +20,15 @@ class IndexController implements IExpressController {
   public readonly router: express.Router;
 
   constructor() {
+    super();
     this.router = express.Router();
     this.routes(this.router);
   }
 
   public routes(app: express.Router): void {
-    app.get('/', IndexController.indexHandler);
+    app.get('/', (req, res) => IndexController.indexHandler(req, res));
   }
 }
-
-App.registerRouter('/', new IndexController(), 1);
+// const controller = new IndexController();
+// console.log(controller);
+// App.registerRouter('/', new IndexController(), 1);

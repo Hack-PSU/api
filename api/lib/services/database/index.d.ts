@@ -1,4 +1,4 @@
-import { Stream } from 'stream';
+import { Stream } from 'ts-stream';
 
 export interface IDataMapper {
   get(object: any): any;
@@ -9,7 +9,7 @@ export interface IDataMapper {
 
   delete(object: any): any;
 
-  getAll(): Promise<IDbResult<Stream>>;
+  getAll(): Promise<IDbResult<Stream<any>>>;
 
   getCount(): any;
 }

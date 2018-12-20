@@ -1,3 +1,4 @@
+import { Injectable } from 'injection-js';
 import { ICacheService } from './cache.service';
 
 interface IRedisOpts {
@@ -6,6 +7,7 @@ interface IRedisOpts {
   password: string;
 }
 
+@Injectable()
 export class RedisCacheImpl implements ICacheService {
   public static instance() {
     if (!RedisCacheImpl.instanceInternal) {

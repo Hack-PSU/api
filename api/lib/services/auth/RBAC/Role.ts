@@ -1,7 +1,7 @@
 export class Role {
   private readonly _name: string;
   private _capability: Set<string>;
-  private readonly _action: (params: any) => boolean | undefined;
+  private readonly _action: ((params: any) => boolean) | undefined;
   private _inherits: Set<string> | undefined;
 
   public get name(): string {
@@ -12,7 +12,7 @@ export class Role {
     return this._capability;
   }
 
-  public get action(): (params: any) => (boolean | undefined) {
+  public get action(): ((params: any) => boolean) | undefined {
     return this._action;
   }
 
@@ -27,7 +27,7 @@ export class Role {
     inherits?: string[],
   ) {
     this._name = name;
-    this._capability = capability ? new Set<string>(capability) : undefined;
+    this._capability = new Set<string>(capability);
     this._action = action;
     this._inherits = inherits ? new Set<string>(inherits) : undefined;
   }
@@ -42,9 +42,7 @@ export class Role {
     if (this.name !== role.name) {
       throw new Error('Cannot merge different roles');
     }
-    this._capability = (!this.capability && !role.capability) ?
-      undefined :
-      new Set([...(this.capability ? this.capability : []), ...(role.capability ? role.capability : [])]);
+    this._capability = new Set([...this.capability, ...role.capability]);
     this._inherits = (!this.inherits && !role.inherits) ?
       undefined :
       new Set(

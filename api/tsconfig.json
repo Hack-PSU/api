@@ -17,6 +17,7 @@
     "baseUrl": "./lib",
     "outDir": "./dist",
     "experimentalDecorators": true,
+    "strictNullChecks": true,
     "removeComments": false,
     "noImplicitAny": false,
     "esModuleInterop": true

@@ -14,7 +14,7 @@ export class RBAC implements IAcl {
 
   public registerRBAC(role: Role) {
     if (this.roles.has(role.name)) {
-      this.roles.get(role.name).merge(role);
+      this.roles.get(role.name)!.merge(role);
     } else {
       this.roles.set(role.name, role);
     }
@@ -22,7 +22,7 @@ export class RBAC implements IAcl {
 
   public can(role: string, operation: string, params?: any) {
     if (!this.roles.has(role)) return false;
-    const registeredRole: Role = this.roles[role];
+    const registeredRole: Role = this.roles.get(role)!;
     if (registeredRole.capability.has(operation)) {
       if (registeredRole.action) {
         return registeredRole.action(params);

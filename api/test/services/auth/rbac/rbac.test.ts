@@ -1,22 +1,22 @@
 import { expect } from 'chai';
 import 'mocha';
 import { RBAC } from '../../../../lib/services/auth/RBAC/rbac';
+import { Role } from '../../../../lib/services/auth/RBAC/Role';
 
-describe('TEST: RBAC', () => {
+describe('TEST: RBAC Tests', () => {
   describe('TEST: Verify Access Level', () => {
     it('access granted: basic role', () => {
       // GIVEN: RBAC with defined roles
       const rolestring = 'test:role';
       const roles = [
-        {
-          action: undefined,
-          capability: new Set<string>(['read']),
-          inherits: undefined,
-          name: rolestring,
-        },
+        new Role(
+          rolestring,
+          ['read'],
+        ),
       ];
       // WHEN: verifying access
-      const rbac = new RBAC(roles);
+      const rbac = new RBAC();
+      roles.forEach((role) => rbac.registerRBAC(role));
       // THEN: access is granted
       expect(rbac.can(rolestring, 'read'));
     });
@@ -26,7 +26,8 @@ describe('TEST: RBAC', () => {
       const rolestring = 'test:role';
       const roles = [];
       // WHEN: verifying access
-      const rbac = new RBAC(roles);
+      const rbac = new RBAC();
+      roles.forEach((role: Role) => rbac.registerRBAC(role));
       // THEN: access is denied
       expect(!rbac.can(rolestring, 'read'));
     });
@@ -35,15 +36,14 @@ describe('TEST: RBAC', () => {
       // GIVEN: RBAC with defined roles
       const rolestring = 'test:role';
       const roles = [
-        {
-          action: undefined,
-          capability: new Set<string>(['read']),
-          inherits: undefined,
-          name: rolestring,
-        },
+        new Role(
+          rolestring,
+          ['read'],
+        ),
       ];
       // WHEN: verifying access
-      const rbac = new RBAC(roles);
+      const rbac = new RBAC();
+      roles.forEach((role: Role) => rbac.registerRBAC(role));
       // THEN: access is denied
       expect(!rbac.can(rolestring, 'write'));
     });
@@ -53,21 +53,20 @@ describe('TEST: RBAC', () => {
       const rolestring = 'test:role';
       const parent_rolestring = 'test:parentrole';
       const roles = [
-        {
-          action: undefined,
-          capability: new Set<string>(['read']),
-          inherits: new Set<string>([parent_rolestring]),
-          name: rolestring,
-        },
-        {
-          action: undefined,
-          capability: new Set<string>(['read', 'write']),
-          inherits: undefined,
-          name: parent_rolestring,
-        },
+        new Role(
+          rolestring,
+          ['read'],
+          undefined,
+          [parent_rolestring],
+        ),
+        new Role(
+          parent_rolestring,
+          ['read', 'write'],
+        ),
       ];
       // WHEN: verifying access
-      const rbac = new RBAC(roles);
+      const rbac = new RBAC();
+      roles.forEach((role: Role) => rbac.registerRBAC(role));
       // THEN: access is granted
       expect(rbac.can(rolestring, 'write'));
     });
@@ -77,21 +76,20 @@ describe('TEST: RBAC', () => {
       const rolestring = 'test:role';
       const parent_rolestring = 'test:parentrole';
       const roles = [
-        {
-          action: undefined,
-          capability: new Set<string>(['read']),
-          inherits: new Set<string>([parent_rolestring]),
-          name: rolestring,
-        },
-        {
-          action: undefined,
-          capability: new Set<string>(['read', 'write']),
-          inherits: undefined,
-          name: parent_rolestring,
-        },
+        new Role(
+          rolestring,
+          ['read'],
+          undefined,
+          [parent_rolestring],
+        ),
+        new Role(
+          parent_rolestring,
+          ['read', 'write'],
+        ),
       ];
       // WHEN: verifying access
-      const rbac = new RBAC(roles);
+      const rbac = new RBAC();
+      roles.forEach((role: Role) => rbac.registerRBAC(role));
       // THEN: access is granted
       expect(!rbac.can(rolestring, 'delete'));
     });

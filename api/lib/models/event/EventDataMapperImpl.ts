@@ -10,7 +10,7 @@ import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
-import { IUow, IUowOpts } from '../../services/database/svc/uow.service';
+import { IUowOpts } from '../../services/database/svc/uow.service';
 import { logger } from '../../services/logging/logging';
 import { Event } from './Event';
 
@@ -51,16 +51,19 @@ export class EventDataMapperImpl extends GenericDataMapper implements IEventData
     return from(
       this.sql.query(query.text, query.values, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: null })),
+      map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
   }
 
   public get(id: EventIdType, opts?: IUowOpts): Promise<IDbResult<Event>> {
-    const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(this.tableName)
-      .fields((opts && opts.fields) || null)
-      .where(`${this.pkColumnName}= ?`, id)
-      .toParam();
+    let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .from(this.tableName);
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    queryBuilder = queryBuilder
+      .where(`${this.pkColumnName}= ?`, id);
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<Event>(query.text, query.values, { stream: false, cache: true }))
       .pipe(

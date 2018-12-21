@@ -1,10 +1,10 @@
-import { NextFunction, Request, Response } from 'express';
+import express from 'express';
 import * as firebase from 'firebase-admin';
 import { Inject, Injectable } from 'injection-js';
 import 'reflect-metadata';
 import { HttpError } from '../../JSCommon/errors';
 import { Environment, Util } from '../../JSCommon/util';
-import { FirebaseService } from '../common/firebase/firebase.service';
+import { IFirebaseService } from '../common/firebase/firebase-types/firebase-service';
 import { logger } from '../logging/logging';
 import { AuthLevel, IAuthService } from './auth-types/';
 import { AclOperations, IAcl, IAclPerm } from './RBAC/rbac-types';
@@ -14,7 +14,7 @@ export class FirebaseAuthService implements IAuthService {
   private admin: firebase.auth.Auth;
 
   constructor(
-    @Inject('FirebaseService') private firebaseService: FirebaseService,
+    @Inject('FirebaseService') private firebaseService: IFirebaseService,
     @Inject('IAcl') private acl: IAcl,
   ) {
     this.admin = firebaseService.admin.auth();
@@ -39,9 +39,9 @@ export class FirebaseAuthService implements IAuthService {
    * @param next
    */
   public async authenticationMiddleware(
-    request: Request,
-    response: Response,
-    next: NextFunction,
+    request: express.Request,
+    response: express.Response,
+    next: express.NextFunction,
   ) {
     // Allow all requests on local
     if (Util.getCurrentEnv() === Environment.DEBUG) {
@@ -71,7 +71,7 @@ export class FirebaseAuthService implements IAuthService {
    * @returns {(request: Request, response: e.Response, next: e.NextFunction) => void}
    */
   public verifyAcl(permission: IAclPerm, requestedOp: AclOperations) {
-    return (request: Request, response: Response, next: NextFunction) => {
+    return (request: express.Request, response: express.Response, next: express.NextFunction) => {
       // Remove if you require idtoken support locally
       if (Util.getCurrentEnv() === Environment.DEBUG) {
         return next();
@@ -113,11 +113,11 @@ export class FirebaseAuthService implements IAuthService {
    * Returns whether the ACL found is allowed to access the operation of the requested
    * level
    */
-  private aclVerifier(foundAcl: AuthLevel | AuthLevel[], requestedOp: string): boolean {
+  private aclVerifier(foundAcl: AuthLevel | AuthLevel[], requestedOp: string, customParams?: any): boolean {
     if (Array.isArray(foundAcl)) {
-      return (foundAcl as AuthLevel[]).some(acl => this.acl.can(AuthLevel[acl], requestedOp));
+      return (foundAcl as AuthLevel[]).some(acl => this.acl.can(AuthLevel[acl], requestedOp, customParams));
     }
-    return this.acl.can(AuthLevel[foundAcl], requestedOp);
+    return this.acl.can(AuthLevel[foundAcl], requestedOp, customParams);
   }
 }
 

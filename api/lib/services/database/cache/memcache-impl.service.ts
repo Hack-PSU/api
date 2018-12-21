@@ -35,6 +35,7 @@ export class MemCacheServiceImpl implements ICacheService {
   public constructor() {
     this.cache = new Map();
     this.size = DEFAULT_SIZE;
+    this.useCache = true;
   }
 
   public get(key: string): Promise<any> {

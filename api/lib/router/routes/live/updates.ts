@@ -4,18 +4,10 @@ import { HttpError, RouteNotImplementedError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IUpdateDataMapper } from '../../../models/update';
 import { Update } from '../../../models/update/Update';
-import { UpdateDataMapperImpl } from '../../../models/update/UpdateDataMapperImpl';
-import { IAuthService, RBAC } from '../../../services/auth/auth-types/';
-import { FirebaseAuthService } from '../../../services/auth/firebase-auth';
+import { IAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { FirebaseService } from '../../../services/common/firebase/firebase.service';
+import { RootInjector } from '../../../services/common/injector/root-injector';
 import { IPushNotifService } from '../../../services/communication/push-notification';
-import { OnesignalService } from '../../../services/communication/push-notification/onesignal.service';
-import { MemCacheServiceImpl } from '../../../services/database/cache/memcache-impl.service';
-import { RtdbConnectionFactory } from '../../../services/database/connection/rtdb-connection-factory';
-import { SqlConnectionFactory } from '../../../services/database/connection/sql-connection-factory';
-import { MysqlUow } from '../../../services/database/svc/mysql-uow.service';
-import { RtdbUow } from '../../../services/database/svc/rtdb-uow.service';
 import { logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
 import LiveController from './live';
@@ -181,19 +173,6 @@ export default class UpdatesController extends LiveController {
 }
 LiveController.registerRouter(
   'updates',
-  Util.getInstance(
-    [
-      { provide: 'IAcl', useClass: RBAC },
-      { provide: 'FirebaseService', useValue: FirebaseService.instance },
-      { provide: 'IAuthService', useClass: FirebaseAuthService },
-      { provide: 'IUpdateDataMapper', useClass: UpdateDataMapperImpl },
-      { provide: 'IConnectionFactory', useClass: SqlConnectionFactory },
-      { provide: 'IPushNotifService', useClass: OnesignalService },
-      { provide: 'IRtdbFactory', useClass: RtdbConnectionFactory },
-      { provide: 'ICacheService', useClass: MemCacheServiceImpl },
-      { provide: 'MysqlUow', useClass: MysqlUow },
-      { provide: 'RtdbUow', useClass: RtdbUow },
-      UpdatesController,
-    ],
-  ),
+  RootInjector.getInjector()
+    .get(UpdatesController),
 );

@@ -52,10 +52,10 @@ export class Util {
     return false;
   }
 
-  /**
-   * Returns an instance from the Dependency Framework of the
-   * requested type.
-   */
+  // /**
+  //  * Returns an instance from the Dependency Framework of the
+  //  * requested type.
+  //  */
   public static getInstance(type: Provider[]) {
     const injector = ReflectiveInjector.resolveAndCreate(type);
     return injector.get(type[type.length - 1]);

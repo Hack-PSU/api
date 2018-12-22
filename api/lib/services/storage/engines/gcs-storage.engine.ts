@@ -1,6 +1,7 @@
 import Storage from '@google-cloud/storage';
 import * as express from 'express';
 import * as multer from 'multer';
+import { IFile, IGcsStorageEngineOpts } from '../storage-types';
 
 export class GcsStorageEngine implements multer.StorageEngine {
   private gcobj: Storage.Storage;
@@ -8,10 +9,7 @@ export class GcsStorageEngine implements multer.StorageEngine {
   private readonly filenameGenerator: (req: express.Request, file: any) => string;
   private metadata: Storage.WriteStreamOptions;
 
-  constructor(opts: GCSStorageEngine.IGcsStorageEngineOpts) {
-    if (!opts) {
-      throw new Error('Cannot pass null options');
-    }
+  constructor(opts: IGcsStorageEngineOpts) {
     this.gcobj = Storage({
       keyFilename: opts.keyFilename,
       projectId: opts.projectId,
@@ -25,15 +23,15 @@ export class GcsStorageEngine implements multer.StorageEngine {
 
   public _handleFile(
     req: express.Request,
-    file: IStorageService.IFile,
-    cb: (error?: Error, info?: Partial<IStorageService.IFile>) => void,
+    file: IFile,
+    cb: (error?: Error, info?: Partial<IFile>) => void,
   ) {
     try {
       const filename = this.filenameGenerator(req, file);
       const gcFile = this.gcsBucket.file(filename);
       return file.stream.pipe(gcFile.createWriteStream(this.metadata))
         .on('error', (err) => cb(err))
-        .on('finish', () => cb(null, {
+        .on('finish', () => cb(undefined, {
           filename,
           path: `https://${this.gcsBucket.name}.storage.googleapis.com/${filename}`,
         }));
@@ -44,36 +42,12 @@ export class GcsStorageEngine implements multer.StorageEngine {
 
   public _removeFile(
     req: express.Request,
-    file: IStorageService.IFile,
+    file: IFile,
     cb: (error: Error) => void,
   ) {
     const gcFile = this.gcsBucket.file(file.filename);
     gcFile.delete()
-      .then(() => cb(null))
+      .then(() => cb(new Error('successfully deleted')))
       .catch(err => cb(err));
-  }
-}
-
-declare global {
-  namespace GCSStorageEngine {
-    interface IGcsStorageEngineOpts {
-      /*
-       GCS Bucket to use
-       */
-      bucket: string;
-      /*
-       Project on Google Cloud platform
-       */
-      projectId: string;
-      /*
-       Name of file containing private key
-       */
-      keyFilename: string;
-      /*
-       Name of file to upload
-       */
-      filename?: (req: express.Request, file: any) => string;
-      metadata?: Storage.WriteStreamOptions;
-    }
   }
 }

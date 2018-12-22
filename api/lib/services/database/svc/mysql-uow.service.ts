@@ -66,7 +66,7 @@ export class MysqlUow implements IUow {
    */
   public query<T>(
     query: string,
-    params: any[] = [],
+    params: string | string[] = [],
     opts: IQueryOpts = { stream: false, cache: false },
   ) {
     return this.connectionPromise

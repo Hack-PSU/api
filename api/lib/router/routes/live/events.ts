@@ -9,6 +9,7 @@ import { IAuthService, RBAC } from '../../../services/auth/auth-types/';
 import { FirebaseAuthService } from '../../../services/auth/firebase-auth';
 import { AclOperations, IAcl, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { FirebaseService } from '../../../services/common/firebase/firebase.service';
+import { RootInjector } from '../../../services/common/injector/root-injector';
 import { MemCacheServiceImpl } from '../../../services/database/cache/memcache-impl.service';
 import { IConnectionFactory } from '../../../services/database/connection/connection-factory';
 import { SqlConnectionFactory } from '../../../services/database/connection/sql-connection-factory';
@@ -204,16 +205,18 @@ export default class EventsController extends LiveController {
 }
 LiveController.registerRouter(
   'events',
-  Util.getInstance(
-    [
-      { provide: 'IAcl', useClass: RBAC },
-      { provide: 'FirebaseService', useValue: FirebaseService.instance },
-      { provide: 'IAuthService', useClass: FirebaseAuthService },
-      { provide: 'IConnectionFactory', useClass: SqlConnectionFactory },
-      { provide: 'ICacheService', useClass: MemCacheServiceImpl },
-      { provide: 'MysqlUow', useClass: MysqlUow },
-      { provide: 'IEventDataMapper', useClass: EventDataMapperImpl },
-      EventsController,
-    ],
-  ),
+  RootInjector.getInjector()
+    .get(EventsController),
+  // Util.getInstance(
+  //   [
+  //     { provide: 'IAcl', useClass: RBAC },
+  //     { provide: 'FirebaseService', useValue: FirebaseService.instance },
+  //     { provide: 'IAuthService', useClass: FirebaseAuthService },
+  //     { provide: 'IConnectionFactory', useClass: SqlConnectionFactory },
+  //     { provide: 'ICacheService', useClass: MemCacheServiceImpl },
+  //     { provide: 'MysqlUow', useClass: MysqlUow },
+  //     { provide: 'IEventDataMapper', useClass: EventDataMapperImpl },
+  //     EventsController,
+  //   ],
+  // ),
 );

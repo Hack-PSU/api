@@ -1,42 +1,64 @@
 import * as express from 'express';
+import { Injectable } from 'injection-js';
 import multer from 'multer';
 import { GcsStorageEngine } from '../engines/gcs-storage.engine';
-import { IFileUploadLimits } from '../storage-types';
+import { IFile, IFileUploadLimits, IGcsStorageEngineOpts } from '../storage-types';
 import { IStorageService } from './storage.service';
 
 const MAX_FILENUM = 20;
 
-export class IGoogleStorageService implements IStorageService {
+@Injectable()
+export class GoogleStorageService implements IStorageService {
 
   public get upload(): express.RequestHandler {
     return this._upload;
   }
 
-  public readonly fieldName: string;
-  public readonly fileFilter: (file: IStorageService.IFile) => boolean;
-  public readonly readMultipleFiles: boolean;
-  private fileLimits: IFileUploadLimits;
-  private readonly bucket: string;
+  public fieldName: string | undefined;
+  public fileFilter: ((file: IFile) => boolean) | undefined;
+  public readMultipleFiles: boolean | undefined;
+  private fileLimits: IFileUploadLimits | undefined;
+  private bucket: string | undefined;
+  private googleStorageEngine: GcsStorageEngine | undefined;
 
-  private readonly googleStorageEngine: GcsStorageEngine;
+  constructor() {
+    this.setFileFilter();
+    this.setReadMultipleFiles();
+  }
 
-  constructor(
-    fieldName: string,
-    fileFilter: (file: IStorageService.IFile) => boolean = () => true,
-    readMultipleFiles: boolean = false,
-    gcsOptions: GCSStorageEngine.IGcsStorageEngineOpts,
-    fileLimits: IFileUploadLimits,
-  ) {
-    this.fieldName = fieldName;
-    this.fileFilter = fileFilter || null;
-    this.readMultipleFiles = readMultipleFiles || false;
-    this.googleStorageEngine = new GcsStorageEngine(gcsOptions);
+  public setGcsOpts(gcsOptions: IGcsStorageEngineOpts) {
     this.bucket = gcsOptions.bucket;
+    this.googleStorageEngine = new GcsStorageEngine(gcsOptions);
+    return this;
+  }
+
+  public setFieldName(fieldName: string): this {
+    this.fieldName = fieldName;
+    return this;
+  }
+
+  public setFileFilter(fileFilter: (file: IFile) => boolean = () => true) {
+    this.fileFilter = fileFilter;
+    return this;
+  }
+
+  public setReadMultipleFiles(readMultipleFiles: boolean = false) {
+    this.readMultipleFiles = readMultipleFiles;
+    return this;
+  }
+
+  public setBucket(bucket: string) {
+    this.bucket = bucket;
+    return this;
+  }
+
+  public setFileLimits(fileLimits: IFileUploadLimits) {
     this.fileLimits = fileLimits;
+    return this;
   }
 
   public uploadedFileUrl(name: string) {
-    return `https://${this.bucket}.storage.googleapis.com/${name}`;
+    return encodeURI(`https://${this.bucket!}.storage.googleapis.com/${name}`);
   }
 
   private _upload(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -51,13 +73,9 @@ export class IGoogleStorageService implements IStorageService {
     const uploader = multer(opts);
     if (this.readMultipleFiles) {
       return uploader.array(
-        this.fieldName,
-        this.fileLimits.maxNumFiles || MAX_FILENUM,
-      )(
-        req,
-        res,
-        next,
-      );
+        this.fieldName!,
+        this.fileLimits!.maxNumFiles || MAX_FILENUM,
+      )(req, res, next);
     }
     return uploader.single(this.fieldName)(req, res, next);
   }
@@ -68,7 +86,7 @@ export class IGoogleStorageService implements IStorageService {
     callback: (error: (Error | null), acceptFile: boolean) => void,
   ) {
     try {
-      const result = this.fileFilter(file);
+      const result = this.fileFilter!(file as IFile);
       callback(null, result);
     } catch (error) {
       callback(error, false);

@@ -18,6 +18,7 @@ export enum RtdbQueryType {
 @Injectable()
 export class RtdbUow implements IUow {
   private db: firebase.database.Database;
+
   constructor(@Inject('IRtdbFactory') private databaseFactory: IRtdbFactory) {
     this.db = databaseFactory.getDatabase();
   }
@@ -29,7 +30,7 @@ export class RtdbUow implements IUow {
    * @param [data] {Object} Data if query is SET
    * @returns {Promise<DataSnapshot>}
    */
-  public query<T>(query: RtdbQueryType, reference: string, data: any): Promise<T> {
+  public query<T>(query: RtdbQueryType, reference: string, data: any): Promise<T | Stream<T>> {
     if (Util.getCurrentEnv() === Environment.DEBUG) {
       logger.info(query, reference, data);
     }
@@ -52,7 +53,7 @@ export class RtdbUow implements IUow {
   }
 
   public _get<T>(reference) {
-    return new Promise<T>((resolve, reject) => {
+    return new Promise<Stream<T>>((resolve, reject) => {
       this.db.ref(reference)
         .once('value', (data) => {
           const firebaseData = data.val();
@@ -66,7 +67,7 @@ export class RtdbUow implements IUow {
                 return r;
               });
           }
-          resolve(Stream.from(result) as unknown as T);
+          resolve(Stream.from(result) as Stream<T>);
         })
         .catch(reject);
     });
@@ -99,12 +100,14 @@ export class RtdbUow implements IUow {
       this.db.ref(reference)
         .transaction(() => data, (error, committed, snapshot) => {
           if (error) {
-            reject(error);
-          } else {
-            const returnObject = {};
-            returnObject[snapshot.key] = snapshot.val();
-            resolve(returnObject as T);
+            return reject(error);
           }
+          if (!snapshot) {
+            return reject(new Error('Could not write'));
+          }
+          const returnObject = {};
+          returnObject[snapshot.key!] = snapshot.val();
+          resolve(returnObject as T);
         },           true)
         .catch(reject);
     });

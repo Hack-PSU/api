@@ -11,12 +11,8 @@ import * as path from 'path';
 import { HttpError } from './JSCommon/errors';
 import { Environment, Util } from './JSCommon/util';
 import { ParentRouter, ResponseBody } from './router/router-types';
-import {
-  EventsController,
-  IndexController,
-  LiveController,
-  UpdatesController,
-} from './router/routes/controllers';
+import * as Controllers from './router/routes/controllers';
+import { RootInjector } from './services/common/injector/root-injector';
 import { logger } from './services/logging/logging';
 
 // Setup cloud specific trace and debug
@@ -162,13 +158,12 @@ export class App extends ParentRouter {
   }
 
   private routerConfig() {
-    App.registerRouter('', new IndexController());
-    App.registerRouter('live', Util.getInstance([LiveController]));
-    // LiveController.registerRouter('live/events', Util.getInstance([EventsController]));
+    App.registerRouter('', new Controllers.IndexController());
+    App.registerRouter('live', RootInjector.getInjector().get(Controllers.LiveController));
     App.registeredRoutes.forEach((router, key) => {
       this.app.use(key, router.router);
     });
-    this.app.use('', new IndexController().router);
+    this.app.use('', new Controllers.IndexController().router);
     this.app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 
     // ERROR HANDLERS

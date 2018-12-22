@@ -1,5 +1,6 @@
 import * as firebase from 'firebase-admin';
 import { Constants } from '../../../assets/constants/constants';
+// @ts-ignore
 import serviceAccount from '../../../config.json';
 import { Environment, Util } from '../../../JSCommon/util';
 import { IFirebaseService } from './firebase-types/firebase-service';

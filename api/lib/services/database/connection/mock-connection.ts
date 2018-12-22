@@ -28,14 +28,16 @@ export class MockConnection implements PoolConnection {
   public threadId: number | null;
 
   constructor() {
-    const qfn = (query: string, params: any, callback?: queryCallback): Query => {
+    const qfn = (query: string, params: any, callback?: queryCallback): Query | undefined => {
       logger.info(`Query: ${query}\n Params: ${JSON.stringify(params)}`);
       this.noop();
-      callback(
-        null,
-        Array.of(fs.readFileSync(path.join(__dirname, './dump_text'), 'utf-8')),
-      );
-      return null;
+      if (callback) {
+        callback(
+          null,
+          Array.of(fs.readFileSync(path.join(__dirname, './dump_text'), 'utf-8')),
+        );
+      }
+      return undefined;
     };
     this.query = qfn as QueryFunction;
   }
@@ -126,7 +128,7 @@ export class MockConnection implements PoolConnection {
     ev: 'drain' | 'connect' | 'end' | 'fields' | 'error' | 'enqueue' | string,
     callback: (() => void) | ((err?: MysqlError) => void) |
       ((fields: any[]) => void) | ((err: MysqlError) => void) | ((...args: any[]) => void),
-  ): Connection | this {
+  ): Connection | this | undefined {
     return undefined;
   }
 

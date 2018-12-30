@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle,no-param-reassign,class-methods-use-this */
 import ajv from 'ajv';
+
 const ajvValidator = new ajv();
 /**
  * @Abstract
@@ -103,13 +104,18 @@ export default abstract class BaseObject {
    * Validates that the object matches some ajv schema
    * @return {result: boolean, error: string}
    */
-  public validate(): { result: boolean, error: string } {
+  public validate(): { result: boolean, error?: string } {
     if (this.schema) {
       const validate = ajvValidator.compile(this.schema);
       const result = validate(this) as boolean;
-      return { result, error: result ? null : ajvValidator.errorsText(validate.errors) };
+      return {
+        error: result ?
+          undefined :
+          ajvValidator.errorsText(validate.errors as unknown as ajv.ErrorObject[] | undefined),
+        result,
+      };
     }
-    return { result: true, error: null };
+    return { result: true, error: undefined };
   }
 
   // /**

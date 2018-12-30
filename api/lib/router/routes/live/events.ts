@@ -4,21 +4,13 @@ import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IEventDataMapper } from '../../../models/event';
 import { Event } from '../../../models/event/Event';
-import { EventDataMapperImpl } from '../../../models/event/EventDataMapperImpl';
-import { IAuthService, RBAC } from '../../../services/auth/auth-types/';
-import { FirebaseAuthService } from '../../../services/auth/firebase-auth';
-import { AclOperations, IAcl, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { FirebaseService } from '../../../services/common/firebase/firebase.service';
-import { RootInjector } from '../../../services/common/injector/root-injector';
-import { MemCacheServiceImpl } from '../../../services/database/cache/memcache-impl.service';
-import { IConnectionFactory } from '../../../services/database/connection/connection-factory';
-import { SqlConnectionFactory } from '../../../services/database/connection/sql-connection-factory';
-import { MysqlUow } from '../../../services/database/svc/mysql-uow.service';
+import { IAuthService } from '../../../services/auth/auth-types/';
+import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { ResponseBody } from '../../router-types';
-import LiveController from './live';
+import { LiveController } from '../controllers';
 
 @Injectable()
-export default class EventsController extends LiveController {
+export class EventsController extends LiveController {
 
   protected static baseRoute: string = 'events/';
 
@@ -26,7 +18,6 @@ export default class EventsController extends LiveController {
     @Inject('IAuthService') private readonly authService: IAuthService,
     @Inject('IEventDataMapper') private readonly dataMapper: IEventDataMapper,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
-    // TODO: Decide if this needs to be a different instance
   ) {
     super();
     this.routes(this.router);
@@ -203,20 +194,3 @@ export default class EventsController extends LiveController {
     }
   }
 }
-LiveController.registerRouter(
-  'events',
-  RootInjector.getInjector()
-    .get(EventsController),
-  // Util.getInstance(
-  //   [
-  //     { provide: 'IAcl', useClass: RBAC },
-  //     { provide: 'FirebaseService', useValue: FirebaseService.instance },
-  //     { provide: 'IAuthService', useClass: FirebaseAuthService },
-  //     { provide: 'IConnectionFactory', useClass: SqlConnectionFactory },
-  //     { provide: 'ICacheService', useClass: MemCacheServiceImpl },
-  //     { provide: 'MysqlUow', useClass: MysqlUow },
-  //     { provide: 'IEventDataMapper', useClass: EventDataMapperImpl },
-  //     EventsController,
-  //   ],
-  // ),
-);

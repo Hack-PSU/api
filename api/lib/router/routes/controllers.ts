@@ -1,5 +1,5 @@
-import { IndexController } from './index';
-import EventsController from './live/events';
-import UpdatesController from './live/updates';
-import LiveController from './live/live';
-export { IndexController, EventsController, LiveController, UpdatesController };
+export * from '../../app';
+export * from './live/live';
+export * from './index';
+export * from './live/events';
+export * from './live/updates';

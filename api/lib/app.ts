@@ -1,5 +1,10 @@
 import dotenv from 'dotenv';
+
 dotenv.config();
+import 'source-map-support/register';
+import { ExpressProvider } from './services/common/injector/providers';
+
+ExpressProvider.config();
 import * as debugAgent from '@google-cloud/debug-agent';
 import * as traceAgent from '@google-cloud/trace-agent';
 import * as bodyParser from 'body-parser';
@@ -11,10 +16,8 @@ import * as path from 'path';
 import { HttpError } from './JSCommon/errors';
 import { Environment, Util } from './JSCommon/util';
 import { ParentRouter, ResponseBody } from './router/router-types';
-import * as Controllers from './router/routes/controllers';
-import { RootInjector } from './services/common/injector/root-injector';
-import { logger } from './services/logging/logging';
-
+import * as controllers from './router/routes/controllers';
+import { Logger } from './services/logging/logging';
 // Setup cloud specific trace and debug
 if (Util.getCurrentEnv() === Environment.PRODUCTION) {
   traceAgent.start();
@@ -26,9 +29,18 @@ export class App extends ParentRouter {
     next(new HttpError('Not Found', 404));
   }
 
-  private static errorHandler(error: HttpError, response: Response) {
+  public app: express.Application;
+  private logger: Logger = Util.getInstance('BunyanLogger');
+
+  constructor() {
+    super();
+    this.app = express();
+    this.config();
+  }
+
+  private errorHandler(error: HttpError, request: Request, response: Response) {
     if (Util.getCurrentEnv() === Environment.PRODUCTION || Util.getCurrentEnv() === Environment.DEBUG) {
-      logger.error(error);
+      this.logger.error(error);
     }
     // set locals, only providing error in development
     response.locals.message = error.message;
@@ -40,35 +52,32 @@ export class App extends ParentRouter {
     response.send(res);
   }
 
-  public app: express.Application;
-
-  constructor() {
-    super();
-    this.app = express();
-    this.config();
-  }
-
   private config() {
-    // Set proxy settings
-    this.app.set('trust proxy', true);
+    this.loggerConfig()
+      .then(() => {
+        // Set proxy settings
+        this.app.set('trust proxy', true);
 
-    // Setup database handlers
-    // this.uowConfig();
+        // Setup database handlers
+        // this.uowConfig();
 
-    // Setup CORS and other security options
-    this.securityConfig();
+        // Setup CORS and other security options
+        this.securityConfig();
 
-    // Setup views
-    this.viewConfig();
+        // Setup views
+        this.viewConfig();
 
-    // Setup body parser
-    this.parserConfig();
+        // Setup body parser
+        this.parserConfig();
 
-    // Setup static files
-    this.staticFileConfig();
+        // Setup static files
+        this.staticFileConfig();
 
-    // Setup routers
-    this.routerConfig();
+        // Setup routers
+        this.routerConfig();
+      })
+      // @ts-ignore
+      .catch((error) => console.error(error));
   }
 
   /**
@@ -100,36 +109,6 @@ export class App extends ParentRouter {
     this.app.use(cookieParser());
   }
 
-  // /**
-  //  * Sets up connections to the database in the form of
-  //  * units of work.
-  //  * Each request gets one unit of work with the database,
-  //  * and this gets closed out once the request completes
-  //  */
-  // private uowConfig() {
-  //
-  //   // TODO: Create MySQL DB UOW
-  //
-  //   // TODO: Create Realtime DB UOW
-  //   // this.uowCleanupConfig();
-  // }
-
-  // /**
-  //  * Sets up the cleanup for a UOW on a connected request.
-  //  * Once the request completes, this will cleanup any pending
-  //  * connections
-  //  */
-  // private uowCleanupConfig() {
-  //   this.app.use((request: Request, response: Response, next: NextFunction) => {
-  //     if (request.uow) {
-  //       const complete = async () => request.uow.complete();
-  //       response.on('finish', complete);
-  //       response.on('close', complete);
-  //     }
-  //     next();
-  //   });
-  // }
-
   /**
    * Setup CORS and other security related configurations
    * NOTE: SSL is not configured through Express on purpose.
@@ -158,12 +137,13 @@ export class App extends ParentRouter {
   }
 
   private routerConfig() {
-    App.registerRouter('', new Controllers.IndexController());
-    App.registerRouter('live', RootInjector.getInjector().get(Controllers.LiveController));
+    App.registerRouter('', 'IndexController');
+    App.registerRouter('live', 'LiveController');
+    App.registerRouter('internal', 'InternalController', 1);
     App.registeredRoutes.forEach((router, key) => {
-      this.app.use(key, router.router);
+      this.app.use(key, Util.getInstance(router).router);
     });
-    this.app.use('', new Controllers.IndexController().router);
+    this.app.use('', Util.getInstance('IndexController').router);
     this.app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
 
     // ERROR HANDLERS
@@ -174,8 +154,18 @@ export class App extends ParentRouter {
       response: Response,
       next: NextFunction,
     ) => {
-      App.errorHandler(error, response);
+      this.errorHandler(error, request, response);
     });
+  }
+
+  private async loggerConfig() {
+    const loggingMw = await this.logger.mw();
+    this.app.use(loggingMw);
+    this.app.use((request: Request, response, next) => {
+      this.logger.setContext(request);
+      next();
+    });
+    return;
   }
 }
 

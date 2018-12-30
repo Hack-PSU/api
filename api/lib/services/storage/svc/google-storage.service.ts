@@ -1,6 +1,7 @@
 import * as express from 'express';
 import { Injectable } from 'injection-js';
 import multer from 'multer';
+import 'reflect-metadata';
 import { GcsStorageEngine } from '../engines/gcs-storage.engine';
 import { IFile, IFileUploadLimits, IGcsStorageEngineOpts } from '../storage-types';
 import { IStorageService } from './storage.service';

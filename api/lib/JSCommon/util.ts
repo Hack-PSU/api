@@ -1,5 +1,5 @@
-import { Provider, ReflectiveInjector } from 'injection-js';
 import * as Stringify from 'streaming-json-stringify';
+import { RootInjector } from '../services/common/injector/root-injector';
 import { HttpError } from './errors';
 
 export class Util {
@@ -52,13 +52,12 @@ export class Util {
     return false;
   }
 
-  // /**
-  //  * Returns an instance from the Dependency Framework of the
-  //  * requested type.
-  //  */
-  public static getInstance(type: Provider[]) {
-    const injector = ReflectiveInjector.resolveAndCreate(type);
-    return injector.get(type[type.length - 1]);
+  /**
+   * Returns an instance from the Dependency Framework of the
+   * requested type.
+   */
+  public static getInstance(token: string) {
+    return RootInjector.getInjector().get(token);
   }
 }
 

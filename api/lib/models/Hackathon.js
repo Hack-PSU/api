@@ -2,7 +2,7 @@
 import * as squel from 'squel';
 import * as uuid from 'uuid';
 import assets from '../assets/schemas/load-schemas';
-import { logger } from '../services/logging/logging';
+import { Logger }from '../services/logging/logging';
 import BaseObject from './BaseObject';
 
 const hackathonSchema = assets('hackathonSchema');

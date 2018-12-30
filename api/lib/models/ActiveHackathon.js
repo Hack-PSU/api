@@ -1,5 +1,5 @@
 import * as squel from 'squel';
-import { logger } from '../services/logging/logging';
+import { Logger }from '../services/logging/logging';
 import { Hackathon, TABLE_NAME } from './Hackathon';
 
 const squelOptions = {

@@ -11,7 +11,7 @@ interface IRedisOpts {
 export class RedisCacheImpl implements ICacheService {
   public static instance() {
     if (!RedisCacheImpl.instanceInternal) {
-      RedisCacheImpl.init(null);
+      RedisCacheImpl.init({ host: '', username: '', password: '' });
     }
     return RedisCacheImpl.instanceInternal;
   }

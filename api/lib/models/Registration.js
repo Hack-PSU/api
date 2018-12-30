@@ -1,12 +1,12 @@
 /* eslint-disable class-methods-use-this,no-underscore-dangle */
-import * as Chance from 'chance';
-import * as squel from 'squel';
-import { Readable } from 'stream';
-import assets from '../assets/schemas/load-schemas';
-import { HttpError } from '../JSCommon/errors';
-import { IUow } from '../services/database/svc/uow.service';
-import { logger } from '../services/logging/logging';
-import BaseObject from './BaseObject';
+import * as Chance                                     from 'chance';
+import * as squel                                      from 'squel';
+import { Readable }                                    from 'stream';
+import assets                                          from '../assets/schemas/load-schemas';
+import { HttpError }                                   from '../JSCommon/errors';
+import { IUow }                                        from '../services/database/svc/uow.service';
+import { Logger }                                      from '../services/logging/logging';
+import BaseObject                                      from './BaseObject';
 import { Hackathon, TABLE_NAME as HackathonTableName } from './Hackathon';
 
 const registeredUserSchema = assets('registeredUserSchema');

@@ -9,7 +9,8 @@ import {
   QueryOptions,
 } from 'mysql';
 import path from 'path';
-import { logger } from '../../logging/logging';
+import { Util } from '../../../JSCommon/util';
+import { Logger } from '../../logging/logging';
 
 export class MockConnection implements PoolConnection {
 
@@ -21,15 +22,16 @@ export class MockConnection implements PoolConnection {
    * @return {Promise<MockStream>}
    */
   public query: QueryFunction;
-
   public config: ConnectionConfig;
   public createQuery: QueryFunction;
   public state: 'connected' | 'authenticated' | 'disconnected' | 'protocol_error' | string;
   public threadId: number | null;
+  private readonly logger: Logger;
 
   constructor() {
+    this.logger = Util.getInstance('BunyanLogger');
     const qfn = (query: string, params: any, callback?: queryCallback): Query | undefined => {
-      logger.info(`Query: ${query}\n Params: ${JSON.stringify(params)}`);
+      this.logger.info(`Query: ${query}\n Params: ${JSON.stringify(params)}`);
       this.noop();
       if (callback) {
         callback(
@@ -47,7 +49,7 @@ export class MockConnection implements PoolConnection {
    * @return {Promise<any>}
    */
   public beginTransaction(callback: any) {
-    logger.info('Starting transaction');
+    this.logger.info('Starting transaction');
     this.noop();
     callback();
   }
@@ -57,18 +59,18 @@ export class MockConnection implements PoolConnection {
    * @return {Promise<any>}
    */
   public rollback(callback: any) {
-    logger.error('Rolling back');
+    this.logger.error('Rolling back');
     this.noop();
     callback();
   }
 
   public release() {
-    logger.info('Connection released');
+    this.logger.info('Connection released');
     this.noop();
   }
 
   public commit(callback: any) {
-    logger.info('Query committed.');
+    this.logger.info('Query committed.');
     this.noop();
     if (callback) {
       callback();

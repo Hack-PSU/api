@@ -7,7 +7,7 @@ import { ParentRouter } from '../router-types';
 @Injectable()
 export class IndexController extends ParentRouter implements IExpressController {
 
-  private static indexHandler(request: express.Request, response: express.Response) {
+  private static indexHandler(response: express.Response) {
     const r: ResponseBody = new ResponseBody(
       'Welcome to the HackPSU API!',
       200,
@@ -26,9 +26,6 @@ export class IndexController extends ParentRouter implements IExpressController 
   }
 
   public routes(app: express.Router): void {
-    app.get('/', (req, res) => IndexController.indexHandler(req, res));
+    app.get('/', (req, res) => IndexController.indexHandler(res));
   }
 }
-// const controller = new IndexController();
-// console.log(controller);
-// App.registerRouter('/', new IndexController(), 1);

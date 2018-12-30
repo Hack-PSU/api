@@ -6,14 +6,13 @@ import { IUpdateDataMapper } from '../../../models/update';
 import { Update } from '../../../models/update/Update';
 import { IAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { RootInjector } from '../../../services/common/injector/root-injector';
 import { IPushNotifService } from '../../../services/communication/push-notification';
-import { logger } from '../../../services/logging/logging';
+import { Logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
-import LiveController from './live';
+import { LiveController } from '../controllers';
 
 @Injectable()
-export default class UpdatesController extends LiveController {
+export class UpdatesController extends LiveController {
   protected static baseRoute = 'updates/';
 
   constructor(
@@ -21,8 +20,10 @@ export default class UpdatesController extends LiveController {
     @Inject('IUpdateDataMapper') private dataMapper: IUpdateDataMapper,
     @Inject('IUpdateDataMapper') private acl: IAclPerm,
     @Inject('IPushNotifService') private notificationService: IPushNotifService,
+    @Inject('BunyanLogger') private logger: Logger,
   ) {
     super();
+    this.routes(this.router);
   }
 
   public routes(app: express.Router): void {
@@ -113,7 +114,7 @@ export default class UpdatesController extends LiveController {
             generatedUpdate.update_text,
           );
         } catch (error) {
-          logger.error(error);
+          this.logger.error(error);
         }
       }
       const res = new ResponseBody('Success', 200, update);
@@ -171,8 +172,3 @@ export default class UpdatesController extends LiveController {
     }
   }
 }
-LiveController.registerRouter(
-  'updates',
-  RootInjector.getInjector()
-    .get(UpdatesController),
-);

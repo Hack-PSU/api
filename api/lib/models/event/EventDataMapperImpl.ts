@@ -11,7 +11,7 @@ import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
-import { logger } from '../../services/logging/logging';
+import { Logger } from '../../services/logging/logging';
 import { Event } from './Event';
 
 @Injectable()
@@ -24,7 +24,11 @@ export class EventDataMapperImpl extends GenericDataMapper implements IEventData
   protected pkColumnName = 'uid';
   protected tableName = 'EVENTS';
 
-  constructor(@Inject('IAcl') acl: IAcl, @Inject('MysqlUow') private sql: MysqlUow) {
+  constructor(
+    @Inject('IAcl') acl: IAcl,
+    @Inject('MysqlUow') private sql: MysqlUow,
+    @Inject('BunyanLogger') private logger: Logger,
+  ) {
     super(acl);
     super.addRBAC(
       ['event:create', 'event:update', 'event:delete'],
@@ -106,8 +110,8 @@ export class EventDataMapperImpl extends GenericDataMapper implements IEventData
   public insert(object: Event): Promise<IDbResult<Event>> {
     const validation = object.validate();
     if (!validation.result) {
-      logger.warn('Validation failed while adding object.');
-      logger.warn(object.dbRepresentation);
+      this.logger.warn('Validation failed while adding object.');
+      this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
@@ -125,8 +129,8 @@ export class EventDataMapperImpl extends GenericDataMapper implements IEventData
   public update(object: Event): Promise<IDbResult<Event>> {
     const validation = object.validate();
     if (!validation.result) {
-      logger.warn('Validation failed while adding object.');
-      logger.warn(object.dbRepresentation);
+      this.logger.warn('Validation failed while adding object.');
+      this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
     const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })

@@ -1,15 +1,13 @@
 import express from 'express';
 import { NodeReadable, Stream } from 'ts-stream';
-import { IExpressController } from './express-controller';
 import { ResponseBody } from './response-body';
 
 export abstract class ParentRouter {
-  public static registerRouter(route: string, router: IExpressController, version: number = 1) {
-    this.registeredRoutes.set(`/v${version}/${this.baseRoute}${route}`, router);
+  public static registerRouter(route: string, routerToken: string, version: number = 1) {
+    this.registeredRoutes.set(`/v${version}/${this.baseRoute}${route}`, routerToken);
   }
 
-  protected static registeredRoutes: Map<string, IExpressController> =
-    new Map<string, IExpressController>();
+  protected static registeredRoutes: Map<string, string> = new Map<string, string>();
   protected static baseRoute = '';
 
   protected sendResponse(eResponse: express.Response, response: ResponseBody): Promise<any> {

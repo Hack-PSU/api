@@ -1,4 +1,3 @@
-import { MysqlUow } from './svc/mysql-uow.service';
 const squel = require('squel');
 const uuidv4 = require('uuid/v4');
 const Hackathon = require('../../models/Hackathon');

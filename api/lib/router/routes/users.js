@@ -12,7 +12,7 @@ import {
   standardErrorHandler,
   streamHandler,
 } from '../services/functions';
-import { logger } from '../../services/logging/logging';
+import { Logger }from '../../services/logging/logging';
 
 import { Constants } from '../../assets/constants/constants';
 

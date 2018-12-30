@@ -12,7 +12,7 @@ import { GenericDataMapper } from '../../services/database/svc/generic-data-mapp
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { RtdbQueryType, RtdbUow } from '../../services/database/svc/rtdb-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
-import { logger } from '../../services/logging/logging';
+import { Logger } from '../../services/logging/logging';
 import { Hackathon } from '../Hackathon';
 import { IUpdateDataMapper, UpdateIdType } from './index';
 import { Update } from './Update';
@@ -28,7 +28,11 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
 
   private readonly hackathonObservable: Observable<Array<{ uid: string }>>;
 
-  constructor(@Inject('MysqlUow') private sql: MysqlUow, @Inject('RtdbUow') private rtdb: RtdbUow) {
+  constructor(
+    @Inject('MysqlUow') private sql: MysqlUow,
+    @Inject('RtdbUow') private rtdb: RtdbUow,
+    @Inject('BunyanLogger') private logger: Logger,
+  ) {
     super(ReflectiveInjector.resolveAndCreate([RBAC]).get(RBAC));
     super.addRBAC(
       ['update:create', 'update:update', 'update:delete'],
@@ -60,7 +64,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
           `${reference}/${id}`,
           { stream: false, cache: false },
         )),
-        map(() => ({ result: 'Success',  data: null })),
+        map(() => ({ result: 'Success', data: undefined })),
       )
       .toPromise();
   }
@@ -73,7 +77,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
           `${reference}/${id}`,
           { stream: true, cache: true },
         )),
-        map(result => ({ result: 'Success', data: result })),
+        map(result => ({ result: 'Success', data: result as Update })),
       ).toPromise();
   }
 
@@ -82,9 +86,9 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
       .pipe(
         switchMap((result) => {
           const reference = `/updates/${result[0].uid}`;
-          return from(this.rtdb.query<Stream<Update>>(RtdbQueryType.GET, reference, null));
+          return from(this.rtdb.query<Stream<Update>>(RtdbQueryType.GET, reference, undefined));
         }),
-        map((data) => ({ result: 'Success', data })),
+        map((data) => ({ result: 'Success', data: data as Stream<Update> })),
       ).toPromise();
   }
 
@@ -95,7 +99,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
           const reference = `/updates/${result[0].uid}`;
           return this.rtdb.query<number>(RtdbQueryType.COUNT, reference, null);
         }),
-        map((data) => ({ result: 'Success', data })),
+        map((data) => ({ result: 'Success', data: data as number })),
       ).toPromise();
   }
 
@@ -114,15 +118,15 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
             object.dbRepresentation,
           ),
         )),
-        map(result => ({ result: 'Success', data: result })),
+        map(result => ({ result: 'Success', data: result as Update })),
       ).toPromise();
   }
 
   public update(object: Update): Promise<IDbResult<Update>> {
     const validation = object.validate();
     if (!validation.result) {
-      logger.warn('Validation failed while adding object.');
-      logger.warn(object.dbRepresentation);
+      this.logger.warn('Validation failed while adding object.');
+      this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
     return this.hackathonObservable.pipe(
@@ -132,7 +136,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
           `${reference[0].uid}/${object.id}`,
           object.dbRepresentation,
         ))),
-      map(result => ({ result: 'Success', data: result })),
+      map(result => ({ result: 'Success', data: result as Update })),
     ).toPromise();
   }
 
@@ -142,7 +146,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
         const reference = `/updates/${result[0].uid}`;
         return from(this.rtdb.query<string>(RtdbQueryType.REF, reference, null));
       }),
-      map(result => ({ result: 'Success', data: result })),
+      map(result => ({ result: 'Success', data: result as string })),
     )
       .toPromise();
   }

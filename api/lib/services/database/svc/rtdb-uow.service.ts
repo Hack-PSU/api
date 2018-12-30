@@ -2,7 +2,7 @@ import * as firebase from 'firebase-admin';
 import { Inject, Injectable } from 'injection-js';
 import Stream from 'ts-stream';
 import { Environment, Util } from '../../../JSCommon/util';
-import { logger } from '../../logging/logging';
+import { Logger } from '../../logging/logging';
 import { IRtdbFactory } from '../connection/rtdb-factory';
 import { IUow } from './uow.service';
 
@@ -19,7 +19,10 @@ export enum RtdbQueryType {
 export class RtdbUow implements IUow {
   private db: firebase.database.Database;
 
-  constructor(@Inject('IRtdbFactory') private databaseFactory: IRtdbFactory) {
+  constructor(
+    @Inject('IRtdbFactory') private databaseFactory: IRtdbFactory,
+    @Inject('BunyanLogger') private logger: Logger,
+  ) {
     this.db = databaseFactory.getDatabase();
   }
 
@@ -30,9 +33,9 @@ export class RtdbUow implements IUow {
    * @param [data] {Object} Data if query is SET
    * @returns {Promise<DataSnapshot>}
    */
-  public query<T>(query: RtdbQueryType, reference: string, data: any): Promise<T | Stream<T>> {
+  public query<T>(query: RtdbQueryType, reference: string, data?: any): Promise<T | Stream<T>> {
     if (Util.getCurrentEnv() === Environment.DEBUG) {
-      logger.info(query, reference, data);
+      this.logger.info({ query, reference, data });
     }
     this.db.goOnline();
     switch (query) {
@@ -108,7 +111,7 @@ export class RtdbUow implements IUow {
           const returnObject = {};
           returnObject[snapshot.key!] = snapshot.val();
           resolve(returnObject as T);
-        },           true)
+        }, true)
         .catch(reject);
     });
   }

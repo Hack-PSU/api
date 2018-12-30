@@ -36,7 +36,7 @@
   "dependencies": {
     "@fluffy-spoon/substitute": "1.0.66",
     "@google-cloud/debug-agent": "2.6.0",
-    "@google-cloud/logging-bunyan": "0.8.2",
+    "@google-cloud/logging-bunyan": "0.9.5",
     "@google-cloud/monitoring": "0.5.0",
     "@google-cloud/storage": "1.7.0",
     "@google-cloud/trace-agent": "2.10.1",
@@ -78,6 +78,7 @@
     "sinon-express-mock": "2.1.0",
     "squel": "5.12.2",
     "streaming-json-stringify": "3.1.0",
+    "source-map-support": "0.5.9",
     "ts-stream": "2.0.0",
     "tslint": "5.11.0",
     "tslint-config-airbnb": "5.11.0",
@@ -96,7 +97,6 @@
     "mocha": "4.1.0",
     "nodemon": "1.18.4",
     "nyc": "13.1.0",
-    "source-map-support": "0.5.9",
     "ts-node": "7.0.1",
     "typings": "2.1.1"
   },

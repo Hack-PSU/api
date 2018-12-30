@@ -1,12 +1,13 @@
-import express, { NextFunction, Response, Request } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
+import { Injectable } from 'injection-js';
 import { IExpressController } from '..';
-import { App } from '../../app';
 import { HttpError } from '../../JSCommon/errors';
 import { ParentRouter } from '../router-types';
 
 // const Metrics = require('../../services/logging/monitoring');
 
-class InternalController extends ParentRouter implements IExpressController {
+@Injectable()
+export class InternalController extends ParentRouter implements IExpressController {
   protected static baseRoute = 'internal/';
   private static internalVerifier(
     request: Request,
@@ -32,5 +33,3 @@ class InternalController extends ParentRouter implements IExpressController {
     app.use(InternalController.internalVerifier);
   }
 }
-
-App.registerRouter('/', new InternalController(), 1);

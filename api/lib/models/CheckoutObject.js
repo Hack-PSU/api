@@ -1,7 +1,7 @@
 import * as squel from 'squel';
 import assets from '../assets/schemas/load-schemas';
 import { HttpError } from '../JSCommon/errors';
-import { logger } from '../services/logging/logging';
+import { Logger }from '../services/logging/logging';
 import BaseObject from './BaseObject';
 import { Hackathon, TABLE_NAME as HackathonTableName } from './Hackathon';
 import { TABLE_NAME as RegistrationTableName } from './Registration';

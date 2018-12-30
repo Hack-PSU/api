@@ -1,10 +1,10 @@
 import { Inject, Injectable } from 'injection-js';
 import { MysqlError, PoolConnection } from 'mysql';
-import { from, Observable } from 'rxjs';
+import { from, Observable, defer } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { ReadableStream, Stream } from 'ts-stream';
 import { HttpError } from '../../../JSCommon/errors';
-import { logger } from '../../logging/logging';
+import { Logger } from '../../logging/logging';
 import { ICacheService } from '../cache/cache';
 import { IConnectionFactory } from '../connection/connection-factory';
 import { IQueryOpts, IUow } from './uow.service';
@@ -47,11 +47,12 @@ export class MysqlUow implements IUow {
   constructor(
     @Inject('IConnectionFactory') private connectionFactory: IConnectionFactory,
     @Inject('ICacheService') private cacheService: ICacheService,
+    @Inject('BunyanLogger') private logger: Logger,
   ) {
-    this.connectionPromise = from(this.connectionFactory.getConnection())
+    this.connectionPromise = defer<PoolConnection>(() => this.connectionFactory.getConnection())
       .pipe(
         catchError((error) => {
-          logger.error(error);
+          this.logger.error(error);
           throw error;
         }),
       );
@@ -86,7 +87,7 @@ export class MysqlUow implements IUow {
                 }
               } catch (err) {
                 // Error checking cache. Fallback silently.
-                logger.error(err);
+                this.logger.error(err);
               }
             }
             connection.beginTransaction(() => {
@@ -97,7 +98,7 @@ export class MysqlUow implements IUow {
                 }
                 // Add result to cache
                 this.cacheService.set(query, result)
-                  .catch((cacheError) => logger.error(cacheError));
+                  .catch((cacheError) => this.logger.error(cacheError));
                 if (opts.stream) {
                   this.complete(connection);
                   return resolve(Stream.from([result]));

@@ -5,7 +5,7 @@ import 'reflect-metadata';
 import { HttpError } from '../../JSCommon/errors';
 import { Environment, Util } from '../../JSCommon/util';
 import { IFirebaseService } from '../common/firebase/firebase-types/firebase-service';
-import { logger } from '../logging/logging';
+import { Logger } from '../logging/logging';
 import { AuthLevel, IAuthService } from './auth-types/';
 import { AclOperations, IAcl, IAclPerm } from './RBAC/rbac-types';
 
@@ -16,6 +16,7 @@ export class FirebaseAuthService implements IAuthService {
   constructor(
     @Inject('FirebaseService') private firebaseService: IFirebaseService,
     @Inject('IAcl') private acl: IAcl,
+    @Inject('BunyanLogger') private logger: Logger,
   ) {
     this.admin = firebaseService.admin.auth();
   }
@@ -57,7 +58,7 @@ export class FirebaseAuthService implements IAuthService {
       response.locals.privilege = decodedToken.privilege;
       next();
     } catch (e) {
-      logger.info(e);
+      this.logger.info(e);
       const error = new HttpError(e.message || e, 401);
       return next(error);
     }
@@ -113,9 +114,14 @@ export class FirebaseAuthService implements IAuthService {
    * Returns whether the ACL found is allowed to access the operation of the requested
    * level
    */
-  private aclVerifier(foundAcl: AuthLevel | AuthLevel[], requestedOp: string, customParams?: any): boolean {
+  private aclVerifier(
+    foundAcl: AuthLevel | AuthLevel[],
+    requestedOp: string,
+    customParams?: any
+  ): boolean {
     if (Array.isArray(foundAcl)) {
-      return (foundAcl as AuthLevel[]).some(acl => this.acl.can(AuthLevel[acl], requestedOp, customParams));
+      return (foundAcl as AuthLevel[]).some(
+        acl => this.acl.can(AuthLevel[acl], requestedOp, customParams));
     }
     return this.acl.can(AuthLevel[foundAcl], requestedOp, customParams);
   }

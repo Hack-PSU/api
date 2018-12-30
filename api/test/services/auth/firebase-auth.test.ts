@@ -9,6 +9,7 @@ import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { AclOperations, IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { Role } from '../../../lib/services/auth/RBAC/Role';
 import { IFirebaseService } from '../../../lib/services/common/firebase/firebase-types/firebase-service';
+import { Logger } from '../../../lib/services/logging/logging';
 
 // Mocked services
 let firebaseService: IFirebaseService;
@@ -36,7 +37,7 @@ describe('TEST: Firebase Auth Test', () => {
       // @ts-ignore
         .returns(Promise.resolve(testDecodedToken));
       // GIVEN: given a firebase authentication service
-      const firebaseAuthService = new FirebaseAuthService(firebaseService, Substitute.for<IAcl>());
+      const firebaseAuthService = new FirebaseAuthService(firebaseService, Substitute.for<IAcl>(), new Logger());
 
       // WHEN: Checking authentication
       const result = firebaseAuthService.checkAuthentication('test token');
@@ -56,7 +57,7 @@ describe('TEST: Firebase Auth Test', () => {
           Promise.reject(new Error('authentication failed')),
         );
       // GIVEN: a firebase authentication service
-      const firebaseAuthService = new FirebaseAuthService(firebaseService, Substitute.for<IAcl>());
+      const firebaseAuthService = new FirebaseAuthService(firebaseService, Substitute.for<IAcl>(), new Logger());
 
       // WHEN: Checking authentication
       const result = firebaseAuthService.checkAuthentication('test token');
@@ -78,7 +79,7 @@ describe('TEST: Firebase Auth Test', () => {
         // GIVEN: a firebase authentication service and RBAC service
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
-        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac);
+        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
         // GIVEN: environment is set to production
         process.env.APP_ENV = 'PROD';
 
@@ -98,7 +99,7 @@ describe('TEST: Firebase Auth Test', () => {
         // GIVEN: a firebase authentication service and RBAC service
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
-        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac);
+        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
         // GIVEN: environment is set to production
         process.env.APP_ENV = 'PROD';
 
@@ -120,7 +121,7 @@ describe('TEST: Firebase Auth Test', () => {
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege[0]], ['test:access']));
         rbac.registerRBAC(new Role(AuthLevel[privilege[1]], ['test:update']));
-        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac);
+        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
         // GIVEN: environment is set to production
         process.env.APP_ENV = 'PROD';
 
@@ -153,7 +154,7 @@ describe('TEST: Firebase Auth Test', () => {
         let actionResult = true;
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access'], (params) => actionResult));
-        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac);
+        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
         // GIVEN: environment is set to production
         process.env.APP_ENV = 'PROD';
 
@@ -193,7 +194,7 @@ describe('TEST: Firebase Auth Test', () => {
         // GIVEN: a firebase authentication service and RBAC service
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
-        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac);
+        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
         // GIVEN: environment is set to production
         process.env.APP_ENV = 'PROD';
 
@@ -220,7 +221,7 @@ describe('TEST: Firebase Auth Test', () => {
         // GIVEN: a firebase authentication service and RBAC service
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
-        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac);
+        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
         // GIVEN: environment is set to production
         process.env.APP_ENV = 'PROD';
 
@@ -246,7 +247,7 @@ describe('TEST: Firebase Auth Test', () => {
         // GIVEN: a firebase authentication service and RBAC service
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
-        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac);
+        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
         // GIVEN: environment is set to production
         process.env.APP_ENV = 'PROD';
 
@@ -273,7 +274,7 @@ describe('TEST: Firebase Auth Test', () => {
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access2']));
-        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac);
+        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
         // GIVEN: environment is set to production
         process.env.APP_ENV = 'PROD';
 

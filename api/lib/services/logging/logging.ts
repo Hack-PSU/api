@@ -14,11 +14,7 @@ export class Logger {
   public bunyan: bunyan;
   private request?: any;
 
-  public async mw() {
-    const { mw } = await express.middleware({
-      level: 'info',
-      logName: LOGGER_NAME,
-    });
+  constructor() {
     this.bunyan = bunyan.createLogger({
       name: LOGGER_NAME,
       streams: [
@@ -26,6 +22,13 @@ export class Logger {
         { stream: process.stdout, level: 'info' },
         { stream: process.stderr, level: 'error' },
       ],
+    });
+  }
+
+  public async mw() {
+    const { mw } = await express.middleware({
+      level: 'info',
+      logName: LOGGER_NAME,
     });
     return mw;
   }

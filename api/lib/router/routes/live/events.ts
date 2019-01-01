@@ -3,7 +3,7 @@ import { Inject, Injectable } from 'injection-js';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IEventDataMapper } from '../../../models/event';
-import { Event } from '../../../models/event/Event';
+import { Event } from '../../../models/event/event';
 import { IAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { ResponseBody } from '../../router-types';

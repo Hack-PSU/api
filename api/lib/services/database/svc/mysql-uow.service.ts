@@ -38,7 +38,6 @@ export class MysqlUow implements IUow {
     throw error;
   }
 
-  // private connection: PoolConnection;
   private connectionPromise: Observable<PoolConnection>;
 
   /**

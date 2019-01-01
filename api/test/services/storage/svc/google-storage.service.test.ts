@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import * as express from 'express';
 import 'mocha';
 import { mockReq, mockRes } from 'sinon-express-mock';
 import { IFile } from '../../../../lib/services/storage/storage-types';

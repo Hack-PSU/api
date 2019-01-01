@@ -97,7 +97,7 @@ export default abstract class BaseObject {
 
   protected constructor() {
     this.disallowedPropertiesInternal = new Set();
-    this.disallowedProperties = ['_disallowedProperties'];
+    this.disallowedProperties = ['disallowedPropertiesInternal'];
   }
 
   /**

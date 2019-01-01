@@ -3,7 +3,7 @@ import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel = require('squel');
 import { Stream } from 'ts-stream';
-import { EventIdType, IEventDataMapper } from '.';
+import { EventIdType, EventType, IEventDataMapper } from '.';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -12,10 +12,11 @@ import { GenericDataMapper } from '../../services/database/svc/generic-data-mapp
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
-import { Event } from './Event';
+import { Event } from './event';
 
 @Injectable()
 export class EventDataMapperImpl extends GenericDataMapper implements IEventDataMapper, IAclPerm {
+  // ACL permissions
   public readonly CREATE: string = 'event:create';
   public readonly DELETE: string = 'event:delete';
   public readonly READ: string = 'event:read';

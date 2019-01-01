@@ -20,7 +20,7 @@
       "minLength": 1
     },
     "event_description": {
-      "type": "string",
+      "type": ["string", "null"],
       "minLength": 1
     },
     "event_type": {

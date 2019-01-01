@@ -1,4 +1,4 @@
-import { EventDataMapperImpl } from '../../../models/event/EventDataMapperImpl';
+import { EventDataMapperImpl } from '../../../models/event/event-data-mapper-impl';
 import { UpdateDataMapperImpl } from '../../../models/update/UpdateDataMapperImpl';
 import { IndexController } from '../../../router/routes';
 import { InternalController } from '../../../router/routes/internal';

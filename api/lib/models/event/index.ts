@@ -1,8 +1,7 @@
 import { Stream } from 'ts-stream';
 import { IDataMapper, IDbResult } from '../../services/database';
-import { Event } from './Event';
-
-export interface IEventDataMapper extends IDataMapper {
+import { Event, EventType } from './event';
+interface IEventDataMapper extends IDataMapper {
   get(id: EventIdType): Promise<IDbResult<Event>>;
 
   insert(object: Event): Promise<IDbResult<Event>>;
@@ -15,5 +14,6 @@ export interface IEventDataMapper extends IDataMapper {
 
   getCount(): Promise<IDbResult<number>>;
 }
+export { Event, EventType, IEventDataMapper };
 
 export type EventIdType = string;

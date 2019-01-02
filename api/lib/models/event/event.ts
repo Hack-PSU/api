@@ -1,5 +1,6 @@
 import * as uuid from 'uuid';
 import assets from '../../assets/schemas/load-schemas';
+import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 
 const eventSchema = assets('eventSchema');
@@ -11,7 +12,7 @@ export enum EventType {
 }
 
 interface IEventApiModel {
-  uid?: string;
+  uid?: UidType;
   eventLocation: string;
   eventStartTime: number;
   eventEndTime: number;
@@ -30,18 +31,7 @@ export class Event extends BaseObject {
     return this.uid;
   }
 
-  // public static generateTestData() {
-  //   const testObj = new Event({});
-  //   testObj.event_location = chance.integer({ min: 1, max: 73 }).toString();
-  //   testObj.event_start_time = chance.date().getTime();
-  //   testObj.event_end_time = (chance.date({ min: new Date(testObj.event_start_time) }) as Date).getTime();
-  //   testObj.event_title = chance.sentence();
-  //   testObj.event_description = chance.paragraph();
-  //   testObj.event_type = ['food', 'activity', 'workshop'][chance.integer({ min: 0, max: 2 })];
-  //   return testObj;
-  // }
-
-  public readonly uid: string;
+  public readonly uid: UidType;
   public event_location: string;
   public event_start_time: number;
   public event_end_time: number;

@@ -1,0 +1,266 @@
+import { validate } from 'email-validator';
+import express, { NextFunction, Request, Response, Router } from 'express';
+import * as fs from 'fs';
+import { Inject, Injectable } from 'injection-js';
+import * as path from 'path';
+import { IExpressController, ResponseBody } from '..';
+import { UidType } from '../../JSCommon/common-types';
+import { HttpError } from '../../JSCommon/errors';
+import { Util } from '../../JSCommon/util';
+import { IActiveHackathonDataMapper } from '../../models/hackathon/active-hackathon';
+import { IPreRegisterDataMapper, IRegisterDataMapper, Registration } from '../../models/register';
+import { IAuthService } from '../../services/auth/auth-types';
+import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { IEmailService } from '../../services/communication/email';
+import { Logger } from '../../services/logging/logging';
+import { IStorageService } from '../../services/storage';
+import { ParentRouter } from '../router-types';
+
+// TODO: Refactor this to retrieve email template from cloud storage?
+const EMAIL_TEMPLATE_PATH = '../../assets/emails/email_template.html';
+const REGISTRATION_EMAIL_BODY = '../../assets/emails/registration_body.html';
+const emailTemplate = fs.readFileSync(path.join(__dirname, EMAIL_TEMPLATE_PATH), 'utf-8');
+const registrationEmailBody = fs.readFileSync(
+  path.join(__dirname, REGISTRATION_EMAIL_BODY),
+  'utf-8',
+);
+const emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
+
+@Injectable()
+export class RegistrationController extends ParentRouter implements IExpressController {
+
+  private static normaliseRequestBody(registration: any) {
+    /** Converting boolean strings to booleans types in registration */
+    registration.travelReimbursement = registration.travelReimbursement && registration.travelReimbursement === 'true';
+
+    registration.firstHackathon = registration.firstHackathon && registration.firstHackathon === 'true';
+
+    registration.eighteenBeforeEvent = registration.eighteenBeforeEvent && registration.eighteenBeforeEvent === 'true';
+
+    registration.mlhcoc = registration.mlhcoc && registration.mlhcoc === 'true';
+
+    registration.mlhdcp = registration.mlhdcp && registration.mlhdcp === 'true';
+  }
+
+  public router: Router;
+
+  constructor(
+    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IRegisterDataMapper') private readonly dataMapper: IRegisterDataMapper,
+    @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IPreRegisterDataMapper,
+    @Inject('IRegisterDataMapper') private readonly aclPerm: IAclPerm,
+    @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
+    @Inject('IStorageService') private readonly storageService: IStorageService,
+    @Inject('IEmailService') private readonly emailService: IEmailService,
+    @Inject('BunyanLogger') private readonly logger: Logger,
+  ) {
+    super();
+    this.router = express.Router();
+    this.routes(this.router);
+  }
+
+  public routes(app: Router): void {
+    if (!this.authService) {
+      return;
+    }
+    if (!this.dataMapper) {
+      return;
+    }
+    // Unauthenticated routes
+    app.post('/pre', (req, res, next) => this.preRegistrationHandler(req, res, next));
+    // Use authentication
+    app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
+    // Authenticated routes
+    app
+      .post(
+        '/',
+        this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
+        (req, res, next) => this.storageService.upload(req, res, next),
+        (req, res, next) => this.registrationHandler(req, res, next),
+      );
+  }
+
+  private async generateFileName(uid: UidType, firstName: string, lastName: string) {
+    return `${uid}-${firstName}-${lastName}-${await this.activeHackathonDataMapper.activeHackathon.toPromise()}.pdf`;
+  }
+
+  private validateRegistrationFields(registration: any) {
+    if (!registration) {
+      this.logger.error('No registration provided');
+      throw new HttpError('No registration provided', 400);
+    }
+    if (!validate(registration.email)) {
+      this.logger.error('Email used for registration is invalid');
+      throw new HttpError('Email used for registration is invalid', 400);
+    }
+    if (!registration.eighteenBeforeEvent) {
+      this.logger.error('User must be over eighteen years of age to register');
+      throw new HttpError('User must be over eighteen years of age to register', 400);
+    }
+    if (!registration.mlhcoc) {
+      this.logger.error('User must agree to MLH Code of Conduct');
+      throw new HttpError('User must agree to MLH Code of Conduct', 400);
+    }
+    if (!registration.mlhdcp) {
+      this.logger.error('User must agree to MLH data collection policy');
+      throw new HttpError('User must agree to MLH data collection policy', 400);
+    }
+  }
+
+  /**
+   * @api {post} /register/pre Pre-register for HackPSU
+   * @apiVersion 1.0.0
+   * @apiName Add Pre-Registration
+   * @apiGroup Pre Registration
+   * @apiParam {String} email The email ID to register with
+   * @apiPermission None
+   *
+   * @apiSuccess {String} Success
+   * @apiUse IllegalArgumentError
+   */
+  private async preRegistrationHandler(request: Request, response: Response, next: NextFunction) {
+    if (!request.body ||
+      !request.body.email ||
+      !validate(request.body.email)) {
+      return next(new HttpError('Valid email must be provided', 400));
+    }
+    let preRegistration;
+    try {
+      preRegistration = new PreRegistration(request.body.email);
+    } catch (error) {
+      return Util.standardErrorHandler(
+        new HttpError('Some properties were not as expected', 400),
+        next,
+      );
+    }
+    try {
+      const result = await this.preRegDataMapper.insert(preRegistration);
+      const res = new ResponseBody(
+        'Success',
+        200,
+        { result: 'Success', data: { preRegistration, result } },
+      );
+      return this.sendResponse(response, res);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {post} /register/ Register for HackPSU
+   * @apiVersion 1.0.0
+   * @apiName Add Registration
+   * @apiGroup Registration
+   * @apiPermission UserPermission
+   * @apiParamExample {Object} Request-Example: {	req.header: {idtoken: <user's idtoken> }
+   * request.body: {
+   * firstName: "Matt",
+   * lastName: "Stewart",
+   * gender: "Male",
+   * shirtSize: "L",
+   * dietaryRestriction: "Vegetarian",
+   * allergies: "Peanuts",
+   * travelReimbursement: true,
+   * firstHackathon: false,
+   * university: "University of hackathon",
+   * email: matt@email.com,
+   * academicYear: "sophomore",
+   * major: "Communication"
+   * phone: "1234567890"
+   * race: "no-disclose"
+   * codingExperience: "advanced"
+   * uid: "JH123891JDW98E89J3389",
+   * eighteenBeforeEvent: true,
+   * mlhCOC: true,
+   * mlhDCP: true,
+   * referral: "facebook",
+   * project: "My project description",
+   * resume: <FILE_OBJECT>
+   *   }
+   * @apiUse AuthArgumentRequired
+   * @apiParam {String} firstName First name of the user
+   * @apiParam {String} lastName Last name of the user
+   * @apiParam {String} gender Gender of the user
+   * @apiParam {enum} shirtSize [XS, S, M, L, XL, XXL]
+   * @apiParam {String} [dietaryRestriction] The dietary restictions for the user
+   * @apiParam {String} [allergies] Any allergies the user might have
+   * @apiParam {boolean} travelReimbursement=false
+   * @apiParam {boolean} firstHackathon=false Is this the user's first hackathon
+   * @apiParam {String} university The university that the user attends
+   * @apiParam {String} email The user's school email
+   * @apiParam {String} academicYear The user's current year in school
+   * @apiParam {String} major Intended or current major
+   * @apiParam {String} phone The user's phone number (For MLH)
+   * @apiParam {FILE} [resume] The resume file for the user (Max size: 10 MB)
+   * @apiParam {String} [ethnicity] The user's ethnicity
+   * @apiParam {String} codingExperience The coding experience that the user has
+   * @apiParam {String} uid The UID from their Firebase account
+   * @apiParam {boolean} eighteenBeforeEvent=true Will the person be eighteen before the event
+   * @apiParam {boolean} mlhcoc=true Does the user agree to the mlhcoc?
+   * @apiParam {boolean} mlhdcp=true Does the user agree to the mlh dcp?
+   * @apiParam {String} referral Where did the user hear about the Hackathon?
+   * @apiParam {String} project A project description that the user is proud of
+   * @apiParam {String} expectations What the user expects to get from the hackathon
+   * @apiParam {String} veteran=false Is the user a veteran?
+   *
+   * @apiSuccess {String} Success
+   * @apiUse IllegalArgumentError
+   */
+  private async registrationHandler(request: Request, response: Response, next: NextFunction) {
+    // Validate incoming registration
+    try {
+      RegistrationController.normaliseRequestBody(request.body);
+      request.body.uid = response.locals.user.uid;
+      request.body.email = response.locals.user.email;
+      this.validateRegistrationFields(request.body);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+
+    // Save registration
+    if (request.file) {
+      request.body.resume = this.storageService.uploadedFileUrl(
+        await this.generateFileName(
+          request.body.uid,
+          request.body.firstName,
+          request.body.lastName,
+        ),
+      );
+    }
+
+    let registration: Registration;
+    try {
+      registration = new Registration(request.body);
+    } catch (error) {
+      return Util.standardErrorHandler(
+        new HttpError('Some properties were not as expected', 400),
+        next,
+      );
+    }
+    try {
+      const result = await this.dataMapper.insert(registration);
+      const submission = await this.dataMapper.submit(registration);
+      await this.sendRegistrationEmail(registration);
+      const res = new ResponseBody(
+        'Success',
+        200,
+        { result: 'Success', data: { registration, result, submission } },
+      );
+      return this.sendResponse(response, res);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  private async sendRegistrationEmail(registration: Registration) {
+    const html = emailHtml;
+    const preparedHtml = await this.emailService.emailSubstitute(html, registration.firstname);
+    const request = this.emailService.createEmailRequest(
+      registration.email,
+      preparedHtml,
+      'Thank you for your Registration',
+      '',
+    );
+    return this.emailService.sendEmail(request);
+  }
+}

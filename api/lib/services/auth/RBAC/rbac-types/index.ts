@@ -11,6 +11,7 @@ export interface IAclPerm {
   UPDATE: string;
   DELETE: string;
   READ: string;
+  READ_ALL: string;
 }
 
 export enum AclOperations {

@@ -9,11 +9,16 @@ export class Util {
 
   public static getCurrentEnv(): Environment {
     switch (this.readEnv('APP_ENV', '')) {
-      case 'PROD': return Environment.PRODUCTION;
-      case 'STAGING': return Environment.STAGING;
-      case 'TEST': return Environment.TEST;
-      case 'DEBUG': return Environment.DEBUG;
-      default: throw new Error('Invalid environment variable read');
+      case 'PROD':
+        return Environment.PRODUCTION;
+      case 'STAGING':
+        return Environment.STAGING;
+      case 'TEST':
+        return Environment.TEST;
+      case 'DEBUG':
+        return Environment.DEBUG;
+      default:
+        throw new Error(`Invalid environment variable read: ${this.readEnv('APP_ENV', '')}`);
     }
   }
 

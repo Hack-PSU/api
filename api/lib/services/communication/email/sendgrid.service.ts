@@ -1,12 +1,14 @@
 import * as sendgrid from '@sendgrid/mail';
 import * as validator from 'email-validator';
+import { Injectable } from 'injection-js';
 import { EmailReplacementError } from '../../../JSCommon/errors';
 import { IEmailData } from './email-types';
 import { IEmailService } from './email.service';
 
+@Injectable()
 export class SendgridService implements IEmailService {
 
-  public static createEmailRequest(
+  public createEmailRequest(
     email: string,
     htmlContent: string,
     subject: string,
@@ -37,18 +39,20 @@ export class SendgridService implements IEmailService {
    * @return {string} return substituted version of the html
    * @throws EmailReplacementError
    */
-  public static emailSubstitute(html: string, name: string, substitutions: Map<string, string>) {
+  public emailSubstitute(html: string, name: string, substitutions?: Map<string, string>) {
     let subbedHTML = name ? html.replace(/\$name\$/g, name) : html;
-    for (const key in substitutions) {
-      if (substitutions[key] && substitutions[key].length > 0 && key.length > 0) {
-        subbedHTML = subbedHTML.replace(new RegExp(`\\$${key}\\$`, 'g'), substitutions[key]);
-      } else {
-        const error = new EmailReplacementError(
-          'One or more substitution keyword or substitution-text is empty',
-          key,
-          substitutions[key],
-        );
-        throw error;
+    if (substitutions) {
+      for (const key in substitutions) {
+        if (substitutions[key] && substitutions[key].length > 0 && key.length > 0) {
+          subbedHTML = subbedHTML.replace(new RegExp(`\\$${key}\\$`, 'g'), substitutions[key]);
+        } else {
+          const error = new EmailReplacementError(
+            'One or more substitution keyword or substitution-text is empty',
+            key,
+            substitutions[key],
+          );
+          throw error;
+        }
       }
     }
     return subbedHTML;

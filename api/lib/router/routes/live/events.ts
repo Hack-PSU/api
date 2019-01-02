@@ -2,10 +2,10 @@ import express from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
-import { IEventDataMapper } from '../../../models/event';
-import { Event } from '../../../models/event/event';
+import { Event, IEventDataMapper } from '../../../models/event';
 import { IAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
+import { Logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
 
@@ -18,6 +18,7 @@ export class EventsController extends LiveController {
     @Inject('IAuthService') private readonly authService: IAuthService,
     @Inject('IEventDataMapper') private readonly dataMapper: IEventDataMapper,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
+    @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
     super();
     this.routes(this.router);
@@ -31,7 +32,7 @@ export class EventsController extends LiveController {
       return;
     }
     // Unauthenticated route
-    app.get('/', (req, res, next) => this.getEventHandler(req, res, next));
+    app.get('/', (req, res, next) => this.getEventHandler(res, next));
     // Use authentication
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
@@ -110,13 +111,18 @@ export class EventsController extends LiveController {
     if (!request.body || !request.body.event) {
       return next(new HttpError('No event provided to update', 400));
     }
-    const event = new Event(request.body);
+    let event;
+    try {
+      event = new Event(request.body);
+    } catch (error) {
+      return Util.standardErrorHandler(new HttpError('Some properties were not as expected', 401), next);
+    }
     try {
       await this.dataMapper.update(event);
       const res = new ResponseBody('Success', 200, { result: 'Success', data: event });
       return this.sendResponse(response, res);
     } catch (error) {
-      Util.errorHandler500(error, next);
+      return Util.errorHandler500(error, next);
     }
   }
 
@@ -161,7 +167,12 @@ export class EventsController extends LiveController {
     if (!request.body.eventType) {
       return next(new HttpError('Event type must be provided', 400));
     }
-    const event = new Event(request.body);
+    let event;
+    try {
+      event = new Event(request.body);
+    } catch (error) {
+      return Util.standardErrorHandler(new HttpError('Some properties were not as expected', 400), next);
+    }
     try {
       const result = await this.dataMapper.insert(event);
       const res = new ResponseBody('Success', 200, { result: 'Success', data: { event, result } });
@@ -181,11 +192,11 @@ export class EventsController extends LiveController {
    * @apiSuccess {Array} Array of current events.
    */
   private async getEventHandler(
-    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
     try {
+      this.logger.info('Logging to test: event/get');
       const stream = await this.dataMapper.getAll();
       const res = new ResponseBody('Success', 200, stream);
       return this.sendResponse(response, res);

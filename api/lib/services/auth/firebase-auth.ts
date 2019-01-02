@@ -26,8 +26,8 @@ export class FirebaseAuthService implements IAuthService {
    * @param token
    * @return {Promise<admin.auth.DecodedIdToken>}
    */
-  public checkAuthentication(token: string | string[]): Promise<firebase.auth.DecodedIdToken> {
-    return this.admin.verifyIdToken(token as string);
+  public checkAuthentication(token: string): Promise<firebase.auth.DecodedIdToken> {
+    return this.admin.verifyIdToken(token);
   }
 
   /**
@@ -49,18 +49,16 @@ export class FirebaseAuthService implements IAuthService {
       return next();
     }
     if (!request.headers.idtoken) {
-      const error = new HttpError('ID token must be provided', 401);
-      return next(error);
+      return Util.standardErrorHandler(new HttpError('ID token must be provided', 401), next);
     }
     try {
-      const decodedToken = await this.checkAuthentication(request.headers.idtoken);
+      const decodedToken = await this.checkAuthentication(request.headers.idtoken as string);
       response.locals.user = decodedToken;
       response.locals.privilege = decodedToken.privilege;
       next();
     } catch (e) {
       this.logger.info(e);
-      const error = new HttpError(e.message || e, 401);
-      return next(error);
+      return Util.standardErrorHandler(new HttpError(e.message || e, 401), next);
     }
   }
 
@@ -104,7 +102,7 @@ export class FirebaseAuthService implements IAuthService {
       }
       if (!this.aclVerifier(response.locals.user.privilege, requestPermission)) {
         const error = new HttpError('Insufficient permissions for this operation', 401);
-        return next(error);
+        return Util.standardErrorHandler(error, next);
       }
       return next();
     };
@@ -117,7 +115,7 @@ export class FirebaseAuthService implements IAuthService {
   private aclVerifier(
     foundAcl: AuthLevel | AuthLevel[],
     requestedOp: string,
-    customParams?: any
+    customParams?: any,
   ): boolean {
     if (Array.isArray(foundAcl)) {
       return (foundAcl as AuthLevel[]).some(

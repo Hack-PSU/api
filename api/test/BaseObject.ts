@@ -11,7 +11,7 @@ process.env.SQL_DATABASE = 'test';
 
 const MysqlUow = require('../lib/services/mysql_uow');
 const RtdbUow = require('../lib/services/rtdb_uow');
-const { Update } = require('../lib/models/update/Update');
+const { Update } = require('../lib/models/update/update');
 
 const modelFiles = fs.readdirSync('./models')
   .map(a => a.replace(/\.js/g, ''))

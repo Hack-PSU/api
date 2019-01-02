@@ -13,7 +13,12 @@
     "test": "nyc mocha",
     "prod": "APP_ENV=prod npnm run build && npm start",
     "apidoc": "apidoc -i ./lib/routes -o doc/",
-    "debug": "node --inspect ./dist/bin/www"
+    "debug": "node --inspect ./dist/bin/www",
+    "prepare": "npm run gcp-build",
+    "pretest": "npm run gcp-build",
+    "posttest": "npm run lint",
+    "lint": "tslint -p .",
+    "gcp-build": "tsc -p ."
   },
   "nyc": {
     "extension": [

@@ -33,3 +33,14 @@ export function RouteNotImplementedError(message) {
 }
 
 RouteNotImplementedError.prototype = Object.create(Error.prototype);
+
+export function MethodNotImplementedError(message) {
+  this.name = 'MethodNotImplementedError';
+  this.message = message || 'Method not implemented';
+  this.body = { message };
+  const error = new Error(message);
+  error.name = this.name;
+  this.stack = error.stack;
+}
+
+MethodNotImplementedError.prototype = Object.create(Error.prototype);

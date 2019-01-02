@@ -2,7 +2,6 @@ import express from 'express';
 import { Injectable } from 'injection-js';
 import 'reflect-metadata';
 import { IExpressController, ResponseBody } from '../..';
-import { Util } from '../../../JSCommon/util';
 import { ParentRouter } from '../../router-types';
 
 @Injectable()

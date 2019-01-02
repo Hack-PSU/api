@@ -38,7 +38,7 @@ export class App extends ParentRouter {
     this.config();
   }
 
-  private errorHandler(error: HttpError, request: Request, response: Response) {
+  private errorHandler(error: HttpError, request: Request, response: Response, next: NextFunction) {
     if (Util.getCurrentEnv() === Environment.PRODUCTION || Util.getCurrentEnv() === Environment.DEBUG) {
       this.logger.error(error);
     }
@@ -50,6 +50,7 @@ export class App extends ParentRouter {
     response.status(error.status || 500);
     const res = new ResponseBody('Error', error.status || 500, error.body);
     response.send(res);
+    next();
   }
 
   private config() {
@@ -76,7 +77,6 @@ export class App extends ParentRouter {
         // Setup routers
         this.routerConfig();
       })
-      // @ts-ignore
       .catch((error) => console.error(error));
   }
 
@@ -140,6 +140,7 @@ export class App extends ParentRouter {
     App.registerRouter('', 'IndexController');
     App.registerRouter('live', 'LiveController');
     App.registerRouter('internal', 'InternalController', 1);
+    App.registerRouter('register', 'RegistrationController');
     App.registeredRoutes.forEach((router, key) => {
       this.app.use(key, Util.getInstance(router).router);
     });
@@ -154,7 +155,7 @@ export class App extends ParentRouter {
       response: Response,
       next: NextFunction,
     ) => {
-      this.errorHandler(error, request, response);
+      this.errorHandler(error, request, response, next);
     });
   }
 

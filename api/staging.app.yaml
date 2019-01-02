@@ -8,3 +8,4 @@ automatic_scaling:
   max_instances: 1
 env_variables:
   GCLOUD_ENV: "staging"
+  APP_ENV: "STAGING"

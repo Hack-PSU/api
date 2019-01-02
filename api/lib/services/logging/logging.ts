@@ -37,30 +37,30 @@ export class Logger {
     this.request = request;
   }
 
-  public debug(message: any) {
+  public debug(...message: any) {
     if (this.request) {
-      this.request.log.debug(message);
+      this.request.log.debug(...message);
     }
     this.bunyan.debug(message);
   }
 
-  public info(message: any) {
+  public info(...message: any) {
     if (this.request) {
-      this.request.log.info(message);
+      this.request.log.info(...message);
     }
     this.bunyan.info(message);
   }
 
-  public error(message: any) {
+  public error(...message: any) {
     if (this.request) {
-      this.request.log.error(message);
+      this.request.log.error(...message);
     }
     this.bunyan.error(message);
   }
 
-  public warn(message: any) {
+  public warn(...message: any) {
     if (this.request) {
-      this.request.log.warn(message);
+      this.request.log.warn(...message);
     }
     this.bunyan.warn(message);
   }

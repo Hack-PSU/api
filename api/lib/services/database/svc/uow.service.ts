@@ -1,4 +1,5 @@
 import * as squel from 'squel';
+import { UidType } from '../../../JSCommon/common-types';
 
 /**
  * A wrapper around connecting to a database backend. Performs "one unit of work" with each call.
@@ -40,7 +41,8 @@ export interface IUowOpts {
   query?: squel.ParamString;
   startAt?: number;
   count?: number;
-  currentHackathon?: boolean,
+  byHackathon?: boolean;
+  hackathon?: UidType;
 }
 
 export interface IQueryOpts {

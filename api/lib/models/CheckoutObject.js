@@ -58,7 +58,7 @@ export class CheckoutObject extends BaseObject {
       .limit(opts.count || null)
       .join('CHECKOUT_ITEMS', 'i', 'item_id=i.uid')
       .join(RegistrationTableName, 'u', 'user_id=u.uid');
-    if (opts.currentHackathon) {
+    if (opts.byHackathon) {
       query = query.join(
         HackathonTableName,
         'h',

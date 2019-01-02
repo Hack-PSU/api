@@ -3,7 +3,7 @@ import { Inject, Injectable } from 'injection-js';
 import { HttpError, RouteNotImplementedError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IUpdateDataMapper } from '../../../models/update';
-import { Update } from '../../../models/update/Update';
+import { Update } from '../../../models/update/update';
 import { IAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IPushNotifService } from '../../../services/communication/push-notification';

@@ -9,10 +9,7 @@ export class SqlConnectionFactory implements IConnectionFactory {
   private dbConnection: Pool;
 
   constructor() {
-    if (Util.readEnv(
-      'INSTANCE_CONNECTION_NAME',
-      '',
-    ) && Util.getCurrentEnv() === Environment.PRODUCTION) {
+    if (Util.readEnv('INSTANCE_CONNECTION_NAME', '') !== '') {
       Constants.sqlConnection.host = '';
     } else {
       Constants.sqlConnection.socketPath = '';

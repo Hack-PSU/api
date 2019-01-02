@@ -2,7 +2,7 @@
 const database = require('../../services/database');
 const authenticator = require('../../services/auth/firebase-auth');
 
-const { Update: UpdateModel } = require('../../models/update/Update');
+const { Update: UpdateModel } = require('../../models/update/update');
 const { Event: EventModel } = require('../../models/event/event');
 
 const { sendNotification } = require('../services/functions');

@@ -18,6 +18,7 @@ node_modules/
 # Encrypted files
 *.env.aes
 .privatekey.aes
+hackpsu18-ecc9dc4878c6.json.enc
 *.yaml
 *.yml
 .ebignore
@@ -34,4 +35,6 @@ cloud_sql_proxy
 .idea/
 .ebextensions/
 .DS_Store/
-hackpsu18-ecc9dc4878c6.json.enc
+
+# Other files
+lib/assets/travel_reimbursement_files

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from 'injection-js';
 import { MysqlError, PoolConnection } from 'mysql';
-import { from, Observable, defer } from 'rxjs';
+import { defer, from, Observable } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { ReadableStream, Stream } from 'ts-stream';
 import { HttpError } from '../../../JSCommon/errors';

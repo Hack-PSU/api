@@ -33,7 +33,7 @@ module.exports.PreRegistration = class PreRegistration extends BaseObject {
    * @return {Promise<Stream>}
    */
   static getAll(uow, opts) {
-    if (opts && opts.currentHackathon) {
+    if (opts && opts.byHackathon) {
       const query = squel.select({
         autoQuoteTableNames: opts.quoteFields !== false,
         autoQuoteFieldNames: opts.quoteFields !== false,

@@ -1,8 +1,9 @@
 import { Inject, ReflectiveInjector } from 'injection-js';
 import Timeuuid from 'node-time-uuid';
-import { from, Observable } from 'rxjs';
-import { map, shareReplay, switchMap } from 'rxjs/operators';
+import { from } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { Stream } from 'ts-stream';
+import { IUpdateDataMapper, UpdateIdType } from '.';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { RBAC } from '../../services/auth/RBAC/rbac';
@@ -13,33 +14,32 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { RtdbQueryType, RtdbUow } from '../../services/database/svc/rtdb-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
-import { Hackathon } from '../Hackathon';
-import { IUpdateDataMapper, UpdateIdType } from './index';
-import { Update } from './Update';
+import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
+import { Update } from './update';
 
 export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDataMapper, IAclPerm {
   public readonly CREATE: string = 'event:create';
   public readonly DELETE: string = 'event:delete';
   public readonly READ: string = 'event:read';
   public readonly UPDATE: string = 'event:update';
+  public readonly READ_ALL: string = 'event:readall';
 
   protected pkColumnName = '';
   protected tableName = '';
 
-  private readonly hackathonObservable: Observable<Array<{ uid: string }>>;
-
   constructor(
-    @Inject('MysqlUow') private sql: MysqlUow,
-    @Inject('RtdbUow') private rtdb: RtdbUow,
-    @Inject('BunyanLogger') private logger: Logger,
+    @Inject('MysqlUow') private readonly sql: MysqlUow,
+    @Inject('RtdbUow') private readonly rtdb: RtdbUow,
+    @Inject('BunyanLogger') private readonly logger: Logger,
+    @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
   ) {
     super(ReflectiveInjector.resolveAndCreate([RBAC]).get(RBAC));
     super.addRBAC(
-      ['update:create', 'update:update', 'update:delete'],
+      [this.CREATE, this.UPDATE, this.DELETE],
       [AuthLevel.TEAM_MEMBER, AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
     );
     super.addRBAC(
-      'update:read',
+      [this.READ_ALL, this.READ],
       [
         AuthLevel.PARTICIPANT,
         AuthLevel.VOLUNTEER,
@@ -48,16 +48,10 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
         AuthLevel.TECHNOLOGY,
       ],
     );
-    const query = Hackathon.getActiveHackathonQuery().toParam();
-    this.hackathonObservable = from(this.sql.query(
-      query.text,
-      query.values,
-    ) as Promise<Array<{ uid: string }>>)
-      .pipe(shareReplay());
   }
 
   public delete(id: UpdateIdType): Promise<IDbResult<void>> {
-    return this.hackathonObservable
+    return this.activeHackathonDataMapper.activeHackathon
       .pipe(
         switchMap(reference => this.rtdb.query<void>(
           RtdbQueryType.DELETE,
@@ -70,7 +64,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   }
 
   public get(id: UpdateIdType, opts?: IUowOpts): Promise<IDbResult<Update>> {
-    return this.hackathonObservable
+    return this.activeHackathonDataMapper.activeHackathon
       .pipe(
         switchMap(reference => this.rtdb.query<Update>(
           RtdbQueryType.GET,
@@ -82,7 +76,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   }
 
   public getAll(): Promise<IDbResult<Stream<Update>>> {
-    return this.hackathonObservable
+    return this.activeHackathonDataMapper.activeHackathon
       .pipe(
         switchMap((result) => {
           const reference = `/updates/${result[0].uid}`;
@@ -93,7 +87,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   }
 
   public getCount(): Promise<IDbResult<number>> {
-    return this.hackathonObservable
+    return this.activeHackathonDataMapper.activeHackathon
       .pipe(
         switchMap((result) => {
           const reference = `/updates/${result[0].uid}`;
@@ -109,7 +103,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
       return Promise.reject(new Error(validation.error));
     }
     const uid = new Timeuuid().toString();
-    return this.hackathonObservable
+    return this.activeHackathonDataMapper.activeHackathon
       .pipe(
         switchMap(reference => from(
           this.rtdb.query<Update>(
@@ -129,7 +123,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
       this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
-    return this.hackathonObservable.pipe(
+    return this.activeHackathonDataMapper.activeHackathon.pipe(
       switchMap(reference => from(
         this.rtdb.query<Update>(
           RtdbQueryType.UPDATE,
@@ -141,7 +135,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   }
 
   public getReference() {
-    return this.hackathonObservable.pipe(
+    return this.activeHackathonDataMapper.activeHackathon.pipe(
       switchMap(result => {
         const reference = `/updates/${result[0].uid}`;
         return from(this.rtdb.query<string>(RtdbQueryType.REF, reference, null));

@@ -1,6 +1,6 @@
 import { Stream } from 'ts-stream';
 import { IDataMapper, IDbResult } from '../../services/database';
-import { Update } from './Update';
+import { Update } from './update';
 
 export interface IUpdateDataMapper extends IDataMapper {
   get(id: UpdateIdType): Promise<IDbResult<Update>>;

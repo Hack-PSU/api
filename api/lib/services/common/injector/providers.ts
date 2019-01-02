@@ -1,12 +1,16 @@
 import { EventDataMapperImpl } from '../../../models/event/event-data-mapper-impl';
-import { UpdateDataMapperImpl } from '../../../models/update/UpdateDataMapperImpl';
+import { ActiveHackathonDataMapperImpl } from '../../../models/hackathon/active-hackathon';
+import { PreRegisterDataMapperImpl, RegisterDataMapperImpl } from '../../../models/register';
+import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';
 import { IndexController } from '../../../router/routes';
 import { InternalController } from '../../../router/routes/internal';
 import { EventsController } from '../../../router/routes/live/events';
 import { LiveController } from '../../../router/routes/live/live';
 import { UpdatesController } from '../../../router/routes/live/updates';
+import { RegistrationController } from '../../../router/routes/register';
 import { FirebaseAuthService } from '../../auth/firebase-auth';
 import { RBAC } from '../../auth/RBAC/rbac';
+import { SendgridService } from '../../communication/email/sendgrid.service';
 import { OnesignalService } from '../../communication/push-notification/onesignal.service';
 import { MemCacheServiceImpl } from '../../database/cache/memcache-impl.service';
 import { RtdbConnectionFactory } from '../../database/connection/rtdb-connection-factory';
@@ -14,6 +18,7 @@ import { SqlConnectionFactory } from '../../database/connection/sql-connection-f
 import { MysqlUow } from '../../database/svc/mysql-uow.service';
 import { RtdbUow } from '../../database/svc/rtdb-uow.service';
 import { Logger } from '../../logging/logging';
+import { GoogleStorageService } from '../../storage/svc/google-storage.service';
 import { FirebaseService } from '../firebase/firebase.service';
 import { RootInjector } from './root-injector';
 
@@ -27,6 +32,7 @@ export class ExpressProvider {
         { provide: 'UpdatesController', useClass: UpdatesController },
         { provide: 'EventsController', useClass: EventsController },
         { provide: 'InternalController', useClass: InternalController },
+        { provide: 'RegistrationController', useClass: RegistrationController },
 
         // Interfaces
         { provide: 'IAcl', useClass: RBAC },
@@ -37,6 +43,11 @@ export class ExpressProvider {
         { provide: 'ICacheService', useClass: MemCacheServiceImpl },
         { provide: 'IUpdateDataMapper', useClass: UpdateDataMapperImpl },
         { provide: 'IEventDataMapper', useClass: EventDataMapperImpl },
+        { provide: 'IRegisterDataMapper', useClass: RegisterDataMapperImpl },
+        { provide: 'IPreRegisterDataMapper', useClass: PreRegisterDataMapperImpl },
+        { provide: 'IActiveHackathonDataMapper', useClass: ActiveHackathonDataMapperImpl },
+        { provide: 'IEmailService', useClass: SendgridService },
+        { provide: 'IStorageService', useClass: GoogleStorageService },
 
         // Classes
         { provide: 'FirebaseService', useValue: FirebaseService.instance },

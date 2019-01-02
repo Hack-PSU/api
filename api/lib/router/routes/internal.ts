@@ -30,6 +30,6 @@ export class InternalController extends ParentRouter implements IExpressControll
   }
 
   public routes(app: express.Router): void {
-    app.use(InternalController.internalVerifier);
+    app.use((req, res, next) => InternalController.internalVerifier(req, res, next));
   }
 }

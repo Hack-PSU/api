@@ -1,52 +1,48 @@
-import { Stream } from 'ts-stream';
+import * as squel from 'squel';
 import { UidType } from '../../JSCommon/common-types';
 import { IDataMapper, IDbResult } from '../../services/database';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { PreRegisterDataMapperImpl } from './pre-register-data-mapper-impl';
-import { PreRegistration } from './pre-registration';
 import { RegisterDataMapperImpl } from './register-data-mapper-impl';
-import { Registration } from './registration';
+import { IRegistrationStats, Registration } from './registration';
 
-interface IRegisterDataMapper extends IDataMapper {
+interface IRegisterDataMapper extends IDataMapper<Registration | Registration[]> {
 
   tableName: string;
 
-  insert(object: Registration): Promise<IDbResult<Registration>>;
-
-  update(object: Registration): Promise<IDbResult<Registration>>;
-
   submit(object: Registration): Promise<IDbResult<boolean>>;
 
-  delete(id: UidType): Promise<IDbResult<void>>;
+  getCurrent(id: UidType, opts?: IUowOpts): Promise<IDbResult<Registration>>;
 
-  get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Registration[]>>;
+  getStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats>>;
 
-  getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Registration>>>;
+  getEmailByUid(uid: UidType): Promise<IDbResult<string>>;
 
-  getCurrent(id: UidType): Promise<IDbResult<Registration>>;
-
-  getCount(opts?: IUowOpts): Promise<IDbResult<number>>;
-
+  /**
+   * Returns a generated query for counting the statistics for
+   * a given table column
+   */
+  getSelectQueryForOptionName(fieldname: string, opts?: IUowOpts): Promise<squel.Select>;
 }
 
-interface IPreRegisterDataMapper extends IDataMapper {
-  get(id: UidType): Promise<IDbResult<PreRegistration>>;
-
-  insert(object: PreRegistration): Promise<IDbResult<PreRegistration>>;
-
-  update(object: PreRegistration): Promise<IDbResult<PreRegistration>>;
-
-  delete(id: UidType): Promise<IDbResult<void>>;
-
-  getAll(): Promise<IDbResult<Stream<PreRegistration>>>;
-
-  getCount(): Promise<IDbResult<number>>;
-}
+// interface IPreRegisterDataMapper extends IDataMapper {
+//   get(id: UidType): Promise<IDbResult<PreRegistration>>;
+//
+//   insert(object: PreRegistration): Promise<IDbResult<PreRegistration>>;
+//
+//   update(object: PreRegistration): Promise<IDbResult<PreRegistration>>;
+//
+//   delete(id: UidType): Promise<IDbResult<void>>;
+//
+//   getAll(): Promise<IDbResult<Stream<PreRegistration>>>;
+//
+//   getCount(): Promise<IDbResult<number>>;
+// }
 
 export * from './registration';
 export {
   IRegisterDataMapper,
-  IPreRegisterDataMapper,
+  // IPreRegisterDataMapper,
   PreRegisterDataMapperImpl,
   RegisterDataMapperImpl,
 };

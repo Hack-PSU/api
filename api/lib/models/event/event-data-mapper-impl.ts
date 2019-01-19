@@ -1,14 +1,13 @@
 import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import squel = require('squel');
+import * as squel from 'squel';
 import { Stream } from 'ts-stream';
-import { EventType, IEventDataMapper } from '.';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDbResult } from '../../services/database';
+import { IDataMapper, IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
@@ -16,7 +15,7 @@ import { Logger } from '../../services/logging/logging';
 import { Event } from './event';
 
 @Injectable()
-export class EventDataMapperImpl extends GenericDataMapper implements IEventDataMapper, IAclPerm {
+export class EventDataMapperImpl extends GenericDataMapper implements IDataMapper<Event>, IAclPerm {
   // ACL permissions
   public readonly CREATE: string = 'event:create';
   public readonly DELETE: string = 'event:delete';

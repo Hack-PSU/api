@@ -1,5 +1,5 @@
 import { Inject, ReflectiveInjector } from 'injection-js';
-import Timeuuid from 'node-time-uuid';
+import * as NodeTimeUuid from 'node-time-uuid';
 import { from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { Stream } from 'ts-stream';
@@ -8,7 +8,7 @@ import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { RBAC } from '../../services/auth/RBAC/rbac';
 import { IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDbResult } from '../../services/database';
+import { IDataMapper, IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { RtdbQueryType, RtdbUow } from '../../services/database/svc/rtdb-uow.service';
@@ -82,7 +82,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
           const reference = `/updates/${result[0].uid}`;
           return from(this.rtdb.query<Stream<Update>>(RtdbQueryType.GET, reference, undefined));
         }),
-        map((data) => ({ result: 'Success', data: data as Stream<Update> })),
+        map(data => ({ result: 'Success', data: data as Stream<Update> })),
       ).toPromise();
   }
 
@@ -93,7 +93,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
           const reference = `/updates/${result[0].uid}`;
           return this.rtdb.query<number>(RtdbQueryType.COUNT, reference, null);
         }),
-        map((data) => ({ result: 'Success', data: data as number })),
+        map(data => ({ result: 'Success', data: data as number })),
       ).toPromise();
   }
 
@@ -102,7 +102,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
     if (!validation.result) {
       return Promise.reject(new Error(validation.error));
     }
-    const uid = new Timeuuid().toString();
+    const uid = new NodeTimeUuid().toString();
     return this.activeHackathonDataMapper.activeHackathon
       .pipe(
         switchMap(reference => from(
@@ -136,7 +136,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
 
   public getReference() {
     return this.activeHackathonDataMapper.activeHackathon.pipe(
-      switchMap(result => {
+      switchMap((result) => {
         const reference = `/updates/${result[0].uid}`;
         return from(this.rtdb.query<string>(RtdbQueryType.REF, reference, null));
       }),

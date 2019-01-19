@@ -13,7 +13,7 @@ import {
   RegisterDataMapperImpl,
   Registration,
   ShirtSize,
-  VeteranOptions
+  VeteranOptions,
 } from '../../../lib/models/register';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
@@ -29,6 +29,32 @@ let registerDataMapper: IRegisterDataMapper;
 let activeHackathonDataMapper;
 let mysqlUow;
 const acl: IAcl = new RBAC();
+const validRegistration = new Registration({
+  academicYear: AcademicYear.FRESHMAN,
+  allergies: null,
+  codingExperience: CodingExperience.NONE,
+  dietaryRestriction: null,
+  eighteenBeforeEvent: true,
+  email: 'test@email.com',
+  ethnicity: 'test ethnicity',
+  expectations: 'test expectations',
+  firstHackathon: true,
+  firstName: 'test first name',
+  gender: Gender.NODISCLOSE,
+  lastName: 'test last name',
+  major: 'test major',
+  mlhcoc: true,
+  mlhdcp: true,
+  phone: '1234567890',
+  projectDesc: 'test description',
+  referral: 'test referral',
+  resume: null,
+  shirtSize: ShirtSize.MEDIUM,
+  travelReimbursement: false,
+  uid: 'test uid',
+  university: 'test university',
+  veteran: VeteranOptions.NODISCLOSE,
+});
 
 describe('TEST: Register data mapper', () => {
   beforeEach(() => {
@@ -42,7 +68,7 @@ describe('TEST: Register data mapper', () => {
       name: 'test hackathon',
       uid: 'test uid',
     })));
-    activeHackathonDataMapper.tableName.returns('HACKATHON');
+    activeHackathonDataMapper.tableName.mimicks(() => 'HACKATHON');
     // Configure Register Data Mapper
     registerDataMapper = new RegisterDataMapperImpl(
       acl,
@@ -209,32 +235,7 @@ describe('TEST: Register data mapper', () => {
     // @ts-ignore
     it('inserts the registration', async () => {
       // GIVEN: A registration to insert
-      const registration = new Registration({
-        academicYear: AcademicYear.FRESHMAN,
-        allergies: null,
-        codingExperience: CodingExperience.NONE,
-        dietaryRestriction: null,
-        eighteenBeforeEvent: true,
-        email: 'test@email.com',
-        ethnicity: 'test ethnicity',
-        expectations: 'test expectations',
-        firstHackathon: true,
-        firstName: 'test first name',
-        gender: Gender.NODISCLOSE,
-        lastName: 'test last name',
-        major: 'test major',
-        mlhcoc: true,
-        mlhdcp: true,
-        phone: '1234567890',
-        projectDesc: 'test description',
-        referral: 'test referral',
-        resume: null,
-        shirtSize: ShirtSize.MEDIUM,
-        travelReimbursement: false,
-        uid: 'test uid',
-        university: 'test university',
-        veteran: VeteranOptions.NODISCLOSE,
-      });
+      const registration = validRegistration;
       // WHEN: Retrieving number of events
       const result = await registerDataMapper.insert(registration);
 
@@ -303,32 +304,7 @@ describe('TEST: Register data mapper', () => {
     // @ts-ignore
     it('updates the registration', async () => {
       // GIVEN: A registration to update
-      const registration = new Registration({
-        academicYear: AcademicYear.FRESHMAN,
-        allergies: null,
-        codingExperience: CodingExperience.NONE,
-        dietaryRestriction: null,
-        eighteenBeforeEvent: true,
-        email: 'test@email.com',
-        ethnicity: 'test ethnicity',
-        expectations: 'test expectations',
-        firstHackathon: true,
-        firstName: 'test first name',
-        gender: Gender.NODISCLOSE,
-        lastName: 'test last name',
-        major: 'test major',
-        mlhcoc: true,
-        mlhdcp: true,
-        phone: '1234567890',
-        projectDesc: 'test description',
-        referral: 'test referral',
-        resume: null,
-        shirtSize: ShirtSize.MEDIUM,
-        travelReimbursement: false,
-        uid: 'test uid',
-        university: 'test university',
-        veteran: VeteranOptions.NODISCLOSE,
-      });
+      const registration = validRegistration;
       // WHEN: Updating the registration
       const result = await registerDataMapper.update(registration);
 
@@ -376,6 +352,115 @@ describe('TEST: Register data mapper', () => {
         return;
       }
       expect(false).to.equal(true);
+    });
+  });
+
+  describe('TEST: Registration submit', () => {
+    // @ts-ignore
+    it('submits the registration', async () => {
+      // GIVEN: Registration to submit
+      const registration = validRegistration;
+      // WHEN: Registration is submitted
+      const result = await registerDataMapper.submit(registration);
+      // THEN: Submission is successful
+      expect(result.data)
+        .to
+        .equal(true);
+    });
+  });
+
+  describe('TEST: Registration read current', () => {
+    // @ts-ignore
+    it('generates the correct sql to get the current registration', async () => {
+      // GIVEN: A valid registration ID
+      const uid = 'test registration';
+      // WHEN: The current registration version is retrieved
+      const result = await registerDataMapper.getCurrent(uid);
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'SELECT registration.*, registration.pin - hackathon.base_pin AS "pin" FROM `REGISTRATION` `registration`' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid and hackathon.active = 1)' +
+        ' WHERE (registration.uid= ?);';
+      expect((result.data as any).query).to.equal(expectedSQL);
+    });
+
+    it(
+      'generates the correct sql to get the current registration with specific fields',
+    // @ts-ignore
+      async () => {
+        // GIVEN: A valid registration ID
+        const uid = 'test registration';
+        // WHEN: The current registration version is retrieved
+        const result = await registerDataMapper.getCurrent(uid, { fields: ['firstname'] });
+        // THEN: Generated SQL matches the expectation
+        const expectedSQL = 'SELECT firstname, registration.pin - hackathon.base_pin AS "pin" FROM `REGISTRATION` `registration`' +
+          ' INNER JOIN `HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid and hackathon.active = 1)' +
+          ' WHERE (registration.uid= ?);';
+        expect((result.data as any).query).to.equal(expectedSQL);
+      },
+    );
+  });
+
+  describe('TEST: Registration get stats', () => {
+    // @ts-ignore
+    it('generates the correct sql to get the current registration statistics', async () => {
+      // GIVEN: A registration data mapper
+      // WHEN: The registration statistics are retrieved
+      const result = await registerDataMapper.getStats();
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'SELECT "academic_year" AS "CATEGORY", academic_year AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' GROUP BY academic_year UNION (SELECT "coding_experience" AS "CATEGORY", coding_experience AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' GROUP BY coding_experience) UNION (SELECT "dietary_restriction" AS "CATEGORY", dietary_restriction AS "OPTION",' +
+        ' COUNT(*) AS "COUNT" FROM `REGISTRATION` GROUP BY dietary_restriction) UNION (SELECT "travel_reimbursement" AS "CATEGORY",' +
+        ' travel_reimbursement AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION` GROUP BY travel_reimbursement)' +
+        ' UNION (SELECT "race" AS "CATEGORY", race AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION` GROUP BY race)' +
+        ' UNION (SELECT "shirt_size" AS "CATEGORY", shirt_size AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION` GROUP BY shirt_size)' +
+        ' UNION (SELECT "gender" AS "CATEGORY", gender AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION` GROUP BY gender)' +
+        ' UNION (SELECT "first_hackathon" AS "CATEGORY", first_hackathon AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION` GROUP BY first_hackathon)' +
+        ' UNION (SELECT "veteran" AS "CATEGORY", veteran AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION` GROUP BY veteran);';
+      expect((result.data as any).query).to.equal(expectedSQL);
+    });
+
+    // @ts-ignore
+    it('generates the correct sql to get the registration statistics by hackathon', async () => {
+      // GIVEN: A registration data mapper
+      // WHEN: The registration statistics are retrieved
+      const result = await registerDataMapper.getStats({ byHackathon: true, hackathon: 'test hackathon' });
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL =
+        'SELECT "academic_year" AS "CATEGORY", academic_year AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\')' +
+        ' GROUP BY academic_year UNION (SELECT "coding_experience" AS "CATEGORY", coding_experience AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\')' +
+        ' GROUP BY coding_experience) UNION (SELECT "dietary_restriction" AS "CATEGORY", dietary_restriction AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\') GROUP BY dietary_restriction)' +
+        ' UNION (SELECT "travel_reimbursement" AS "CATEGORY", travel_reimbursement AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\')' +
+        ' GROUP BY travel_reimbursement) UNION (SELECT "race" AS "CATEGORY", race AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\') GROUP BY race)' +
+        ' UNION (SELECT "shirt_size" AS "CATEGORY", shirt_size AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\') ' +
+        'GROUP BY shirt_size) UNION (SELECT "gender" AS "CATEGORY", gender AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\') GROUP BY gender)' +
+        ' UNION (SELECT "first_hackathon" AS "CATEGORY", first_hackathon AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\')' +
+        ' GROUP BY first_hackathon) UNION (SELECT "veteran" AS "CATEGORY", veteran AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\') GROUP BY veteran);';
+      expect((result.data as any).query).to.equal(expectedSQL);
+    });
+  });
+
+  describe('TEST: Registration get email from uid', () => {
+    // @ts-ignore
+    it('generates the correct sql to get the email from registrtation', async () => {
+      // GIVEN: A valid registration ID
+      const uid = 'test registration';
+      // WHEN: The current registration version is retrieved
+      const result = await registerDataMapper.getEmailByUid(uid);
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'SELECT `email` FROM `REGISTRATION` WHERE (uid = ?);';
+      const expectedParams = [uid];
+      expect((result.data as any).query).to.equal(expectedSQL);
+      expect((result.data as any).params).to.deep.equal(expectedParams);
     });
   });
 });

@@ -1,8 +1,11 @@
 import { EventDataMapperImpl } from '../../../models/event/event-data-mapper-impl';
+import { HackathonDataMapperImpl } from '../../../models/hackathon';
 import { ActiveHackathonDataMapperImpl } from '../../../models/hackathon/active-hackathon';
 import { PreRegisterDataMapperImpl, RegisterDataMapperImpl } from '../../../models/register';
 import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';
 import { IndexController } from '../../../router/routes';
+import { AdminController } from '../../../router/routes/admin/';
+import { AdminRegisterController } from '../../../router/routes/admin/admin-register';
 import { InternalController } from '../../../router/routes/internal';
 import { EventsController } from '../../../router/routes/live/events';
 import { LiveController } from '../../../router/routes/live/live';
@@ -33,6 +36,8 @@ export class ExpressProvider {
         { provide: 'EventsController', useClass: EventsController },
         { provide: 'InternalController', useClass: InternalController },
         { provide: 'RegistrationController', useClass: RegistrationController },
+        { provide: 'AdminController', useClass: AdminController },
+        { provide: 'AdminRegisterController', useClass: AdminRegisterController },
 
         // Interfaces
         { provide: 'IAcl', useClass: RBAC },
@@ -46,6 +51,7 @@ export class ExpressProvider {
         { provide: 'IRegisterDataMapper', useClass: RegisterDataMapperImpl },
         { provide: 'IPreRegisterDataMapper', useClass: PreRegisterDataMapperImpl },
         { provide: 'IActiveHackathonDataMapper', useClass: ActiveHackathonDataMapperImpl },
+        { provide: 'IHackathonDataMapper', useClass: HackathonDataMapperImpl },
         { provide: 'IEmailService', useClass: SendgridService },
         { provide: 'IStorageService', useClass: GoogleStorageService },
 

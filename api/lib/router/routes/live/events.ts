@@ -2,9 +2,10 @@ import express from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
-import { Event, IEventDataMapper } from '../../../models/event';
+import { Event } from '../../../models/event';
 import { IAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
+import { IDataMapper } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
@@ -16,7 +17,7 @@ export class EventsController extends LiveController {
 
   constructor(
     @Inject('IAuthService') private readonly authService: IAuthService,
-    @Inject('IEventDataMapper') private readonly dataMapper: IEventDataMapper,
+    @Inject('IEventDataMapper') private readonly dataMapper: IDataMapper<Event>,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
@@ -196,7 +197,6 @@ export class EventsController extends LiveController {
     next: express.NextFunction,
   ) {
     try {
-      this.logger.info('Logging to test: event/get');
       const stream = await this.dataMapper.getAll();
       const res = new ResponseBody('Success', 200, stream);
       return this.sendResponse(response, res);

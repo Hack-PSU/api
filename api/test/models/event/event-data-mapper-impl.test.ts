@@ -1,10 +1,11 @@
 import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
-import { Event, EventType, IEventDataMapper } from '../../../lib/models/event';
+import { Event, EventType } from '../../../lib/models/event';
 import { EventDataMapperImpl } from '../../../lib/models/event/event-data-mapper-impl';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
+import { IDataMapper } from '../../../lib/services/database';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
 
@@ -14,7 +15,7 @@ function mockedQuery<T>(query, params) {
   return Promise.resolve({ query, params });
 }
 
-let eventDataMapper: IEventDataMapper;
+let eventDataMapper: IDataMapper<Event>;
 let mysqlUow;
 const acl: IAcl = new RBAC();
 

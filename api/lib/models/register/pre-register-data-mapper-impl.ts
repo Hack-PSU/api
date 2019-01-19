@@ -7,17 +7,17 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDbResult } from '../../services/database';
+import { IDataMapper, IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
-import { IPreRegisterDataMapper } from './index';
+// import { IPreRegisterDataMapper } from './index';
 import { PreRegistration } from './pre-registration';
 
 export class PreRegisterDataMapperImpl extends GenericDataMapper
-  implements IPreRegisterDataMapper, IAclPerm {
+  implements IDataMapper<PreRegistration>, IAclPerm {
 
   public CREATE: string = 'pre-registration:create';
   public DELETE: string = 'pre-registration:delete';
@@ -72,14 +72,14 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getAll(hackathonId?: UidType): Promise<IDbResult<Stream<PreRegistration>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<PreRegistration>>> {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
       .where(
         'hackathon = ?',
-        await hackathonId ?
-          Promise.resolve(hackathonId) :
-          this.activeHackathonDataMapper.activeHackathon.toPromise(),
+        await (opts && opts.hackathon ?
+          Promise.resolve(opts.hackathon) :
+          this.activeHackathonDataMapper.activeHackathon.toPromise()),
       )
       .toString()
       .concat(';');

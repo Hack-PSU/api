@@ -241,16 +241,16 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       'first_hackathon',
       'veteran',
     ];
-    let query;
-    columnNames.forEach(async (value, index) => {
-      // Add a union for every value but the first
-      query = index === 0 ? await this.getSelectQueryForOptionName(value, opts) : query.union(
-        await this.getSelectQueryForOptionName(value, opts));
-    });
-    query = query.toString().concat(';');
+    let queryBuilder;
+    for (let i = 0; i < columnNames.length; i += 1) {
+      queryBuilder = !queryBuilder ?
+        await this.getSelectQueryForOptionName(columnNames[i], opts) :
+        queryBuilder.union(await this.getSelectQueryForOptionName(columnNames[i], opts));
+    }
+    const query: string = queryBuilder.toString().concat(';');
     return from(this.sql.query<IRegistrationStats>(
-      query.text,
-      query.values,
+      query,
+      [],
       { stream: true, cache: true },
     ))
       .pipe(
@@ -284,7 +284,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
    * Returns a generated query for counting the statistics for
    * a given table column
    */
-  private async getSelectQueryForOptionName(fieldname: string, opts?: IUowOpts) {
+  public async getSelectQueryForOptionName(fieldname: string, opts?: IUowOpts) {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: false,
       autoQuoteTableNames: true,
@@ -302,9 +302,9 @@ export class RegisterDataMapperImpl extends GenericDataMapper
         )
         .where(
           'hackathon.uid = ?',
-          await opts.hackathon ?
+          await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon.toPromise(),
+            this.activeHackathonDataMapper.activeHackathon.toPromise()),
         );
     }
     return queryBuilder.group(fieldname);

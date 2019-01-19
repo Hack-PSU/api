@@ -1,11 +1,10 @@
-import { Stream } from 'ts-stream';
+import * as squel from 'squel';
 import { UidType } from '../../JSCommon/common-types';
 import { IDataMapper, IDbResult } from '../../services/database';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { PreRegisterDataMapperImpl } from './pre-register-data-mapper-impl';
-import { PreRegistration } from './pre-registration';
 import { RegisterDataMapperImpl } from './register-data-mapper-impl';
-import { Registration } from './registration';
+import { IRegistrationStats, Registration } from './registration';
 
 interface IRegisterDataMapper extends IDataMapper<Registration | Registration[]> {
 
@@ -13,8 +12,17 @@ interface IRegisterDataMapper extends IDataMapper<Registration | Registration[]>
 
   submit(object: Registration): Promise<IDbResult<boolean>>;
 
-  getCurrent(id: UidType): Promise<IDbResult<Registration>>;
+  getCurrent(id: UidType, opts?: IUowOpts): Promise<IDbResult<Registration>>;
 
+  getStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats>>;
+
+  getEmailByUid(uid: UidType): Promise<IDbResult<string>>;
+
+  /**
+   * Returns a generated query for counting the statistics for
+   * a given table column
+   */
+  getSelectQueryForOptionName(fieldname: string, opts?: IUowOpts): Promise<squel.Select>;
 }
 
 // interface IPreRegisterDataMapper extends IDataMapper {

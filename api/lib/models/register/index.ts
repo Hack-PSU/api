@@ -7,46 +7,34 @@ import { PreRegistration } from './pre-registration';
 import { RegisterDataMapperImpl } from './register-data-mapper-impl';
 import { Registration } from './registration';
 
-interface IRegisterDataMapper extends IDataMapper {
+interface IRegisterDataMapper extends IDataMapper<Registration | Registration[]> {
 
   tableName: string;
 
-  insert(object: Registration): Promise<IDbResult<Registration>>;
-
-  update(object: Registration): Promise<IDbResult<Registration>>;
-
   submit(object: Registration): Promise<IDbResult<boolean>>;
-
-  delete(id: UidType): Promise<IDbResult<void>>;
-
-  get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Registration[]>>;
-
-  getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Registration>>>;
 
   getCurrent(id: UidType): Promise<IDbResult<Registration>>;
 
-  getCount(opts?: IUowOpts): Promise<IDbResult<number>>;
-
 }
 
-interface IPreRegisterDataMapper extends IDataMapper {
-  get(id: UidType): Promise<IDbResult<PreRegistration>>;
-
-  insert(object: PreRegistration): Promise<IDbResult<PreRegistration>>;
-
-  update(object: PreRegistration): Promise<IDbResult<PreRegistration>>;
-
-  delete(id: UidType): Promise<IDbResult<void>>;
-
-  getAll(): Promise<IDbResult<Stream<PreRegistration>>>;
-
-  getCount(): Promise<IDbResult<number>>;
-}
+// interface IPreRegisterDataMapper extends IDataMapper {
+//   get(id: UidType): Promise<IDbResult<PreRegistration>>;
+//
+//   insert(object: PreRegistration): Promise<IDbResult<PreRegistration>>;
+//
+//   update(object: PreRegistration): Promise<IDbResult<PreRegistration>>;
+//
+//   delete(id: UidType): Promise<IDbResult<void>>;
+//
+//   getAll(): Promise<IDbResult<Stream<PreRegistration>>>;
+//
+//   getCount(): Promise<IDbResult<number>>;
+// }
 
 export * from './registration';
 export {
   IRegisterDataMapper,
-  IPreRegisterDataMapper,
+  // IPreRegisterDataMapper,
   PreRegisterDataMapperImpl,
   RegisterDataMapperImpl,
 };

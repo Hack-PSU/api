@@ -7,16 +7,16 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDbResult } from '../../services/database';
+import { IDataMapper, IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { Hackathon } from './hackathon';
-import { IHackathonDataMapper } from './index';
+// import { IHackathonDataMapper } from './index';
 
 export class HackathonDataMapperImpl extends GenericDataMapper
-  implements IHackathonDataMapper, IAclPerm {
+  implements IDataMapper<Hackathon>, IAclPerm {
 
   public readonly CREATE: string = 'hackathon:create';
   public readonly DELETE: string = 'hackathon:delete';

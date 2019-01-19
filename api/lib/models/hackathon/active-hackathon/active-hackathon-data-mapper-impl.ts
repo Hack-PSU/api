@@ -36,8 +36,8 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
 
   constructor(
     @Inject('IAcl') acl: IAcl,
-    @Inject('MysqlUow') sql: MysqlUow,
-    @Inject('BunyanLogger') logger: Logger,
+    @Inject('MysqlUow') protected readonly sql: MysqlUow,
+    @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl, sql, logger);
     super.addRBAC(

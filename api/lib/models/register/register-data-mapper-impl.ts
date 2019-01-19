@@ -13,7 +13,7 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
-import { IRegisterDataMapper } from './index';
+import { IRegisterDataMapper, IRegistrationStats } from './index';
 import { Registration } from './registration';
 
 @Injectable()
@@ -26,8 +26,8 @@ export class RegisterDataMapperImpl extends GenericDataMapper
   public READ_ALL: string = 'registration:readall';
   public UPDATE: string = 'registration:update';
 
-  public tableName: string;
-  protected pkColumnName: string;
+  public tableName: string = 'REGISTRATION';
+  protected pkColumnName: string = 'uid';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -106,9 +106,9 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       queryBuilder = queryBuilder
         .where(
           'hackathon.uid = ?',
-          await opts.hackathon ?
+          await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon.toPromise(),
+            this.activeHackathonDataMapper.activeHackathon.toPromise()),
         );
     }
     const query = queryBuilder
@@ -116,7 +116,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .concat(';');
     return from(this.sql.query<Registration>(query, [], { stream: true, cache: true }))
       .pipe(
-        map((event: Stream<Registration>) => ({ result: 'Success', data: event })),
+        map((registrationStream: Stream<Registration>) => ({ result: 'Success', data: registrationStream })),
       )
       .toPromise();
   }
@@ -129,17 +129,16 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       queryBuilder = queryBuilder
         .where(
           'hackathon = ?',
-          await opts.hackathon ?
+          await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon.toPromise(),
+            this.activeHackathonDataMapper.activeHackathon.toPromise()),
         );
     }
     const query = queryBuilder
       .toString()
       .concat(';');
-    const params = [];
     return from(
-      this.sql.query<number>(query, params, { stream: true, cache: true }),
+      this.sql.query<number>(query, [], { stream: true, cache: true }),
     ).pipe(
       map((result: number) => ({ result: 'Success', data: result })),
     ).toPromise();
@@ -155,7 +154,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation])
-      .set('hackathon', await this.activeHackathonDataMapper.activeHackathon.toPromise())
+      .set('hackathon', (await this.activeHackathonDataMapper.activeHackathon.toPromise()).id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -186,7 +185,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
   public update(object: Registration): Promise<IDbResult<Registration>> {
     const validation = object.validate();
     if (!validation.result) {
-      this.logger.warn('Validation failed while adding object.');
+      this.logger.warn('Validation failed while updating object.');
       this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
@@ -228,5 +227,86 @@ export class RegisterDataMapperImpl extends GenericDataMapper
         map((event: Registration) => ({ result: 'Success', data: event })),
       )
       .toPromise();
+  }
+
+  public async getStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats>> {
+    const columnNames = [
+      'academic_year',
+      'coding_experience',
+      'dietary_restriction',
+      'travel_reimbursement',
+      'race',
+      'shirt_size',
+      'gender',
+      'first_hackathon',
+      'veteran',
+    ];
+    let query;
+    columnNames.forEach(async (value, index) => {
+      // Add a union for every value but the first
+      query = index === 0 ? await this.getSelectQueryForOptionName(value, opts) : query.union(
+        await this.getSelectQueryForOptionName(value, opts));
+    });
+    query = query.toString().concat(';');
+    return from(this.sql.query<IRegistrationStats>(
+      query.text,
+      query.values,
+      { stream: true, cache: true },
+    ))
+      .pipe(
+        map((event: IRegistrationStats) => ({ result: 'Success', data: event })),
+      )
+      .toPromise();
+  }
+
+  public getEmailByUid(uid: UidType): Promise<IDbResult<string>> {
+    const query = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName)
+      .field('email')
+      .where('uid = ?', uid)
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<string>(
+      query.text,
+      query.values,
+      { stream: false, cache: true },
+    ))
+      .pipe(
+        map((email: string) => ({ result: 'Success', data: email })),
+      )
+      .toPromise();
+  }
+
+  /**
+   * Returns a generated query for counting the statistics for
+   * a given table column
+   */
+  private async getSelectQueryForOptionName(fieldname: string, opts?: IUowOpts) {
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: false,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName)
+      .field(`"${fieldname}"`, 'CATEGORY')
+      .field(fieldname, 'OPTION')
+      .field('COUNT(*)', 'COUNT');
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .join(
+          this.activeHackathonDataMapper.tableName,
+          'hackathon',
+          `hackathon.uid = ${this.tableName}.hackathon`,
+        )
+        .where(
+          'hackathon.uid = ?',
+          await opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon.toPromise(),
+        );
+    }
+    return queryBuilder.group(fieldname);
   }
 }

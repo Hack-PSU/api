@@ -1,6 +1,7 @@
 import { Inject } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
+import squel from 'squel';
 import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';

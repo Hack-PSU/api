@@ -8,7 +8,12 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { Util } from '../../JSCommon/util';
 import { IActiveHackathonDataMapper } from '../../models/hackathon/active-hackathon';
-import { IPreRegisterDataMapper, IRegisterDataMapper, Registration } from '../../models/register';
+import {
+  IPreRegisterDataMapper,
+  IRegisterDataMapper,
+  Registration,
+} from '../../models/register';
+import { PreRegistration } from '../../models/register/pre-registration';
 import { IAuthService } from '../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IEmailService } from '../../services/communication/email';
@@ -108,13 +113,11 @@ export class RegistrationController extends ParentRouter implements IExpressCont
   }
 
   /**
-   * @api {post} /register/pre Pre-register for HackPSU
+   * @api {post} /register/pre Preregister for HackPSU
    * @apiVersion 1.0.0
    * @apiName Add Pre-Registration
    * @apiGroup Pre Registration
    * @apiParam {String} email The email ID to register with
-   * @apiPermission None
-   *
    * @apiSuccess {String} Success
    * @apiUse IllegalArgumentError
    */
@@ -152,31 +155,6 @@ export class RegistrationController extends ParentRouter implements IExpressCont
    * @apiName Add Registration
    * @apiGroup Registration
    * @apiPermission UserPermission
-   * @apiParamExample {Object} Request-Example: {	req.header: {idtoken: <user's idtoken> }
-   * request.body: {
-   * firstName: "Matt",
-   * lastName: "Stewart",
-   * gender: "Male",
-   * shirtSize: "L",
-   * dietaryRestriction: "Vegetarian",
-   * allergies: "Peanuts",
-   * travelReimbursement: true,
-   * firstHackathon: false,
-   * university: "University of hackathon",
-   * email: matt@email.com,
-   * academicYear: "sophomore",
-   * major: "Communication"
-   * phone: "1234567890"
-   * race: "no-disclose"
-   * codingExperience: "advanced"
-   * uid: "JH123891JDW98E89J3389",
-   * eighteenBeforeEvent: true,
-   * mlhCOC: true,
-   * mlhDCP: true,
-   * referral: "facebook",
-   * project: "My project description",
-   * resume: <FILE_OBJECT>
-   *   }
    * @apiUse AuthArgumentRequired
    * @apiParam {String} firstName First name of the user
    * @apiParam {String} lastName Last name of the user

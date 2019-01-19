@@ -77,7 +77,7 @@ export class App extends ParentRouter {
         // Setup routers
         this.routerConfig();
       })
-      .catch((error) => console.error(error));
+      .catch(error => console.error(error));
   }
 
   /**

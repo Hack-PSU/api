@@ -96,6 +96,9 @@ export class FirebaseAuthService implements IAuthService {
         case AclOperations.READ:
           requestPermission = permission.READ;
           break;
+        case AclOperations.READ_ALL:
+          requestPermission = permission.READ_ALL;
+          break;
         default:
           requestPermission = '';
           break;

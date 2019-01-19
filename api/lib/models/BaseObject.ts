@@ -20,7 +20,6 @@ export default abstract class BaseObject {
       .filter(kv => !this.disallowedPropertiesInternal.has(kv[0]))
       .filter(kv => kv[1])
       .reduce((accumulator, currentValue) => {
-        // eslint-disable-next-line prefer-destructuring
         accumulator[currentValue[0]] = currentValue[1];
         return accumulator;
       },      {});

@@ -81,17 +81,6 @@
 //
 //
 // /** ******************* ROUTES *************************** */
-// /**
-//  * @api {post} /register/pre Pre-register for HackPSU
-//  * @apiVersion 1.0.0
-//  * @apiName Add Pre-Registration
-//  * @apiGroup Pre Registration
-//  * @apiParam {String} email The email ID to register with
-//  * @apiPermission None
-//  *
-//  * @apiSuccess {String} Success
-//  * @apiUse IllegalArgumentError
-//  */
 // router.post('/pre', (req, res, next) => {
 //   if (!req.body ||
 //     !req.body.email ||
@@ -117,70 +106,7 @@
 // });
 //
 //
-// /**
-//  * @api {post} /register/ Register for HackPSU
-//  * @apiVersion 1.0.0
-//  * @apiName Add Registration
-//  * @apiGroup Registration
-//  * @apiPermission UserPermission
-//  * @apiParamExample {Object} Request-Example: {
-// 	req.header: {
-// 		idtoken: <user's idtoken>
-// 	}
-//
-//  	request.body: {
-// firstName: "Matt",
-//             lastName: "Stewart",
-//             gender: "Male",
-//             shirtSize: "L",
-//             dietaryRestriction: "Vegetarian",
-//             allergies: "Peanuts",
-//             travelReimbursement: true,
-//             firstHackathon: false,
-//             university: "University of hackathon",
-//             email: matt@email.com,
-//             academicYear: "sophomore",
-//             major: "Communication"
-//             phone: "1234567890"
-//             race: "no-disclose"
-//             codingExperience: "advanced"
-//             uid: "JH123891JDW98E89J3389",
-//             eighteenBeforeEvent: true,
-//             mlhCOC: true,
-//             mlhDCP: true,
-//             referral: "facebook",
-//             project: "My project description",
-//             resume: <FILE_OBJECT>
-//     }
-//  * @apiUse AuthArgumentRequired
-//  * @apiParam {String} firstName First name of the user
-//  * @apiParam {String} lastName Last name of the user
-//  * @apiParam {String} gender Gender of the user
-//  * @apiParam {enum} shirtSize [XS, S, M, L, XL, XXL]
-//  * @apiParam {String} [dietaryRestriction] The dietary restictions for the user
-//  * @apiParam {String} [allergies] Any allergies the user might have
-//  * @apiParam {boolean} travelReimbursement=false
-//  * @apiParam {boolean} firstHackathon=false Is this the user's first hackathon
-//  * @apiParam {String} university The university that the user attends
-//  * @apiParam {String} email The user's school email
-//  * @apiParam {String} academicYear The user's current year in school
-//  * @apiParam {String} major Intended or current major
-//  * @apiParam {String} phone The user's phone number (For MLH)
-//  * @apiParam {FILE} [resume] The resume file for the user (Max size: 10 MB)
-//  * @apiParam {String} [ethnicity] The user's ethnicity
-//  * @apiParam {String} codingExperience The coding experience that the user has
-//  * @apiParam {String} uid The UID from their Firebase account
-//  * @apiParam {boolean} eighteenBeforeEvent=true Will the person be eighteen before the event
-//  * @apiParam {boolean} mlhcoc=true Does the user agree to the mlhcoc?
-//  * @apiParam {boolean} mlhdcp=true Does the user agree to the mlh dcp?
-//  * @apiParam {String} referral Where did the user hear about the Hackathon?
-//  * @apiParam {String} project A project description that the user is proud of
-//  * @apiParam {String} expectations What the user expects to get from the hackathon
-//  * @apiParam {String} veteran=false Is the user a veteran?
-//  *
-//  * @apiSuccess {String} Success
-//  * @apiUse IllegalArgumentError
-//  */
+
 //
 // router.post('/', verifyAuthMiddleware, upload.single('resume'), storeIP, (req, res, next) => {
 //   /** Converting boolean strings to booleans types in req.body */

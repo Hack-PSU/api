@@ -33,23 +33,23 @@ export class Registration extends BaseObject {
     return this.uid;
   }
 
-  /**
-   *
-   * @param uid
-   * @return {Promise<any>}
-   */
-  public static getEmail(uow: IUow, uid: string) {
-    const query = squel.select({
-      autoQuoteFieldNames: true,
-      autoQuoteTableNames: true,
-    })
-      .from(TABLE_NAME)
-      .field('email')
-      .where('uid = ?', uid)
-      .toString()
-      .concat(';');
-    return uow.query(query, [], { stream: false, cache: true });
-  }
+  // /**
+  //  *
+  //  * @param uid
+  //  * @return {Promise<any>}
+  //  */
+  // public static getEmail(uow: IUow, uid: string) {
+  //   const query = squel.select({
+  //     autoQuoteFieldNames: true,
+  //     autoQuoteTableNames: true,
+  //   })
+  //     .from(TABLE_NAME)
+  //     .field('email')
+  //     .where('uid = ?', uid)
+  //     .toString()
+  //     .concat(';');
+  //   return uow.query(query, [], { stream: false, cache: true });
+  // }
 
   // /**
   //  *
@@ -185,48 +185,48 @@ export class Registration extends BaseObject {
   //   return testObj;
   // }
 
-  /**
-   * @param uow
-   * @return {Promise<any>}
-   */
-  public static getStatsCount(uow) {
-    const columnNames = [
-      'academic_year',
-      'coding_experience',
-      'dietary_restriction',
-      'travel_reimbursement',
-      'race',
-      'shirt_size',
-      'gender',
-      'first_hackathon',
-      'veteran',
-    ];
-    let query = null;
-    columnNames.forEach((value, index) => {
-      // Add a union for every value but the first
-      query = index === 0 ? Registration._getSelectQueryForOptionName(value) : query.union(
-        Registration._getSelectQueryForOptionName(value));
-    });
-    query = query.toString().concat(';');
-    return uow.query(query, null, { stream: true });
-  }
-
-  public static _getSelectQueryForOptionName(value) {
-    return squel.select({
-      autoQuoteFieldNames: false,
-      autoQuoteTableNames: true,
-    })
-      .from(TABLE_NAME)
-      .field(`"${value}"`, 'CATEGORY')
-      .field(value, 'OPTION')
-      .field('COUNT(*)', 'COUNT')
-      .join(
-        HackathonTableName,
-        'hackathon',
-        `hackathon.uid = ${TABLE_NAME}.hackathon and hackathon.active = 1`,
-      )
-      .group(value);
-  }
+  // /**
+  //  * @param uow
+  //  * @return {Promise<any>}
+  //  */
+  // public static getStatsCount(uow) {
+  //   const columnNames = [
+  //     'academic_year',
+  //     'coding_experience',
+  //     'dietary_restriction',
+  //     'travel_reimbursement',
+  //     'race',
+  //     'shirt_size',
+  //     'gender',
+  //     'first_hackathon',
+  //     'veteran',
+  //   ];
+  //   let query = null;
+  //   columnNames.forEach((value, index) => {
+  //     // Add a union for every value but the first
+  //     query = index === 0 ? Registration._getSelectQueryForOptionName(value) : query.union(
+  //       Registration._getSelectQueryForOptionName(value));
+  //   });
+  //   query = query.toString().concat(';');
+  //   return uow.query(query, null, { stream: true });
+  // }
+  //
+  // public static _getSelectQueryForOptionName(value) {
+  //   return squel.select({
+  //     autoQuoteFieldNames: false,
+  //     autoQuoteTableNames: true,
+  //   })
+  //     .from(TABLE_NAME)
+  //     .field(`"${value}"`, 'CATEGORY')
+  //     .field(value, 'OPTION')
+  //     .field('COUNT(*)', 'COUNT')
+  //     .join(
+  //       HackathonTableName,
+  //       'hackathon',
+  //       `hackathon.uid = ${TABLE_NAME}.hackathon and hackathon.active = 1`,
+  //     )
+  //     .group(value);
+  // }
 
   protected firstname: string;
   protected lastname: string;

@@ -1,9 +1,9 @@
 import { validate } from 'email-validator';
-import assets from '../../assets/schemas/load-schemas';
-import { EpochNumber, UidType } from '../../JSCommon/common-types';
+import loadSchemas from '../../assets/schemas/load-schemas';
+import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 
-const registeredUserSchema = assets('registeredUserSchema');
+const registeredUserSchema = loadSchemas('registeredUserSchema');
 
 export enum Gender {
   MALE = 'male',
@@ -69,8 +69,6 @@ export interface IRegistrationApiModel {
   projectDesc: string | null;
   expectations: string | null;
   veteran: VeteranOptions | null;
-  time: EpochNumber;
-  hackathon: UidType;
 }
 
 export class Registration extends BaseObject {
@@ -136,10 +134,22 @@ export class Registration extends BaseObject {
     this.expectations = data.expectations;
     this.veteran = data.veteran || 'no-disclose';
     this.time = Date.now();
-    this.hackathon = data.hackathon;
+    // this.hackathon = data.hackathon;
   }
 
   public get id() {
     return this.uid;
   }
+}
+
+export interface IRegistrationStats {
+  academic_year: AcademicYear;
+  coding_experience: CodingExperience;
+  dietary_restriction: string | null;
+  travel_reimbursement: boolean;
+  race: string | null;
+  shirt_size: ShirtSize;
+  gender: Gender;
+  first_hackathon: boolean;
+  veteran: VeteranOptions;
 }

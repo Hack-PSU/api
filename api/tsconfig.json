@@ -22,6 +22,9 @@
     "noImplicitAny": false,
     "esModuleInterop": true
   },
+  "tslint": {
+    "exclude": ["**/*.js"]
+  },
   "include": [
     "lib/**/*.ts",
     "lib/bin/*"

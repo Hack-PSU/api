@@ -10,8 +10,8 @@ firebase.initializeApp({
   messagingSenderId: '614592542726',
 });
 firebase.auth().signInWithEmailAndPassword(process.argv[2], process.argv[3])
-  .then((user) => {
-    user.getIdToken(true)
+.then(() => {
+  firebase.auth().currentUser.getIdToken(true)
       .then((idtoken) => {
         console.log(idtoken);
         process.exit();

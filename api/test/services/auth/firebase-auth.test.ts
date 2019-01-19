@@ -21,7 +21,7 @@ describe('TEST: Firebase Auth Test', () => {
   beforeEach(() => {
     // Configure mock authentication service
 
-    testDecodedToken = { uid: 'test uid', privilege };
+    testDecodedToken = { privilege, uid: 'test uid' };
     const mockedApp = Substitute.for<firebase.app.App>();
     mockedAuth = Substitute.for<firebase.auth.Auth>();
     mockedApp.auth().returns(mockedAuth);
@@ -46,7 +46,7 @@ describe('TEST: Firebase Auth Test', () => {
       result.then((token) => {
         expect(token).equals(testDecodedToken);
         done();
-      }).catch((error) => done(error));
+      }).catch(error => done(error));
     });
 
     it('authentication failure', (done) => {
@@ -63,7 +63,7 @@ describe('TEST: Firebase Auth Test', () => {
       const result = firebaseAuthService.checkAuthentication('test token');
       // THEN: it throws an error
       result
-        .then((token) => done(token))
+        .then(token => done(token))
         .catch((error) => {
           expect(error).to.not.equal(null);
           done();
@@ -85,7 +85,7 @@ describe('TEST: Firebase Auth Test', () => {
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
-          { CREATE: 'test:access', READ: '', DELETE: '', UPDATE: '' },
+          { CREATE: 'test:access', READ: '', DELETE: '', UPDATE: '', READ_ALL: '' },
           AclOperations.CREATE,
         );
         // THEN: Allows access
@@ -105,7 +105,7 @@ describe('TEST: Firebase Auth Test', () => {
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
-          { CREATE: '', READ: 'test:access', DELETE: '', UPDATE: '' },
+          { READ_ALL: '', CREATE: '', READ: 'test:access', DELETE: '', UPDATE: '' },
           AclOperations.READ,
         );
         // THEN: Allows access
@@ -127,7 +127,7 @@ describe('TEST: Firebase Auth Test', () => {
 
         // WHEN: Checking permission
         let middleware = firebaseAuthService.verifyAcl(
-          { CREATE: '', READ: '', DELETE: 'test:access', UPDATE: 'test:update' },
+          { READ_ALL: '', CREATE: '', READ: '', DELETE: 'test:access', UPDATE: 'test:update' },
           AclOperations.DELETE,
         );
         // THEN: Allows access
@@ -139,7 +139,7 @@ describe('TEST: Firebase Auth Test', () => {
 
         // WHEN: Checking permission
         middleware = firebaseAuthService.verifyAcl(
-          { CREATE: 'test:access', READ: '', DELETE: '', UPDATE: 'test:update' },
+          { READ_ALL: '', CREATE: 'test:access', READ: '', DELETE: '', UPDATE: 'test:update' },
           AclOperations.UPDATE,
         );
         // THEN: Allows access
@@ -153,14 +153,14 @@ describe('TEST: Firebase Auth Test', () => {
         // GIVEN: a firebase authentication service and RBAC service with custom action
         let actionResult = true;
         const rbac = new RBAC();
-        rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access'], (params) => actionResult));
+        rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access'], () => actionResult));
         const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
         // GIVEN: environment is set to production
         process.env.APP_ENV = 'PROD';
 
         // WHEN: Checking permission
         let middleware = firebaseAuthService.verifyAcl(
-          { CREATE: '', READ: '', DELETE: 'test:access', UPDATE: 'test:update' },
+          { READ_ALL: '', CREATE: '', READ: '', DELETE: 'test:access', UPDATE: 'test:update' },
           AclOperations.DELETE,
         );
         // THEN: Allows access
@@ -174,7 +174,7 @@ describe('TEST: Firebase Auth Test', () => {
         actionResult = false;
         // WHEN: Checking permission
         middleware = firebaseAuthService.verifyAcl(
-          { CREATE: 'test:access', READ: '', DELETE: '', UPDATE: 'test:update' },
+          { READ_ALL: '', CREATE: 'test:access', READ: '', DELETE: '', UPDATE: 'test:update' },
           AclOperations.UPDATE,
         );
         // THEN: Allows access
@@ -200,7 +200,7 @@ describe('TEST: Firebase Auth Test', () => {
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
-          { CREATE: 'test:noaccess', READ: '', DELETE: '', UPDATE: '' },
+          { READ_ALL: '', CREATE: 'test:noaccess', READ: '', DELETE: '', UPDATE: '' },
           AclOperations.CREATE,
         );
         // THEN: Blocks access
@@ -227,7 +227,7 @@ describe('TEST: Firebase Auth Test', () => {
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
-          { CREATE: 'test:access', READ: '', DELETE: '', UPDATE: '' },
+          { READ_ALL: '', CREATE: 'test:access', READ: '', DELETE: '', UPDATE: '' },
           8,
         );
         // THEN: Blocks access
@@ -253,7 +253,7 @@ describe('TEST: Firebase Auth Test', () => {
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
-          { CREATE: 'test:access', READ: '', DELETE: '', UPDATE: '' },
+          { READ_ALL: '', CREATE: 'test:access', READ: '', DELETE: '', UPDATE: '' },
           AclOperations.READ,
         );
         // THEN: Blocks access
@@ -280,7 +280,7 @@ describe('TEST: Firebase Auth Test', () => {
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
-          { CREATE: 'test:access2', READ: '', DELETE: '', UPDATE: '' },
+          { READ_ALL: '', CREATE: 'test:access2', READ: '', DELETE: '', UPDATE: '' },
           AclOperations.CREATE,
         );
         // THEN: Blocks access

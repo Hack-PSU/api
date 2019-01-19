@@ -14,7 +14,6 @@ import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { Hackathon } from './hackathon';
 import { IHackathonDataMapper } from './index';
-import * as squel from 'squel'
 
 export class HackathonDataMapperImpl extends GenericDataMapper
   implements IHackathonDataMapper, IAclPerm {

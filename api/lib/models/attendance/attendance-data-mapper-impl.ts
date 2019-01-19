@@ -12,7 +12,7 @@ import { Stream } from 'ts-stream';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper'
 import { IDbResult } from "../../services/database";
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
-import { Attendance } from '../attendance';
+import { Attendance } from '.';
 
 export const TABLE_NAME = 'ATTENDANCE';
 
@@ -21,7 +21,7 @@ export const TABLE_NAME = 'ATTENDANCE';
  */
 
 @Injectable()
-export class AttendanceDataMapper extends GenericDataMapper
+export class AttendanceDataMapperImpl extends GenericDataMapper
   implements IAclPerm {
 
  

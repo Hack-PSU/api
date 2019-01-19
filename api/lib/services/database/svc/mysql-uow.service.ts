@@ -13,6 +13,7 @@ export enum SQL_ERRORS {
   DUPLICATE_KEY = 1062,
   FOREIGN_KEY_DELETE_FAILURE = 1217,
   FOREIGN_KEY_INSERT_FAILURE = 1452,
+  CONNECTION_REFUSED = 'ECONNREFUSED',
 }
 
 @Injectable()
@@ -33,6 +34,9 @@ export class MysqlUow implements IUow {
       case SQL_ERRORS.FOREIGN_KEY_DELETE_FAILURE:
         throw new HttpError(
           { message: 'cannot delete as this object is referenced elsewhere', error }, 400);
+      case SQL_ERRORS.CONNECTION_REFUSED:
+        throw new HttpError(
+          { message: 'could not connect to the database', error }, 500);
     }
     // TODO: Handle other known SQL errors here
     throw error;
@@ -107,6 +111,10 @@ export class MysqlUow implements IUow {
               });
             });
           }));
+        }),
+        catchError((err: MysqlError) => {
+          MysqlUow.SQLErrorHandler(err);
+          return from('');
         }),
       )
       .toPromise()

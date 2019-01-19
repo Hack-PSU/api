@@ -1,6 +1,7 @@
 import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { IDataMapper, IDbResult } from '../../services/database';
+import { IUowOpts } from '../../services/database/svc/uow.service';
 import { PreRegisterDataMapperImpl } from './pre-register-data-mapper-impl';
 import { PreRegistration } from './pre-registration';
 import { RegisterDataMapperImpl } from './register-data-mapper-impl';
@@ -18,13 +19,13 @@ interface IRegisterDataMapper extends IDataMapper {
 
   delete(id: UidType): Promise<IDbResult<void>>;
 
-  get(id: UidType): Promise<IDbResult<Registration[]>>;
+  get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Registration[]>>;
 
-  getAll(): Promise<IDbResult<Stream<Registration>>>;
+  getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Registration>>>;
 
   getCurrent(id: UidType): Promise<IDbResult<Registration>>;
 
-  getCount(): Promise<IDbResult<number>>;
+  getCount(opts?: IUowOpts): Promise<IDbResult<number>>;
 
 }
 

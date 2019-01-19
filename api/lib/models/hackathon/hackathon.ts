@@ -1,10 +1,10 @@
 import * as uuid from 'uuid';
-import assets from '../../assets/schemas/load-schemas';
+import loadSchemas from '../../assets/schemas/load-schemas';
 import { EpochNumber, UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 import { IHackathonApiModel } from './index';
 
-const hackathonSchema = assets('hackathonSchema');
+const hackathonSchema = loadSchemas('hackathonSchema');
 
 export class Hackathon extends BaseObject {
   public get id() {

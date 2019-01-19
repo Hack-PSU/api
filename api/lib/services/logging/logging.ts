@@ -64,32 +64,4 @@ export class Logger {
     }
     this.bunyan.warn(message);
   }
-
-  // private static createStdLogger() {
-  //   return bunyan.createLogger({
-  //     level: 'info',
-  //     name: LOGGER_NAME,
-  //     streams: [
-  //       // stdout logging
-  //       { stream: process.stdout, level: 'info' },
-  //       { stream: process.stderr, level: 'error' },
-  //       // Stackdriver logging
-  //       loggingBunyan.stream('info'),
-  //     ],
-  //   });
-  // }
-  //
-  // private static createTestLogger() {
-  //   return bunyan.createLogger({
-  //     level: 'trace',
-  //     name: LOGGER_NAME,
-  //     streams: [
-  //       { path: './logs/debug', level: 'trace' },
-  //       { path: './logs/error', level: 'error' },
-  //     ],
-  //   });
-  // }
 }
-
-// RootInjector.registerProvider([{ provide: 'BunyanLogger', useClass: Logger }]);
-// export const logger = RootInjector.getInjector().get('BunyanLogger').bunyan;

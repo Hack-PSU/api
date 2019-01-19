@@ -19,4 +19,5 @@ export enum AclOperations {
   UPDATE,
   DELETE,
   READ,
+  READ_ALL,
 }

@@ -3,6 +3,8 @@ import { UidType } from '../../JSCommon/common-types';
 import { IUowOpts } from './svc/uow.service';
 
 export interface IDataMapper<T> {
+  tableName: string;
+
   get(object: UidType, opts?: IUowOpts): Promise<IDbResult<T>>;
 
   insert(object: T): Promise<IDbResult<T>>;

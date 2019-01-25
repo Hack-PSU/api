@@ -1,9 +1,9 @@
 import * as uuid from 'uuid';
-import assets from '../../assets/schemas/load-schemas';
+import loadSchemas from '../../assets/schemas/load-schemas';
 import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 
-const eventSchema = assets('eventSchema');
+const eventSchema = loadSchemas('eventSchema');
 
 export enum EventType {
   WORKSHOP = 'workshop',

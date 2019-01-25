@@ -1,3 +1,5 @@
+import { AdminDataMapperImpl } from '../../../models/admin';
+import { AdminStatisticsDataMapperImpl } from '../../../models/admin/statistics/admin-statistics-data-mapper-impl';
 import { EventDataMapperImpl } from '../../../models/event/event-data-mapper-impl';
 import { HackathonDataMapperImpl } from '../../../models/hackathon';
 import { ActiveHackathonDataMapperImpl } from '../../../models/hackathon/active-hackathon';
@@ -6,6 +8,7 @@ import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-
 import { IndexController } from '../../../router/routes';
 import { AdminController } from '../../../router/routes/admin/';
 import { AdminRegisterController } from '../../../router/routes/admin/admin-register';
+import { AdminStatisticsController } from '../../../router/routes/admin/admin-statistics';
 import { InternalController } from '../../../router/routes/internal';
 import { EventsController } from '../../../router/routes/live/events';
 import { LiveController } from '../../../router/routes/live/live';
@@ -38,6 +41,7 @@ export class ExpressProvider {
         { provide: 'RegistrationController', useClass: RegistrationController },
         { provide: 'AdminController', useClass: AdminController },
         { provide: 'AdminRegisterController', useClass: AdminRegisterController },
+        { provide: 'AdminStatisticsController', useClass: AdminStatisticsController },
 
         // Interfaces
         { provide: 'IAcl', useClass: RBAC },
@@ -52,6 +56,8 @@ export class ExpressProvider {
         { provide: 'IPreRegisterDataMapper', useClass: PreRegisterDataMapperImpl },
         { provide: 'IActiveHackathonDataMapper', useClass: ActiveHackathonDataMapperImpl },
         { provide: 'IHackathonDataMapper', useClass: HackathonDataMapperImpl },
+        { provide: 'IAdminDataMapper', useClass: AdminDataMapperImpl },
+        { provide: 'IAdminStatisticsDataMapper', useClass: AdminStatisticsDataMapperImpl },
         { provide: 'IEmailService', useClass: SendgridService },
         { provide: 'IStorageService', useClass: GoogleStorageService },
 

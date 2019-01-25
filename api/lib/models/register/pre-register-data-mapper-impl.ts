@@ -7,26 +7,28 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDataMapper, IDbResult } from '../../services/database';
+import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
+import { IPreRegisterDataMapper } from './index';
 // import { IPreRegisterDataMapper } from './index';
 import { PreRegistration } from './pre-registration';
 
 export class PreRegisterDataMapperImpl extends GenericDataMapper
-  implements IDataMapper<PreRegistration>, IAclPerm {
+  implements IPreRegisterDataMapper, IAclPerm {
 
   public CREATE: string = 'pre-registration:create';
   public DELETE: string = 'pre-registration:delete';
   public READ: string = 'pre-registration:read';
   public UPDATE: string = 'pre-registration:update';
   public READ_ALL: string = 'pre-registration:readall';
+  public COUNT: string = 'pre-registration:count';
+  public tableName: string = 'PRE_REGISTRATION';
 
-  protected pkColumnName: string;
-  protected tableName: string;
+  protected pkColumnName: string = 'uid';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -35,14 +37,21 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
-    super.addRBAC([this.DELETE], [AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY]);
+    super.addRBAC(
+      [this.DELETE],
+      [AuthLevel.DIRECTOR],
+      undefined,
+      [AuthLevel[AuthLevel.TEAM_MEMBER]],
+    );
     super.addRBAC(
       [this.READ_ALL],
-      [AuthLevel.VOLUNTEER, AuthLevel.TEAM_MEMBER, AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
+      [AuthLevel.VOLUNTEER],
+      undefined,
+      [AuthLevel[AuthLevel.PARTICIPANT]],
     );
     super.addRBAC(
       [this.READ, this.UPDATE, this.CREATE],
-      [AuthLevel.PARTICIPANT, AuthLevel.VOLUNTEER, AuthLevel.TEAM_MEMBER, AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
+      [AuthLevel.PARTICIPANT],
     );
   }
 
@@ -91,17 +100,20 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
   }
 
   public getCount(): Promise<IDbResult<number>> {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from(this.tableName)
-      .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toString()
-      .concat(';');
-    const params = [];
+    const query = this.getCountQuery().toParam();
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query, params, { stream: true, cache: true }),
+      this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
     ).pipe(
       map((result: number) => ({ result: 'Success', data: result })),
     ).toPromise();
+  }
+
+  public getCountQuery() {
+    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+      .from(this.tableName)
+      .field(`COUNT(${this.pkColumnName})`, 'preregistration_count');
+    return query;
   }
 
   public async insert(object: PreRegistration): Promise<IDbResult<PreRegistration>> {

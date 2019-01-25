@@ -13,6 +13,7 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { Hackathon } from './hackathon';
+
 // import { IHackathonDataMapper } from './index';
 
 export class HackathonDataMapperImpl extends GenericDataMapper
@@ -23,6 +24,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
   public readonly READ: string = 'hackathon:read';
   public readonly UPDATE: string = 'hackathon:update';
   public readonly READ_ALL: string = 'hackathon:readall';
+  public readonly COUNT: string = 'hackathon:count';
   public tableName: string = 'HACKATHON';
 
   protected pkColumnName: string = 'uid';
@@ -35,17 +37,20 @@ export class HackathonDataMapperImpl extends GenericDataMapper
     super(acl);
     super.addRBAC(
       [this.CREATE, this.UPDATE],
-      [AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
+      [AuthLevel.DIRECTOR],
+      undefined,
+      [AuthLevel[AuthLevel.TEAM_MEMBER]],
     );
-    super.addRBAC([this.DELETE], [AuthLevel.TECHNOLOGY]);
+    super.addRBAC(
+      [this.DELETE],
+      [AuthLevel.TECHNOLOGY],
+      undefined,
+      [AuthLevel[AuthLevel.DIRECTOR]],
+    );
     super.addRBAC(
       [this.READ, this.READ_ALL],
       [
         AuthLevel.PARTICIPANT,
-        AuthLevel.VOLUNTEER,
-        AuthLevel.TEAM_MEMBER,
-        AuthLevel.DIRECTOR,
-        AuthLevel.TECHNOLOGY,
       ],
     );
   }

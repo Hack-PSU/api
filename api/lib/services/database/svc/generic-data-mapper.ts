@@ -4,7 +4,7 @@ import { Role } from '../../auth/RBAC/Role';
 
 export abstract class GenericDataMapper {
 
-  protected abstract tableName: string;
+  public abstract tableName: string;
   protected abstract pkColumnName: string;
 
   protected constructor(protected acl: IAcl) {

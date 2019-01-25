@@ -9,7 +9,7 @@ export interface IEmailService {
     email: string,
     htmlContent: string,
     subject: string,
-    fromEmail: string,
+    fromEmail?: string,
   ): IEmailData;
 
   /**

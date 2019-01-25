@@ -79,7 +79,7 @@ export class MysqlUow implements IUow {
           return from(new Promise<T | ReadableStream<T>>(async (resolve, reject) => {
             if (opts.cache) { // Check cache
               try {
-                const result: T = await this.cacheService.get(query);
+                const result: T = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
                 if (result !== null) {
                   if (opts.stream) {
                     this.complete(connection);
@@ -100,8 +100,8 @@ export class MysqlUow implements IUow {
                   throw err;
                 }
                 // Add result to cache
-                this.cacheService.set(query, result)
-                  .catch((cacheError) => this.logger.error(cacheError));
+                this.cacheService.set(`${query}${(params as string[]).join('')}`, result)
+                  .catch(cacheError => this.logger.error(cacheError));
                 if (opts.stream) {
                   this.complete(connection);
                   return resolve(Stream.from([result]));

@@ -116,7 +116,7 @@ export class Registration extends BaseObject {
     this.first_hackathon = data.firstHackathon || false;
     this.university = data.university;
     if (!data.email || !validate(data.email)) {
-      throw new Error('Email format is invalid');
+      throw new Error('IEmail format is invalid');
     }
     this.email = data.email;
     this.academic_year = data.academicYear;

@@ -1,5 +1,6 @@
 import { Injectable } from 'injection-js';
 import 'reflect-metadata';
+import { Logger } from '../../logging/logging';
 import { IAcl } from './rbac-types';
 import { Role } from './Role';
 
@@ -31,5 +32,9 @@ export class RBAC implements IAcl {
     }
     return registeredRole.inherits ? [...registeredRole.inherits].some(
       inherit => this.can(inherit, operation, params)) : false;
+  }
+
+  public printDebugInformation(logger: Logger) {
+    logger.debug(JSON.stringify(this.roles));
   }
 }

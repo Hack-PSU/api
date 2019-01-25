@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "dev": "grunt && nodemon ./dist/bin/www",
+    "dev": "nodemon ./dist/bin/www",
     "start": "grunt && node ./dist/bin/www",
     "watch": "grunt && nodemon ./dist/bin/www",
     "test": "nyc mocha",
@@ -87,7 +87,8 @@
     "ts-stream": "2.0.0",
     "tslint": "5.11.0",
     "tslint-config-airbnb": "5.11.0",
-    "uuid": "3.2.1"
+    "uuid": "3.2.1",
+    "express-query-boolean": "latest"
   },
   "devDependencies": {
     "@types/lodash": "4.14.117",

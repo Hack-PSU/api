@@ -22,8 +22,11 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
       this.hackathonObservable = from(this.sql.query(
         query.text,
         query.values,
-      ) as Promise<ActiveHackathon>)
-        .pipe(shareReplay());
+      ) as Promise<ActiveHackathon[]>)
+        .pipe(
+          map((hackathons: ActiveHackathon[]) => hackathons[0]),
+          shareReplay(),
+        );
     }
     return this.hackathonObservable;
   }
@@ -32,6 +35,7 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
   public DELETE: string = 'active-hackathon:delete';
   public READ: string = 'active-hackathon:read';
   public UPDATE: string = 'active-hackathon:update';
+  public COUNT: string = 'active-hackathon:count';
   private hackathonObservable: Observable<ActiveHackathon>;
 
   constructor(
@@ -42,17 +46,20 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
     super(acl, sql, logger);
     super.addRBAC(
       [this.CREATE, this.UPDATE],
-      [AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
+      [AuthLevel.DIRECTOR],
+      undefined,
+      [AuthLevel[AuthLevel.TEAM_MEMBER]],
     );
-    super.addRBAC([this.DELETE], [AuthLevel.TECHNOLOGY]);
+    super.addRBAC(
+      [this.DELETE],
+      [AuthLevel.TECHNOLOGY],
+      undefined,
+      [AuthLevel[AuthLevel.DIRECTOR]],
+    );
     super.addRBAC(
       [this.READ, this.READ_ALL],
       [
         AuthLevel.PARTICIPANT,
-        AuthLevel.VOLUNTEER,
-        AuthLevel.TEAM_MEMBER,
-        AuthLevel.DIRECTOR,
-        AuthLevel.TECHNOLOGY,
       ],
     );
   }

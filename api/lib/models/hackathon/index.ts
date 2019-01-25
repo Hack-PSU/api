@@ -1,6 +1,4 @@
-import { Stream } from 'ts-stream';
 import { EpochNumber, UidType } from '../../JSCommon/common-types';
-import { IDataMapper, IDbResult } from '../../services/database';
 import { Hackathon } from './hackathon';
 import { HackathonDataMapperImpl } from './hackathon-data-mapper-impl';
 

@@ -23,9 +23,10 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   public readonly READ: string = 'event:read';
   public readonly UPDATE: string = 'event:update';
   public readonly READ_ALL: string = 'event:readall';
+  public readonly COUNT: string = 'event:count';
+  public tableName = '';
 
   protected pkColumnName = '';
-  protected tableName = '';
 
   constructor(
     @Inject('MysqlUow') private readonly sql: MysqlUow,
@@ -36,16 +37,14 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
     super(ReflectiveInjector.resolveAndCreate([RBAC]).get(RBAC));
     super.addRBAC(
       [this.CREATE, this.UPDATE, this.DELETE],
-      [AuthLevel.TEAM_MEMBER, AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
+      [AuthLevel.TEAM_MEMBER],
+      undefined,
+      [AuthLevel[AuthLevel.VOLUNTEER]],
     );
     super.addRBAC(
       [this.READ_ALL, this.READ],
       [
         AuthLevel.PARTICIPANT,
-        AuthLevel.VOLUNTEER,
-        AuthLevel.TEAM_MEMBER,
-        AuthLevel.DIRECTOR,
-        AuthLevel.TECHNOLOGY,
       ],
     );
   }

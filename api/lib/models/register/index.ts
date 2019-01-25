@@ -3,6 +3,7 @@ import { UidType } from '../../JSCommon/common-types';
 import { IDataMapper, IDbResult } from '../../services/database';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { PreRegisterDataMapperImpl } from './pre-register-data-mapper-impl';
+import { PreRegistration } from './pre-registration';
 import { RegisterDataMapperImpl } from './register-data-mapper-impl';
 import { IRegistrationStats, Registration } from './registration';
 
@@ -23,6 +24,14 @@ interface IRegisterDataMapper extends IDataMapper<Registration | Registration[]>
    * a given table column
    */
   getSelectQueryForOptionName(fieldname: string, opts?: IUowOpts): Promise<squel.Select>;
+
+  normaliseRegistrationData(registration: any): void;
+
+  getCountQuery(opts?: IUowOpts): Promise<squel.Select>;
+}
+
+interface IPreRegisterDataMapper extends IDataMapper<PreRegistration> {
+  getCountQuery(): squel.Select;
 }
 
 // interface IPreRegisterDataMapper extends IDataMapper {
@@ -42,7 +51,7 @@ interface IRegisterDataMapper extends IDataMapper<Registration | Registration[]>
 export * from './registration';
 export {
   IRegisterDataMapper,
-  // IPreRegisterDataMapper,
+  IPreRegisterDataMapper,
   PreRegisterDataMapperImpl,
   RegisterDataMapperImpl,
 };

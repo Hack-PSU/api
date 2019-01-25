@@ -8,10 +8,7 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { Util } from '../../JSCommon/util';
 import { IActiveHackathonDataMapper } from '../../models/hackathon/active-hackathon';
-import {
-  IRegisterDataMapper,
-  Registration,
-} from '../../models/register';
+import { IRegisterDataMapper, Registration, } from '../../models/register';
 import { PreRegistration } from '../../models/register/pre-registration';
 import { IAuthService } from '../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -34,26 +31,13 @@ const emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
 @Injectable()
 export class RegistrationController extends ParentRouter implements IExpressController {
 
-  private static normaliseRequestBody(registration: any) {
-    /** Converting boolean strings to booleans types in registration */
-    registration.travelReimbursement = registration.travelReimbursement && registration.travelReimbursement === 'true';
-
-    registration.firstHackathon = registration.firstHackathon && registration.firstHackathon === 'true';
-
-    registration.eighteenBeforeEvent = registration.eighteenBeforeEvent && registration.eighteenBeforeEvent === 'true';
-
-    registration.mlhcoc = registration.mlhcoc && registration.mlhcoc === 'true';
-
-    registration.mlhdcp = registration.mlhdcp && registration.mlhdcp === 'true';
-  }
-
   public router: Router;
 
   constructor(
     @Inject('IAuthService') private readonly authService: IAuthService,
-    @Inject('IRegisterDataMapper') private readonly dataMapper: IRegisterDataMapper,
-    @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IDataMapper<PreRegistration>,
+    @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IRegisterDataMapper') private readonly aclPerm: IAclPerm,
+    @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IDataMapper<PreRegistration>,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IStorageService') private readonly storageService: IStorageService,
     @Inject('IEmailService') private readonly emailService: IEmailService,
@@ -68,7 +52,7 @@ export class RegistrationController extends ParentRouter implements IExpressCont
     if (!this.authService) {
       return;
     }
-    if (!this.dataMapper) {
+    if (!this.registerDataMapper) {
       return;
     }
     // Unauthenticated routes
@@ -95,8 +79,8 @@ export class RegistrationController extends ParentRouter implements IExpressCont
       throw new HttpError('No registration provided', 400);
     }
     if (!validate(registration.email)) {
-      this.logger.error('Email used for registration is invalid');
-      throw new HttpError('Email used for registration is invalid', 400);
+      this.logger.error('IEmail used for registration is invalid');
+      throw new HttpError('IEmail used for registration is invalid', 400);
     }
     if (!registration.eighteenBeforeEvent) {
       this.logger.error('User must be over eighteen years of age to register');
@@ -187,12 +171,15 @@ export class RegistrationController extends ParentRouter implements IExpressCont
   private async registrationHandler(request: Request, response: Response, next: NextFunction) {
     // Validate incoming registration
     try {
-      RegistrationController.normaliseRequestBody(request.body);
+      this.registerDataMapper.normaliseRegistrationData(request.body);
       request.body.uid = response.locals.user.uid;
       request.body.email = response.locals.user.email;
       this.validateRegistrationFields(request.body);
     } catch (error) {
-      return Util.errorHandler500(error, next);
+      return Util.standardErrorHandler(
+        new HttpError(error.toString(), 400),
+        next,
+      );
     }
 
     // Save registration
@@ -216,8 +203,8 @@ export class RegistrationController extends ParentRouter implements IExpressCont
       );
     }
     try {
-      const result = await this.dataMapper.insert(registration);
-      const submission = await this.dataMapper.submit(registration);
+      const result = await this.registerDataMapper.insert(registration);
+      const submission = await this.registerDataMapper.submit(registration);
       await this.sendRegistrationEmail(registration);
       const res = new ResponseBody(
         'Success',

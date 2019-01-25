@@ -1,15 +1,11 @@
-import { Stream } from 'ts-stream';
-import { IDataMapper, IDbResult } from '../../services/database';
 import { Attendance } from './attendance';
-import { AttendanceDataMapperImpl } from './attendance-data-mapper-impl'
-import { IUowOpts } from '../../services/database/svc/uow.service';
+import { AttendanceDataMapperImpl } from './attendance-data-mapper-impl';
 
-interface IAttendanceDataMapper extends IDataMapper {
+// interface IAttendanceDataMapper extends IDataMapper<Attet> {
+//
+//   getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Attendance>>>;
+//
+//   getCount(opts?: IUowOpts): Promise<IDbResult<number>>;
+// }
 
-  getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Attendance>>>;
-
-  getCount(opts?: IUowOpts): Promise<IDbResult<number>>;
-}
-
-export { IAttendanceDataMapper, Attendance, AttendanceDataMapperImpl };
-
+export { Attendance, AttendanceDataMapperImpl };

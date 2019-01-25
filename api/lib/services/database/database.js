@@ -148,57 +148,57 @@ function addRfidScans(uow, scans) {
  * @param uow
  * @return {Promise<any>}
  */
-function getAllUsersList(uow) {
-  let query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
-    .distinct()
-    .field('pre_reg.uid', 'pre_uid')
-    .field('reg.*')
-    .field('reg.pin - hackathon.base_pin', 'pin')
-    .field('hackathon.name')
-    .field('hackathon.start_time')
-    .field('hackathon.end_time')
-    .field('hackathon.base_pin')
-    .field('hackathon.active')
-    .field('rsvp.user_id')
-    .field('rsvp.rsvp_time')
-    .field('rsvp.rsvp_status')
-    .field('rfid.user_uid')
-    .from(PreRegistration.TABLE_NAME, 'pre_reg')
-    .right_join(Registration.TABLE_NAME, 'reg', 'pre_reg.email = reg.email')
-    .join(Hackathon.TABLE_NAME, 'hackathon', 'reg.hackathon = hackathon.uid and hackathon.active = 1')
-    .left_join(RSVP.TABLE_NAME, 'rsvp', 'reg.uid = rsvp.user_id AND rsvp.hackathon = hackathon.uid')
-    .left_join('RFID_ASSIGNMENTS', 'rfid', 'reg.uid = rfid.user_uid AND hackathon.uid = rfid.hackathon')
-    .toString();
-  query = query.concat(';');
-  return uow.query(query, null, { stream: true });
-}
+// function getAllUsersList(uow) {
+//   let query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
+//     .distinct()
+//     .field('pre_reg.uid', 'pre_uid')
+//     .field('reg.*')
+//     .field('reg.pin - hackathon.base_pin', 'pin')
+//     .field('hackathon.name')
+//     .field('hackathon.start_time')
+//     .field('hackathon.end_time')
+//     .field('hackathon.base_pin')
+//     .field('hackathon.active')
+//     .field('rsvp.user_id')
+//     .field('rsvp.rsvp_time')
+//     .field('rsvp.rsvp_status')
+//     .field('rfid.user_uid')
+//     .from(PreRegistration.TABLE_NAME, 'pre_reg')
+//     .right_join(Registration.TABLE_NAME, 'reg', 'pre_reg.email = reg.email')
+//     .join(Hackathon.TABLE_NAME, 'hackathon', 'reg.hackathon = hackathon.uid and hackathon.active = 1')
+//     .left_join(RSVP.TABLE_NAME, 'rsvp', 'reg.uid = rsvp.user_id AND rsvp.hackathon = hackathon.uid')
+//     .left_join('RFID_ASSIGNMENTS', 'rfid', 'reg.uid = rfid.user_uid AND hackathon.uid = rfid.hackathon')
+//     .toString();
+//   query = query.concat(';');
+//   return uow.query(query, null, { stream: true });
+// }
 
-/**
- *
- * @param uow
- * @return {Promise<any>}
- */
-function getAllUsersCount(uow) {
-  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .from(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from(PreRegistration.TABLE_NAME, 'prereg')
-      .field('COUNT(prereg.uid)', 'pre_count'), 'a')
-    .join(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from(Registration.TABLE_NAME, 'registration')
-      .field('COUNT(registration.uid)', 'reg_count')
-      .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = registration.hackathon AND hackathon.active = 1'), 'b')
-    .join(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from(RSVP.TABLE_NAME, 'rsvp')
-      .field('COUNT(rsvp.user_id)', 'rsvp_count')
-      .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = rsvp.hackathon AND hackathon.active = 1'), 'c')
-    .join(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from('RFID_ASSIGNMENTS', 'rfid')
-      .field('COUNT(rfid.user_uid)', 'checkin_count')
-      .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = rfid.hackathon AND hackathon.active = 1'), 'd')
-    .toString();
-  query = query.concat(';');
-  return uow.query(query, null, { stream: false });
-}
+// /**
+//  *
+//  * @param uow
+//  * @return {Promise<any>}
+//  */
+// function getAllUsersCount(uow) {
+//   let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+//     .from(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+//       .from(PreRegistration.TABLE_NAME, 'prereg')
+//       .field('COUNT(prereg.uid)', 'pre_count'), 'a')
+//     .join(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+//       .from(Registration.TABLE_NAME, 'registration')
+//       .field('COUNT(registration.uid)', 'reg_count')
+//       .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = registration.hackathon AND hackathon.active = 1'), 'b')
+//     .join(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+//       .from(RSVP.TABLE_NAME, 'rsvp')
+//       .field('COUNT(rsvp.user_id)', 'rsvp_count')
+//       .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = rsvp.hackathon AND hackathon.active = 1'), 'c')
+//     .join(squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+//       .from('RFID_ASSIGNMENTS', 'rfid')
+//       .field('COUNT(rfid.user_uid)', 'checkin_count')
+//       .join(Hackathon.TABLE_NAME, 'hackathon', 'hackathon.uid = rfid.hackathon AND hackathon.active = 1'), 'd')
+//     .toString();
+//   query = query.concat(';');
+//   return uow.query(query, null, { stream: false });
+// }
 
 module.exports = {
   writePiMessage,

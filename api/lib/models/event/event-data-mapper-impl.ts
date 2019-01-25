@@ -22,9 +22,10 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
   public readonly READ: string = 'event:read';
   public readonly UPDATE: string = 'event:update';
   public readonly READ_ALL: string = 'event:readall';
+  public readonly COUNT: string = 'event:count';
+  public tableName = 'EVENTS';
 
   protected pkColumnName = 'uid';
-  protected tableName = 'EVENTS';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -34,16 +35,14 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
     super(acl);
     super.addRBAC(
       [this.CREATE, this.UPDATE, this.DELETE],
-      [AuthLevel.TEAM_MEMBER, AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
+      [AuthLevel.TEAM_MEMBER],
+      undefined,
+      [AuthLevel[AuthLevel.VOLUNTEER]],
     );
     super.addRBAC(
       [this.READ, this.READ_ALL],
       [
         AuthLevel.PARTICIPANT,
-        AuthLevel.VOLUNTEER,
-        AuthLevel.TEAM_MEMBER,
-        AuthLevel.DIRECTOR,
-        AuthLevel.TECHNOLOGY,
       ],
     );
   }

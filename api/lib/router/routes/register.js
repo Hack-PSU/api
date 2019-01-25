@@ -128,7 +128,7 @@
 //     req.body.mlhcoc && req.body.mlhdcp)) {
 //     logger.error('Request body:');
 //     logger.error(req.body);
-//     logger.error('Email validation:');
+//     logger.error('IEmail validation:');
 //     logger.error(validator.validate(req.body.email));
 //     const error = new Error();
 //     error.body = {

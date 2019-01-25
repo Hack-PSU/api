@@ -126,10 +126,13 @@ describe('TEST: Firebase Auth Test', () => {
         process.env.APP_ENV = 'PROD';
 
         // WHEN: Checking permission
-        let middleware = firebaseAuthService.verifyAcl(
-          { READ_ALL: '', CREATE: '', READ: '', DELETE: 'test:access', UPDATE: 'test:update' },
-          AclOperations.DELETE,
-        );
+        let middleware = firebaseAuthService.verifyAcl({
+          READ_ALL: '',
+          CREATE: '',
+          READ: '',
+          DELETE: 'test:access',
+          UPDATE: 'test:update',
+        }, AclOperations.DELETE);
         // THEN: Allows access
         middleware(mockReq(), mockedResponse, (response) => {
           if (response) {
@@ -138,10 +141,13 @@ describe('TEST: Firebase Auth Test', () => {
         });
 
         // WHEN: Checking permission
-        middleware = firebaseAuthService.verifyAcl(
-          { READ_ALL: '', CREATE: 'test:access', READ: '', DELETE: '', UPDATE: 'test:update' },
-          AclOperations.UPDATE,
-        );
+        middleware = firebaseAuthService.verifyAcl({
+          READ_ALL: '',
+          CREATE: 'test:access',
+          READ: '',
+          DELETE: '',
+          UPDATE: 'test:update',
+        }, AclOperations.UPDATE);
         // THEN: Allows access
         middleware(mockReq(), mockedResponse, done);
       });
@@ -159,10 +165,13 @@ describe('TEST: Firebase Auth Test', () => {
         process.env.APP_ENV = 'PROD';
 
         // WHEN: Checking permission
-        let middleware = firebaseAuthService.verifyAcl(
-          { READ_ALL: '', CREATE: '', READ: '', DELETE: 'test:access', UPDATE: 'test:update' },
-          AclOperations.DELETE,
-        );
+        let middleware = firebaseAuthService.verifyAcl({
+          READ_ALL: '',
+          CREATE: '',
+          READ: '',
+          DELETE: 'test:access',
+          UPDATE: 'test:update',
+        }, AclOperations.DELETE);
         // THEN: Allows access
         middleware(mockReq(), mockedResponse, (response) => {
           if (response) {
@@ -173,10 +182,13 @@ describe('TEST: Firebase Auth Test', () => {
         // GIVEN: custom action result is false
         actionResult = false;
         // WHEN: Checking permission
-        middleware = firebaseAuthService.verifyAcl(
-          { READ_ALL: '', CREATE: 'test:access', READ: '', DELETE: '', UPDATE: 'test:update' },
-          AclOperations.UPDATE,
-        );
+        middleware = firebaseAuthService.verifyAcl({
+          READ_ALL: '',
+          CREATE: 'test:access',
+          READ: '',
+          DELETE: '',
+          UPDATE: 'test:update',
+        }, AclOperations.UPDATE);
         // THEN: Allows access
         middleware(mockReq(), mockedResponse, (response) => {
           if (!response) {

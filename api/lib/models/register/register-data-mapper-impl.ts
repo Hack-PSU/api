@@ -25,6 +25,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
   public READ: string = 'registration:read';
   public READ_ALL: string = 'registration:readall';
   public UPDATE: string = 'registration:update';
+  public COUNT: string = 'registration:count';
 
   public tableName: string = 'REGISTRATION';
   protected pkColumnName: string = 'uid';
@@ -36,15 +37,35 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
-    super.addRBAC([this.DELETE], [AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY]);
     super.addRBAC(
-      [this.READ_ALL],
-      [AuthLevel.VOLUNTEER, AuthLevel.TEAM_MEMBER, AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
+      [this.DELETE],
+      [AuthLevel.DIRECTOR],
+      undefined,
+      [AuthLevel[AuthLevel.TEAM_MEMBER]],
+    );
+    super.addRBAC(
+      [this.READ_ALL, this.COUNT],
+      [AuthLevel.VOLUNTEER],
+      undefined,
+      [AuthLevel[AuthLevel.PARTICIPANT]],
     );
     super.addRBAC(
       [this.READ, this.UPDATE, this.CREATE],
-      [AuthLevel.PARTICIPANT, AuthLevel.VOLUNTEER, AuthLevel.TEAM_MEMBER, AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
+      [AuthLevel.PARTICIPANT],
     );
+  }
+
+  public normaliseRegistrationData(registration: any) {
+    /** Converting boolean strings to booleans types in registration */
+    registration.travelReimbursement = registration.travelReimbursement && registration.travelReimbursement === 'true';
+
+    registration.firstHackathon = registration.firstHackathon && registration.firstHackathon === 'true';
+
+    registration.eighteenBeforeEvent = registration.eighteenBeforeEvent && registration.eighteenBeforeEvent === 'true';
+
+    registration.mlhcoc = registration.mlhcoc && registration.mlhcoc === 'true';
+
+    registration.mlhdcp = registration.mlhdcp && registration.mlhdcp === 'true';
   }
 
   public delete(id: UidType): Promise<IDbResult<void>> {
@@ -108,7 +129,9 @@ export class RegisterDataMapperImpl extends GenericDataMapper
           'hackathon.uid = ?',
           await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon.toPromise()),
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
         );
     }
     const query = queryBuilder
@@ -122,26 +145,31 @@ export class RegisterDataMapperImpl extends GenericDataMapper
   }
 
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
+    const query = (await this.getCountQuery(opts)).toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
+    ).pipe(
+      map((result: number) => ({ result: 'Success', data: result })),
+    ).toPromise();
+  }
+
+  public async getCountQuery(opts?: IUowOpts) {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
-      .field(`COUNT(${this.pkColumnName})`, 'count');
+      .field(`COUNT(${this.pkColumnName})`, 'registration_count');
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
         .where(
           'hackathon = ?',
           await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon.toPromise()),
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
         );
     }
-    const query = queryBuilder
-      .toString()
-      .concat(';');
-    return from(
-      this.sql.query<number>(query, [], { stream: true, cache: true }),
-    ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
-    ).toPromise();
+    return queryBuilder;
   }
 
   public async insert(object: Registration): Promise<IDbResult<Registration>> {
@@ -154,7 +182,11 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation])
-      .set('hackathon', (await this.activeHackathonDataMapper.activeHackathon.toPromise()).id)
+      .set(
+        'hackathon',
+        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+          .toPromise(),
+      )
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -172,7 +204,12 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .table(this.tableName)
       .set('submitted', true)
       .where('uid = ?', object.id)
-      .where('hackathon = ?', await this.activeHackathonDataMapper.activeHackathon.toPromise())
+      .where(
+        'hackathon = ?',
+        await this.activeHackathonDataMapper.activeHackathon
+          .pipe(map(hackathon => hackathon.uid))
+          .toPromise(),
+      )
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -247,7 +284,8 @@ export class RegisterDataMapperImpl extends GenericDataMapper
         await this.getSelectQueryForOptionName(columnNames[i], opts) :
         queryBuilder.union(await this.getSelectQueryForOptionName(columnNames[i], opts));
     }
-    const query: string = queryBuilder.toString().concat(';');
+    const query = queryBuilder.toString().concat(';');
+    console.log(query);
     return from(this.sql.query<IRegistrationStats>(
       query,
       [],
@@ -304,7 +342,9 @@ export class RegisterDataMapperImpl extends GenericDataMapper
           'hackathon.uid = ?',
           await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon.toPromise()),
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
         );
     }
     return queryBuilder.group(fieldname);

@@ -11,6 +11,7 @@ import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
+import { default as expressQueryBoolean } from 'express-query-boolean';
 import helmet from 'helmet';
 import * as path from 'path';
 import { HttpError } from './JSCommon/errors';
@@ -19,6 +20,7 @@ import { ParentRouter, ResponseBody } from './router/router-types';
 import * as controllers from './router/routes/controllers';
 import { Logger } from './services/logging/logging';
 // Setup cloud specific trace and debug
+
 if (Util.getCurrentEnv() === Environment.PRODUCTION) {
   traceAgent.start();
   debugAgent.start();
@@ -49,7 +51,7 @@ export class App extends ParentRouter {
     // render the error page
     response.status(error.status || 500);
     const res = new ResponseBody('Error', error.status || 500, error.body);
-    response.send(res);
+    this.sendResponse(response, res);
     next();
   }
 
@@ -107,6 +109,9 @@ export class App extends ParentRouter {
 
     // Setup Cookie Parser
     this.app.use(cookieParser());
+
+    // Setup boolean query parser
+    this.app.use(expressQueryBoolean());
   }
 
   /**
@@ -141,6 +146,7 @@ export class App extends ParentRouter {
     App.registerRouter('live', 'LiveController');
     App.registerRouter('internal', 'InternalController', 1);
     App.registerRouter('register', 'RegistrationController');
+    App.registerRouter('admin', 'AdminController');
     App.registeredRoutes.forEach((router, key) => {
       this.app.use(key, Util.getInstance(router).router);
     });

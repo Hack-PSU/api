@@ -12,12 +12,12 @@ export class SendgridService implements IEmailService {
     email: string,
     htmlContent: string,
     subject: string,
-    fromEmail: string,
+    fromEmail?: string,
   ) {
     if (!validator.validate(email)) {
       throw new Error('Invalid email');
     }
-    const emailAddress = validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
+    const emailAddress = fromEmail && validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
     return {
       from: emailAddress,
       html: htmlContent,

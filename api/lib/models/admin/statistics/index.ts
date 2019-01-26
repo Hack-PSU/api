@@ -61,4 +61,3 @@ interface IAdminStatisticsDataMapper extends IDataMapper<any> {
 }
 
 export { IAdminStatisticsDataMapper, IUserCount, IUserStatistics };
-

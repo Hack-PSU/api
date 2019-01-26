@@ -37,7 +37,7 @@ export class Constants {
     debug: 'https://hackpsu18-staging.firebaseio.com/',
     prod: 'https://hackpsu18.firebaseio.com/',
     staging: 'https://hackpsu18-staging.firebaseio.com',
-    test: 'https://hackpsu18-test.firebaseio.com/',
+    test: 'https://hackpsu18-staging.firebaseio.com/',
   };
 
   public static readonly pushNotifKey = {

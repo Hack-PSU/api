@@ -26,6 +26,7 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
   public SEND_EMAIL: string = 'admin:send_email';
   public CREATE: string = 'admin:create';
   public REDUCE_PERMISSION: string = 'admin:reduce_perm';
+  public MAKE_ACTIVE: string = 'admin:make_active';
   // Undefined actions for admin mapper
   public COUNT: string;
   public DELETE: string;
@@ -45,13 +46,7 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
   ) {
     super(acl);
     super.addRBAC(
-      [this.GET_EMAIL, this.SEND_EMAIL],
-      [AuthLevel.DIRECTOR],
-      undefined,
-      [AuthLevel[AuthLevel.TEAM_MEMBER]],
-    );
-    super.addRBAC(
-      this.CREATE,
+      [this.GET_EMAIL, this.SEND_EMAIL, this.CREATE, this.MAKE_ACTIVE],
       [AuthLevel.DIRECTOR],
       undefined,
       [AuthLevel[AuthLevel.TEAM_MEMBER]],

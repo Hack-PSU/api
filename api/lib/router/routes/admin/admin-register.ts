@@ -70,7 +70,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @api {get} /admin/register Get registered hackers
    * @apiVersion 1.0.0
    * @apiName Get Registered Hackers
-   * @apiGroup Registration
+   * @apiGroup Admin Registration
    * @apiPermission TeamMemberPermission
    *
    * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
@@ -102,7 +102,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @api {get} /admin/register/count Get a count of Registered Users
    * @apiVersion 1.0.0
    * @apiName get count of registration
-   * @apiGroup Registration
+   * @apiGroup Admin Registration
    * @apiPermission TeamMemberPermission
    * @apiParam {string} hackathon The hackathon uid to get registration details for
    * @apiParam {boolean} allHackathons Whether to retrieve data for all hackathons
@@ -128,7 +128,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @api {post} /admin/register/update Update an existing registration
    * @apiVersion 1.0.0
    * @apiName Update Registration
-   * @apiGroup Registration
+   * @apiGroup Admin Registration
    * @apiPermission DirectorPermission
    * @apiParam {Object} registration The updated registration object.
    * @apiUse AuthArgumentRequired

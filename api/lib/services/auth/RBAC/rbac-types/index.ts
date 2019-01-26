@@ -22,6 +22,7 @@ export interface IAdminAclPerm extends IAclPerm {
   GET_EMAIL: string;
   SEND_EMAIL: string;
   REDUCE_PERMISSION: string;
+  MAKE_ACTIVE: string;
 }
 
 export interface IAdminStatisticsPerm extends IAclPerm {
@@ -39,4 +40,5 @@ export enum AclOperations {
   GET_EMAIL,
   REDUCE_PERMISSION,
   STATISTICS,
+  MAKE_ACTIVE,
 }

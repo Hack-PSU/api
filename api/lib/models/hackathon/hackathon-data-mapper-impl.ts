@@ -69,9 +69,9 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Hackathon>(query.text, query.values, { stream: false, cache: true }))
+    return from(this.sql.query<Hackathon[]>(query.text, query.values, { stream: false, cache: true }))
       .pipe(
-        map((event: Hackathon) => ({ result: 'Success', data: event })),
+        map((event: Hackathon[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
@@ -112,32 +112,40 @@ export class HackathonDataMapperImpl extends GenericDataMapper
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation])
+      .set(
+        'base_pin',
+        squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: false })
+          .from('REGISTRATION LOCK IN SHARE MODE')
+          .field('MAX(pin)'),
+      )
       .toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 
-  public update(object: Hackathon): Promise<IDbResult<Hackathon>> {
-    const validation = object.validate();
+  public async update(object: Hackathon): Promise<IDbResult<Hackathon>> {
+    const currentDbObject = await this.get(object.id);
+    const currentObject = Hackathon.merge(currentDbObject.data, object);
+    const validation = currentObject.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
-      this.logger.warn(object.dbRepresentation);
-      return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
+      this.logger.warn(currentObject.dbRepresentation);
+      return Promise.reject(new HttpError(validation.error, 400));
     }
     const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)
-      .setFields(object.dbRepresentation)
-      .where(`${this.pkColumnName} = ?`, object.id)
+      .setFields(currentObject.dbRepresentation)
+      .where(`${this.pkColumnName} = ?`, currentObject.id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map(() => ({ result: 'Success', data: currentObject.cleanRepresentation })),
     ).toPromise();
   }
 }

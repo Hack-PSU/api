@@ -15,11 +15,23 @@ export class Hackathon extends BaseObject {
     return hackathonSchema;
   }
 
-  public readonly uid: UidType;
-  public readonly name: string;
-  public readonly start_time: EpochNumber;
-  public readonly end_time: EpochNumber | null;
-  public readonly base_pin: number | null;
+  public static merge(oldObject: Hackathon, newObject: Hackathon): Hackathon {
+    newObject.uid = newObject.uid || oldObject.uid;
+    newObject.name = newObject.name || oldObject.name;
+    newObject.start_time = Math.abs(newObject.start_time - Date.now()) < 1000 ?
+      parseInt(oldObject.start_time as any, 10) :
+      newObject.start_time;
+    newObject.end_time = newObject.end_time || parseInt(oldObject.end_time as any, 10);
+    newObject.base_pin = newObject.base_pin || oldObject.base_pin;
+    newObject.active = newObject.active || oldObject.active;
+    return newObject;
+  }
+
+  public uid: UidType;
+  public name: string;
+  public start_time: EpochNumber;
+  public end_time: EpochNumber | null;
+  public base_pin: number | null;
   public active: boolean;
 
   constructor(data: IHackathonApiModel) {
@@ -31,4 +43,5 @@ export class Hackathon extends BaseObject {
     this.base_pin = data.basePin;
     this.active = false;
   }
+
 }

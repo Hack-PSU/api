@@ -99,38 +99,11 @@ router.use('/checkout', checkout);
 // }
 
 /** ********************** ROUTES ******************************** */
-// /**
-//  * @api {get} /admin/ Get Authentication Status
-//  * @apiVersion 1.0.0
-//  * @apiName Get Authentication Status
-//  * @apiGroup Admin
-//  * @apiPermission TeamMemberPermission
-//  *
-//  * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
-//  *
-//  * @apiUse AuthArgumentRequired
-//  *
-//  * @apiSuccess {Array} Array of registered hackers
-//  */
 // router.get('/', (req, res) => {
 //   res.status(200)
 //     .send({ response: 'authorized' });
 // });
 
-// /**
-//  * @api {get} /admin/registered Get registered hackers
-//  * @apiVersion 1.0.0
-//  * @apiName Get Registered Hackers
-//  * @apiGroup Registration
-//  * @apiPermission TeamMemberPermission
-//  *
-//  * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
-//  * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
-//  *
-//  * @apiUse AuthArgumentRequired
-//  *
-//  * @apiSuccess {Array} Array of registered hackers
-//  */
 // router.get('/registered', verifyACL(2), (req, res, next) => {
 //   Registration.getAll(req.uow, {
 //     count: res.locals.limit,
@@ -163,18 +136,6 @@ router.get('/preregistered', verifyACL(2), (req, res, next) => {
     .catch(err => errorHandler500(err, next));
 });
 
-// /**
-//  * @api {get} /admin/userid Get the uid corresponding to an email
-//  * @apiVersion 1.0.0
-//  * @apiName Get User Id
-//  * @apiGroup Admin
-//  * @apiPermission DirectorPermission
-//  *
-//  * @apiUse AuthArgumentRequired
-//  * @apiParam {string} email The email to query user id by
-//  * @apiSuccess {object} Object {uid, displayName}
-//  * @apiUse IllegalArgumentError
-//  */
 // router.get('/userid', verifyACL(3), (req, res, next) => {
 //   if (!req.query ||
 //       !req.query.email ||
@@ -232,24 +193,6 @@ router.get(['/rsvp_list', '/rsvp'], verifyACL(3), (req, res, next) => {
     .catch(err => errorHandler500(err, next));
 });
 
-// /**
-//  * @api {post} /admin/update_registration Update an existing registration
-//  * @apiVersion 0.4.0
-//  * @apiName Update Registration
-//  * @apiGroup Registration
-//  * @apiPermission DirectorPermission
-//  * @apiParam {Object} registration The updated registration object.
-//  * @apiUse AuthArgumentRequired
-//  */
-// /**
-//  * @api {post} /admin/registration/update Update an existing registration
-//  * @apiVersion 1.0.0
-//  * @apiName Update Registration
-//  * @apiGroup Registration
-//  * @apiPermission DirectorPermission
-//  * @apiParam {Object} registration The updated registration object.
-//  * @apiUse AuthArgumentRequired
-//  */
 // router.post(['/update_registration', '/registration/update'], verifyACL(3), (req, res, next) => {
 // if (!req.body || !req.body.registration) {
 //   const error = new Error();
@@ -387,20 +330,6 @@ router.post('/assignment', verifyACL(2), (req, res, next) => {
     .catch(err => errorHandler500(err, next));
 });
 
-// /**
-//  * @api {post} /admin/makeadmin Elevate a user's privileges
-//  * @apiVersion 1.0.0
-//  * @apiName Elevate user
-//  *
-//  * @apiGroup Admin
-//  * @apiPermission DirectorPermission
-//  *
-//  * @apiUse AuthArgumentRequired
-//  * @apiParam {String} uid The UID of the user to elevate privileges
-//  * @apiParam {Number} privilege [Default = 1] The privilege level to set to {1: Volunteer, 2: Team Member, 3: Exec, 4: Tech-Exec}
-//  * @apiSuccess {String} Success
-//  * @apiUse IllegalArgumentError
-//  */
 // router.post('/makeadmin', verifyACL(3), (req, res, next) => {
 //   if (!req.body || !req.body.uid) {
 //     const error = new Error();
@@ -661,39 +590,7 @@ router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, 
 });
 
 // /**
-//  * @api {post} /admin/email Send communication email to recipients
-//  * @apiVersion 1.0.0
-//  * @apiName Send communication emails
-//  *
-//  * @apiGroup Admin
-//  * @apiPermission DirectorPermission
-//  *
-//  * @apiUse AuthArgumentRequired
-//  * @apiParam {Object[]} emails An array of objects with the following schema { email: <email>, name: <name of person>, substitutions: {...} }
-//  *                   Substitutions is a map { keyword: substitute-text }
-//  * @apiParam {String} subject The subject of the email to send
-//  * @apiParam {String} html The HTML/text email to send. Make sure that all words that need to be substituted have matching substitutes in each object in the emails array
-//  *
-//  * @apiParamExample {Object} Request-Example:
-//  *                  {
-//  *                    emails: [{
-//  *                        email: abc@email.com,
-//  *                        name: Name,
-//  *                        substitutions: {
-//  *                          date: '29-03-2014',
-//  *                          language: 'english',
-//  *                          ...,
-//  *                          }
-//  *                        },
-//  *                        {...},
-//  *                        ...],
-//  *                    fromEmail: "IEmail address send from and reply to. *NOTE: email are case sensitive"
-//  *                    subject: "generic email",
-//  *                    html: "<html><head><body>.....</body></head></html>"
-//  *                  }
-//  * @apiSuccess (200) {Object[]} Responses All responses from the emails sent
-//  * @apiSuccess (207) {Object[]} Partial-Success An array of success responses as well as failure objects
-//  */
+
 // router.post('/email', verifyACL(3), validateEmails, (req, res, next) => {
 //   // Validation
 //   if (!res.locals.successArray ||
@@ -777,20 +674,6 @@ router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, 
 //     .catch(error => logger.error(error));
 // });
 
-/**
- * @api {get} /admin/user_data Get all user data
- * @apiVersion 1.0.0
- * @apiName Get list of all users
- * @apiGroup Admin
- * @apiPermission TeamMemberPermission
- *
- * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
- * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess {Array} Array of all users
- */
 // router.get('/user_data', verifyACL(2), (req, res, next) => {
 //   database.getAllUsersList(req.uow)
 //     .then(stream => streamHandler(stream, res, next))
@@ -800,17 +683,6 @@ router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, 
 /**
  * @api {get} /admin/prereg_count Get a count of Preregistered Users
  * @apiVersion 0.4.0
- * @apiName get count preregistration
- * @apiGroup Pre Registration
- * @apiPermission TeamMemberPermission
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess {Array} number of preregistered users
- */
-/**
- * @api {get} /admin/preregistration/count Get a count of Preregistered Users
- * @apiVersion 1.0.0
  * @apiName get count preregistration
  * @apiGroup Pre Registration
  * @apiPermission TeamMemberPermission
@@ -829,17 +701,6 @@ router.post(['/assign_extra_credit', '/extra_credit'], verifyACL(3), (req, res, 
 //  * @apiDeprecated
 //  * @api {get} /admin/reg_count Get a count of Registered Users
 //  * @apiVersion 0.4.0
-//  * @apiName get count registration
-//  * @apiGroup Registration
-//  * @apiPermission TeamMemberPermission
-//  *
-//  * @apiUse AuthArgumentRequired
-//  *
-//  * @apiSuccess {Array} number of registered users
-//  */
-// /**
-//  * @api {get} /admin/registered/count Get a count of Registered Users
-//  * @apiVersion 1.0.0
 //  * @apiName get count registration
 //  * @apiGroup Registration
 //  * @apiPermission TeamMemberPermission
@@ -895,34 +756,12 @@ router.get(['/rsvp_count', '/rsvp/count'], verifyACL(2), (req, res, next) => {
  *
  * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
  */
-/**
- * @api {get} /admin/user/count Get the count of users in each category
- * @apiVersion 1.0.0
- * @apiName Get User Count
- * @apiGroup Users
- * @apiPermission TeamMemberPermission
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
- */
 // router.get(['/user_count', '/user/count'], verifyACL(2), (req, res, next) => {
 //   database.getAllUsersCount(req.uow)
 //     .then(response => res.status(200).send(response[0]))
 //     .catch(err => errorHandler500(err, next));
 // });
 
-/**
- * @api {get} /admin/statistics Get the count of each option for the registration options
- * @apiVersion 1.0.0
- * @apiName Get Statistics
- * @apiGroup Admin
- * @apiPermission TeamMemberPermission
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess {Array} Array of registration options and respective counts
- */
 // TODO: Add test for route
 // router.get('/statistics', verifyACL(2), (req, res, next) => {
 //   Registration.getStatsCount(req.uow)
@@ -930,94 +769,63 @@ router.get(['/rsvp_count', '/rsvp/count'], verifyACL(2), (req, res, next) => {
 //     .catch(err => errorHandler500(err, next));
 // });
 
-/**
- * @api {post} /admin/hackathon Add a new non-active hackathon
- * @apiVersion 1.0.0
- * @apiName Add non-active hackathon
- * @apiGroup Hackathon
- * @apiPermission TechnologyAdminPermission
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess (200) {String} Added new non-active hackathon
- */
-// TODO: Add test for route
-router.post('/hackathon', verifyACL(4), (req, res, next) => {
-  if (req.body && req.body.name && req.body.startTime && req.body.endTime) {
-    const hackathon = new Hackathon(req.body, req.uow);
-    hackathon.add()
-      .then((data) => {
-        res.type('json').status(200).send({ message: 'Added new non-active hackathon' });
-      })
-      .catch(err => errorHandler500(err, next));
-  } else {
-    const error = new Error();
-    error.status = 400;
-    error.body = { error: 'Missing one of the following body parameters: name, startTime, endTime' };
-    next(error);
-  }
-});
 
-/**
- * @api {post} /admin/hackathon/active Add a new active hackathon
- * @apiVersion 1.0.0
- * @apiName Add Active hackathon
- * @apiGroup Hackathon
- * @apiPermission TechnologyAdminPermission
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess (200) {String} Added new active hackathon
- */
 // TODO: Add test for route
-router.post('/hackathon/active', verifyACL(4), (req, res, next) => {
-  if (req.body && req.body.name) {
-    const activeHackathon = new ActiveHackathon(req.body, req.uow);
-    activeHackathon.add()
-      .then((data) => {
-        res.type('json').status(200).send({ message: 'Added new active hackathon' });
-      })
-      .catch(err => errorHandler500(err, next));
-  } else {
-    const error = new Error();
-    error.status = 400;
-    error.body = { error: 'Missing one of the following body parameters: name, startTime' };
-    next(error);
-  }
-});
+// router.post('/hackathon', verifyACL(4), (req, res, next) => {
+//   if (req.body && req.body.name && req.body.startTime && req.body.endTime) {
+//     const hackathon = new Hackathon(req.body, req.uow);
+//     hackathon.add()
+//       .then((data) => {
+//         res.type('json').status(200).send({ message: 'Added new non-active hackathon' });
+//       })
+//       .catch(err => errorHandler500(err, next));
+//   } else {
+//     const error = new Error();
+//     error.status = 400;
+//     error.body = { error: 'Missing one of the following body parameters: name, startTime, endTime' };
+//     next(error);
+//   }
+// });
 
-/**
- * @api {post} /admin/hackathon/update Update non-active hackathon
- * @apiVersion 1.0.0
- * @apiName Update non-active hackathon
- * @apiGroup Hackathon
- * @apiPermission TechnologyAdminPermission
- *
- * @apiUse AuthArgumentRequired
- *
- * @apiSuccess (200) {String} Updated non-active hackathon
- */
+
 // TODO: Add test for route
-router.post('/hackathon/update', verifyACL(4), (req, res, next) => {
-  if (req.body && req.body.uid) {
-    if (req.body.active) {
-      const error = new Error();
-      error.status = 400;
-      error.body = { error: 'Please use /hackathon/update/active to update the active hackathon' };
-      next(error);
-    }
-    const hackathon = new Hackathon(req.body, req.uow);
-    hackathon.update()
-      .then((data) => {
-        res.type('json').status(200).send({ message: 'Updated non-active hackathon' });
-      })
-      .catch(err => errorHandler500(err, next));
-  } else {
-    const error = new Error();
-    error.status = 400;
-    error.body = { error: 'Missing the following body parameter: uid' };
-    next(error);
-  }
-});
+// router.post('/hackathon/active', verifyACL(4), (req, res, next) => {
+//   if (req.body && req.body.name) {
+//     const activeHackathon = new ActiveHackathon(req.body, req.uow);
+//     activeHackathon.add()
+//       .then((data) => {
+//         res.type('json').status(200).send({ message: 'Added new active hackathon' });
+//       })
+//       .catch(err => errorHandler500(err, next));
+//   } else {
+//     const error = new Error();
+//     error.status = 400;
+//     error.body = { error: 'Missing one of the following body parameters: name, startTime' };
+//     next(error);
+//   }
+// });
+
+// TODO: Add test for route
+// router.post('/hackathon/update', verifyACL(4), (req, res, next) => {
+//   if (req.body && req.body.uid) {
+//     if (req.body.active) {
+//       const error = new Error();
+//       error.status = 400;
+//       error.body = { error: 'Please use /hackathon/update/active to update the active hackathon' };
+//       next(error);
+//     }
+//     const hackathon = new Hackathon(req.body, req.uow);
+//     hackathon.update()
+//       .then((data) => {
+//         res.type('json').status(200).send({ message: 'Updated non-active hackathon' });
+//       })
+//       .catch(err => errorHandler500(err, next));
+//   } else {
+//     const error = new Error();
+//     error.status = 400;
+//     error.body = { error: 'Missing the following body parameter: uid' };
+//     next(error);
+//   }
+// });
 
 module.exports = router;

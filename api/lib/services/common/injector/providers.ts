@@ -7,6 +7,7 @@ import { PreRegisterDataMapperImpl, RegisterDataMapperImpl } from '../../../mode
 import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';
 import { IndexController } from '../../../router/routes';
 import { AdminController } from '../../../router/routes/admin/';
+import { AdminHackathonController } from '../../../router/routes/admin/admin-hackathon';
 import { AdminRegisterController } from '../../../router/routes/admin/admin-register';
 import { AdminStatisticsController } from '../../../router/routes/admin/admin-statistics';
 import { InternalController } from '../../../router/routes/internal';
@@ -42,6 +43,7 @@ export class ExpressProvider {
         { provide: 'AdminController', useClass: AdminController },
         { provide: 'AdminRegisterController', useClass: AdminRegisterController },
         { provide: 'AdminStatisticsController', useClass: AdminStatisticsController },
+        { provide: 'AdminHackathonController', useClass: AdminHackathonController },
 
         // Interfaces
         { provide: 'IAcl', useClass: RBAC },

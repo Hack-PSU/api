@@ -25,6 +25,13 @@ export default abstract class BaseObject {
       },      {});
   }
 
+  public get cleanRepresentation() {
+    const clone = { ...this };
+    // @ts-ignore
+    delete clone.disallowedPropertiesInternal;
+    return clone;
+  }
+
   /**
    * Returns the current disallowed properties for the object
    * @returns {string[]}
@@ -46,6 +53,13 @@ export default abstract class BaseObject {
    * @returns {*} The primary key value for this object type
    */
   public abstract get id();
+
+  /**
+   * Merge two instances for update
+   * @param {this} oldObject Old object that passes validation
+   * @param {this} newObject New instance with updated fields
+   */
+  // public abstract merge(oldObject: this, newObject: this): this;
 
   /**
    * @returns {any} The AJV validation schema

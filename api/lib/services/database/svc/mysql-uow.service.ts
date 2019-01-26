@@ -23,7 +23,7 @@ export class MysqlUow implements IUow {
    * Converts MySQL errors to HTTP Errors
    * @param {MysqlError} error
    */
-  private static SQLErrorHandler(error: MysqlError) {
+  private static sqlErrorHandler(error: MysqlError) {
     switch (error.errno) {
       case SQL_ERRORS.DUPLICATE_KEY:
         throw new HttpError(
@@ -97,7 +97,7 @@ export class MysqlUow implements IUow {
               connection.query(query, params, (err: MysqlError, result: T) => {
                 if (err) {
                   connection.rollback();
-                  throw err;
+                  reject(err);
                 }
                 // Add result to cache
                 this.cacheService.set(`${query}${(params as string[]).join('')}`, result)
@@ -113,13 +113,13 @@ export class MysqlUow implements IUow {
           }));
         }),
         catchError((err: MysqlError) => {
-          MysqlUow.SQLErrorHandler(err);
+          MysqlUow.sqlErrorHandler(err);
           return from('');
         }),
       )
       .toPromise()
       // Gracefully convert MySQL errors to HTTP Errors
-      .catch((err: MysqlError) => MysqlUow.SQLErrorHandler(err));
+      .catch((err: MysqlError) => MysqlUow.sqlErrorHandler(err));
   }
 
   public commit(connection: PoolConnection) {
@@ -137,6 +137,5 @@ export class MysqlUow implements IUow {
         return resolve(null);
       });
     });
-
   }
 }

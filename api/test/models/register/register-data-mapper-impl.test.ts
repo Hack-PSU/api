@@ -405,7 +405,7 @@ describe('TEST: Register data mapper', () => {
     it('generates the correct sql to get the current registration statistics', async () => {
       // GIVEN: A registration data mapper
       // WHEN: The registration statistics are retrieved
-      const result = await registerDataMapper.getStats();
+      const result = await registerDataMapper.getRegistrationStats();
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT "academic_year" AS "CATEGORY", academic_year AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
         ' GROUP BY academic_year UNION (SELECT "coding_experience" AS "CATEGORY", coding_experience AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
@@ -424,7 +424,7 @@ describe('TEST: Register data mapper', () => {
     it('generates the correct sql to get the registration statistics by hackathon', async () => {
       // GIVEN: A registration data mapper
       // WHEN: The registration statistics are retrieved
-      const result = await registerDataMapper.getStats({ byHackathon: true, hackathon: 'test hackathon' });
+      const result = await registerDataMapper.getRegistrationStats({ byHackathon: true, hackathon: 'test hackathon' });
       // THEN: Generated SQL matches the expectation
       const expectedSQL =
         'SELECT "academic_year" AS "CATEGORY", academic_year AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +

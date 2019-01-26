@@ -6,7 +6,7 @@ import { ActiveHackathonDataMapperImpl } from '../../../models/hackathon/active-
 import { PreRegisterDataMapperImpl, RegisterDataMapperImpl } from '../../../models/register';
 import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';
 import { IndexController } from '../../../router/routes';
-import { AdminController } from '../../../router/routes/admin/';
+import { AdminController, AdminLocationController } from '../../../router/routes/admin/';
 import { AdminHackathonController } from '../../../router/routes/admin/admin-hackathon';
 import { AdminRegisterController } from '../../../router/routes/admin/admin-register';
 import { AdminStatisticsController } from '../../../router/routes/admin/admin-statistics';
@@ -44,6 +44,7 @@ export class ExpressProvider {
         { provide: 'AdminRegisterController', useClass: AdminRegisterController },
         { provide: 'AdminStatisticsController', useClass: AdminStatisticsController },
         { provide: 'AdminHackathonController', useClass: AdminHackathonController },
+        // { provide: 'AdminLocationController', useClass: AdminLocationController },
 
         // Interfaces
         { provide: 'IAcl', useClass: RBAC },
@@ -54,6 +55,7 @@ export class ExpressProvider {
         { provide: 'ICacheService', useClass: MemCacheServiceImpl },
         { provide: 'IUpdateDataMapper', useClass: UpdateDataMapperImpl },
         { provide: 'IEventDataMapper', useClass: EventDataMapperImpl },
+        // { provide: 'ILocationDataMapper', useClass: LocationDataMapperImpl },
         { provide: 'IRegisterDataMapper', useClass: RegisterDataMapperImpl },
         { provide: 'IPreRegisterDataMapper', useClass: PreRegisterDataMapperImpl },
         { provide: 'IActiveHackathonDataMapper', useClass: ActiveHackathonDataMapperImpl },

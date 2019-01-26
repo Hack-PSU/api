@@ -69,7 +69,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public async getUserCount(opts?: IUowOpts): Promise<IDbResult<IUserCount>> {
+  public async getUserCountByCategory(opts?: IUowOpts): Promise<IDbResult<IUserCount>> {
     let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(
         // squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })

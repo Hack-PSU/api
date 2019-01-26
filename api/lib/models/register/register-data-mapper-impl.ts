@@ -266,7 +266,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats>> {
+  public async getRegistrationStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats>> {
     const columnNames = [
       'academic_year',
       'coding_experience',
@@ -285,7 +285,6 @@ export class RegisterDataMapperImpl extends GenericDataMapper
         queryBuilder.union(await this.getSelectQueryForOptionName(columnNames[i], opts));
     }
     const query = queryBuilder.toString().concat(';');
-    console.log(query);
     return from(this.sql.query<IRegistrationStats>(
       query,
       [],

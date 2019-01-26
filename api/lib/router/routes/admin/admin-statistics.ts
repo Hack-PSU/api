@@ -38,7 +38,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
     app.use(this.authService.verifyAcl(this.acl, AclOperations.STATISTICS));
     app.get(
       '/',
-      (req, res, next) => this.getStatisticsHandler(res,  next),
+      (req, res, next) => this.getRegistrationStatisticsHandler(res,  next),
     );
     app.get(
       '/count',
@@ -46,7 +46,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
     );
     app.get(
       '/user',
-      (req, res, next) => this.getUserCountHandler(res, next),
+      (req, res, next) => this.getUserCountByCategoryHandler(res, next),
     );
     app.get(
       '/preregistration',
@@ -68,7 +68,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiSuccess {Array} Array of all users
    */
-  private async getStatisticsHandler(res: Response, next: NextFunction) {
+  private async getRegistrationStatisticsHandler(res: Response, next: NextFunction) {
     let result: IDbResult<IUserStatistics>;
     try {
       result = await this.adminStatisticsDataMapper.getAllUserData({
@@ -101,7 +101,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   ) {
     let result: IDbResult<IRegistrationStats>;
     try {
-      result = await this.registerDataMapper.getStats({
+      result = await this.registerDataMapper.getRegistrationStats({
         byHackathon: !res.locals.allHackathons,
         hackathon: res.locals.hackathon,
       });
@@ -123,13 +123,13 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
    */
-  private async getUserCountHandler(
+  private async getUserCountByCategoryHandler(
     res: Response,
     next: NextFunction,
   ) {
     let result: IDbResult<IUserCount>;
     try {
-      result = await this.adminStatisticsDataMapper.getUserCount({
+      result = await this.adminStatisticsDataMapper.getUserCountByCategory({
         byHackathon: !res.locals.allHackathons,
         hackathon: res.locals.hackathon,
       });

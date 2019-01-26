@@ -9,7 +9,7 @@
     "build": "tsc",
     "dev": "nodemon ./dist/bin/www",
     "start": "grunt && node ./dist/bin/www",
-    "watch": "grunt && nodemon ./dist/bin/www",
+    "watch": "grunt && nodemon ./dist/bin/www --inspect",
     "test": "nyc mocha",
     "prod": "APP_ENV=prod npnm run build && npm start",
     "apidoc": "apidoc -i ./lib/router -o doc/",

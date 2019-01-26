@@ -15,7 +15,7 @@ interface IRegisterDataMapper extends IDataMapper<Registration | Registration[]>
 
   getCurrent(id: UidType, opts?: IUowOpts): Promise<IDbResult<Registration>>;
 
-  getStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats>>;
+  getRegistrationStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats>>;
 
   getEmailByUid(uid: UidType): Promise<IDbResult<string>>;
 

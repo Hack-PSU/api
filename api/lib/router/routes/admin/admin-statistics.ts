@@ -1,6 +1,7 @@
-import { NextFunction, Response, Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import { Inject } from 'injection-js';
 import { IExpressController, ResponseBody } from '../..';
+import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import {
   IAdminStatisticsDataMapper,
@@ -38,24 +39,12 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
     app.use(this.authService.verifyAcl(this.acl, AclOperations.STATISTICS));
     app.get(
       '/',
-      (req, res, next) => this.getRegistrationStatisticsHandler(res,  next),
-    );
-    app.get(
-      '/count',
-      (req, res, next) => this.getStatisticsCountHandler(res, next),
-    );
-    app.get(
-      '/user',
-      (req, res, next) => this.getUserCountByCategoryHandler(res, next),
-    );
-    app.get(
-      '/preregistration',
-      (req, res, next) => this.getPreRegistrationCountHandler(res, next),
+      (req, res, next) => this.getStatistics(req, res, next),
     );
   }
 
   /**
-   * @api {get} /admin/statistics Get all user data
+   * @api {get} /admin/data/?type=registration_stats Get all user data
    * @apiVersion 1.0.0
    * @apiName Get list of all users
    * @apiGroup Admin Statistics
@@ -85,7 +74,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   }
 
   /**
-   * @api {get} /admin/statistics/count Get the count of category statistics
+   * @api {get} /admin/data/?type=registration_category_count Get the count of category data
    * @apiVersion 1.0.0
    * @apiName Get Registration Statistics Count
    * @apiGroup Admin Statistics
@@ -95,7 +84,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiSuccess {Array} number of users that selected particular categories for registrations
    */
-  private async getStatisticsCountHandler(
+  private async getRegistrationStatisticsCountHandler(
     res: Response,
     next: NextFunction,
   ) {
@@ -113,7 +102,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   }
 
   /**
-   * @api {get} /admin/statistics/user Get the count of users in each category
+   * @api {get} /admin/data/?type=stats_count Get number of users by interaction type (Pre registration, Registration, RSVP, Event scans)
    * @apiVersion 1.0.0
    * @apiName Get User Count
    * @apiGroup Admin Statistics
@@ -141,7 +130,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   }
 
   /**
-   * @api {get} /admin/statistics/preregistration Get a count of Preregistered Users
+   * @api {get} /admin/data/?type=preregistration_count Get a count of Preregistered Users
    * @apiVersion 1.0.0
    * @apiName get count preregistration
    * @apiGroup Admin Statistics
@@ -163,5 +152,183 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
     }
     const response = new ResponseBody('Success', 200, result);
     return this.sendResponse(res, response);
+  }
+
+  /**
+   * @api {get} /admin/data/?type=preregistration Get all pre-registered users
+   * @apiVersion 1.0.0
+   * @apiName Get Pre-registration
+   * @apiGroup Admin Statistics
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {Array} all preregistered users
+   */
+  private async getPreRegistrationHandler(res: Response, next: NextFunction) {
+    try {
+      const result = await this.preRegDataMapper.getAll({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /admin/data/?type=rsvp Get all RSVP'ed users
+   * @apiVersion 1.0.0
+   * @apiName Get RSVP
+   * @apiGroup Admin Statistics
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {Array} All RSVP'ed users
+   */
+  private async getRsvpHandler(res: Response, next: NextFunction) {
+    // try {
+    //   const result = await this.rsvpDataMapper.getAll({
+    //     byHackathon: !res.locals.allHackathons,
+    //     count: res.locals.limit,
+    //     hackathon: res.locals.hackathon,
+    //     startAt: res.locals.offset,
+    //   });
+    //   const response = new ResponseBody('Success', 200, result);
+    //   return this.sendResponse(res, response);
+    // } catch (error) {
+    //   return Util.errorHandler500(error, next);
+    // }
+    return Util.standardErrorHandler(new HttpError('This method is not supported yet', 501), next);
+  }
+
+  /**
+   * @api {get} /admin/data/?type=rsvp_count Get number of RSVP'ed users
+   * @apiVersion 1.0.0
+   * @apiName Get RSVP Count
+   * @apiGroup Admin Statistics
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {Array} All RSVP'ed users
+   */
+  private async getRsvpCountHandler(res: Response, next: NextFunction) {
+    // try {
+    //   const result = await this.rsvpDataMapper.getCount({
+    //     byHackathon: !res.locals.allHackathons,
+    //     count: res.locals.limit,
+    //     hackathon: res.locals.hackathon,
+    //     startAt: res.locals.offset,
+    //   });
+    //   const response = new ResponseBody('Success', 200, result);
+    //   return this.sendResponse(res, response);
+    // } catch (error) {
+    //   return Util.errorHandler500(error, next);
+    // }
+    return Util.standardErrorHandler(new HttpError('This method is not supported yet', 501), next);
+  }
+
+  /**
+   * @api {get} /admin/data/?type=attendance Get all attendance data
+   * @apiVersion 1.0.0
+   * @apiName Get Attendance
+   * @apiGroup Admin Statistics
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {Array} All Attendance data
+   */
+  private async getAttendanceHandler(res: Response, next: NextFunction) {
+    // try {
+    //   const result = await this.attendanceDataMapper.getAll({
+    //     byHackathon: !res.locals.allHackathons,
+    //     count: res.locals.limit,
+    //     hackathon: res.locals.hackathon,
+    //     startAt: res.locals.offset,
+    //   });
+    //   const response = new ResponseBody('Success', 200, result);
+    //   return this.sendResponse(res, response);
+    // } catch (error) {
+    //   return Util.errorHandler500(error, next);
+    // }
+    return Util.standardErrorHandler(new HttpError('This method is not supported yet', 501), next);
+  }
+
+  /**
+   * @api {get} /admin/data/?type=extra_credit_classes Get all extra credit classes
+   * @apiVersion 1.0.0
+   * @apiName Get Extra Credit Classes
+   * @apiGroup Admin Statistics
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {Array} All Attendance data
+   */
+  private async getExtraCreditClassesHandler(res: Response, next: NextFunction) {
+    // try {
+    //   const result = await this.extraCreditDataMapper.getAllClasses({
+    //     byHackathon: !res.locals.allHackathons,
+    //     count: res.locals.limit,
+    //     hackathon: res.locals.hackathon,
+    //     startAt: res.locals.offset,
+    //   });
+    //   const response = new ResponseBody('Success', 200, result);
+    //   return this.sendResponse(res, response);
+    // } catch (error) {
+    //   return Util.errorHandler500(error, next);
+    // }
+    return Util.standardErrorHandler(new HttpError('This method is not supported yet', 501), next);
+  }
+
+  /**
+   * Handler that parses query type and routes to the appropriate handler
+   */
+  private getStatistics(req: Request, res: Response, next: NextFunction) {
+    if (!req.query.type) {
+      return Util.standardErrorHandler(
+        new HttpError(
+          'Type of required statistic must be provided in query',
+          400,
+        ),
+        next,
+      );
+    }
+
+    switch (req.query.type) {
+      case 'stats_count':
+        return this.getUserCountByCategoryHandler(res, next);
+      case 'preregistration_count':
+        return this.getPreRegistrationCountHandler(res, next);
+      case 'preregistration':
+        return this.getPreRegistrationHandler(res, next);
+      case 'registration_category_count':
+        return this.getRegistrationStatisticsCountHandler(res, next);
+      case 'registration_stats':
+        return this.getRegistrationStatisticsHandler(res, next);
+      case 'rsvp':
+        return this.getRsvpHandler(res, next);
+      case 'rsvp_count':
+        return this.getRsvpCountHandler(res, next);
+      case 'attendance':
+        return this.getAttendanceHandler(res, next);
+      case 'extra_credit_classes':
+        return this.getExtraCreditClassesHandler(res, next);
+      default:
+        return Util.standardErrorHandler(
+          new HttpError(
+            'provided statistics type is not supported',
+            400,
+          ),
+          next,
+        );
+    }
   }
 }

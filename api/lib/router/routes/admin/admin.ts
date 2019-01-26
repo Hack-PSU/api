@@ -82,7 +82,7 @@ export class AdminController extends ParentRouter implements IExpressController 
     app.use((req, res, next) => AdminController.parseCommonRequestFields(req, res, next));
     // AdminController.registerRouter('checkout', 'CheckoutController');
     AdminController.registerRouter('register', 'AdminRegisterController');
-    AdminController.registerRouter('statistics', 'AdminStatisticsController');
+    AdminController.registerRouter('data', 'AdminStatisticsController');
     AdminController.registerRouter('hackathon', 'AdminHackathonController');
     // AdminController.registerRouter('location', 'AdminLocationController');
     app.get('/', (req, res) => this.mainHandler(res));

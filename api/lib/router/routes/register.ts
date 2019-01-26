@@ -3,12 +3,13 @@ import express, { NextFunction, Request, Response, Router } from 'express';
 import * as fs from 'fs';
 import { Inject, Injectable } from 'injection-js';
 import * as path from 'path';
+import { map } from 'rxjs/operators';
 import { IExpressController, ResponseBody } from '..';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { Util } from '../../JSCommon/util';
 import { IActiveHackathonDataMapper } from '../../models/hackathon/active-hackathon';
-import { IRegisterDataMapper, Registration, } from '../../models/register';
+import { IRegisterDataMapper, Registration } from '../../models/register';
 import { PreRegistration } from '../../models/register/pre-registration';
 import { IAuthService } from '../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -70,7 +71,8 @@ export class RegistrationController extends ParentRouter implements IExpressCont
   }
 
   private async generateFileName(uid: UidType, firstName: string, lastName: string) {
-    return `${uid}-${firstName}-${lastName}-${await this.activeHackathonDataMapper.activeHackathon.toPromise()}.pdf`;
+    return `${uid}-${firstName}-${lastName}-${await this.activeHackathonDataMapper.activeHackathon.pipe(
+      map(hackathon => hackathon.uid)).toPromise()}.pdf`;
   }
 
   private validateRegistrationFields(registration: any) {

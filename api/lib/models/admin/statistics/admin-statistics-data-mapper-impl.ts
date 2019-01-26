@@ -1,4 +1,4 @@
-import { Inject } from 'injection-js';
+import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
@@ -15,6 +15,7 @@ import { IActiveHackathonDataMapper } from '../../hackathon/active-hackathon';
 import { IPreRegisterDataMapper, IRegisterDataMapper } from '../../register';
 import { IAdminStatisticsDataMapper, IUserCount, IUserStatistics } from './index';
 
+@Injectable()
 export class AdminStatisticsDataMapperImpl extends GenericDataMapper
   implements IAdminStatisticsDataMapper, IAdminStatisticsPerm {
   public STATISTICS: string = 'statistics:read';

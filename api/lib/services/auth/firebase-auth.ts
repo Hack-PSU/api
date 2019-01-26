@@ -9,7 +9,13 @@ import { Environment, Util } from '../../JSCommon/util';
 import { IFirebaseService } from '../common/firebase/firebase-types/firebase-service';
 import { Logger } from '../logging/logging';
 import { AuthLevel, IAuthService } from './auth-types/';
-import { AclOperations, IAcl, IAclPerm, IAdminAclPerm } from './RBAC/rbac-types';
+import {
+  AclOperations,
+  IAcl,
+  IAclPerm,
+  IAdminAclPerm,
+  IAdminStatisticsPerm,
+} from './RBAC/rbac-types';
 
 @Injectable()
 export class FirebaseAuthService implements IAuthService {
@@ -38,6 +44,22 @@ export class FirebaseAuthService implements IAuthService {
       case AclOperations.GET_EMAIL:
         // Only supported for IAdminAclPerm
         requestPermission = (permission as IAdminAclPerm).GET_EMAIL;
+        break;
+      case AclOperations.MAKE_ACTIVE:
+        // Only supported for IAdminAclPerm
+        requestPermission = (permission as IAdminAclPerm).MAKE_ACTIVE;
+        break;
+      case AclOperations.REDUCE_PERMISSION:
+        // Only supported for IAdminAclPerm
+        requestPermission = (permission as IAdminAclPerm).REDUCE_PERMISSION;
+        break;
+      case AclOperations.SEND_EMAIL:
+        // Only supported for IAdminAclPerm
+        requestPermission = (permission as IAdminAclPerm).SEND_EMAIL;
+        break;
+      case AclOperations.STATISTICS:
+        // Only supported for IAdminStatisticsPerm
+        requestPermission = (permission as IAdminStatisticsPerm).STATISTICS;
         break;
       default:
         requestPermission = '';
@@ -127,6 +149,8 @@ export class FirebaseAuthService implements IAuthService {
           );
         });
         if (!result) {
+          this.logger.info(`Requested permission was: ${requestPermission}`);
+          this.logger.info(response.locals.user);
           const error = new HttpError('Insufficient permissions for this operation', 401);
           return Util.standardErrorHandler(error, next);
         }
@@ -138,6 +162,8 @@ export class FirebaseAuthService implements IAuthService {
         requestPermission,
         response.locals.customVerifierParams,
       )) {
+        this.logger.info(`Requested permission was: ${requestPermission}`);
+        this.logger.info(response.locals.user);
         const error = new HttpError('Insufficient permissions for this operation', 401);
         return Util.standardErrorHandler(error, next);
       }

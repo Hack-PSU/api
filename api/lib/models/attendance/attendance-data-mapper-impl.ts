@@ -19,7 +19,6 @@ export const TABLE_NAME = 'ATTENDANCE';
 /**
  * TODO: Add documentation
  */
-
 @Injectable()
 export class AttendanceDataMapperImpl extends GenericDataMapper
   implements IAclPerm, IDataMapper<Attendance> {
@@ -39,7 +38,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
-    @Inject('IActiveHackathonDataMapper') protected readonly activeHackthonDataMapper: IActiveHackathonDataMapper,
+    @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
@@ -80,7 +79,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
             'hackathon_id = ?',
             await (opts.hackathon ?
               Promise.resolve(opts.hackathon) :
-              this.activeHackthonDataMapper.activeHackathon.toPromise()),
+              this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
           );
     }
 
@@ -116,7 +115,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
           'hackathon_id = ?',
           await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
-            this.activeHackthonDataMapper.activeHackathon.toPromise()),
+            this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
         );
     }
 

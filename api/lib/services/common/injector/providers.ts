@@ -1,21 +1,24 @@
 import { AdminDataMapperImpl } from '../../../models/admin';
 import { AdminStatisticsDataMapperImpl } from '../../../models/admin/statistics/admin-statistics-data-mapper-impl';
+import { AttendanceDataMapperImpl } from '../../../models/attendance/attendance-data-mapper-impl';
 import { EventDataMapperImpl } from '../../../models/event/event-data-mapper-impl';
 import { HackathonDataMapperImpl } from '../../../models/hackathon';
 import { ActiveHackathonDataMapperImpl } from '../../../models/hackathon/active-hackathon';
 import { PreRegisterDataMapperImpl, RegisterDataMapperImpl } from '../../../models/register';
 import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';
 import { IndexController } from '../../../router/routes';
-import { AdminController, AdminLocationController } from '../../../router/routes/admin/';
-import { AdminHackathonController } from '../../../router/routes/admin/admin-hackathon';
-import { AdminRegisterController } from '../../../router/routes/admin/admin-register';
-import { AdminStatisticsController } from '../../../router/routes/admin/admin-statistics';
+import {
+    AdminHackathonController,
+    AdminRegisterController,
+    AdminStatisticsController,
+} from '../../../router/routes/admin';
+import { AdminController } from '../../../router/routes/admin/';
 import { InternalController } from '../../../router/routes/internal';
 import { EventsController } from '../../../router/routes/live/events';
 import { LiveController } from '../../../router/routes/live/live';
 import { UpdatesController } from '../../../router/routes/live/updates';
 import { RegistrationController } from '../../../router/routes/register';
-import { FirebaseAuthService } from '../../auth/firebase-auth';
+import { FirebaseAuthService } from '../../auth';
 import { RBAC } from '../../auth/RBAC/rbac';
 import { SendgridService } from '../../communication/email/sendgrid.service';
 import { OnesignalService } from '../../communication/push-notification/onesignal.service';
@@ -56,6 +59,7 @@ export class ExpressProvider {
         { provide: 'IUpdateDataMapper', useClass: UpdateDataMapperImpl },
         { provide: 'IEventDataMapper', useClass: EventDataMapperImpl },
         // { provide: 'ILocationDataMapper', useClass: LocationDataMapperImpl },
+        { provide: 'IAttendanceDataMapper', useClass: AttendanceDataMapperImpl },
         { provide: 'IRegisterDataMapper', useClass: RegisterDataMapperImpl },
         { provide: 'IPreRegisterDataMapper', useClass: PreRegisterDataMapperImpl },
         { provide: 'IActiveHackathonDataMapper', useClass: ActiveHackathonDataMapperImpl },

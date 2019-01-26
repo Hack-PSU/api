@@ -13,7 +13,7 @@ export interface IDataMapper<T> {
 
   delete(object: T | UidType): Promise<IDbResult<void>>;
 
-  getAll(opts?: IUowOpts): Promise<IDbResult<Stream<any>>>;
+  getAll(opts?: IUowOpts): Promise<IDbResult<Stream<T>>>;
 
   getCount(opts?: IUowOpts): Promise<IDbResult<number>>;
 }

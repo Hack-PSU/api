@@ -88,7 +88,8 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
         'hackathon = ?',
         await (opts && opts.hackathon ?
           Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon.toPromise()),
+          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+            .toPromise()),
       )
       .toString()
       .concat(';');
@@ -126,7 +127,10 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation])
-      .set('hackathon', await this.activeHackathonDataMapper.activeHackathon.toPromise())
+      .set('hackathon',
+        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+          .toPromise(),
+      )
       .toParam();
     query.text = query.text.concat(';');
     return from(

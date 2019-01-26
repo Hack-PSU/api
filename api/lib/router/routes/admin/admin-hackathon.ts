@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { Inject } from 'injection-js';
+import { Inject, Injectable } from 'injection-js';
 import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
@@ -10,6 +10,7 @@ import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/R
 import { Logger } from '../../../services/logging/logging';
 import { ParentRouter } from '../../router-types';
 
+@Injectable()
 export class AdminHackathonController extends ParentRouter implements IExpressController {
   public router: Router;
 

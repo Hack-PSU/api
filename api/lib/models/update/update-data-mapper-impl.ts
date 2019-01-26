@@ -8,7 +8,7 @@ import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { RBAC } from '../../services/auth/RBAC/rbac';
 import { IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDataMapper, IDbResult } from '../../services/database';
+import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { RtdbQueryType, RtdbUow } from '../../services/database/svc/rtdb-uow.service';
@@ -52,6 +52,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   public delete(id: UpdateIdType): Promise<IDbResult<void>> {
     return this.activeHackathonDataMapper.activeHackathon
       .pipe(
+        map(hackathon => hackathon.uid),
         switchMap(reference => this.rtdb.query<void>(
           RtdbQueryType.DELETE,
           `${reference}/${id}`,
@@ -65,6 +66,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   public get(id: UpdateIdType, opts?: IUowOpts): Promise<IDbResult<Update>> {
     return this.activeHackathonDataMapper.activeHackathon
       .pipe(
+        map(hackathon => hackathon.uid),
         switchMap(reference => this.rtdb.query<Update>(
           RtdbQueryType.GET,
           `${reference}/${id}`,
@@ -77,8 +79,9 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   public getAll(): Promise<IDbResult<Stream<Update>>> {
     return this.activeHackathonDataMapper.activeHackathon
       .pipe(
+        map(hackathon => hackathon.uid),
         switchMap((result) => {
-          const reference = `/updates/${result[0].uid}`;
+          const reference = `/updates/${result}`;
           return from(this.rtdb.query<Stream<Update>>(RtdbQueryType.GET, reference, undefined));
         }),
         map(data => ({ result: 'Success', data: data as Stream<Update> })),
@@ -88,8 +91,9 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   public getCount(): Promise<IDbResult<number>> {
     return this.activeHackathonDataMapper.activeHackathon
       .pipe(
+        map(hackathon => hackathon.uid),
         switchMap((result) => {
-          const reference = `/updates/${result[0].uid}`;
+          const reference = `/updates/${result}`;
           return this.rtdb.query<number>(RtdbQueryType.COUNT, reference, null);
         }),
         map(data => ({ result: 'Success', data: data as number })),
@@ -104,10 +108,11 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
     const uid = new NodeTimeUuid().toString();
     return this.activeHackathonDataMapper.activeHackathon
       .pipe(
+        map(hackathon => hackathon.uid),
         switchMap(reference => from(
           this.rtdb.query<Update>(
             RtdbQueryType.SET,
-            `${reference[0].uid}/${uid}`,
+            `${reference}/${uid}`,
             object.dbRepresentation,
           ),
         )),
@@ -123,10 +128,11 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
     return this.activeHackathonDataMapper.activeHackathon.pipe(
+      map(hackathon => hackathon.uid),
       switchMap(reference => from(
         this.rtdb.query<Update>(
           RtdbQueryType.UPDATE,
-          `${reference[0].uid}/${object.id}`,
+          `${reference}/${object.id}`,
           object.dbRepresentation,
         ))),
       map(result => ({ result: 'Success', data: result as Update })),
@@ -135,8 +141,9 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
 
   public getReference() {
     return this.activeHackathonDataMapper.activeHackathon.pipe(
+      map(hackathon => hackathon.uid),
       switchMap((result) => {
-        const reference = `/updates/${result[0].uid}`;
+        const reference = `/updates/${result}`;
         return from(this.rtdb.query<string>(RtdbQueryType.REF, reference, null));
       }),
       map(result => ({ result: 'Success', data: result as string })),

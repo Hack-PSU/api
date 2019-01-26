@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { Inject } from 'injection-js';
+import { Inject, Injectable } from 'injection-js';
 import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
@@ -8,6 +8,7 @@ import {
   IUserCount,
   IUserStatistics,
 } from '../../../models/admin/statistics';
+import { Attendance, AttendanceDataMapperImpl } from '../../../models/attendance';
 import {
   IPreRegisterDataMapper,
   IRegisterDataMapper,
@@ -15,10 +16,11 @@ import {
 } from '../../../models/register';
 import { IAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { IDbResult } from '../../../services/database';
+import { IDataMapper, IDbResult } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
 import { ParentRouter } from '../../router-types';
 
+@Injectable()
 export class AdminStatisticsController extends ParentRouter implements IExpressController {
   public router: Router;
 
@@ -26,6 +28,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
     @Inject('IAuthService') private readonly authService: IAuthService,
     @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
     @Inject('IAdminStatisticsDataMapper') private readonly acl: IAclPerm,
+    @Inject('IAttendanceDataMapper') private readonly attendanceDataMapper: IDataMapper<Attendance>,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IPreRegisterDataMapper,
     @Inject('BunyanLogger') private readonly logger: Logger,
@@ -246,19 +249,18 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiSuccess {Array} All Attendance data
    */
   private async getAttendanceHandler(res: Response, next: NextFunction) {
-    // try {
-    //   const result = await this.attendanceDataMapper.getAll({
-    //     byHackathon: !res.locals.allHackathons,
-    //     count: res.locals.limit,
-    //     hackathon: res.locals.hackathon,
-    //     startAt: res.locals.offset,
-    //   });
-    //   const response = new ResponseBody('Success', 200, result);
-    //   return this.sendResponse(res, response);
-    // } catch (error) {
-    //   return Util.errorHandler500(error, next);
-    // }
-    return Util.standardErrorHandler(new HttpError('This method is not supported yet', 501), next);
+    try {
+      const result = await this.attendanceDataMapper.getAll({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 
   /**

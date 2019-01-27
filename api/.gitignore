@@ -15,3 +15,4 @@ hackpsu18-ecc9dc4878c6.json
 hackpsu-18-serviceaccount.json
 *.iml
 doc/
+.nyc_output/

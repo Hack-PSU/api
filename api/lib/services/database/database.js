@@ -1,147 +1,147 @@
-const squel = require('squel');
-const uuidv4 = require('uuid/v4');
-const Hackathon = require('../../models/Hackathon');
-const PreRegistration = require('../../models/PreRegistration');
-const Registration = require('../../models/Registration');
-const RSVP = require('../../models/RSVP');
+// const squel = require('squel');
+// const uuidv4 = require('uuid/v4');
+// const Hackathon = require('../../models/Hackathon');
+// const PreRegistration = require('../../models/PreRegistration');
+// const Registration = require('../../models/Registration');
+// const RSVP = require('../../models/RSVP');
 
 // TODO: Migrate all of these to model classes
-/**
- * Returns a list of extra credit classes available.
- * @return {Promise<Stream>} Return the list of all class in the database
- */
-function getExtraCreditClassList(uow) {
-  let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .from('EXTRA_CREDIT_CLASSES')
-    .toString();
-  query = query.concat(';');
-  return uow.query(query, null, { stream: true });
-}
+// /**
+//  * Returns a list of extra credit classes available.
+//  * @return {Promise<Stream>} Return the list of all class in the database
+//  */
+// function getExtraCreditClassList(uow) {
+//   let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+//     .from('EXTRA_CREDIT_CLASSES')
+//     .toString();
+//   query = query.concat(';');
+//   return uow.query(query, null, { stream: true });
+// }
 
-/**
- *
- * @param uow
- * @param uid - id of the hacker
- * @param cid - id of the class
- */
-function assignExtraCredit(uow, uid, cid) {
-  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .into('EXTRA_CREDIT_ASSIGNMENT')
-    .setFieldsRows([{ class_uid: cid, user_uid: uid }])
-    .set('hackathon', Hackathon.Hackathon.getActiveHackathonQuery())
-    .toParam();
-  query.text = query.text.concat(';');
-  return uow.query(query.text, query.values);
-}
+// /**
+//  *
+//  * @param uow
+//  * @param uid - id of the hacker
+//  * @param cid - id of the class
+//  */
+// function assignExtraCredit(uow, uid, cid) {
+//   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+//     .into('EXTRA_CREDIT_ASSIGNMENT')
+//     .setFieldsRows([{ class_uid: cid, user_uid: uid }])
+//     .set('hackathon', Hackathon.Hackathon.getActiveHackathonQuery())
+//     .toParam();
+//   query.text = query.text.concat(';');
+//   return uow.query(query.text, query.values);
+// }
 
-/**
- *
- * @param uow
- * @param msg {String} Message to write
- */
-function writePiMessage(uow, msg) {
-  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .into('PI_TEST')
-    .setFieldsRows([
-      { time: new Date().getTime(), message: msg },
-    ])
-    .toParam();
-  query.text = query.text.concat(';');
-  return uow.query(query.text, query.values);
-}
+// /**
+//  *
+//  * @param uow
+//  * @param msg {String} Message to write
+//  */
+// function writePiMessage(uow, msg) {
+//   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+//     .into('PI_TEST')
+//     .setFieldsRows([
+//       { time: new Date().getTime(), message: msg },
+//     ])
+//     .toParam();
+//   query.text = query.text.concat(';');
+//   return uow.query(query.text, query.values);
+// }
 
-/**
- *
- * @param ipAddress {string} The IP Address to store
- * @param userAgent {string} The user-agent field
- * @return Promise<any> {Promise<any>}
- */
-function storeIP(uow, ipAddress, userAgent) {
-  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .into('REQ_DATA')
-    .setFieldsRows([
-      {
-        idREQ_DATA: uuidv4(),
-        req_time: new Date().getTime(),
-        req_ip: ipAddress || '',
-        req_user_agent: userAgent,
-      },
-    ])
-    .toParam();
-  query.text = query.text.concat(';');
-  return uow.query(query.text, query.values);
-}
+// /**
+//  *
+//  * @param ipAddress {string} The IP Address to store
+//  * @param userAgent {string} The user-agent field
+//  * @return Promise<any> {Promise<any>}
+//  */
+// function storeIP(uow, ipAddress, userAgent) {
+//   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+//     .into('REQ_DATA')
+//     .setFieldsRows([
+//       {
+//         idREQ_DATA: uuidv4(),
+//         req_time: new Date().getTime(),
+//         req_ip: ipAddress || '',
+//         req_user_agent: userAgent,
+//       },
+//     ])
+//     .toParam();
+//   query.text = query.text.concat(';');
+//   return uow.query(query.text, query.values);
+// }
 
-/**
- *
- * @param successes
- * @param fails
- * @return {Promise<any>}
- */
-function addEmailsHistory(uow, successes, fails) {
-  const mSuccesses = successes.map((s) => {
-    s.status = '200';
-    return s;
-  });
-  if (fails) {
-    fails.forEach((f) => {
-      f.status = '207';
-      mSuccesses.push(f);
-    });
-  }
-  const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .into('EMAIL_HISTORY')
-    .setFieldsRows(mSuccesses)
-    .toParam();
-  return uow.query(query.text, query.values);
-}
+// /**
+//  *
+//  * @param successes
+//  * @param fails
+//  * @return {Promise<any>}
+//  */
+// function addEmailsHistory(uow, successes, fails) {
+//   const mSuccesses = successes.map((s) => {
+//     s.status = '200';
+//     return s;
+//   });
+//   if (fails) {
+//     fails.forEach((f) => {
+//       f.status = '207';
+//       mSuccesses.push(f);
+//     });
+//   }
+//   const query = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+//     .into('EMAIL_HISTORY')
+//     .setFieldsRows(mSuccesses)
+//     .toParam();
+//   return uow.query(query.text, query.values);
+// }
 
-/**
- *
- * @param uow
- * @param assignments
- * @return {Promise<any[]>}
- */
-function addRfidAssignments(uow, assignments) {
-  const promises = assignments.map((assignment) => {
-    const insertAssignment = {
-      rfid_uid: assignment.rfid,
-      user_uid: assignment.uid,
-      time: assignment.time,
-      hackathon: Hackathon.Hackathon.getActiveHackathonQuery(),
-    };
-    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into('RFID_ASSIGNMENTS')
-      .setFields(insertAssignment)
-      .toParam();
-    return uow.query(query.text, query.values)
-      .then(() => uow.commit())
-      .catch(error => error);
-  });
-  return Promise.all(promises);
-}
+// /**
+//  *
+//  * @param uow
+//  * @param assignments
+//  * @return {Promise<any[]>}
+//  */
+// function addRfidAssignments(uow, assignments) {
+//   const promises = assignments.map((assignment) => {
+//     const insertAssignment = {
+//       rfid_uid: assignment.rfid,
+//       user_uid: assignment.uid,
+//       time: assignment.time,
+//       hackathon: Hackathon.Hackathon.getActiveHackathonQuery(),
+//     };
+//     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+//       .into('RFID_ASSIGNMENTS')
+//       .setFields(insertAssignment)
+//       .toParam();
+//     return uow.query(query.text, query.values)
+//       .then(() => uow.commit())
+//       .catch(error => error);
+//   });
+//   return Promise.all(promises);
+// }
 
-/**
- *
- * @param uow
- * @param scans
- * @return {Promise<any[]>}
- */
-// TODO: Possibly migrate to Scans model?
-function addRfidScans(uow, scans) {
-  const promises = scans.map((scan) => {
-    scan.hackathon = Hackathon.Hackathon.getActiveHackathonQuery();
-    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into('SCANS')
-      .setFields(scan)
-      .toParam();
-    query.text = query.text.concat(';');
-    return uow.query(query.text, query.values)
-      .then(() => uow.commit())
-      .catch(error => error);
-  });
-  return Promise.all(promises);
-}
+// /**
+//  *
+//  * @param uow
+//  * @param scans
+//  * @return {Promise<any[]>}
+//  */
+// // TODO: Possibly migrate to Scans model?
+// function addRfidScans(uow, scans) {
+//   const promises = scans.map((scan) => {
+//     scan.hackathon = Hackathon.Hackathon.getActiveHackathonQuery();
+//     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+//       .into('SCANS')
+//       .setFields(scan)
+//       .toParam();
+//     query.text = query.text.concat(';');
+//     return uow.query(query.text, query.values)
+//       .then(() => uow.commit())
+//       .catch(error => error);
+//   });
+//   return Promise.all(promises);
+// }
 
 /**
  *
@@ -200,14 +200,14 @@ function addRfidScans(uow, scans) {
 //   return uow.query(query, null, { stream: false });
 // }
 
-module.exports = {
-  writePiMessage,
-  getExtraCreditClassList,
-  addRfidAssignments,
-  addRfidScans,
-  assignExtraCredit,
-  storeIP,
-  addEmailsHistory,
-  getAllUsersList,
-  getAllUsersCount,
-};
+// module.exports = {
+//   writePiMessage,
+//   getExtraCreditClassList,
+//   addRfidAssignments,
+//   addRfidScans,
+//   assignExtraCredit,
+//   storeIP,
+//   addEmailsHistory,
+//   getAllUsersList,
+//   getAllUsersCount,
+// };

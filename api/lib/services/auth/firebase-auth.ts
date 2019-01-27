@@ -127,48 +127,47 @@ export class FirebaseAuthService implements IAuthService {
    */
   public verifyAcl(permission: IAclPerm, requestedOp: AclOperations | AclOperations[]) {
     return (request: express.Request, response: express.Response, next: express.NextFunction) => {
-      // Remove if you require idtoken support locally
-      if (Util.getCurrentEnv() === Environment.DEBUG) {
-        return next();
-      }
-
       /**
        * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
        */
       if (!response.locals.user.privilege) {
         response.locals.user.privilege = AuthLevel.PARTICIPANT;
       }
-      let requestPermission;
-      if (Array.isArray(requestedOp)) {
-        const result = (requestedOp as AclOperations[]).every((op) => {
-          requestPermission = FirebaseAuthService.extractedPermission(op, permission);
-          return this.aclVerifier(
-            response.locals.user.privilege,
-            requestPermission,
-            response.locals.customVerifierParams,
-          );
-        });
-        if (!result) {
-          this.logger.info(`Requested permission was: ${requestPermission}`);
-          this.logger.info(response.locals.user);
-          const error = new HttpError('Insufficient permissions for this operation', 401);
-          return Util.standardErrorHandler(error, next);
-        }
-        return next();
-      }
-      requestPermission = FirebaseAuthService.extractedPermission(requestedOp, permission);
-      if (!this.aclVerifier(
-        response.locals.user.privilege,
-        requestPermission,
-        response.locals.customVerifierParams,
-      )) {
-        this.logger.info(`Requested permission was: ${requestPermission}`);
-        this.logger.info(response.locals.user);
-        const error = new HttpError('Insufficient permissions for this operation', 401);
+      try {
+        return this.verifyAclRaw(
+          permission,
+          requestedOp,
+          response.locals.user,
+          response.locals.customVerifierParams,
+        );
+      } catch (error) {
         return Util.standardErrorHandler(error, next);
       }
-      return next();
     };
+  }
+
+  public verifyAclRaw(
+    permission: IAclPerm,
+    requestedOp: AclOperations | AclOperations[],
+    userToken: firebase.auth.DecodedIdToken,
+    customVerifierParams?: any,
+  ): boolean {
+    if (Util.getCurrentEnv() === Environment.DEBUG) {
+      return true;
+    }
+    if (Array.isArray(requestedOp)) {
+      (requestedOp as AclOperations[]).every((op) => {
+        return this.verifyAclInternalOrThrow(op, permission, userToken, customVerifierParams);
+      });
+      return true;
+    }
+    this.verifyAclInternalOrThrow(
+      requestedOp,
+      permission,
+      userToken,
+      customVerifierParams,
+    );
+    return true;
   }
 
   public getUserId(identifier: UidType | string) {
@@ -197,6 +196,29 @@ export class FirebaseAuthService implements IAuthService {
   public elevate(uid: UidType, privilege: AuthLevel) {
     return this.admin.setCustomUserClaims(uid, { privilege, admin: true });
   }
+
+  public verifyApiKey(apikey: string): boolean {
+    return false;
+  }
+
+  private verifyAclInternalOrThrow(
+    requestedOp: AclOperations,
+    permission: IAclPerm,
+    userToken: firebase.auth.DecodedIdToken,
+    customVerifierParams: any,
+  ) {
+    const requestPermission = FirebaseAuthService.extractedPermission(requestedOp, permission);
+    if (!this.aclVerifier(
+      userToken.privilege,
+      requestPermission,
+      customVerifierParams,
+    )) {
+      this.logger.info(`Requested permission was: ${requestPermission}`);
+      this.logger.info(userToken);
+      throw new HttpError('Insufficient permissions for this operation', 401);
+    }
+    return true;
+  }
 }
 
 //
@@ -224,30 +246,4 @@ export class FirebaseAuthService implements IAuthService {
 //  */
 // export function getUserData(uid) {
 //   return admin.auth().getUser(uid);
-// }
-
-// /**
-//  * This function checks if the current user has the permissions required to access the function
-//  * Precondition: Must have called verifyAuthMiddleware or similar function that
-//  *              stores the auth object in res.locals
-//  * @param {Number} level The level of access [1,4] that the function needs
-//  * @return {Function}
-//  */
-// export function verifyACL(level) {
-//   // TODO: Add support for an ACL matrix instead. Use Redis perhaps?
-//   return (req, res, next) => {
-//     if (process.env.NODE_ENV === 'debug') {
-//       // Remove if you require idtoken support locally
-//       return next();
-//     }
-//     if (!res.locals.user.privilege) {
-//       const error = new HttpError('insufficient permissions for this operation', 401);
-//       return next(error);
-//     }
-//     if (res.locals.user.privilege < level) {
-//       const error = new HttpError('insufficient permissions for this operation', 401);
-//       return next(error);
-//     }
-//     return next();
-//   };
 // }

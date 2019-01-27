@@ -7,8 +7,10 @@ import loadSchemas from '../../../assets/schemas/load-schemas';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IAdminDataMapper } from '../../../models/admin';
+import { ExtraCreditAssignment } from '../../../models/extra-credit/extra-credit-assignment';
 import { IAuthService } from '../../../services/auth/auth-types';
-import { AclOperations, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
+import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
+import { IDataMapper } from '../../../services/database';
 import { ParentRouter } from '../../router-types';
 
 const emailObjectSchema = loadSchemas('emailObjectSchema');
@@ -67,6 +69,8 @@ export class AdminController extends ParentRouter implements IExpressController 
     @Inject('IAuthService') private readonly authService: IAuthService,
     @Inject('IAdminDataMapper') private readonly adminDataMapper: IAdminDataMapper,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,
+    @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IDataMapper<ExtraCreditAssignment>,
+    @Inject('IExtraCreditDataMapper') private readonly extraCreditAcl: IAclPerm,
   ) {
     super();
     this.router = Router();
@@ -100,6 +104,11 @@ export class AdminController extends ParentRouter implements IExpressController 
       '/makeadmin',
       this.authService.verifyAcl(this.adminAcl, AclOperations.CREATE),
       (req, res, next) => this.makeAdminHandler(req, res, next),
+    );
+    app.post(
+      '/extra_credit',
+      this.authService.verifyAcl(this.extraCreditAcl, AclOperations.CREATE),
+      (req, res, next) => this.addExtraCreditAssignmentHandler(req, res, next),
     );
   }
 
@@ -316,6 +325,51 @@ export class AdminController extends ParentRouter implements IExpressController 
       );
     } catch (error) {
       return Util.standardErrorHandler(error, next);
+    }
+  }
+
+  /**
+   * @api {post} /admin/extra_credit setting user with the class they are receiving extra credit
+   * @apiName Assign Extra Credit
+   * @apiVersion 1.0.0
+   * @apiGroup Admin
+   * @apiPermission DirectorPermission
+   *
+   * @apiParam {String} uid - the id associated with the student
+   * @apiParam {String} cid - the id associated with the class
+   * @apiUse AuthArgumentRequired
+   * @apiSuccess {String} Success
+   * @apiUse IllegalArgumentError
+   */
+  private async addExtraCreditAssignmentHandler(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    // Validate incoming request
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+
+    if (!req.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find hacker uid', 400), next);
+    }
+
+    if (!req.body.cid || !parseInt(req.body.cid, 10)) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid class id', 400), next);
+    }
+
+    try {
+      const ecAssignment = new ExtraCreditAssignment(req.body);
+      const result = await this.extraCreditDataMapper.insert(ecAssignment);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result,
+      );
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
     }
   }
 }

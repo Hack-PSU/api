@@ -29,6 +29,15 @@ export interface IAuthService {
   ): boolean;
 
   elevate(uid, privilege): Promise<void>;
+
+  verifyAclRaw(
+    permission: IAclPerm,
+    requestedOp: AclOperations | AclOperations[],
+    userToken: admin.auth.DecodedIdToken,
+    customVerifierParams?: any,
+  ): boolean;
+
+  verifyApiKey(apikey: string): boolean;
 }
 
 export enum AuthLevel {

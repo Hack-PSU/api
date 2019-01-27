@@ -14,7 +14,6 @@ import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { IPreRegisterDataMapper } from './index';
-// import { IPreRegisterDataMapper } from './index';
 import { PreRegistration } from './pre-registration';
 
 export class PreRegisterDataMapperImpl extends GenericDataMapper
@@ -127,7 +126,8 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation])
-      .set('hackathon',
+      .set(
+        'hackathon',
         await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
           .toPromise(),
       )
@@ -136,7 +136,7 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 
@@ -156,7 +156,7 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 }

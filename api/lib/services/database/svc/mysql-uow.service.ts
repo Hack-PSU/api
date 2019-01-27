@@ -27,7 +27,7 @@ export class MysqlUow implements IUow {
     switch (error.errno) {
       case SQL_ERRORS.DUPLICATE_KEY:
         throw new HttpError(
-          { message: 'duplicate objects not allowed', error }, 400);
+          { message: 'duplicate objects not allowed', error }, 409);
       case SQL_ERRORS.FOREIGN_KEY_INSERT_FAILURE:
         throw new HttpError(
           { message: 'object depends on non-existent dependency', error }, 400);

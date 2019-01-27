@@ -2,7 +2,7 @@ const BaseObject = require('./BaseObject');
 const squel = require('squel');
 const { TABLE_NAME: HackathonTableName, Hackathon } = require('./Hackathon');
 const HttpError = require('../JSCommon/errors');
-const rsvpSchema = require('../assets/schemas/load-schemas')('rsvpSchema');
+const rsvpSchema = require('../assets/schemas/json-asset-loader')('rsvpSchema');
 
 const TABLE_NAME = 'RSVP';
 const COLUMN_NAME = 'user_id';

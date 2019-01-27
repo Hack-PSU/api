@@ -1,6 +1,6 @@
 import * as Chance from 'chance';
-import assets from '../assets/schemas/load-schemas';
-import BaseObject from './BaseObject';
+import assets      from '../assets/schemas/json-asset-loader';
+import BaseObject  from './BaseObject';
 
 const chance = new Chance();
 const categorySchema = assets('categorySchema');

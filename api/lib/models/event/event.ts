@@ -1,5 +1,5 @@
 import * as uuid from 'uuid';
-import loadSchemas from '../../assets/schemas/load-schemas';
+import loadSchemas from '../../assets/schemas/json-asset-loader';
 import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 

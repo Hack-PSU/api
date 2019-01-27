@@ -10,7 +10,7 @@ const ONESIGNAL_URL = 'https://onesignal.com/api/v1/notifications';
 @Injectable()
 export class OnesignalService implements IPushNotifService {
 
-  private readonly authorization;
+  private readonly authorization: string;
   private readonly appId: string;
 
   constructor() {

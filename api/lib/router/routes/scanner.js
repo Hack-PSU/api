@@ -7,7 +7,7 @@ const { errorHandler500, streamHandler } = require('../services/functions');
 const HttpError = require('../../JSCommon/errors');
 const { Registration } = require('../../models/Registration');
 const { rfidAssignmentSchema, rfidScansSchema } =
-        require('../../assets/schemas/load-schemas')(['rfidAssignmentSchema', 'rfidScansSchema']);
+        require('../../assets/schemas/json-asset-loader')(['rfidAssignmentSchema', 'rfidScansSchema']);
 const { redisKey } = require('../../assets/constants/constants');
 const { Location } = require('../../models/Location');
 

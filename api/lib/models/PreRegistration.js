@@ -5,7 +5,7 @@ const Chance = require('chance');
 const uuidv4 = require('uuid/v4');
 const squel = require('squel');
 
-const preRegisteredSchema = require('../assets/schemas/load-schemas')('preRegisteredSchema');
+const preRegisteredSchema = require('../assets/schemas/json-asset-loader')('preRegisteredSchema');
 
 const chance = new Chance();
 

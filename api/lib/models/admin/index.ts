@@ -20,6 +20,8 @@ interface IAdminDataMapper extends IDataMapper<any> {
     html: string,
     senderUid: UidType,
     subject: string,
+    // fromEmail is an optional field. The sendEmails method should provide
+    // a default email to send from
     fromEmail?: string,
   ): Promise<{ successfulEmails: EmailHistory[], failedEmails: EmailHistory[] }>;
 

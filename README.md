@@ -88,7 +88,7 @@ Resource | URL
 Services are any helper mechanisms needed to connect to external systems. All services are standalone and provide simple interfaces that perform specific tasks. Services are useful since they can be tested individually without requiring a lot of integration and can be mocked easily for larger tests.
 
 ##### DataMappers
-DataMappers are important services that provide Model <-> Database mapping in the form od Create, Read, Update, Delete (CRUD) and other methods. These classes are model and database specific and are kept that way to improve type safety and compatibility.
+DataMappers are important services that provide Model <-> Database mapping in the form of Create, Read, Update, Delete (CRUD) and other methods. These classes are model and database specific and are kept that way to improve type safety and compatibility.
 This structure lets us use multiple databases without ever having to change the overall structure of the server.
 
 #### RouteControllers

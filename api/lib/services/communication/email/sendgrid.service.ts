@@ -17,6 +17,7 @@ export class SendgridService implements IEmailService {
     if (!validator.validate(email)) {
       throw new Error('Invalid email');
     }
+    // TODO: Change the hardcoded email to something read in from the constants file
     const emailAddress = fromEmail && validator.validate(fromEmail) ? fromEmail : 'team@hackpsu.org';
     return {
       from: emailAddress,

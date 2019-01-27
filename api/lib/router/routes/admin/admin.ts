@@ -3,7 +3,7 @@ import { validate } from 'email-validator';
 import { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { IExpressController, ResponseBody } from '../..';
-import loadSchemas from '../../../assets/schemas/load-schemas';
+import loadSchemas from '../../../assets/schemas/json-asset-loader';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IAdminDataMapper } from '../../../models/admin';

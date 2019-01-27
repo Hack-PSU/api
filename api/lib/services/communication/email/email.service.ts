@@ -9,6 +9,8 @@ export interface IEmailService {
     email: string,
     htmlContent: string,
     subject: string,
+    // fromEmail is an optional field. The implementation
+    // should select an email by default in case on undefined
     fromEmail?: string,
   ): IEmailData;
 

@@ -1,9 +1,9 @@
 import { validate } from 'email-validator';
-import loadSchemas from '../../assets/schemas/load-schemas';
+import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
 import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 
-const registeredUserSchema = loadSchemas('registeredUserSchema');
+const registeredUserSchema = jsonAssetLoader('registeredUserSchema');
 
 export enum Gender {
   MALE = 'male',

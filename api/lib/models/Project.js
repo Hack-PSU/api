@@ -2,7 +2,7 @@ const squel = require('squel');
 const BaseObject = require('./BaseObject');
 const Hackathon = require('./Hackathon');
 
-const projectRegistrationSchema = require('../assets/schemas/load-schemas')('projectRegistrationSchema');
+const projectRegistrationSchema = require('../assets/schemas/json-asset-loader')('projectRegistrationSchema');
 
 module.exports.Project = class Project extends BaseObject {
   /**

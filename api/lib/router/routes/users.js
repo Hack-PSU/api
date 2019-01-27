@@ -30,7 +30,7 @@ import HttpError from '../../JSCommon/errors';
 
 import travelReimbursement from './travel_reimbursement';
 
-import assets from '../../assets/schemas/load-schemas';
+import assets from '../../assets/schemas/json-asset-loader';
 
 const { projectRegistrationSchema } = assets(
   ['projectRegistrationSchema']);

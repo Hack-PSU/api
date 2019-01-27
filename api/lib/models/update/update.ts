@@ -1,5 +1,5 @@
 /* eslint-disable class-methods-use-this */
-import assets from '../../assets/schemas/load-schemas';
+import assets from '../../assets/schemas/json-asset-loader';
 import { EpochNumber } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 

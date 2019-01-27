@@ -1,7 +1,7 @@
 const uuidv4 = require('uuid/v4');
 const squel = require('squel');
 const BaseObject = require('./BaseObject');
-const travelReimbursementSchema = require('../assets/schemas/load-schemas')('travelReimbursementSchema');
+const travelReimbursementSchema = require('../assets/schemas/json-asset-loader')('travelReimbursementSchema');
 const HttpError = require('../JSCommon/errors');
 const { Hackathon } = require('./Hackathon');
 const { logger } = require('../services/logging/logging');

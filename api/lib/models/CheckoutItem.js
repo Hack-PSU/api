@@ -4,7 +4,7 @@ import BaseObject from './BaseObject';
 import { TABLE_NAME as CheckoutDataTableName } from './CheckoutObject';
 import { TABLE_NAME as HackathonTableName } from './Hackathon';
 
-import assets from '../assets/schemas/load-schemas';
+import assets from '../assets/schemas/json-asset-loader';
 
 const checkoutItemSchema = assets('checkoutItemSchema');
 

@@ -1,10 +1,10 @@
-import * as squel from 'squel';
-import assets from '../assets/schemas/load-schemas';
-import { HttpError } from '../JSCommon/errors';
-import { Logger }from '../services/logging/logging';
-import BaseObject from './BaseObject';
+import * as squel                                      from 'squel';
+import assets                                          from '../assets/schemas/json-asset-loader';
+import { HttpError }                                   from '../JSCommon/errors';
+import { Logger }                                      from '../services/logging/logging';
+import BaseObject                                      from './BaseObject';
 import { Hackathon, TABLE_NAME as HackathonTableName } from './Hackathon';
-import { TABLE_NAME as RegistrationTableName } from './Registration';
+import { TABLE_NAME as RegistrationTableName }         from './Registration';
 
 const checkoutSchema = assets('checkoutObjectSchema');
 

@@ -25,6 +25,12 @@ export default abstract class BaseObject {
       },      {});
   }
 
+  /**
+   * This function strips the object of any internal properties
+   * Specifically, it removes the disallowedProperties Set, but in case there
+   * are any other fields in subclasses that should not be present in an instance
+   * of the object sent for APIs, override this method and delete those there
+   */
   public get cleanRepresentation() {
     const clone = { ...this };
     // @ts-ignore

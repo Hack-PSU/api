@@ -40,9 +40,9 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
 
   constructor(
     @Inject('IAcl') readonly acl: IAcl,
-    @Inject('IAuthService') private readonly authService: IAuthService,
-    @Inject('MysqlUow') private sql: MysqlUow,
-    @Inject('IEmailService') private readonly emailService: IEmailService,
+    @Inject('IAuthService') protected readonly authService: IAuthService,
+    @Inject('MysqlUow') protected readonly sql: MysqlUow,
+    @Inject('IEmailService') protected readonly emailService: IEmailService,
   ) {
     super(acl);
     super.addRBAC(

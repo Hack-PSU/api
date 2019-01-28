@@ -1,23 +1,19 @@
 {
-  "type": "array",
-  "minItems": 1,
-  "items": {
-    "type": "object",
-    "properties": {
-      "rfid": {
-        "type": "string"
-      },
-      "uid": {
-        "type": "string"
-      },
-      "time": {
-        "type": "number"
-      }
+  "type": "object",
+  "properties": {
+    "rfid_uid": {
+      "type": "string"
     },
-    "required": [
-      "rfid",
-      "uid",
-      "time"
-    ]
-  }
+    "user_uid": {
+      "type": "string"
+    },
+    "time": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "rfid_uid",
+    "user_uid",
+    "time"
+  ]
 }

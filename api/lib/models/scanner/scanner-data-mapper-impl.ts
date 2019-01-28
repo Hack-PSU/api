@@ -5,12 +5,15 @@ import squel from 'squel';
 import tsStream from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
+import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
+import BaseObject from '../BaseObject';
+import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { IScannerDataMapper } from './index';
 import { RfidAssignment } from './rfid-assignment';
 import { Scan } from './scan';
@@ -18,6 +21,20 @@ import { Scan } from './scan';
 @Injectable()
 export class ScannerDataMapperImpl extends GenericDataMapper
   implements IAclPerm, IScannerDataMapper {
+
+  private static handleInsertionError<T extends BaseObject>(error: Error, object: T): IDbResult<T> {
+    switch ((error as HttpError).status) {
+      case 400:
+        return { result: 'Bad input', data: object.cleanRepresentation };
+      case 409:
+        return {
+          data: object.cleanRepresentation,
+          result: 'Duplicate detected',
+        };
+      default:
+        return { result: 'Error', data: object.cleanRepresentation };
+    }
+  }
   public COUNT: string = 'rfidassignment:count';
   public CREATE: string = 'rfidassignment:create';
   public READ_ALL: string = 'rfidassignment:readall';
@@ -33,9 +50,16 @@ export class ScannerDataMapperImpl extends GenericDataMapper
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
+    @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
+    super.addRBAC(
+      [this.CREATE, this.UPDATE, this.COUNT, this.READ_ALL],
+      [AuthLevel.TEAM_MEMBER],
+      undefined,
+      [AuthLevel[AuthLevel.VOLUNTEER]],
+    );
   }
 
   public delete(object: UidType | RfidAssignment): Promise<IDbResult<void>> {
@@ -54,16 +78,21 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public insert(object: RfidAssignment): Promise<IDbResult<RfidAssignment>> {
+  public async insert(object: RfidAssignment): Promise<IDbResult<RfidAssignment>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
       this.logger.warn(object.dbRepresentation);
-      return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
+      return Promise.reject(new HttpError(validation.error, 400));
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFields(object.dbRepresentation)
+      .set(
+        'hackathon',
+        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+          .toPromise(),
+      )
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -77,10 +106,28 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('This method is not supported by this class');
   }
 
-  public addRfidAssignments(assignments: RfidAssignment[]) {
-    return Promise.all(assignments.map(
-      assignment => this.insert(assignment).catch(error => error),
-    ));
+  public async addRfidAssignments(assignments: RfidAssignment[]): Promise<IDbResult<Array<IDbResult<RfidAssignment>>>> {
+    let resultString: string = 'Success';
+    const result = await Promise.all(
+      assignments.map(
+        // Handle any insertion errors here and
+        // change return an IDbResult with result: error
+        async (assignment, index) => {
+          try {
+            return await this.insert(assignment);
+          } catch (error) {
+            resultString = 'Error';
+            return ScannerDataMapperImpl.handleInsertionError<RfidAssignment>(
+              error,
+              assignment[index],
+            );
+          }
+        },
+      ));
+    return {
+      data: result,
+      result: resultString,
+    };
   }
 
   public addScans(scans: Scan[]): Promise<Array<IDbResult<Scan>>> {

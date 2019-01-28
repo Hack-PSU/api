@@ -3,7 +3,7 @@ import { Inject, Injectable } from 'injection-js';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { Event } from '../../../models/event';
-import { IAuthService } from '../../../services/auth/auth-types/';
+import { IFirebaseAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDataMapper } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
@@ -16,7 +16,7 @@ export class EventsController extends LiveController {
   protected static baseRoute: string = 'events/';
 
   constructor(
-    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IEventDataMapper') private readonly dataMapper: IDataMapper<Event>,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('BunyanLogger') private readonly logger: Logger,

@@ -5,7 +5,7 @@ import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IRegisterDataMapper, Registration } from '../../../models/register';
-import { IAuthService } from '../../../services/auth/auth-types';
+import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { Logger } from '../../../services/logging/logging';
 import { ParentRouter } from '../../router-types';
@@ -15,7 +15,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
   public router: Router;
 
   constructor(
-    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IRegisterDataMapper') private readonly acl: IAclPerm,
     @Inject('BunyanLogger') private readonly logger: Logger,

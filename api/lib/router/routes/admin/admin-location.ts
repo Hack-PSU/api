@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { Inject } from 'injection-js';
 import { IExpressController } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
-import { IAuthService } from '../../../services/auth/auth-types';
+import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDataMapper } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
@@ -12,7 +12,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
   public router: Router;
 
   constructor(
-    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('ILocationDataMapper') private readonly locationDataMapper: IDataMapper<Location>,
     @Inject('ILocationDataMapper') private readonly locationAcl: IAclPerm,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,

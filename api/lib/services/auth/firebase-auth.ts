@@ -1,5 +1,5 @@
 import { validate } from 'email-validator';
-import express from 'express';
+import express, { Request } from 'express';
 import * as firebase from 'firebase-admin';
 import { Inject, Injectable } from 'injection-js';
 import 'reflect-metadata';
@@ -8,7 +8,7 @@ import { HttpError } from '../../JSCommon/errors';
 import { Environment, Util } from '../../JSCommon/util';
 import { IFirebaseService } from '../common/firebase/firebase-types/firebase-service';
 import { Logger } from '../logging/logging';
-import { AuthLevel, IAuthService } from './auth-types/';
+import { AuthLevel, IFirebaseAuthService } from './auth-types/';
 import {
   AclOperations,
   IAcl,
@@ -18,7 +18,7 @@ import {
 } from './RBAC/rbac-types';
 
 @Injectable()
-export class FirebaseAuthService implements IAuthService {
+export class FirebaseAuthService implements IFirebaseAuthService {
 
   private static extractedPermission(requestedOp: AclOperations, permission: IAclPerm) {
     let requestPermission: string;
@@ -134,11 +134,18 @@ export class FirebaseAuthService implements IAuthService {
         response.locals.user.privilege = AuthLevel.PARTICIPANT;
       }
       try {
-        return this.verifyAclRaw(
+        if (this.verifyAclRaw(
           permission,
           requestedOp,
           response.locals.user,
           response.locals.customVerifierParams,
+        )) return next();
+        return Util.standardErrorHandler(
+          new HttpError(
+            'Insufficient permissions for this operation',
+            401,
+          ),
+          next,
         );
       } catch (error) {
         return Util.standardErrorHandler(error, next);
@@ -195,10 +202,6 @@ export class FirebaseAuthService implements IAuthService {
 
   public elevate(uid: UidType, privilege: AuthLevel) {
     return this.admin.setCustomUserClaims(uid, { privilege, admin: true });
-  }
-
-  public verifyApiKey(apikey: string): boolean {
-    return false;
   }
 
   private verifyAclInternalOrThrow(

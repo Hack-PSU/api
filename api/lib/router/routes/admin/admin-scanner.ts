@@ -5,7 +5,11 @@ import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { RfidAssignment } from '../../../models/scanner/rfid-assignment';
-import { AuthLevel, IAuthService } from '../../../services/auth/auth-types';
+import {
+  AuthLevel,
+  IApikeyAuthService,
+  IFirebaseAuthService,
+} from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../../services/database';
 import { ParentRouter } from '../../router-types';
@@ -15,7 +19,8 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
   public router: Router;
 
   constructor(
-    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
+    @Inject('IScannerAuthService') private readonly scannerAuthService: IApikeyAuthService,
     @Inject('IScannerDataMapper') private readonly scannerDataMapper: IScannerDataMapper,
     @Inject('IScannerDataMapper') private readonly scannerAcl: IAclPerm,
   ) {
@@ -30,6 +35,16 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
       (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.CREATE),
       (req, res, next) => this.addRfidAssignments(req, res, next),
     );
+    app.get(
+      '/register',
+      (req, res, next) => this.authService.authenticationMiddleware(req, res, next),
+      this.authService.verifyAcl(this.scannerAcl, AclOperations.CREATE),
+      (_req, res, next) => this.registerNewScannerHandler(res, next),
+    );
+    app.post(
+      '/register',
+      (req, res, next) => this.confirmRegisterScannerHandler(req, res, next),
+    );
   }
 
   private async verifyScannerPermissionsMiddleware(
@@ -41,18 +56,54 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
     /**
      * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
      */
-    if (!response.locals.user.privilege) {
-      response.locals.user.privilege = AuthLevel.PARTICIPANT;
+    try {
+      if (response.locals.user) {
+        if (!response.locals.user.privilege) {
+          response.locals.user.privilege = AuthLevel.PARTICIPANT;
+        }
+        if (this.authService.verifyAclRaw(
+          this.scannerAcl,
+          operation,
+          response.locals.user,
+        )) {
+          return next();
+        }
+      }
+      if (!request.headers.macaddr) {
+        return Util.standardErrorHandler(
+          new HttpError('could not find mac address of device', 400),
+          next,
+        );
+      }
+      if (await this.scannerAuthService.checkAuthentication(
+        request.headers.apikey as string,
+        request.headers.macaddr as string,
+      )) {
+        return next();
+      }
+    } catch (error) {
+      return Util.standardErrorHandler(new HttpError(error.message || error, 401), next);
     }
-    return this.authService.verifyAclRaw(
-      this.scannerAcl,
-      operation,
-      response.locals.user,
-    ) || this.authService.verifyApiKey(request.headers.apikey as string);
+    return Util.standardErrorHandler(new HttpError('Could not verify authentication', 401), next);
+  }
+
+  private async registerNewScannerHandler(
+    response: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const pinToken = await this.scannerAuthService.generatePinAuthenticator();
+      return this.sendResponse(
+        response,
+        new ResponseBody('Success', 200, { result: 'Success', data: pinToken }),
+      );
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 
   /**
-   * @api {post} /admin/assignment Assign RFID tags ID to users
+   * @api {post} /admin/scanner/assign Assign RFID tags ID to users
    * @apiVersion 1.0.0
    * @apiName Assign an RFID to a user (Admin)
    *
@@ -85,32 +136,40 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
       );
     }
 
-    let result: IDbResult<RfidAssignment> | Array<IDbResult<RfidAssignment>>;
     try {
-      let status = 200;
       let response: ResponseBody;
       if (Array.isArray(req.body.assignments)) {
-        result = await this.scannerDataMapper.addRfidAssignments(req.body.assignments);
-        // If any insertions fail, mark the response with 207 partial result status
-        if (result.filter(assignment => assignment instanceof HttpError).length === 0) {
-          status = 207;
-        }
+        const assignments: RfidAssignment[] = req.body.assignments.map(
+          assignment => new RfidAssignment(assignment));
+        const result = await this.scannerDataMapper
+          .addRfidAssignments(assignments);
 
-        // Replace error responses with the error and the original scan for the
-        // caller to handle gracefully
-        const handledResult = result.map((assignment, index) => {
-          if (assignment instanceof HttpError) {
-            return { scan: req.body.assignments[index], error: assignment as HttpError };
-          }
-          return assignment;
-        });
+        // Find response status to send
+        const status = Math.max(
+          ...result.data.map(
+            (individualResult) => {
+              switch (individualResult.result) {
+                case 'Error':
+                  return 500;
+                case 'Duplicate detected':
+                  return 409;
+                case 'Bad input':
+                  return 400;
+                default:
+                  return 200;
+              }
+            },
+          ),
+        );
+
         response = new ResponseBody(
           'Success',
           status,
-          { result: 'Success', data: handledResult },
+          result,
         );
       } else {
-        result = await this.scannerDataMapper.insert(req.body.assignments);
+        const assignment = new RfidAssignment(req.body.assignments);
+        const result = await this.scannerDataMapper.insert(assignment);
         response = new ResponseBody(
           'Success',
           200,
@@ -119,7 +178,48 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
       }
       return this.sendResponse(res, response);
     } catch (error) {
+      return Util.standardErrorHandler(error, next);
+    }
+  }
+
+  private async confirmRegisterScannerHandler(
+    request: Request,
+    response: Response,
+    next: NextFunction,
+  ) {
+    // Validate incoming request
+    if (!request.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+    if (!request.body.pin || !parseInt(request.body.pin, 10)) {
+      return Util.standardErrorHandler(
+        new HttpError('could not find authentication pin', 400),
+        next,
+      );
+    }
+    if (!request.headers.macaddr) {
+      return Util.standardErrorHandler(
+        new HttpError('could not find mac address of device', 400),
+        next,
+      );
+    }
+    try {
+      const result = await this.scannerAuthService
+        .checkPinAuthentication(parseInt(request.body.pin, 10));
+      if (!result) {
+        return Util.standardErrorHandler(
+          new HttpError('invalid authentication pin provided', 401),
+          next,
+        );
+      }
+      const apiToken = await this.scannerAuthService.generateApiKey(request.headers.macaddr as string);
+      return this.sendResponse(
+        response,
+        new ResponseBody('Success', 200, { result: 'Success', data: apiToken }),
+      );
+    } catch (error) {
       return Util.errorHandler500(error, next);
     }
+
   }
 }

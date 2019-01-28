@@ -1,12 +1,42 @@
 import { NextFunction, Request, Response } from 'express';
 import * as admin from 'firebase-admin';
-import { UidType } from '../../../JSCommon/common-types';
+import { EpochNumber, UidType } from '../../../JSCommon/common-types';
 import { AclOperations, IAclPerm } from '../RBAC/rbac-types';
 
 export { RBAC } from '../RBAC/rbac';
 
+export type Apikey = string;
+
+export interface IApiToken {
+  key: string;
+  mintTime: EpochNumber;
+  expiryTime: EpochNumber;
+  valid: boolean;
+  macAddress: string;
+}
+
+export interface IPinAuthenticator {
+  pin: number;
+  mintTime: EpochNumber;
+  expiryTime: EpochNumber;
+  valid: boolean;
+}
 export interface IAuthService {
   checkAuthentication(token: string): Promise<any>;
+}
+
+export interface IApikeyAuthService extends IAuthService {
+  checkAuthentication(token?: Apikey, macAddress?: string): Promise<boolean>;
+
+  generateApiKey(macAddress: string): Promise<IApiToken>;
+
+  generatePinAuthenticator(): Promise<IPinAuthenticator>;
+
+  checkPinAuthentication(pin: number): Promise<boolean>;
+}
+
+export interface IFirebaseAuthService extends IAuthService {
+  checkAuthentication(token: string): Promise<admin.auth.DecodedIdToken>;
 
   authenticationMiddleware(request: Request, response: Response, next: NextFunction);
 
@@ -36,8 +66,6 @@ export interface IAuthService {
     userToken: admin.auth.DecodedIdToken,
     customVerifierParams?: any,
   ): boolean;
-
-  verifyApiKey(apikey: string): boolean;
 }
 
 export enum AuthLevel {

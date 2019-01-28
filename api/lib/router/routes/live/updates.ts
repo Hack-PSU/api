@@ -4,7 +4,7 @@ import { HttpError, RouteNotImplementedError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IUpdateDataMapper } from '../../../models/update';
 import { Update } from '../../../models/update/update';
-import { IAuthService } from '../../../services/auth/auth-types/';
+import { IFirebaseAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IPushNotifService } from '../../../services/communication/push-notification';
 import { Logger } from '../../../services/logging/logging';
@@ -16,7 +16,7 @@ export class UpdatesController extends LiveController {
   protected static baseRoute = 'updates/';
 
   constructor(
-    @Inject('IAuthService') private authService: IAuthService,
+    @Inject('IAuthService') private authService: IFirebaseAuthService,
     @Inject('IUpdateDataMapper') private dataMapper: IUpdateDataMapper,
     @Inject('IUpdateDataMapper') private acl: IAclPerm,
     @Inject('IPushNotifService') private notificationService: IPushNotifService,

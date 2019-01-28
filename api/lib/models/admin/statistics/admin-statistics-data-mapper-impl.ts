@@ -5,7 +5,7 @@ import squel from 'squel';
 import tsStream from 'ts-stream';
 import { UidType } from '../../../JSCommon/common-types';
 import { MethodNotImplementedError } from '../../../JSCommon/errors';
-import { AuthLevel, IAuthService } from '../../../services/auth/auth-types';
+import { AuthLevel, IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { IAcl, IAdminStatisticsPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../../services/database';
 import { GenericDataMapper } from '../../../services/database/svc/generic-data-mapper';
@@ -31,7 +31,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
 
   constructor(
     @Inject('IAcl') readonly acl: IAcl,
-    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('MysqlUow') private readonly sql: MysqlUow,
     @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IPreRegisterDataMapper,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,

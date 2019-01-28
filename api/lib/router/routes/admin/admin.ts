@@ -8,7 +8,7 @@ import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IAdminDataMapper } from '../../../models/admin';
 import { ExtraCreditAssignment } from '../../../models/extra-credit/extra-credit-assignment';
-import { IAuthService } from '../../../services/auth/auth-types';
+import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDataMapper } from '../../../services/database';
 import { ParentRouter } from '../../router-types';
@@ -66,7 +66,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   public router: Router;
 
   constructor(
-    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IAdminDataMapper') private readonly adminDataMapper: IAdminDataMapper,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,
     @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IDataMapper<ExtraCreditAssignment>,
@@ -82,6 +82,7 @@ export class AdminController extends ParentRouter implements IExpressController 
       return;
     }
     // Use authentication
+    app.use('/scanner', Util.getInstance('AdminScannerController').router);
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     app.use((req, res, next) => AdminController.parseCommonRequestFields(req, res, next));
     // AdminController.registerRouter('checkout', 'CheckoutController');

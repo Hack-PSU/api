@@ -5,7 +5,7 @@ import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { Hackathon } from '../../../models/hackathon';
 import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
-import { IAuthService } from '../../../services/auth/auth-types';
+import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { Logger } from '../../../services/logging/logging';
 import { ParentRouter } from '../../router-types';
@@ -15,7 +15,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
   public router: Router;
 
   constructor(
-    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IActiveHackathonDataMapper') private readonly adminHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IActiveHackathonDataMapper') private readonly acl: IAclPerm,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,

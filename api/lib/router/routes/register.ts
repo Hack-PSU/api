@@ -11,7 +11,7 @@ import { Util } from '../../JSCommon/util';
 import { IActiveHackathonDataMapper } from '../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper, Registration } from '../../models/register';
 import { PreRegistration } from '../../models/register/pre-registration';
-import { IAuthService } from '../../services/auth/auth-types';
+import { IFirebaseAuthService } from '../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IEmailService } from '../../services/communication/email';
 import { IDataMapper } from '../../services/database';
@@ -35,7 +35,7 @@ export class RegistrationController extends ParentRouter implements IExpressCont
   public router: Router;
 
   constructor(
-    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IRegisterDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IDataMapper<PreRegistration>,

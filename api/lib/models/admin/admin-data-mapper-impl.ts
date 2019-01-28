@@ -8,7 +8,7 @@ import { IEmail } from '.';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
 import { ICustomPermissions } from '../../services/auth';
-import { AuthLevel, IAuthService } from '../../services/auth/auth-types';
+import { AuthLevel, IFirebaseAuthService } from '../../services/auth/auth-types';
 import { IAcl, IAdminAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IEmailService } from '../../services/communication/email';
 import { IDbResult } from '../../services/database';
@@ -40,7 +40,7 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
 
   constructor(
     @Inject('IAcl') readonly acl: IAcl,
-    @Inject('IAuthService') protected readonly authService: IAuthService,
+    @Inject('IAuthService') protected readonly authService: IFirebaseAuthService,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
     @Inject('IEmailService') protected readonly emailService: IEmailService,
   ) {

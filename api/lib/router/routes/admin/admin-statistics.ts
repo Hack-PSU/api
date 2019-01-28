@@ -14,7 +14,7 @@ import {
   IRegisterDataMapper,
   IRegistrationStats,
 } from '../../../models/register';
-import { IAuthService } from '../../../services/auth/auth-types';
+import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDataMapper, IDbResult } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
@@ -25,7 +25,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   public router: Router;
 
   constructor(
-    @Inject('IAuthService') private readonly authService: IAuthService,
+    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
     @Inject('IAdminStatisticsDataMapper') private readonly acl: IAclPerm,
     @Inject('IAttendanceDataMapper') private readonly attendanceDataMapper: IDataMapper<Attendance>,

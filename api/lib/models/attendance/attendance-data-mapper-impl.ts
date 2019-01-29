@@ -3,7 +3,7 @@ import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
 import { Stream } from 'ts-stream';
-import { Attendance } from '.';
+import { Attendance } from './Attendance';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';

@@ -8,7 +8,7 @@ import {
   IUserCount,
   IUserStatistics,
 } from '../../../models/admin/statistics';
-import { Attendance, AttendanceDataMapperImpl } from '../../../models/attendance';
+import { Attendance } from '../../../models/attendance/attendance';
 import {
   IPreRegisterDataMapper,
   IRegisterDataMapper,

@@ -12,7 +12,7 @@
     "watch": "grunt && nodemon ./dist/bin/www --inspect",
     "test": "nyc mocha",
     "prod": "APP_ENV=prod npnm run build && npm start",
-    "apidoc": "apidoc -i ./lib/router -o doc/",
+    "apidoc": "apidoc -i ./lib/router -o dist/doc/",
     "debug": "node --inspect ./dist/bin/www",
     "prepare": "npm run gcp-build",
     "pretest": "npm run gcp-build",

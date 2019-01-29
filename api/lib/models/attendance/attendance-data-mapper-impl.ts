@@ -3,7 +3,6 @@ import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
 import { Stream } from 'ts-stream';
-import { Attendance } from './Attendance';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -13,6 +12,7 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
+import { Attendance } from './attendance';
 
 export const TABLE_NAME = 'ATTENDANCE';
 

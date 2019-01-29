@@ -111,7 +111,7 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
    * @apiPermission TeamMemberPermission
    *
    * @apiUse AuthArgumentRequired
-   * @apiParam {Array | Assignment} assignments An array or single instance of RFID tags to User uid assignments
+   * @apiParam {Array} assignments An array or single instance of RFID tags to User uid assignments
    * @apiParamExample {json} Request-Example:
    *     [
    *      {

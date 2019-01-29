@@ -67,36 +67,50 @@ module.exports = (grunt) => {
       keys: {
         files: [
           {
-            src: 'config.json', cwd: './', dest: './lib/', expand: true,
+            src: 'hackpsu-18-serviceaccount.json', cwd: './', dest: './lib/', expand: true,
           },
           {
-            src: 'gcs_config.json', cwd: './', dest: './lib/', expand: true,
+            src: 'config.json', cwd: './', dest: './dist/', expand: true,
+          },
+          {
+            src: 'gcs_config.json', cwd: './', dest: './dist/', expand: true,
           },
         ],
       },
       assets: {
         files: [
           {
-            src: './lib/assets/constants/RSVP_Email.html',
-            cwd: './',
+            src: './RSVP_Email.html',
+            cwd: './lib/assets/constants',
             dest: './dist/assets/constants/',
             expand: true,
           },
           {
-            src: './lib/assets/emails', cwd: './', dest: './dist/assets/emails', expand: true,
+            src: '**', cwd: './lib/assets/emails/', dest: './dist/assets/emails', expand: true,
           },
           {
-            src: './lib/assets/schemas', cwd: './', dest: './dist/assets/schemas', expand: true,
+            src: '**', cwd: './lib/assets/schemas/', dest: './dist/assets/schemas', expand: true,
+          },
+        ],
+      },
+      binary: {
+        files: [
+          {
+            src: './www', cwd: './lib/bin/', dest: './dist/bin/', expand: true,
           },
         ],
       },
     },
     env: {
       test: {
-        NODE_ENV: `${grunt.option('debug') ? 'DEBUG' : 'STAGING'}`,
-        APP_ENV: `${grunt.option('debug') ? 'DEBUG' : 'STAGING'}`,
-        SQL_DATABASE: 'test',
-        SQL_HOSTNAME: 'localhost',
+        options: {
+          add: {
+            NODE_ENV: `${grunt.option('debug') ? 'DEBUG' : 'STAGING'}`,
+            APP_ENV: `${grunt.option('debug') ? 'DEBUG' : 'STAGING'}`,
+            SQL_DATABASE: 'test',
+            SQL_HOSTNAME: 'localhost',
+          },
+        },
       },
     },
   });
@@ -107,7 +121,7 @@ module.exports = (grunt) => {
     'Decrypt the corresponding files based on environment',
     () => (grunt.option('production') ? decryptProduction() : decryptStaging()),
   );
-  grunt.registerTask('default', ['env:test', 'decrypt', 'copy:keys', 'exec:sql_proxy', 'run:install', 'run:doc']);
+  grunt.registerTask('default', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'run:doc']);
   grunt.registerTask('start', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'copy:assets']);
   grunt.registerTask('test', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'copy:assets']);
   grunt.registerTask('prep', ['decrypt', 'copy', 'run:doc', 'run:install', 'copy:assets']);

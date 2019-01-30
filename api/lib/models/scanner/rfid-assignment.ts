@@ -1,8 +1,8 @@
-import loadSchemas from '../../assets/schemas/json-asset-loader';
+import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
 import { EpochNumber, UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 
-const rfidAssignmentSchema = loadSchemas('rfidAssignmentSchema');
+const rfidAssignmentSchema = jsonAssetLoader('rfidAssignmentSchema');
 
 interface IRfidAssignmentApiModel {
   rfid: UidType;

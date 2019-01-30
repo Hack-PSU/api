@@ -1,6 +1,6 @@
 import * as firebase from 'firebase-admin';
 import { Inject, Injectable } from 'injection-js';
-import Stream from 'ts-stream';
+import tsStream from 'ts-stream';
 import { Environment, Util } from '../../../JSCommon/util';
 import { Logger } from '../../logging/logging';
 import { IRtdbFactory } from '../connection/rtdb-factory';
@@ -33,7 +33,7 @@ export class RtdbUow implements IUow {
    * @param [data] {Object} Data if query is SET
    * @returns {Promise<DataSnapshot>}
    */
-  public query<T>(query: RtdbQueryType, reference: string, data?: any): Promise<T | Stream<T>> {
+  public query<T>(query: RtdbQueryType, reference: string, data?: any): Promise<T | tsStream<T>> {
     if (Util.getCurrentEnv() === Environment.DEBUG) {
       this.logger.info({ query, reference, data });
     }
@@ -56,7 +56,7 @@ export class RtdbUow implements IUow {
   }
 
   public _get<T>(reference) {
-    return new Promise<Stream<T>>((resolve, reject) => {
+    return new Promise<tsStream<T>>((resolve, reject) => {
       this.db.ref(reference)
         .once('value', (data) => {
           const firebaseData = data.val();
@@ -70,7 +70,7 @@ export class RtdbUow implements IUow {
                 return r;
               });
           }
-          resolve(Stream.from(result) as Stream<T>);
+          resolve(tsStream.from(result) as tsStream<T>);
         })
         .catch(reject);
     });
@@ -111,7 +111,7 @@ export class RtdbUow implements IUow {
           const returnObject = {};
           returnObject[snapshot.key!] = snapshot.val();
           resolve(returnObject as T);
-        }, true)
+        },           true)
         .catch(reject);
     });
   }

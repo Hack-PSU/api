@@ -3,7 +3,6 @@ import * as bunyan from 'bunyan';
 import { Request } from 'express';
 import { Injectable } from 'injection-js';
 import 'reflect-metadata';
-
 // const loggingBunyan = new LoggingBunyan();
 
 const LOGGER_NAME = 'hackpsu-api';

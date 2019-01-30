@@ -1,13 +1,12 @@
-import { Inject, ReflectiveInjector } from 'injection-js';
-import * as NodeTimeUuid from 'node-time-uuid';
+import { Inject } from 'injection-js';
+import { default as NodeTimeUuid } from 'node-time-uuid';
 import { from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { Stream } from 'ts-stream';
 import { IUpdateDataMapper, UpdateIdType } from '.';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
-import { RBAC } from '../../services/auth/RBAC/rbac';
-import { IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
@@ -29,12 +28,13 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   protected pkColumnName = '';
 
   constructor(
-    @Inject('MysqlUow') private readonly sql: MysqlUow,
-    @Inject('RtdbUow') private readonly rtdb: RtdbUow,
-    @Inject('BunyanLogger') private readonly logger: Logger,
-    @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
+    @Inject('IAcl') protected readonly acl: IAcl,
+    @Inject('MysqlUow') protected readonly sql: MysqlUow,
+    @Inject('RtdbUow') protected readonly rtdb: RtdbUow,
+    @Inject('BunyanLogger') protected readonly logger: Logger,
+    @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
   ) {
-    super(ReflectiveInjector.resolveAndCreate([RBAC]).get(RBAC));
+    super(acl);
     super.addRBAC(
       [this.CREATE, this.UPDATE, this.DELETE],
       [AuthLevel.TEAM_MEMBER],
@@ -103,7 +103,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   public insert(object: Update): Promise<IDbResult<Update>> {
     const validation = object.validate();
     if (!validation.result) {
-      return Promise.reject(new Error(validation.error));
+      return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
     const uid = new NodeTimeUuid().toString();
     return this.activeHackathonDataMapper.activeHackathon

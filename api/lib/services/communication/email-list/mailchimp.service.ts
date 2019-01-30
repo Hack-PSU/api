@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import Mailchimp = require('mailchimp-api-v3');
+import mailchimpApiV3 = require('mailchimp-api-v3');
 import { Constants } from '../../../assets/constants/constants';
 import { IMailListService } from './email-list.service';
 
@@ -8,7 +8,7 @@ export class MailchimpService implements IMailListService {
   private readonly mailchimp;
 
   constructor(mailchimpApiKey?: string) {
-    this.mailchimp = new Mailchimp(mailchimpApiKey || Constants.MailchimpApiKey);
+    this.mailchimp = new mailchimpApiV3(mailchimpApiKey || Constants.MailchimpApiKey);
   }
 
   public addSubscriber(emailAddress: string, listId: string) {

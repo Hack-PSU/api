@@ -1,9 +1,9 @@
 /* eslint-disable class-methods-use-this */
-import assets from '../../assets/schemas/json-asset-loader';
+import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
 import { EpochNumber } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 
-const liveUpdateSchema = assets('liveUpdateSchema');
+const liveUpdateSchema = jsonAssetLoader('liveUpdateSchema');
 
 interface IUpdateApiModel {
   updateTitle: string;
@@ -24,7 +24,7 @@ export class Update extends BaseObject {
   }
 
   public get id() {
-    return '';
+    return this.uid;
   }
 
   public static generateTestData() {

@@ -1,10 +1,10 @@
 import * as uuid from 'uuid';
-import loadSchemas from '../../assets/schemas/json-asset-loader';
+import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
 import { EpochNumber, UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 import { IHackathonApiModel } from './index';
 
-const hackathonSchema = loadSchemas('hackathonSchema');
+const hackathonSchema = jsonAssetLoader('hackathonSchema');
 
 export class Hackathon extends BaseObject {
   public get id() {

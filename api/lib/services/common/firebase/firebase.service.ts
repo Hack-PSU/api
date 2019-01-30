@@ -1,7 +1,7 @@
 import * as firebase from 'firebase-admin';
 import { Constants } from '../../../assets/constants/constants';
 // @ts-ignore
-import serviceAccount from '../../../config.json';
+import configJson from '../../../config.json';
 import { Environment, Util } from '../../../JSCommon/util';
 import { IFirebaseService } from './firebase-types/firebase-service';
 
@@ -43,9 +43,9 @@ export class FirebaseService implements IFirebaseService {
     }
     this._admin = firebase.initializeApp({
       credential: firebase.credential.cert({
-        clientEmail: serviceAccount.client_email,
-        privateKey: serviceAccount.private_key,
-        projectId: serviceAccount.project_id,
+        clientEmail: configJson.client_email,
+        privateKey: configJson.private_key,
+        projectId: configJson.project_id,
       }),
       databaseURL,
     });

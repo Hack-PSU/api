@@ -9,6 +9,7 @@
     "build": "tsc",
     "dev": "nodemon ./dist/bin/www",
     "start": "grunt && node ./dist/bin/www",
+    "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls",
     "watch": "grunt && nodemon ./dist/bin/www --inspect",
     "test": "nyc mocha",
     "prod": "APP_ENV=prod npnm run build && npm start",
@@ -16,7 +17,7 @@
     "debug": "node --inspect ./dist/bin/www",
     "prepare": "npm run gcp-build",
     "pretest": "npm run gcp-build",
-    "posttest": "npm run lint",
+    "posttest": "npm run coveralls",
     "lint": "tslint -p .",
     "gcp-build": "tsc -p ."
   },
@@ -24,9 +25,9 @@
     "extension": [
       ".ts"
     ],
-    "lines": 80,
+    "lines": 70,
     "branches": 50,
-    "functions": 80,
+    "functions": 50,
     "check-coverage": true,
     "instrument": true,
     "cache": true,
@@ -96,8 +97,10 @@
     "uuid": "3.2.1"
   },
   "devDependencies": {
+    "@types/es6-shim": "0.31.39",
     "@types/lodash": "4.14.117",
     "apidoc": "0.17.7",
+    "coveralls": "3.0.2",
     "eslint": "4.19.1",
     "eslint-config-airbnb-base": "12.1.0",
     "eslint-plugin-import": "2.9.0",

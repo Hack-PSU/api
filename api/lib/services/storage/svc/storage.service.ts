@@ -34,4 +34,3 @@ export interface IStorageService {
 
   setFileLimits(fileLimits: IFileUploadLimits): IStorageService;
 }
-

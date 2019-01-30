@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
-import BaseObject from '../BaseObject';
 import { EpochNumber, UidType } from '../../JSCommon/common-types';
+import BaseObject from '../BaseObject';
 import { EventType } from '../event';
 
 export const TABLE_NAME = 'ATTENDANCE';

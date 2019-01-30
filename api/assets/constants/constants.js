@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = {
-  HACKATHON_NAME: 'hackpsuF2018',
+  HACKATHON_NAME: 'hackpsuS2019',
   sqlConnection: {
     connectionLimit: 1000,
     timeout: 60 * 60 * 1000,
@@ -53,8 +53,8 @@ module.exports = {
     text: fs.readFileSync(path.join(__dirname, 'RSVP_Email.html'), 'utf-8'),
   },
   GCS: {
-    resumeBucket: process.env.APP_ENV === 'test' ? 'hackpsu-resumes-test' : 'hackpsuf2018-resumes',
-    travelReimbursementBucket: process.env.APP_ENV === 'test' ? 'hackpsu2018-travel-reimbursement-receipts-test' : 'hackpsuf2018-travel-reimbursement-receipts',
+    resumeBucket: process.env.APP_ENV === 'test' ? 'hackpsu-resumes-test' : 'hackpsus2019-resumes',
+    travelReimbursementBucket: process.env.APP_ENV === 'test' ? 'hackpsu2018-travel-reimbursement-receipts-test' : 'hackpsus2019-travel-reimbursement-receipts',
   },
   SendGridApiKey: process.env.SENDGRID_ACCESS_KEY || '',
   MailchimpApiKey: process.env.MAILCHIMP_API_KEY || '',

@@ -63,7 +63,7 @@ describe('INTEGRATION TESTS: /v1/live', () => {
 
   describe('GET: /updates/reference', () => {
     it('it should get the update reference', (done) => {
-      const updateReference = 'https://hackpsu18-staging.firebaseio.com/updates/5f77fb15127d473db7e3abdff74ab1dc';
+      const updateReference = 'https:////hackpsu18-staging.firebaseio.com/updates/84ed52ff52f84591aabe151666fae240';
       loginRegular()
         .then(user => user.getIdToken(true))
         .then((idToken) => {

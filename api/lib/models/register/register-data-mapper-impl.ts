@@ -135,9 +135,13 @@ export class RegisterDataMapperImpl extends GenericDataMapper
         );
     }
     const query = queryBuilder
-      .toString()
-      .concat(';');
-    return from(this.sql.query<Registration>(query, [], { stream: true, cache: true }))
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<Registration>(
+      query.text,
+      query.values,
+      { stream: true, cache: true },
+    ))
       .pipe(
         map((registrationStream: Stream<Registration>) => ({ result: 'Success', data: registrationStream })),
       )
@@ -192,7 +196,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 
@@ -235,7 +239,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 
@@ -284,10 +288,11 @@ export class RegisterDataMapperImpl extends GenericDataMapper
         await this.getSelectQueryForOptionName(columnNames[i], opts) :
         queryBuilder.union(await this.getSelectQueryForOptionName(columnNames[i], opts));
     }
-    const query = queryBuilder.toString().concat(';');
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
     return from(this.sql.query<IRegistrationStats>(
-      query,
-      [],
+      query.text,
+      query.values,
       { stream: true, cache: true },
     ))
       .pipe(

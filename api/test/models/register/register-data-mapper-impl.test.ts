@@ -26,7 +26,7 @@ function mockedQuery<T>(query, params) {
 }
 
 let registerDataMapper: IRegisterDataMapper;
-let activeHackathonDataMapper;
+let activeHackathonDataMapper: IActiveHackathonDataMapper;
 let mysqlUow;
 const acl: IAcl = new RBAC();
 const validRegistration = new Registration({
@@ -62,13 +62,13 @@ describe('TEST: Register data mapper', () => {
     mysqlUow = Substitute.for<MysqlUow>();
     // Configure Active Hackathon Data Mapper
     activeHackathonDataMapper = Substitute.for<IActiveHackathonDataMapper>();
-    activeHackathonDataMapper.activeHackathon.returns(of(new ActiveHackathon({
+    (activeHackathonDataMapper.activeHackathon as any).returns(of(new ActiveHackathon({
       basePin: 0,
       endTime: null,
       name: 'test hackathon',
       uid: 'test uid',
     })));
-    activeHackathonDataMapper.tableName.mimicks(() => 'HACKATHON');
+    (activeHackathonDataMapper.tableName as any).mimicks(() => 'HACKATHON');
     // Configure Register Data Mapper
     registerDataMapper = new RegisterDataMapperImpl(
       acl,
@@ -148,8 +148,10 @@ describe('TEST: Register data mapper', () => {
         const result = await registerDataMapper.getAll({ startAt: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid) OFFSET 100;';
+        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid) OFFSET ?;';
+        const expectedParams = [100];
         expect((result.data as any).query).to.equal(expectedSQL);
+        expect((result.data as any).params).to.deep.equal(expectedParams);
       },
     );
 
@@ -162,8 +164,10 @@ describe('TEST: Register data mapper', () => {
         const result = await registerDataMapper.getAll({ count: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid) LIMIT 100;';
+        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid) LIMIT ?;';
+        const expectedParams = [100];
         expect((result.data as any).query).to.equal(expectedSQL);
+        expect((result.data as any).params).to.deep.equal(expectedParams);
       },
     );
 
@@ -181,7 +185,10 @@ describe('TEST: Register data mapper', () => {
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid)' +
-          ' WHERE (hackathon.uid = \'test uid\');';
+          ' WHERE (hackathon.uid = ?);';
+        const expectedParams = [hackathonUid];
+        expect((result.data as any).query).to.equal(expectedSQL);
+        expect((result.data as any).params).to.deep.equal(expectedParams);
         expect((result.data as any).query).to.equal(expectedSQL);
       },
     );
@@ -212,7 +219,7 @@ describe('TEST: Register data mapper', () => {
       const result = await registerDataMapper.getCount();
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT COUNT(uid) AS "count" FROM `REGISTRATION`;';
+      const expectedSQL = 'SELECT COUNT(uid) AS "registration_count" FROM `REGISTRATION`;';
       expect((result.data as any).query).to.equal(expectedSQL);
     });
     // @ts-ignore
@@ -226,8 +233,10 @@ describe('TEST: Register data mapper', () => {
       });
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT COUNT(uid) AS "count" FROM `REGISTRATION` WHERE (hackathon = \'test uid\');';
+      const expectedSQL = 'SELECT COUNT(uid) AS "registration_count" FROM `REGISTRATION` WHERE (hackathon = ?);';
+      const expectedParams = [hackathonUid];
       expect((result.data as any).query).to.equal(expectedSQL);
+      expect((result.data as any).params).to.deep.equal(expectedParams);
     });
   });
 
@@ -240,7 +249,7 @@ describe('TEST: Register data mapper', () => {
       const result = await registerDataMapper.insert(registration);
 
       // THEN: Returns inserted event
-      expect((result.data as any)).to.equal(registration);
+      expect((result.data as any)).to.deep.equal(registration.cleanRepresentation);
     });
 
     // @ts-ignore
@@ -307,9 +316,8 @@ describe('TEST: Register data mapper', () => {
       const registration = validRegistration;
       // WHEN: Updating the registration
       const result = await registerDataMapper.update(registration);
-
       // THEN: Returns updated event
-      expect((result.data as any)).to.equal(registration);
+      expect((result.data as any)).to.deep.equal(registration.cleanRepresentation);
     });
 
     // @ts-ignore
@@ -424,28 +432,34 @@ describe('TEST: Register data mapper', () => {
     it('generates the correct sql to get the registration statistics by hackathon', async () => {
       // GIVEN: A registration data mapper
       // WHEN: The registration statistics are retrieved
-      const result = await registerDataMapper.getRegistrationStats({ byHackathon: true, hackathon: 'test hackathon' });
+      const hackathonUid = 'test hackathon';
+      const result = await registerDataMapper.getRegistrationStats({
+        byHackathon: true,
+        hackathon: hackathonUid,
+      });
       // THEN: Generated SQL matches the expectation
       const expectedSQL =
         'SELECT "academic_year" AS "CATEGORY", academic_year AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
-        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\')' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = ?)' +
         ' GROUP BY academic_year UNION (SELECT "coding_experience" AS "CATEGORY", coding_experience AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
-        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\')' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = ?)' +
         ' GROUP BY coding_experience) UNION (SELECT "dietary_restriction" AS "CATEGORY", dietary_restriction AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
-        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\') GROUP BY dietary_restriction)' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = ?) GROUP BY dietary_restriction)' +
         ' UNION (SELECT "travel_reimbursement" AS "CATEGORY", travel_reimbursement AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
-        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\')' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = ?)' +
         ' GROUP BY travel_reimbursement) UNION (SELECT "race" AS "CATEGORY", race AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
-        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\') GROUP BY race)' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = ?) GROUP BY race)' +
         ' UNION (SELECT "shirt_size" AS "CATEGORY", shirt_size AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
-        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\') ' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = ?) ' +
         'GROUP BY shirt_size) UNION (SELECT "gender" AS "CATEGORY", gender AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
-        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\') GROUP BY gender)' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = ?) GROUP BY gender)' +
         ' UNION (SELECT "first_hackathon" AS "CATEGORY", first_hackathon AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
-        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\')' +
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = ?)' +
         ' GROUP BY first_hackathon) UNION (SELECT "veteran" AS "CATEGORY", veteran AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
-        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = \'test hackathon\') GROUP BY veteran);';
+        ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = ?) GROUP BY veteran);';
+      const expectedParams = [hackathonUid, hackathonUid, hackathonUid, hackathonUid, hackathonUid, hackathonUid, hackathonUid, hackathonUid, hackathonUid];
       expect((result.data as any).query).to.equal(expectedSQL);
+      expect((result.data as any).params).to.deep.equal(expectedParams);
     });
   });
 

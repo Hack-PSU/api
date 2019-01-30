@@ -7,7 +7,7 @@ require('../test_helper')();
 const server = require('../../lib/app');
 const { RSVP } = require('../../lib/models/RSVP');
 const { UowFactory } = require('../../lib/services/factories/uow_factory');
-const { Registration } = require('../../lib/models/Registration');
+const { Registration } = require('../../lib/models/register/Registration');
 
 const chance = new Chance();
 

@@ -94,9 +94,8 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .field(`COUNT(${this.pkColumnName})`, 'count')
       .toString()
       .concat(';');
-    const params = [];
     return from(
-      this.sql.query<number>(query, params, { stream: true, cache: true }),
+      this.sql.query<number>(query, [], { stream: true, cache: true }),
     ).pipe(
       map((result: number) => ({ result: 'Success', data: result })),
     ).toPromise();

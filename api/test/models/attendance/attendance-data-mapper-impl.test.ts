@@ -3,13 +3,15 @@ import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
+import {
+  Attendance,
+} from '../../../lib/models/attendance/attendance';
+import { AttendanceDataMapperImpl } from '../../../lib/models/attendance/attendance-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
-import { Attendance,
-         IAttendanceDataMapper,
-         AttendanceDataMapperImpl} from '../../../lib/models/attendance'
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
+import { IDataMapper } from '../../../lib/services/database';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
 
@@ -18,7 +20,7 @@ function mockedQuery<T>(query, params) {
   return Promise.resolve({ query, params });
 }
 
-let attendanceDataMapper: IAttendanceDataMapper;
+let attendanceDataMapper: IDataMapper<Attendance>;
 let activeHackathonDataMapper;
 let mysqlUow;
 const acl: IAcl = new RBAC();
@@ -59,7 +61,8 @@ describe('TEST: Attendance data mapper', () => {
       expect((result.data as any).query).to.equal(expectedSQL);
     });
 
-    it('generates the correct sql to read all attendees with specific fields',
+    it(
+      'generates the correct sql to read all attendees with specific fields',
       // @ts-ignore
       async () => {
         // GIVEN: An attendance data mapper instance

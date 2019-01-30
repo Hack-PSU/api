@@ -12,13 +12,16 @@
       "maxLength": 80
     },
     "start_time": {
-      "type": "number"
+      "type": "number",
+      "min": 0
     },
     "end_time": {
-      "type": ["number", "null"]
+      "type": ["number", "null"],
+      "min": 0
     },
     "base_pin": {
-      "type": ["number", "null"]
+      "type": ["number", "null"],
+      "min": 0
     }
   },
   "required": ["uid", "name", "start_time"]

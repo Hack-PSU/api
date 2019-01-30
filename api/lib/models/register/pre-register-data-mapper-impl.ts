@@ -81,18 +81,32 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
   }
 
   public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<PreRegistration>>> {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(this.tableName)
-      .where(
+    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(this.tableName);
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
         'hackathon = ?',
         await (opts && opts.hackathon ?
           Promise.resolve(opts.hackathon) :
           this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
             .toPromise()),
-      )
-      .toString()
-      .concat(';');
-    return from(this.sql.query<PreRegistration>(query, [], { stream: true, cache: true }))
+        );
+    }
+    const query = queryBuilder
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<PreRegistration>(
+      query.text,
+      query.values,
+      { stream: true, cache: true },
+    ))
       .pipe(
         map((event: Stream<PreRegistration>) => ({ result: 'Success', data: event })),
       )

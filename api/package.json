@@ -65,7 +65,7 @@
     "grunt-exec": "3.0.0",
     "grunt-run": "0.8.1",
     "mocha": "4.1.0",
-    "nodemon": "1.18.4"
+    "nodemon": "1.18.9"
   },
   "apidoc": {
     "name": "HackPSU RESTful Web API",

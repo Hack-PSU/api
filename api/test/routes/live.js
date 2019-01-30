@@ -63,7 +63,7 @@ describe('INTEGRATION TESTS: /v1/live', () => {
 
   describe('GET: /updates/reference', () => {
     it('it should get the update reference', (done) => {
-      const updateReference = 'https://hackpsu18-staging.firebaseio.com/updates/5f77fb15127d473db7e3abdff74ab1dc';
+      const updateReference = 'https://hackpsu18-staging.firebaseio.com/updates/84ed52ff52f84591aabe151666fae240';
       loginRegular()
         .then(user => user.getIdToken(true))
         .then((idToken) => {
@@ -87,7 +87,9 @@ describe('INTEGRATION TESTS: /v1/live', () => {
       pushNotification,
     });
 
-    const generateBadUpdate = () => {};
+    const generateBadUpdate = () => ({
+      illegalProperty: '',
+    });
 
     it('should fail on malformed update', (done) => {
       loginAdmin()
@@ -98,7 +100,7 @@ describe('INTEGRATION TESTS: /v1/live', () => {
             .set('idtoken', idToken)
             .send(generateBadUpdate())
             .end((err, res) => {
-              res.should.have.status(400);
+              res.status.should.satisfy(num => num === 400 || num === 401);
               should.not.equal(err, null);
               should.equal(err.response.body.message, 'Update title must be provided');
               done();

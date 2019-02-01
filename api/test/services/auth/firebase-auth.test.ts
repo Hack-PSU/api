@@ -93,6 +93,33 @@ describe('TEST: Firebase Auth Test', () => {
         middleware(mockReq(), mockedResponse, done);
       });
 
+      it('to person with privilege on more than one operations', (done) => {
+        // GIVEN: User token with given role
+        privilege = 5;
+        // GIVEN: a firebase authentication service and RBAC service
+        const rbac = new RBAC();
+        rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access', 'test:update']));
+        const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
+        // GIVEN: environment is set to production
+        process.env.APP_ENV = 'PROD';
+
+        // WHEN: Checking permission
+        const middleware = firebaseAuthService.verifyAcl(
+          {
+            COUNT: '',
+            CREATE: 'test:access',
+            DELETE: '',
+            READ: '',
+            READ_ALL: '',
+            UPDATE: 'test:update',
+          },
+          [AclOperations.CREATE, AclOperations.UPDATE],
+        );
+        // THEN: Allows access
+        const mockedResponse = mockRes({ locals: { user: { privilege } } });
+        middleware(mockReq(), mockedResponse, done);
+      });
+
       it('to person without privilege on operation requiring none', (done) => {
         // GIVEN: User token with given role
         privilege = 0;

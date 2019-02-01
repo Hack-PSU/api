@@ -1,9 +1,9 @@
 import v4 from 'uuid/v4';
-import loadSchemas from '../../assets/schemas/json-asset-loader';
+import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
 import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 
-const preRegisteredSchema = loadSchemas('preRegisteredSchema');
+const preRegisteredSchema = jsonAssetLoader('preRegisteredSchema');
 
 export class PreRegistration extends BaseObject {
   public get id() {

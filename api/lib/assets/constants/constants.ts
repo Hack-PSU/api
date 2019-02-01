@@ -66,4 +66,4 @@ export class Constants {
   public static readonly MailchimpApiKey = Util.readEnv('MAILCHIMP_API_KEY', '');
   public static readonly MailchimpPreregEmailList = 'HackPSU Email List';
   public static readonly redisKey = Util.readEnv('REDIS_KEY', '');
-};
+}

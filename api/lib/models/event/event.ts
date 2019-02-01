@@ -1,9 +1,9 @@
 import * as uuid from 'uuid';
-import loadSchemas from '../../assets/schemas/json-asset-loader';
+import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
 import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 
-const eventSchema = loadSchemas('eventSchema');
+const eventSchema = jsonAssetLoader('eventSchema');
 
 export enum EventType {
   WORKSHOP = 'workshop',

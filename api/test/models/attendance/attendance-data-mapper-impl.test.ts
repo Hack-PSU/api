@@ -3,9 +3,7 @@ import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
-import {
-  Attendance,
-} from '../../../lib/models/attendance/attendance';
+import { Attendance } from '../../../lib/models/attendance/attendance';
 import { AttendanceDataMapperImpl } from '../../../lib/models/attendance/attendance-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';

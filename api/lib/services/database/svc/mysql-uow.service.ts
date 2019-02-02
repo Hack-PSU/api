@@ -1,7 +1,7 @@
 import { Inject, Injectable } from 'injection-js';
 import { MysqlError, PoolConnection } from 'mysql';
 import { defer, from, Observable } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError, mergeMap } from 'rxjs/operators';
 import { ReadableStream, Stream } from 'ts-stream';
 import { HttpError } from '../../../JSCommon/errors';
 import { Logger } from '../../logging/logging';
@@ -75,8 +75,8 @@ export class MysqlUow implements IUow {
   ) {
     return this.connectionPromise
       .pipe(
-        switchMap((connection: PoolConnection) => {
-          return from(new Promise<T | ReadableStream<T>>(async (resolve, reject) => {
+        mergeMap((connection: PoolConnection) => {
+          return new Promise<T | ReadableStream<T>>(async (resolve, reject) => {
             if (opts.cache) { // Check cache
               try {
                 const result: T = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
@@ -110,7 +110,7 @@ export class MysqlUow implements IUow {
                 return resolve(result);
               });
             });
-          }));
+          });
         }),
         catchError((err: MysqlError) => {
           MysqlUow.sqlErrorHandler(err);

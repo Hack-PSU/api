@@ -3,7 +3,7 @@ import { validate } from 'email-validator';
 import { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { IExpressController, ResponseBody } from '../..';
-import loadSchemas from '../../../assets/schemas/json-asset-loader';
+import jsonAssetLoader from '../../../assets/schemas/json-asset-loader';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IAdminDataMapper } from '../../../models/admin';
@@ -13,7 +13,7 @@ import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/R
 import { IDataMapper } from '../../../services/database';
 import { ParentRouter } from '../../router-types';
 
-const emailObjectSchema = loadSchemas('emailObjectSchema');
+const emailObjectSchema = jsonAssetLoader('emailObjectSchema');
 
 @Injectable()
 export class AdminController extends ParentRouter implements IExpressController {

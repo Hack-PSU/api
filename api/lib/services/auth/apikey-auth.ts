@@ -31,7 +31,7 @@ export class ApikeyAuthService implements IApikeyAuthService {
   public async checkAuthentication(token?: Apikey, macAddress?: string): Promise<boolean> {
     const doc = await this.db.collection(this.APIKEY_COLLECTION).doc(token).get();
     if (!doc.exists) {
-      throw new HttpError('invalid apikey', 404);
+      throw new HttpError('invalid API key', 404);
     }
     const apiToken = doc.data() as IApiToken;
     if (apiToken.macAddress !== macAddress) throw new HttpError('MAC addres did not match', 401);

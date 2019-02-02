@@ -1,32 +1,31 @@
-import { Inject } from 'injection-js';
+import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import squel from 'squel';
-import { Stream } from 'ts-stream';
+import * as squel from 'squel';
+import tsStream, { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
-import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
+import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDbResult } from '../../services/database';
+import { IDataMapper, IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
-import { IPreRegisterDataMapper } from './index';
-import { PreRegistration } from './pre-registration';
+import { TravelReimbursement } from './travel-reimbursement';
 
-export class PreRegisterDataMapperImpl extends GenericDataMapper
-  implements IPreRegisterDataMapper, IAclPerm {
+@Injectable()
+export class TravelReimbursementDataMapperImpl extends GenericDataMapper
+  implements IAclPerm, IDataMapper<TravelReimbursement> {
+  public COUNT: string = 'travel_reimbursement:count';
+  public CREATE: string = 'travel_reimbursement:create';
+  public DELETE: string = 'travel_reimbursement:delete';
+  public READ: string = 'travel_reimbursement:read';
+  public READ_ALL: string = 'travel_reimbursement:readall';
+  public UPDATE: string = 'travel_reimbursement:update';
 
-  public CREATE: string = 'pre-registration:create';
-  public DELETE: string = 'pre-registration:delete';
-  public READ: string = 'pre-registration:read';
-  public UPDATE: string = 'pre-registration:update';
-  public READ_ALL: string = 'pre-registration:readall';
-  public COUNT: string = 'pre-registration:count';
-  public tableName: string = 'PRE_REGISTRATION';
-
+  public tableName: string = 'TRAVEL_REIMBURSEMENT';
   protected pkColumnName: string = 'uid';
 
   constructor(
@@ -44,9 +43,9 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     );
     super.addRBAC(
       [this.READ_ALL],
-      [AuthLevel.VOLUNTEER],
+      [AuthLevel.PARTICIPANT],
       undefined,
-      [AuthLevel[AuthLevel.PARTICIPANT]],
+      [AuthLevel[AuthLevel.VOLUNTEER]],
     );
     super.addRBAC(
       [this.READ, this.UPDATE, this.CREATE],
@@ -67,7 +66,7 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<PreRegistration>> {
+  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<TravelReimbursement>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.fields) {
@@ -77,20 +76,34 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<PreRegistration>(
+    return from(this.sql.query<TravelReimbursement>(
       query.text,
       query.values,
       { stream: false, cache: true },
     ))
       .pipe(
-        map((event: PreRegistration) => ({ result: 'Success', data: event })),
+        map((travelReimbursement: TravelReimbursement) => ({
+          data: travelReimbursement,
+          result: 'Success',
+        })),
       )
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<PreRegistration>>> {
-    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(this.tableName);
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<tsStream<TravelReimbursement>>> {
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName, 'reimbursement')
+      .join(
+        this.activeHackathonDataMapper.tableName,
+        'hackathon',
+        'reimbursement.hackathon = hackathon.uid',
+      );
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -100,28 +113,32 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
         .where(
-        'hackathon = ?',
-        await (opts && opts.hackathon ?
-          Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
-            .toPromise()),
+          'hackathon.uid = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
         );
     }
     const query = queryBuilder
       .toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<PreRegistration>(
+    return from(this.sql.query<TravelReimbursement>(
       query.text,
       query.values,
       { stream: true, cache: true },
     ))
       .pipe(
-        map((event: Stream<PreRegistration>) => ({ result: 'Success', data: event })),
+        map((reimbursementStream: Stream<TravelReimbursement>) => ({
+          data: reimbursementStream,
+          result: 'Success',
+        })),
       )
       .toPromise();
   }
 
-  public getCount(): Promise<IDbResult<number>> {
+  public getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     const query = this.getCountQuery().toParam();
     query.text = query.text.concat(';');
     return from(
@@ -134,11 +151,11 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
   public getCountQuery() {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
-      .field(`COUNT(${this.pkColumnName})`, 'preregistration_count');
+      .field(`COUNT(${this.pkColumnName})`, 'reimbursement_count');
     return query;
   }
 
-  public async insert(object: PreRegistration): Promise<IDbResult<PreRegistration>> {
+  public async insert(object: TravelReimbursement): Promise<IDbResult<TravelReimbursement>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -162,10 +179,10 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public update(object: PreRegistration): Promise<IDbResult<PreRegistration>> {
+  public update(object: TravelReimbursement): Promise<IDbResult<TravelReimbursement>> {
     const validation = object.validate();
     if (!validation.result) {
-      this.logger.warn('Validation failed while adding object.');
+      this.logger.warn('Validation failed while updating object.');
       this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }

@@ -112,7 +112,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .join(
         this.activeHackathonDataMapper.tableName,
         'hackathon',
-        'reg.hackathon = hackathon.uid',
+        'registration.hackathon = hackathon.uid',
       );
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);

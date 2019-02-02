@@ -32,7 +32,10 @@ export class ScannerDataMapperImpl extends GenericDataMapper
           result: 'Duplicate detected',
         };
       default:
-        return { result: 'Error', data: object.cleanRepresentation };
+        return {
+          data: object.cleanRepresentation,
+          result: 'Error',
+        };
     }
   }
   public COUNT: string = 'rfidassignment:count';

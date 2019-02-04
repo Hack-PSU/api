@@ -20,7 +20,7 @@ public quantity: number
     return null;
   }
   public get id() {
-    return null
+    return null;
   }
   constructor(data: ICheckoutItemsApiModel) {
     super();

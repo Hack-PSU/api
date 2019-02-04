@@ -20,7 +20,7 @@ import { Registration } from '../../models/Registration';
 
 import { Project } from '../models/Project';
 
-import { RSVP } from '../../models/RSVP';
+import { RSVP } from '../../models/RSVP/RSVP';
 
 import { Category } from '../../models/Category';
 

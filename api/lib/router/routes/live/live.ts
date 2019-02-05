@@ -17,8 +17,8 @@ export class LiveController extends ParentRouter implements IExpressController {
   }
 
   public routes(app: express.Router): void {
-    LiveController.registerRouter('updates', 'UpdatesController');
-    LiveController.registerRouter('events', 'EventsController');
+    LiveController.registerRouter('updates', 'UpdatesController', 2);
+    LiveController.registerRouter('events', 'EventsController', 2);
     app.get('/', (req, res) => this.liveHandler(res));
   }
 

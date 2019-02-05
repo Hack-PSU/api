@@ -142,16 +142,16 @@ export class App extends ParentRouter {
   }
 
   private routerConfig() {
-    App.registerRouter('', 'IndexController');
-    App.registerRouter('live', 'LiveController');
-    App.registerRouter('internal', 'InternalController', 1);
-    App.registerRouter('register', 'RegistrationController');
-    App.registerRouter('admin', 'AdminController');
+    App.registerRouter('', 'IndexController', 2);
+    App.registerRouter('live', 'LiveController', 2);
+    App.registerRouter('internal', 'InternalController', 2);
+    App.registerRouter('register', 'RegistrationController', 2);
+    App.registerRouter('admin', 'AdminController', 2);
     App.registeredRoutes.forEach((router, key) => {
       this.app.use(key, Util.getInstance(router).router);
     });
     this.app.use('', Util.getInstance('IndexController').router);
-    this.app.use('/v1/doc', express.static(path.join(__dirname, 'doc')));
+    this.app.use('/v2/doc', express.static(path.join(__dirname, 'doc')));
 
     // ERROR HANDLERS
     this.app.use(App.notFoundHandler);

@@ -139,7 +139,7 @@ describe('TEST: Category Data Mapper', () => {
       const result = await categoryDataMapper.insert(testCategory);
 
       // THEN: Returns inserted category
-      expect((result.data as any)).to.equal(testCategory);
+      expect((result.data as any)).to.deep.equal(testCategory.cleanRepresentation);
     });
   });
 
@@ -156,7 +156,7 @@ describe('TEST: Category Data Mapper', () => {
       const result = await categoryDataMapper.update(testCategory);
 
       // THEN: Returns inserted category
-      expect((result.data as any)).to.equal(testCategory);
+      expect((result.data as any)).to.deep.equal(testCategory.cleanRepresentation);
     });
   });
 });

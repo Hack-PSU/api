@@ -27,7 +27,7 @@
   },
   "include": [
     "lib/**/*.ts",
-    "lib/bin/*"
+    "lib/bin/*", "test/models/checkout-object/checkout-object-data-mapper-impl.test.ts"
   ],
   "exclude": [
     "node_modules"

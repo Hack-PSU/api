@@ -1,5 +1,8 @@
 /* eslint-disable class-methods-use-this */
 import BaseObject from '../BaseObject';
+import jsonAssetLoader from '../../assets/schemas/json-asset-loader'
+
+const checkoutItemsSchema = jsonAssetLoader('checkoutItemSchema');
 
 export const TABLE_NAME = 'CHECKOUT_ITEMS';
 
@@ -12,19 +15,21 @@ interface ICheckoutItemsApiModel {
 }
 
 export class CheckoutItems extends BaseObject {
-
-public name: string;
-public quantity: number
-
+  
   public get schema() {
-    return null;
+    return checkoutItemsSchema;
   }
   public get id() {
-    return null
+    return undefined;
   }
+
+  public name: string;
+  public quantity: number
+  
   constructor(data: ICheckoutItemsApiModel) {
     super();
     this.name = data.name;
     this.quantity = data.quantity;
+    
   }
 }

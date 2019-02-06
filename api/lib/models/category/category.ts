@@ -1,5 +1,8 @@
 /* eslint-disable class-methods-use-this */
 import BaseObject from '../BaseObject';
+import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
+
+const categorySchema = jsonAssetLoader('categorySchema');
 
 export const TABLE_NAME = 'CATEGORY_LIST';
 
@@ -19,7 +22,7 @@ export class Category extends BaseObject {
   public isSponsor: boolean;
 
   public get schema() {
-    return null;
+    return categorySchema;
   }
   public get id() {
     return this.uid;

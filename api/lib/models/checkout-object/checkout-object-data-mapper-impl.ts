@@ -9,42 +9,44 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { Logger } from '../../services/logging/logging';
 import { Stream } from 'ts-stream';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper'
-import { IDbResult, IDataMapper } from "../../services/database";
-import { Category } from '.';
+import { IDbResult } from "../../services/database";
+import { CheckoutObject, ICheckoutObjectDataMapper } from '.';
 import { UidType } from '../../JSCommon/common-types';
-import { HttpError } from '../../JSCommon/errors'
+import { HttpError } from '../../JSCommon/errors';
+import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 
 @Injectable()
-export class CategoryDataMapperImpl extends GenericDataMapper
-  implements IAclPerm, IDataMapper<Category> {
-  public readonly COUNT: string = 'category:count';
-  public readonly CREATE: string = 'category:create';
-  public readonly DELETE: string = 'category:delete';
-  public readonly READ: string = 'category:read';
-  public readonly READ_ALL: string = 'category:readall';
-  public readonly UPDATE: string = 'category:update';
+export class CheckoutObjectDataMapperImpl extends GenericDataMapper
+  implements IAclPerm, ICheckoutObjectDataMapper {
+  public readonly COUNT: string = 'checkoutObjects:count';
+  public readonly CREATE: string = 'checkoutObject:create';
+  public readonly DELETE: string = 'checkoutObject:delete';
+  public readonly READ: string = 'checkoutObject:read';
+  public readonly READ_ALL: string = 'checkoutObject:readall';
+  public readonly UPDATE: string = 'checkoutObject:update';
   
-  public tableName = 'CATEGORY_LIST'
+  public tableName = 'CHECKOUT_DATA';
 
   protected pkColumnName: string = 'uid';
  
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
+    @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
     super.addRBAC(
-      [this.READ, this.READ_ALL],
-      [
-        AuthLevel.TEAM_MEMBER,
-      ],
+      [this.READ, this.READ_ALL, this.CREATE, this.UPDATE, this.DELETE],
+      [AuthLevel.TEAM_MEMBER],
+      undefined,
+      [AuthLevel[AuthLevel.VOLUNTEER]],
     );
   }
-  public delete(object: Category): Promise<IDbResult<void>> {
+  public delete(object: CheckoutObject): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, Category)
+      .where(`${this.pkColumnName} = ?`, object.id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -54,7 +56,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Category>> {
+  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<CheckoutObject>> {
     let queryBuilder = squel.select({ 
       autoQuoteFieldNames: true, 
       autoQuoteTableNames: true 
@@ -67,25 +69,19 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Category>(query.text, query.values, { stream: false, cache: true }))
+    return from(this.sql.query<CheckoutObject>(query.text, query.values, { stream: false, cache: true }))
       .pipe(
-        map((category: Category) => ({ result: 'Success', data: category })),
+        map((checkoutObject: CheckoutObject) => ({ result: 'Success', data: checkoutObject })),
       )
       .toPromise();
   }
 
-  /**
-   *
-   * @param uow
-   * @param opts
-   * @return {Promise<Stream>}
-   */
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Category>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<CheckoutObject>>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
     })
-      .from(this.tableName, 'category');
+      .from(this.tableName, 'checkoutObject');
       if(opts && opts.fields) {
         queryBuilder = queryBuilder.fields(opts.fields);
       }
@@ -95,20 +91,27 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       if(opts && opts.count) {
         queryBuilder = queryBuilder.limit(opts.count);
       }
-
+      if (opts && opts.byHackathon) {
+        queryBuilder = queryBuilder.
+            where(
+              'hackathon_id = ?',
+              await (opts.hackathon ?
+                Promise.resolve(opts.hackathon) :
+                this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
+            );
+      }
       const query = queryBuilder
         .toString()
         .concat(';');
-      return from(this.sql.query<Category>(query, [], { stream: true, cache: true}))
+      return from(this.sql.query<CheckoutObject>(query, [], { stream: true, cache: true}))
         .pipe(
-          map((categoryStream: Stream<Category>) => ({ result: 'Success', data: categoryStream }))
+          map((checkoutObjectStream: Stream<CheckoutObject>) => ({ result: 'Success', data: checkoutObjectStream }))
         )
         .toPromise();
   }
 
   /**
-   * Returns a count of the number of Category objects.
-   * @param uow
+   * Returns a count of the number of CheckoutObject objects.
    * @returns {Promise<Readable>}
    */
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
@@ -127,8 +130,10 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     ).toPromise();  
   } 
   
-  public insert(object: Category): Promise<IDbResult<Category>> {
+  public insert(object: CheckoutObject): Promise<IDbResult<CheckoutObject>> {
     const validation = object.validate();
+    console.log(validation);
+    console.log(object.dbRepresentation);
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
       this.logger.warn(object.dbRepresentation);
@@ -145,8 +150,28 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
+  
+  public returnItem(object: CheckoutObject) {
+    if (!object.return_time) {
+      this.logger.warn('Return time not set');
+      return Promise.reject(new HttpError('Return time not set', 400));
+    }
+    const query = squel.update({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .table(this.tableName)
+      .set('return_time', object.return_time)
+      .where('uid = ?', object.uid)
+      .toParam();
+    return from(
+      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+    ).pipe(
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
+    ).toPromise();
+  }
 
-  public update(object: Category): Promise<IDbResult<Category>> {
+  public update(object: CheckoutObject): Promise<IDbResult<CheckoutObject>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -165,6 +190,4 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
-
-  
 }

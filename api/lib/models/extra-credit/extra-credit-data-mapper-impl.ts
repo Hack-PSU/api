@@ -6,6 +6,7 @@ import tsStream, { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { AuthLevel } from '../../services/auth/auth-types';
 import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
@@ -36,6 +37,12 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
+    super.addRBAC(
+      [this.READ, this.READ_ALL, this.CREATE, this.UPDATE, this.DELETE],
+      [AuthLevel.DIRECTOR],
+      undefined,
+      [AuthLevel[AuthLevel.VOLUNTEER]],
+    );
   }
 
   public delete(object: UidType): Promise<IDbResult<void>> {

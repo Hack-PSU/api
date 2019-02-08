@@ -1,18 +1,18 @@
-import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { AuthLevel } from '../../services/auth/auth-types';
-import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
-import { Logger } from '../../services/logging/logging';
 import { Stream } from 'ts-stream';
-import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper'
-import { IDbResult } from "../../services/database";
 import { CheckoutItems, ICheckoutItemsDataMapper } from '.';
 import { UidType } from '../../JSCommon/common-types';
-import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
+import { HttpError } from '../../JSCommon/errors';
+import { AuthLevel } from '../../services/auth/auth-types';
+import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { IDbResult } from '../../services/database';
+import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
+import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
+import { IUowOpts } from '../../services/database/svc/uow.service';
+import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 
 /**
@@ -28,11 +28,11 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
   public readonly READ: string = 'checkoutItems:read';
   public readonly READ_ALL: string = 'checkoutItems:readall';
   public readonly UPDATE: string = 'checkoutItems:update';
-  
+
   public tableName = 'CHECKOUT_ITEMS';
 
   protected pkColumnName: string = 'uid';
- 
+
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
@@ -61,9 +61,9 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
   }
 
   public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<CheckoutItems>> {
-    let queryBuilder = squel.select({ 
-      autoQuoteFieldNames: true, 
-      autoQuoteTableNames: true 
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
     })
       .from(this.tableName);
     if (opts && opts.fields) {
@@ -86,30 +86,30 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       autoQuoteTableNames: true,
     })
       .from(this.tableName, 'checkoutItems');
-      if(opts && opts.fields) {
-        queryBuilder = queryBuilder.fields(opts.fields);
-      }
-      if(opts && opts.startAt) {
-        queryBuilder = queryBuilder.offset(opts.startAt);
-      }
-      if(opts && opts.count) {
-        queryBuilder = queryBuilder.limit(opts.count);
-      }
-      if (opts && opts.byHackathon) {
-        queryBuilder = queryBuilder.
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder.
             where(
               'hackathon_id = ?',
               await (opts.hackathon ?
                 Promise.resolve(opts.hackathon) :
                 this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
             );
-      }
-      const query = queryBuilder
+    }
+    const query = queryBuilder
         .toString()
         .concat(';');
-      return from(this.sql.query<CheckoutItems>(query, [], { stream: true, cache: true}))
+    return from(this.sql.query<CheckoutItems>(query, [], { stream: true, cache: true }))
         .pipe(
-          map((checkoutItemsStream: Stream<CheckoutItems>) => ({ result: 'Success', data: checkoutItemsStream }))
+          map((checkoutItemsStream: Stream<CheckoutItems>) => ({ result: 'Success', data: checkoutItemsStream })),
         )
         .toPromise();
   }
@@ -123,18 +123,18 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       .from('CHECKOUT_DATA', 'c')
       .join(this.tableName, 'i', 'c.item_id=i.uid')
       .join(this.activeHackathonDataMapper.tableName, 'h', 'c.hackathon=h.uid and h.active=1')
-      .where(`c.uid=?`, id)
+      .where('c.uid=?', id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<CheckoutItems>(query.text, query.values, {stream: false, cache: true }))
+      this.sql.query<CheckoutItems>(query.text, query.values, { stream: false, cache: true }))
       .pipe(
         map((checkoutItems: CheckoutItems) => ({
           data: checkoutItems,
           result: 'Success',
         })),
       )
-      .toPromise()  
+      .toPromise();
   }
 
   public async getAllAvailable(): Promise<IDbResult<Stream<CheckoutItems>>> {
@@ -142,8 +142,8 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       autoQuoteFieldNames: false,
       autoQuoteTableNames: false,
     })
-      .field('COUNT(uid)')
       .from('CHECKOUT_DATA', 'c') // Here
+      .field('COUNT(uid)')
       .where('c.item_id=i.uid')
       .toString();
     const query = squel.select({
@@ -156,18 +156,17 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       .left_join(this.activeHackathonDataMapper.tableName, 'h', 'c.hackathon=h.uid and h.active=1')
       .group('i.uid')
       .toParam();
-    query.text = query.text.concat(';');
+
     return from(
-      this.sql.query<CheckoutItems>(query.text, [], {stream: true, cache: true }))
+      this.sql.query<CheckoutItems>(query.text, [], { stream: true, cache: true }))
       .pipe(
         map((checkoutItemsStream: Stream<CheckoutItems>) => ({
           data: checkoutItemsStream,
           result: 'Success',
         })),
       )
-      .toPromise()
+      .toPromise();
   }
-
 
   /**
    * Returns a count of the number of CheckoutItems objects.
@@ -186,9 +185,9 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       this.sql.query<number>(query, [], { stream: true, cache: true }),
     ).pipe(
       map((result: number) => ({ result: 'Success', data: result })),
-    ).toPromise();  
-  } 
-  
+    ).toPromise();
+  }
+
   public insert(object: CheckoutItems): Promise<IDbResult<CheckoutItems>> {
     const validation = object.validate();
     if (!validation.result) {

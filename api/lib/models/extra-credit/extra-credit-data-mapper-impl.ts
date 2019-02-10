@@ -38,7 +38,13 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   ) {
     super(acl);
     super.addRBAC(
-      [this.READ, this.READ_ALL, this.CREATE, this.UPDATE, this.DELETE],
+      [this.READ, this.READ_ALL, this.CREATE, this.UPDATE],
+      [AuthLevel.TEAM_MEMBER],
+      undefined,
+      [AuthLevel[AuthLevel.VOLUNTEER]],
+    );
+    super.addRBAC(
+      [this.DELETE],
       [AuthLevel.DIRECTOR],
       undefined,
       [AuthLevel[AuthLevel.VOLUNTEER]],
@@ -63,9 +69,10 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       queryBuilder = queryBuilder.limit(opts.count);
     }
     const query = queryBuilder
-      .toString()
-      .concat(';');
-    return from(this.sql.query<ExtraCreditAssignment>(query, [], { stream: true, cache: true }))
+      .toParam()
+
+      query.text = query.text.concat(';');
+    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { stream: true, cache: true }))
       .pipe(
         map((classes: Stream<ExtraCreditAssignment>) => ({ result: 'Success', data: classes })),
       )
@@ -86,9 +93,10 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       queryBuilder = queryBuilder.limit(opts.count);
     }
     const query = queryBuilder
-      .toString()
-      .concat(';');
-    return from(this.sql.query<ExtraCreditClass>(query, [], { stream: true, cache: true }))
+      .toParam()
+
+      query.text = query.text.concat(';');
+    return from(this.sql.query<ExtraCreditClass>(query.text, query.values, { stream: true, cache: true }))
       .pipe(
         map((classes: Stream<ExtraCreditClass>) => ({ result: 'Success', data: classes })),
       )

@@ -116,41 +116,6 @@ describe('TEST: CheckoutItems Data Mapper', () => {
         expect((result.data as any).query).to.equal(expectedSQL);
       },
     );
-
-    it(
-      'generates the correct sql to read items for a specific hackathon',
-      // @ts-ignore
-      async () => {
-        // GIVEN: A hackathon to read items for
-        const hackathonUid = 'test uid';
-        // WHEN: Retrieving all items data for the given hackathon
-        const result = await checkoutItemsDataMapper.getAll({
-          byHackathon: true,
-          hackathon: hackathonUid,
-        });
-
-        // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CHECKOUT_ITEMS` `checkoutItems` WHERE (hackathon_id = \'test uid\');';
-        expect((result.data as any).query).to.equal(expectedSQL);
-      },
-    );
-
-    it(
-      'generates the correct sql to read items for a specific hackathon, but byHackathon is not provided',
-      // @ts-ignore
-      async () => {
-        // GIVEN: A hackathon to read items for
-        const hackathonUid = 'test uid';
-        // WHEN: Retrieving all items data for the given hackathon
-        const result = await checkoutItemsDataMapper.getAll({
-          hackathon: hackathonUid,
-        });
-
-        // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CHECKOUT_ITEMS` `checkoutItems`;';
-        expect((result.data as any).query).to.equal(expectedSQL);
-      },
-    );
   });
 
   describe('TEST: CheckoutItems get available', () => {

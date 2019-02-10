@@ -20,9 +20,10 @@ export class CheckoutItems extends BaseObject {
     return checkoutItemsSchema;
   }
   public get id() {
-    return undefined;
+    return this.uid;
   }
 
+  public readonly uid: number;
   public name: string;
   public quantity: number
   

@@ -16,21 +16,21 @@ module.exports.RSVP = class RSVP extends BaseObject {
     this.rsvp_status = data.rsvp_status || false;
   }
 
-  get schema() {
-    return rsvpSchema;
-  }
+  // get schema() {
+  //   return rsvpSchema;
+  // }
 
-  get tableName() {
-    return TABLE_NAME;
-  }
-
-  get columnName() {
-    return 'user_id';
-  }
-
-  get id() {
-    return this.user_id;
-  }
+  // get tableName() {
+  //   return TABLE_NAME;
+  // }
+  //
+  // get columnName() {
+  //   return 'user_id';
+  // }
+  //
+  // get id() {
+  //   return this.user_id;
+  // }
 
   add() {
     const validation = this.validate();

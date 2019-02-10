@@ -23,18 +23,18 @@ import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 @Injectable()
 export class CheckoutItemsDataMapperImpl extends GenericDataMapper
   implements IAclPerm, IDataMapper<CheckoutItems> {
-  public readonly COUNT: string = 'checkoutItemss:count';
+  public readonly COUNT: string = 'checkoutItems:count';
   public readonly CREATE: string = 'checkoutItems:create';
   public readonly DELETE: string = 'checkoutItems:delete';
   // Undefined actions for checkout items data mapper
   public readonly READ: string;
   public readonly READ_ALL: string;
   public readonly UPDATE: string;
-  
+
   public tableName = 'CHECKOUT_ITEMS'
 
   protected pkColumnName: string = 'uid';
- 
+
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
@@ -119,7 +119,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
           result: 'Success',
         })),
       )
-      .toPromise()  
+      .toPromise()
   }
 
   /**
@@ -140,9 +140,9 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       this.sql.query<number>(query, [], { stream: true, cache: true }),
     ).pipe(
       map((result: number) => ({ result: 'Success', data: result })),
-    ).toPromise();  
-  } 
-  
+    ).toPromise();
+  }
+
   public insert(object: CheckoutItems): Promise<IDbResult<CheckoutItems>> {
     const validation = object.validate();
     if (!validation.result) {

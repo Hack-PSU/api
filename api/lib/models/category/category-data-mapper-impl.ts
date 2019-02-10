@@ -1,18 +1,18 @@
-import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { AuthLevel } from '../../services/auth/auth-types';
-import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
-import { Logger } from '../../services/logging/logging';
 import { Stream } from 'ts-stream';
-import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper'
-import { IDbResult, IDataMapper } from "../../services/database";
 import { Category } from '.';
 import { UidType } from '../../JSCommon/common-types';
-import { HttpError } from '../../JSCommon/errors'
+import { HttpError } from '../../JSCommon/errors';
+import { AuthLevel } from '../../services/auth/auth-types';
+import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { IDataMapper, IDbResult } from '../../services/database';
+import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
+import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
+import { IUowOpts } from '../../services/database/svc/uow.service';
+import { Logger } from '../../services/logging/logging';
 
 @Injectable()
 export class CategoryDataMapperImpl extends GenericDataMapper
@@ -23,11 +23,11 @@ export class CategoryDataMapperImpl extends GenericDataMapper
   public readonly READ: string = 'category:read';
   public readonly READ_ALL: string = 'category:readall';
   public readonly UPDATE: string = 'category:update';
-  
-  public tableName = 'CATEGORY_LIST'
+
+  public tableName = 'CATEGORY_LIST';
 
   protected pkColumnName: string = 'uid';
- 
+
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
@@ -41,10 +41,10 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       ],
     );
   }
-  public delete(object: Category): Promise<IDbResult<void>> {
+  public delete(id: UidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, Category)
+      .where(`${this.pkColumnName} = ?`, id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -55,9 +55,9 @@ export class CategoryDataMapperImpl extends GenericDataMapper
   }
 
   public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Category>> {
-    let queryBuilder = squel.select({ 
-      autoQuoteFieldNames: true, 
-      autoQuoteTableNames: true 
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
     })
       .from(this.tableName);
     if (opts && opts.fields) {
@@ -69,7 +69,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     query.text = query.text.concat(';');
     return from(this.sql.query<Category>(query.text, query.values, { stream: false, cache: true }))
       .pipe(
-        map((category: Category) => ({ result: 'Success', data: category })),
+        map((category: Category[]) => ({ result: 'Success', data: category[0] })),
       )
       .toPromise();
   }
@@ -86,22 +86,22 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       autoQuoteTableNames: true,
     })
       .from(this.tableName, 'category');
-      if(opts && opts.fields) {
-        queryBuilder = queryBuilder.fields(opts.fields);
-      }
-      if(opts && opts.startAt) {
-        queryBuilder = queryBuilder.offset(opts.startAt);
-      }
-      if(opts && opts.count) {
-        queryBuilder = queryBuilder.limit(opts.count);
-      }
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
 
-      const query = queryBuilder
+    const query = queryBuilder
         .toString()
         .concat(';');
-      return from(this.sql.query<Category>(query, [], { stream: true, cache: true}))
+    return from(this.sql.query<Category>(query, [], { stream: true, cache: true }))
         .pipe(
-          map((categoryStream: Stream<Category>) => ({ result: 'Success', data: categoryStream }))
+          map((categoryStream: Stream<Category>) => ({ result: 'Success', data: categoryStream })),
         )
         .toPromise();
   }
@@ -123,10 +123,10 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<number>(query, [], { stream: true, cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
-    ).toPromise();  
-  } 
-  
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
+    ).toPromise();
+  }
+
   public insert(object: Category): Promise<IDbResult<Category>> {
     const validation = object.validate();
     if (!validation.result) {
@@ -166,5 +166,4 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  
 }

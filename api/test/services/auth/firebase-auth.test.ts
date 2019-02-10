@@ -80,8 +80,8 @@ describe('TEST: Firebase Auth Test', () => {
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
         const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
-        // GIVEN: environment is set to production
-        process.env.APP_ENV = 'PROD';
+        // GIVEN: environment is set to test
+        process.env.APP_ENV = 'TEST';
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
@@ -100,8 +100,8 @@ describe('TEST: Firebase Auth Test', () => {
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access', 'test:update']));
         const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
-        // GIVEN: environment is set to production
-        process.env.APP_ENV = 'PROD';
+        // GIVEN: environment is set to test
+        process.env.APP_ENV = 'TEST';
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
@@ -149,8 +149,8 @@ describe('TEST: Firebase Auth Test', () => {
         rbac.registerRBAC(new Role(AuthLevel[privilege[0]], ['test:access']));
         rbac.registerRBAC(new Role(AuthLevel[privilege[1]], ['test:update']));
         const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
-        // GIVEN: environment is set to production
-        process.env.APP_ENV = 'PROD';
+        // GIVEN: environment is set to test
+        process.env.APP_ENV = 'TEST';
 
         // WHEN: Checking permission
         let middleware = firebaseAuthService.verifyAcl({
@@ -193,8 +193,8 @@ describe('TEST: Firebase Auth Test', () => {
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access'], () => actionResult));
         const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
-        // GIVEN: environment is set to production
-        process.env.APP_ENV = 'PROD';
+        // GIVEN: environment is set to test
+        process.env.APP_ENV = 'TEST';
 
         // WHEN: Checking permission
         let middleware = firebaseAuthService.verifyAcl(
@@ -247,8 +247,8 @@ describe('TEST: Firebase Auth Test', () => {
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
         const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
-        // GIVEN: environment is set to production
-        process.env.APP_ENV = 'PROD';
+        // GIVEN: environment is set to test
+        process.env.APP_ENV = 'TEST';
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
@@ -274,8 +274,8 @@ describe('TEST: Firebase Auth Test', () => {
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
         const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
-        // GIVEN: environment is set to production
-        process.env.APP_ENV = 'PROD';
+        // GIVEN: environment is set to test
+        process.env.APP_ENV = 'TEST';
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
@@ -300,8 +300,8 @@ describe('TEST: Firebase Auth Test', () => {
         const rbac = new RBAC();
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
         const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
-        // GIVEN: environment is set to production
-        process.env.APP_ENV = 'PROD';
+        // GIVEN: environment is set to test
+        process.env.APP_ENV = 'TEST';
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(
@@ -327,8 +327,8 @@ describe('TEST: Firebase Auth Test', () => {
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access']));
         rbac.registerRBAC(new Role(AuthLevel[privilege], ['test:access2']));
         const firebaseAuthService = new FirebaseAuthService(firebaseService, rbac, new Logger());
-        // GIVEN: environment is set to production
-        process.env.APP_ENV = 'PROD';
+        // GIVEN: environment is set to test
+        process.env.APP_ENV = 'TEST';
 
         // WHEN: Checking permission
         const middleware = firebaseAuthService.verifyAcl(

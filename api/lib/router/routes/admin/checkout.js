@@ -13,113 +13,81 @@ const router = express.Router();
 
 /** ***************** ROUTES ***************** */
 
-/**
- * @api {post} /firebase/checkout Create a new checkout request
- * @apiVersion 1.0.0
- * @apiName Create new Item Checkout
- * @apiGroup Item Checkout
- * @apiParam {String} itemId The id of the item being checked out
- * @apiParam {String} userId The uid of the user checking out the item
- * @apiUse AuthArgumentRequired
- * @apiPermission TeamMemberPermission
- * @apiSuccess {String} Success
- * @apiUse IllegalArgumentError
- */
-router.post('/', verifyACL(2), (req, res, next) => {
-  if (!req.body || !req.body.itemId || !req.body.userId) {
-    const error = new HttpError('Incorrectly formatted body', 400);
-    return next(error);
-  }
-  const checkoutInstance = new CheckoutObject(
-    Object.assign(
-      req.body,
-      { checkoutTime: new Date().getTime() },
-    ),
-    req.uow,
-  );
-  return checkoutInstance
-    .add()
-    .then(() => res.status(200).send({ message: 'Success' }))
-    .catch((err) => {
-      const error = new Error();
-      error.status = err.status || 500;
-      error.body = err.message || err;
-      return next(error);
-    });
-});
+// router.post('/', verifyACL(2), (req, res, next) => {
+//   if (!req.body || !req.body.itemId || !req.body.userId) {
+//     const error = new HttpError('Incorrectly formatted body', 400);
+//     return next(error);
+//   }
+//   const checkoutInstance = new CheckoutObject(
+//     Object.assign(
+//       req.body,
+//       { checkoutTime: new Date().getTime() },
+//     ),
+//     req.uow,
+//   );
+//   return checkoutInstance
+//     .add()
+//     .then(() => res.status(200).send({ message: 'Success' }))
+//     .catch((err) => {
+//       const error = new Error();
+//       error.status = err.status || 500;
+//       error.body = err.message || err;
+//       return next(error);
+//     });
+// });
 
-/**
- * @api {post} /firebase/checkout/return Return a checked out item
- * @apiVersion 1.0.0
- * @apiName Return checkout out item
- * @apiGroup Item Checkout
- * @apiParam {String} checkoutId The id of the checkout instance
- * @apiUse AuthArgumentRequired
- * @apiPermission TeamMemberPermission
- * @apiSuccess {String} Success
- * @apiUse IllegalArgumentError
- */
-router.post('/return', verifyACL(2), (req, res, next) => {
-  if (!req.body || !req.body.checkoutId) {
-    const error = new HttpError('Incorrectly formatted body', 400);
-    return next(error);
-  }
-  const checkoutInstance = new CheckoutObject(
-    {
-      uid: req.body.checkoutId,
-      returnTime: new Date().getTime(),
-    },
-    req.uow,
-  );
-  return checkoutInstance
-    .returnItem()
-    .then(() => res.status(200).send({ message: 'Success' }))
-    .catch((err) => {
-      const error = new Error();
-      error.status = err.status || 500;
-      error.body = err.message || err;
-      return next(error);
-    });
-});
 
-/**
- * @api {get} /firebase/checkout/ Get all checked out items
- * @apiVersion 1.0.0
- * @apiName Get list of checkout
- * @apiGroup Item Checkout
- * @apiUse AuthArgumentRequired
- * @apiPermission TeamMemberPermission
- * @apiSuccess {String} Success
- * @apiUse IllegalArgumentError
- */
-router.get('/', verifyACL(2), (req, res, next) => {
-  CheckoutObject.getAll(req.uow, {
-    count: res.locals.limit,
-    startAt: res.locals.offset,
-    currentHackathon: true,
-  })
-    .then(stream => streamHandler(stream, res, next))
-    .catch(err => errorHandler500(err, next));
-});
+// router.post('/return', verifyACL(2), (req, res, next) => {
+//   if (!req.body || !req.body.checkoutId) {
+//     const error = new HttpError('Incorrectly formatted body', 400);
+//     return next(error);
+//   }
+//   const checkoutInstance = new CheckoutObject(
+//     {
+//       uid: req.body.checkoutId,
+//       returnTime: new Date().getTime(),
+//     },
+//     req.uow,
+//   );
+//   return checkoutInstance
+//     .returnItem()
+//     .then(() => res.status(200).send({ message: 'Success' }))
+//     .catch((err) => {
+//       const error = new Error();
+//       error.status = err.status || 500;
+//       error.body = err.message || err;
+//       return next(error);
+//     });
+// });
 
-/**
- * @api {get} /firebase/checkout/items Get all items available for checkout
- * @apiVersion 1.0.0
- * @apiName Get items for checkout
- * @apiGroup Item Checkout
- * @apiUse AuthArgumentRequired
- * @apiPermission TeamMemberPermission
- * @apiSuccess {String} Success
- * @apiUse IllegalArgumentError
- */
-router.get('/items', verifyACL(2), (req, res, next) => {
-  CheckoutItem.getAll(req.uow, {
-    count: res.locals.limit,
-    startAt: res.locals.offset,
-  })
-    .then(stream => streamHandler(stream, res, next))
-    .catch(err => errorHandler500(err, next));
-});
+// /**
+//  * @api {get} /firebase/checkout/ Get all checked out items
+//  * @apiVersion 1.0.0
+//  * @apiName Get list of checkout
+//  * @apiGroup Item Checkout
+//  * @apiUse AuthArgumentRequired
+//  * @apiPermission TeamMemberPermission
+//  * @apiSuccess {String} Success
+//  * @apiUse IllegalArgumentError
+//  */
+// router.get('/', verifyACL(2), (req, res, next) => {
+//   CheckoutObject.getAll(req.uow, {
+//     count: res.locals.limit,
+//     startAt: res.locals.offset,
+//     currentHackathon: true,
+//   })
+//     .then(stream => streamHandler(stream, res, next))
+//     .catch(err => errorHandler500(err, next));
+// });
+
+// router.get('/items', verifyACL(2), (req, res, next) => {
+//   CheckoutItem.getAll(req.uow, {
+//     count: res.locals.limit,
+//     startAt: res.locals.offset,
+//   })
+//     .then(stream => streamHandler(stream, res, next))
+//     .catch(err => errorHandler500(err, next));
+// });
 
 /**
  * @api {post} /firebase/checkout/items Add new item for checkout

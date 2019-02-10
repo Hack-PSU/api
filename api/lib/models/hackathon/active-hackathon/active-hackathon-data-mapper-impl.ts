@@ -22,7 +22,7 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
       this.hackathonObservable = from(this.sql.query(
         query.text,
         query.values,
-      ) as Promise<ActiveHackathon[]>)
+      ))
         .pipe(
           map((hackathons: ActiveHackathon[]) => hackathons[0]),
           shareReplay(),
@@ -36,7 +36,7 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
   public READ: string = 'active-hackathon:read';
   public UPDATE: string = 'active-hackathon:update';
   public COUNT: string = 'active-hackathon:count';
-  private hackathonObservable: Observable<ActiveHackathon>;
+  private hackathonObservable?: Observable<ActiveHackathon>;
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -100,12 +100,8 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
       .pipe(
         // Update hackathon observable
         switchMap(() => {
-          this.hackathonObservable = from(this.sql.query(
-            query.text,
-            query.values,
-          ) as Promise<ActiveHackathon>)
-            .pipe(shareReplay());
-          return this.hackathonObservable;
+          this.hackathonObservable = undefined;
+          return this.activeHackathon;
         }),
         map((hackathon: ActiveHackathon) => ({ result: 'Success', data: hackathon })),
       )

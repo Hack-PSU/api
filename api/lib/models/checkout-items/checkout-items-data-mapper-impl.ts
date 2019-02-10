@@ -47,10 +47,10 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       [AuthLevel[AuthLevel.VOLUNTEER]],
     );
   }
-  public delete(object: CheckoutItems): Promise<IDbResult<void>> {
+  public delete(id: UidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, object.id)
+      .where(`${this.pkColumnName} = ?`, id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -75,7 +75,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     query.text = query.text.concat(';');
     return from(this.sql.query<CheckoutItems>(query.text, query.values, { stream: false, cache: true }))
       .pipe(
-        map((checkoutItems: CheckoutItems) => ({ result: 'Success', data: checkoutItems })),
+        map((checkoutItems: CheckoutItems[]) => ({ result: 'Success', data: checkoutItems[0] })),
       )
       .toPromise();
   }
@@ -129,8 +129,8 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<CheckoutItems>(query.text, query.values, { stream: false, cache: true }))
       .pipe(
-        map((checkoutItems: CheckoutItems) => ({
-          data: checkoutItems,
+        map((checkoutItems: CheckoutItems[]) => ({
+          data: checkoutItems[0],
           result: 'Success',
         })),
       )
@@ -156,7 +156,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       .left_join(this.activeHackathonDataMapper.tableName, 'h', 'c.hackathon=h.uid and h.active=1')
       .group('i.uid')
       .toParam();
-
+    query.text = query.text.concat(';');
     return from(
       this.sql.query<CheckoutItems>(query.text, [], { stream: true, cache: true }))
       .pipe(
@@ -184,7 +184,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<number>(query, [], { stream: true, cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 

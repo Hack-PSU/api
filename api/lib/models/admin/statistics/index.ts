@@ -55,9 +55,9 @@ interface IUserStatistics {
 
 interface IAdminStatisticsDataMapper extends IDataMapper<any> {
 
-  getUserCountByCategory(uowOpts?: IUowOpts): Promise<IDbResult<IUserCount>>;
+  getUserCountByCategory(uowOpts?: IUowOpts): Promise<IDbResult<IUserCount[]>>;
 
-  getAllUserData(opts?: IUowOpts): Promise<IDbResult<IUserStatistics>>;
+  getAllUserData(opts?: IUowOpts): Promise<IDbResult<IUserStatistics[]>>;
 }
 
 export { IAdminStatisticsDataMapper, IUserCount, IUserStatistics };

@@ -123,9 +123,9 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
       .toString()
       .concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: true, cache: true }),
+      this.sql.query<number>(query, [], { stream: false, cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 

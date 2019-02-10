@@ -14,8 +14,8 @@ export class PreRegistration extends BaseObject {
     return preRegisteredSchema;
   }
 
-  private readonly uid: UidType;
-  private email: string;
+  public readonly uid: UidType;
+  public email: string;
 
   constructor(email: string, uid?: string) {
     super();

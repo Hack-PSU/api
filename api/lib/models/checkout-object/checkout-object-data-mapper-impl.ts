@@ -1,18 +1,18 @@
-import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
+import { Stream } from 'ts-stream';
+import { CheckoutObject, ICheckoutObjectDataMapper } from '.';
+import { EpochNumber, UidType } from '../../JSCommon/common-types';
+import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { IDbResult } from '../../services/database';
+import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
+import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
-import { Stream } from 'ts-stream';
-import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper'
-import { IDbResult } from "../../services/database";
-import { CheckoutObject, ICheckoutObjectDataMapper } from '.';
-import { UidType } from '../../JSCommon/common-types';
-import { HttpError } from '../../JSCommon/errors';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 
 @Injectable()
@@ -24,11 +24,11 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
   public readonly READ: string = 'checkoutObject:read';
   public readonly READ_ALL: string = 'checkoutObject:readall';
   public readonly UPDATE: string = 'checkoutObject:update';
-  
+
   public tableName = 'CHECKOUT_DATA';
 
   protected pkColumnName: string = 'uid';
- 
+
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
@@ -43,10 +43,10 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       [AuthLevel[AuthLevel.VOLUNTEER]],
     );
   }
-  public delete(object: CheckoutObject): Promise<IDbResult<void>> {
+  public delete(id: UidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, object.id)
+      .where(`${this.pkColumnName} = ?`, id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -57,9 +57,9 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
   }
 
   public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<CheckoutObject>> {
-    let queryBuilder = squel.select({ 
-      autoQuoteFieldNames: true, 
-      autoQuoteTableNames: true 
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
     })
       .from(this.tableName);
     if (opts && opts.fields) {
@@ -71,7 +71,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     query.text = query.text.concat(';');
     return from(this.sql.query<CheckoutObject>(query.text, query.values, { stream: false, cache: true }))
       .pipe(
-        map((checkoutObject: CheckoutObject) => ({ result: 'Success', data: checkoutObject })),
+        map((checkoutObject: CheckoutObject[]) => ({ result: 'Success', data: checkoutObject[0] })),
       )
       .toPromise();
   }
@@ -82,30 +82,30 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       autoQuoteTableNames: true,
     })
       .from(this.tableName, 'checkoutObject');
-      if(opts && opts.fields) {
-        queryBuilder = queryBuilder.fields(opts.fields);
-      }
-      if(opts && opts.startAt) {
-        queryBuilder = queryBuilder.offset(opts.startAt);
-      }
-      if(opts && opts.count) {
-        queryBuilder = queryBuilder.limit(opts.count);
-      }
-      if (opts && opts.byHackathon) {
-        queryBuilder = queryBuilder.
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder.
             where(
               'hackathon_id = ?',
               await (opts.hackathon ?
                 Promise.resolve(opts.hackathon) :
                 this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
             );
-      }
-      const query = queryBuilder
+    }
+    const query = queryBuilder
         .toString()
         .concat(';');
-      return from(this.sql.query<CheckoutObject>(query, [], { stream: true, cache: true}))
+    return from(this.sql.query<CheckoutObject>(query, [], { stream: true, cache: true }))
         .pipe(
-          map((checkoutObjectStream: Stream<CheckoutObject>) => ({ result: 'Success', data: checkoutObjectStream }))
+          map((checkoutObjectStream: Stream<CheckoutObject>) => ({ result: 'Success', data: checkoutObjectStream })),
         )
         .toPromise();
   }
@@ -124,16 +124,14 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .toString()
       .concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: true, cache: true }),
+      this.sql.query<number>(query, [], { stream: false, cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
-    ).toPromise();  
-  } 
-  
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
+    ).toPromise();
+  }
+
   public insert(object: CheckoutObject): Promise<IDbResult<CheckoutObject>> {
     const validation = object.validate();
-    console.log(validation);
-    console.log(object.dbRepresentation);
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
       this.logger.warn(object.dbRepresentation);
@@ -150,24 +148,21 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
-  
-  public returnItem(object: CheckoutObject) {
-    if (!object.return_time) {
-      this.logger.warn('Return time not set');
-      return Promise.reject(new HttpError('Return time not set', 400));
-    }
+
+  public returnItem(returnTime: EpochNumber, uid: number) {
     const query = squel.update({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
     })
       .table(this.tableName)
-      .set('return_time', object.return_time)
-      .where('uid = ?', object.uid)
+      .set('return_time', returnTime)
+      .where('uid = ?', uid)
       .toParam();
+    query.text = query.text.concat(';');
     return from(
       this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
+      map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
   }
 

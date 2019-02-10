@@ -1,19 +1,19 @@
-import { IUowOpts } from 'services/database/svc/uow.service';
 import { Inject, Injectable } from 'injection-js';
-import { from } from 'rxjs';
-import { map } from 'rxjs/operators';
-import * as squel from 'squel';
-import { AuthLevel } from 'services/auth/auth-types';
-import { IAcl, IAclPerm } from 'services/auth/RBAC/rbac-types';
-import { MysqlUow } from 'services/database/svc/mysql-uow.service';
-import { Logger } from 'services/logging/logging';
-import { Stream } from 'ts-stream';
-import { GenericDataMapper } from 'services/database/svc/generic-data-mapper'
-import { IDbResult, IDataMapper } from "services/database";
-import { CheckoutItems } from '.';
 import { UidType } from 'JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from 'JSCommon/errors';
+import { from } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { AuthLevel } from 'services/auth/auth-types';
+import { IAcl, IAclPerm } from 'services/auth/RBAC/rbac-types';
+import { IDataMapper, IDbResult } from 'services/database';
+import { GenericDataMapper } from 'services/database/svc/generic-data-mapper';
+import { MysqlUow } from 'services/database/svc/mysql-uow.service';
+import { IUowOpts } from 'services/database/svc/uow.service';
+import { Logger } from 'services/logging/logging';
+import * as squel from 'squel';
+import { Stream } from 'ts-stream';
 import tsStream from 'ts-stream';
+import { CheckoutItems } from '.';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 
 /**
@@ -30,11 +30,11 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
   public readonly READ: string;
   public readonly READ_ALL: string;
   public readonly UPDATE: string;
-  
-  public tableName = 'CHECKOUT_ITEMS'
+
+  public tableName = 'CHECKOUT_ITEMS';
 
   protected pkColumnName: string = 'uid';
- 
+
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
@@ -47,7 +47,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       [AuthLevel.TEAM_MEMBER],
       undefined,
       [AuthLevel[AuthLevel.VOLUNTEER]],
-    )
+    );
     super.addRBAC(
       [this.READ, this.READ_ALL],
       [
@@ -89,14 +89,14 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       .toParam();
 
     return from(
-      this.sql.query<CheckoutItems>(query.text, [], {stream: true, cache: true }))
+      this.sql.query<CheckoutItems>(query.text, [], { stream: true, cache: true }))
       .pipe(
         map((checkoutItemsStream: Stream<CheckoutItems>) => ({
           data: checkoutItemsStream,
           result: 'Success',
         })),
       )
-      .toPromise()
+      .toPromise();
   }
 
   public getAvailable() {
@@ -112,14 +112,14 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       .toParam();
 
     return from(
-      this.sql.query<CheckoutItems>(query.text, [], {stream: true, cache: true }))
+      this.sql.query<CheckoutItems>(query.text, [], { stream: true, cache: true }))
       .pipe(
         map((checkoutItemsStream: Stream<CheckoutItems>) => ({
           data: checkoutItemsStream,
           result: 'Success',
         })),
       )
-      .toPromise()  
+      .toPromise();
   }
 
   /**
@@ -140,9 +140,9 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       this.sql.query<number>(query, [], { stream: true, cache: true }),
     ).pipe(
       map((result: number) => ({ result: 'Success', data: result })),
-    ).toPromise();  
-  } 
-  
+    ).toPromise();
+  }
+
   public insert(object: CheckoutItems): Promise<IDbResult<CheckoutItems>> {
     const validation = object.validate();
     if (!validation.result) {

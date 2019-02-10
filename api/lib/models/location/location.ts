@@ -1,9 +1,9 @@
-import * as uuid from "uuid";
-import jsonAssetLoader from "../../assets/schemas/json-asset-loader";
-import { UidType } from "../../JSCommon/common-types";
-import BaseObject from "../BaseObject";
+import * as uuid from 'uuid';
+import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
+import { UidType } from '../../JSCommon/common-types';
+import BaseObject from '../BaseObject';
 
-const locationSchema = jsonAssetLoader("locationSchema");
+const locationSchema = jsonAssetLoader('locationSchema');
 
 interface ILocationApiModel {
   uid?: UidType;
@@ -24,7 +24,7 @@ export class Location extends BaseObject {
 
   constructor(data: ILocationApiModel) {
     super();
-    this.uid = data.uid || uuid.v4().replace(/-/g, "");
+    this.uid = data.uid || uuid.v4().replace(/-/g, '');
     this.location_name = data.locationName;
   }
 }

@@ -1,4 +1,4 @@
-import Storage from '@google-cloud/storage';
+import storage from '@google-cloud/storage';
 import * as express from 'express';
 
 export interface IFileUploadLimits {

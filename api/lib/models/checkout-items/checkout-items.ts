@@ -13,14 +13,14 @@ interface ICheckoutItemsApiModel {
 
 export class CheckoutItems extends BaseObject {
 
-public name: string;
-public quantity: number
+  public name: string;
+  public quantity: number;
 
   public get schema() {
     return null;
   }
   public get id() {
-    return null
+    return null;
   }
   constructor(data: ICheckoutItemsApiModel) {
     super();

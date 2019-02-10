@@ -4,7 +4,6 @@ import BaseObject from '../BaseObject';
 
 const rsvpSchema = jsonAssetLoader('rsvpSchema');
 export const TABLE_NAME = 'RSVP';
-const COLUMN_NAME = 'user_id';
 
 export interface IRSVPModel {
   uid?: UidType | null;

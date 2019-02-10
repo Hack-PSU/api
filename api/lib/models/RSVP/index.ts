@@ -7,7 +7,8 @@ interface IRSVPDataMapper extends IDataMapper < RSVP > {
 
   tableName: string;
 
-  rsvpStatus (id: UidType): Promise<IDbResult<boolean>>;
+  // To Be Done
+  // rsvpStatus (id: UidType): Promise<IDbResult<boolean>>;
 
 }
 

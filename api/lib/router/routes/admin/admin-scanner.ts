@@ -13,6 +13,7 @@ import {
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../../services/database';
 import { ParentRouter } from '../../router-types';
+import { IAdminStatisticsDataMapper, IUserStatistics } from "../../../models/admin/statistics";
 
 @Injectable()
 export class AdminScannerController extends ParentRouter implements IExpressController {
@@ -22,6 +23,7 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IScannerAuthService') private readonly scannerAuthService: IApikeyAuthService,
     @Inject('IScannerDataMapper') private readonly scannerDataMapper: IScannerDataMapper,
+    @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
     @Inject('IScannerDataMapper') private readonly scannerAcl: IAclPerm,
   ) {
     super();
@@ -44,6 +46,11 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
     app.post(
       '/register',
       (req, res, next) => this.confirmRegisterScannerHandler(req, res, next),
+    );
+    app.get(
+      '/registrations',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.READ_ALL),
+      (req, res, next) => this.getAllRegistrationsHandler(res, next),
     );
   }
 
@@ -221,5 +228,31 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
       return Util.errorHandler500(error, next);
     }
 
+  }
+
+  /**
+   * @api {get} /admin/scanner/registrations Obtain all registrations
+   * @apiVersion 2.0.0
+   * @apiName Obtain all registrations (Scanner)
+   *
+   * @apiGroup Admin
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   * @apiSuccess {Array} Registrations
+   * @apiUse IllegalArgumentError
+   */
+
+  private async getAllRegistrationsHandler(res: Response, next: NextFunction) {
+    let result: IDbResult<IUserStatistics>;
+    try {
+      result = await this.adminStatisticsDataMapper.getAllUserData({
+        byHackathon: true,
+      });
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+    const response = new ResponseBody('Success', 200, result);
+    return this.sendResponse(res, response);
   }
 }

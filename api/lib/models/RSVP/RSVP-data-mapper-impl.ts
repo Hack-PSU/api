@@ -7,17 +7,18 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDataMapper, IDbResult } from '../../services/database';
+import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
+import { IRSVPDataMapper } from './index';
 import { RSVP } from './RSVP';
 
 @Injectable()
 export class RSVPDataMapperImpl extends GenericDataMapper
-    implements IAclPerm, IDataMapper<RSVP> {
+    implements IAclPerm, IRSVPDataMapper {
 
   public COUNT: string = 'rsvp:count';
   public CREATE: string = 'rsvp:create';
@@ -109,7 +110,8 @@ export class RSVPDataMapperImpl extends GenericDataMapper
           'hackathon = ?',
           await (opts && opts.hackathon ?
             Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
               .toPromise()),
         );
     }
@@ -185,4 +187,24 @@ export class RSVPDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
+  public async rsvpStatus(id: UidType): Promise<IDbResult<boolean>> {
+    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(this.tableName)
+      .field('rsvp.rsvp_status')
+      .where('rsvp.user_id = ?', id)
+      .where('hackathon = ?',
+             await this.activeHackathonDataMapper.activeHackathon
+          .pipe(map(hackathon => hackathon.uid))
+          .toPromise())
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<boolean>(
+        query.text,
+        query.values,
+        { stream: true, cache: true },
+      ))
+      .pipe(
+        map((status: boolean) => ({ result: 'Success', data: status })),
+    ).toPromise();
+  }
 }

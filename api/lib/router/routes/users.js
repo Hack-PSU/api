@@ -266,6 +266,7 @@ router.post('/rsvp', (req, res, next) => {
  * @api {get} /users/rsvp Get the RSVP status for a user
  * @apiVersion 1.0.0
  * @apiName get RSVP status
+ * @apiDeprecated
  *
  * @apiGroup RSVP
  * @apiPermission UserPermission
@@ -274,20 +275,20 @@ router.post('/rsvp', (req, res, next) => {
  * @apiSuccess {Object} Containing the rsvp status based on the uid
  * @apiUse IllegalArgumentError
  */
-router.get('/rsvp', (req, res, next) => {
-  if (!res.locals.user) {
-    const error  = new Error();
-    error.status = 400;
-    error.body   = { error: 'Could not identify user' };
-    return next(error);
-  }
-  RSVP.rsvpStatus(res.locals.user.uid, req.uow)
-    .then((statusArray) => {
-      const [status] = statusArray;
-      res.status(200).send(status);
-    })
-    .catch((err) => errorHandler500(err, next));
-});
+// router.get('/rsvp', (req, res, next) => {
+//   if (!res.locals.user) {
+//     const error  = new Error();
+//     error.status = 400;
+//     error.body   = { error: 'Could not identify user' };
+//     return next(error);
+//   }
+//   RSVP.rsvpStatus(res.locals.user.uid, req.uow)
+//     .then((statusArray) => {
+//       const [status] = statusArray;
+//       res.status(200).send(status);
+//     })
+//     .catch((err) => errorHandler500(err, next));
+// });
 
 /**
  * @api {post} /users/project Post the project details to get the table assignment

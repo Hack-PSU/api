@@ -58,7 +58,7 @@ export class Constants {
   };
 
   public static readonly GCS = {
-    resumeBucket: 'hackpsu-resumes-test',
+    resumeBucket: 'hackpsu-resumes',
     travelReimbursementBucket: 'hackpsu2018-travel-reimbursement-receipts',
   };
   public static readonly SendGridApiKey = Util.readEnv('SENDGRID_ACCESS_KEY', '');

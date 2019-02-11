@@ -12,12 +12,15 @@ Firstly, you'll need Nodejs. We recommend v8+
 
 Installing all dependencies:
 - `npm install`
-    - All our sensitive data is encrypted in this repository for security. In order to decrypt all necessary files, run the script `prepare_deploy.sh` in the root directory. To connect to the production environment, run `prepare_deploy.sh prod`
+- `npm run decrypt`
+    - All our sensitive data is encrypted in this repository for security. The npm decrypt script hooks into grunt and will decrypt all relevant files 
+    for the server to run
 - `npm start` 
 - To test:
     - `npm test`
 
 [![Build Status](https://travis-ci.com/hackpsu-tech/hackPSUS2018-api.svg?token=rXBswytuwgwFX9F967pp&branch=master)](https://travis-ci.com/hackpsu-tech/hackPSUS2018-api)
+[![Coverage Status](https://coveralls.io/repos/github/Hack-PSU/api/badge.svg?branch=sush%2Fts-migration)](https://coveralls.io/github/Hack-PSU/api?branch=sush%2Fts-migration)
 
 ## API
 
@@ -85,17 +88,24 @@ Resource | URL
  
 
 #### Services
-Services are any helper mechanisms needed to connect to external systems. All services are standalone and provide simple interfaces that perform specific tasks. Services are useful since they can be tested individually without requiring a lot of integration and can be mocked easily for larger tests.
+Services are any helper mechanisms needed to connect to external systems. All services are standalone and provide simple interfaces that perform specific tasks. 
+Services are useful since they can be tested individually without requiring a lot of integration and can be mocked easily for larger tests.
 
 ##### DataMappers
-DataMappers are important services that provide Model <-> Database mapping in the form of Create, Read, Update, Delete (CRUD) and other methods. These classes are model and database specific and are kept that way to improve type safety and compatibility.
+DataMappers are important services that provide Model <-> Database mapping in the form of Create, Read, Update, Delete (CRUD) and other methods. 
+These classes are model and database specific and are kept that way to improve type safety and compatibility.
 This structure lets us use multiple databases without ever having to change the overall structure of the server.
 
+##### Processors
+Processors are simple abstractions used by the Controllers that abstract away operations connected to the DataMappers. These classes
+are mostly used to make testing easier.
+
 #### RouteControllers
-RouteControllers define the handling and structure of the REST API that the server exposes. These model most of the logic and tie all the remaining pieces together. For example, when a `GET` request is made to the server
-at a certain URL, a defined RouteController will handle that request, parse any data on the incoming request, use any services to store/process that data, and then respond to the request originator.
+RouteControllers define the handling and structure of the REST API that the server exposes. These model most of the logic and tie all the remaining pieces together.
+ For example, when a `GET` request is made to the server at a certain URL, a defined RouteController will handle that request, parse any data on the incoming request,
+  use any services to store/process that data, and then respond to the request originator.
 
 ### Dependency Injection
-An important concept that ties all the elements of the server together is its Dependency Injection (DI) framework. This is developed and documented at [[Injection-js](https://github.com/mgechev/injection-js)].
-Any element that requires access to a certain service "asks" for it and the DI framework provides it with an instance of what it requires.
-This design method makes testing very easy since mocking internal members is no longer needed.
+An important concept that ties all the elements of the server together is its Dependency Injection (DI) framework. This is developed and documented 
+at [[Injection-js](https://github.com/mgechev/injection-js)]. Any element that requires access to a certain service "asks" for it and the DI framework
+provides it with an instance of what it requires. This design method makes testing very easy since mocking internal members is no longer needed.

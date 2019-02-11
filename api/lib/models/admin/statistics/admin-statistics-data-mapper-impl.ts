@@ -70,7 +70,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public async getUserCountByCategory(opts?: IUowOpts): Promise<IDbResult<IUserCount>> {
+  public async getUserCountByCategory(opts?: IUowOpts): Promise<IDbResult<IUserCount[]>> {
     let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(
         // squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
@@ -119,11 +119,11 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<IUserCount>(query, [], { stream: false, cache: true }),
     ).pipe(
-      map((result: IUserCount) => ({ result: 'Success', data: result })),
+      map((result: IUserCount[]) => ({ result: 'Success', data: result })),
     ).toPromise();
   }
 
-  public async getAllUserData(opts?: IUowOpts): Promise<IDbResult<IUserStatistics>> {
+  public async getAllUserData(opts?: IUowOpts): Promise<IDbResult<IUserStatistics[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
       .distinct()
       .field('pre_reg.uid', 'pre_uid')
@@ -168,7 +168,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<IUserStatistics>(query.text, query.values, { stream: true, cache: true }),
     ).pipe(
-      map((result: IUserStatistics) => ({ result: 'Success', data: result })),
+      map((result: IUserStatistics[]) => ({ result: 'Success', data: result })),
     ).toPromise();
   }
 }

@@ -15,6 +15,7 @@
     "emitDecoratorMetadata": true,
     "pretty": true,
     "baseUrl": "./lib",
+    "rootDir": "./lib",
     "outDir": "./dist",
     "experimentalDecorators": true,
     "strictNullChecks": true,
@@ -27,9 +28,10 @@
   },
   "include": [
     "lib/**/*.ts",
-    "lib/bin/*"
+    "lib/bin/*", "test/models/checkout-object/checkout-object-data-mapper-impl.test.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "test"
   ]
 }

@@ -13,7 +13,7 @@ import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/R
 import { IDataMapper } from '../../../services/database';
 import { ParentRouter } from '../../router-types';
 
-const emailObjectSchema = loadSchemas('emailObjectSchema');
+const emailObjectSchema = jsonAssetLoader('emailObjectSchema');
 
 @Injectable()
 export class AdminController extends ParentRouter implements IExpressController {
@@ -83,12 +83,12 @@ export class AdminController extends ParentRouter implements IExpressController 
     }
     // Use authentication
     app.use('/scanner', Util.getInstance('AdminScannerController').router);
+    app.use('/checkout', Util.getInstance('AdminCheckoutController').router);
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     app.use((req, res, next) => AdminController.parseCommonRequestFields(req, res, next));
-    // AdminController.registerRouter('checkout', 'CheckoutController');
-    AdminController.registerRouter('register', 'AdminRegisterController');
-    AdminController.registerRouter('data', 'AdminStatisticsController');
-    AdminController.registerRouter('hackathon', 'AdminHackathonController');
+    AdminController.registerRouter('register', 'AdminRegisterController', 2);
+    AdminController.registerRouter('data', 'AdminStatisticsController', 2);
+    AdminController.registerRouter('hackathon', 'AdminHackathonController', 2);
     // AdminController.registerRouter('location', 'AdminLocationController');
     app.get('/', (req, res) => this.mainHandler(res));
     app.get(

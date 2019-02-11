@@ -55,8 +55,16 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
   }
 
   public delete(id: UidType): Promise<IDbResult<void>> {
-    // TODO: Will need to be implemented for GDPR compliance
-    throw new MethodNotImplementedError('Cannot delete a pre-registration yet');
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(this.tableName)
+      .where(`${this.pkColumnName} = ?`, id)
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+    ).pipe(
+      map(() => ({ result: 'Success', data: undefined })),
+    ).toPromise();
   }
 
   public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<PreRegistration>> {
@@ -75,7 +83,7 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
       { stream: false, cache: true },
     ))
       .pipe(
-        map((event: PreRegistration) => ({ result: 'Success', data: event })),
+        map((event: PreRegistration[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
@@ -117,9 +125,9 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     const query = this.getCountQuery().toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
+      this.sql.query<number>(query.text, query.values, { stream: false, cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 

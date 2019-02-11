@@ -124,7 +124,7 @@ module.exports = (grunt) => {
   grunt.registerTask('default', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'run:doc']);
   grunt.registerTask('start', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'copy:assets']);
   grunt.registerTask('test', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'copy:assets']);
-  grunt.registerTask('prep', ['decrypt', 'copy', 'run:doc', 'run:install', 'copy:assets']);
+  grunt.registerTask('prep', ['decrypt', 'copy', 'run:doc', 'run:install']);
   grunt.registerTask('deploy', ['prep', 'exec:deploy']);
 };
 

@@ -166,8 +166,9 @@ export class RSVPDataMapperImpl extends GenericDataMapper
       .setFieldsRows([object.dbRepresentation])
       .set(
         'hackathon',
-        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)
-        ).toPromise(),
+        await this.activeHackathonDataMapper.activeHackathon
+          .pipe(map(hackathon => hackathon.uid))
+          .toPromise(),
     )
     .toParam();
     query.text = query.text.concat(';');

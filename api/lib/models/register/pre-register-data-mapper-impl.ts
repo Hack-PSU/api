@@ -182,5 +182,4 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-
 }

@@ -5,8 +5,8 @@ import BaseObject from '../BaseObject';
 const rsvpSchema = jsonAssetLoader('rsvpSchema');
 export const TABLE_NAME = 'RSVP';
 
-export interface IRSVPModel {
-  uid?: UidType | null;
+export interface IRsvpApiModel {
+  uid?: UidType;
   rsvp_time: number;
   rsvp_status: boolean;
 
@@ -14,7 +14,7 @@ export interface IRSVPModel {
 
 export class RSVP extends BaseObject {
 
-  public readonly uid?: string | null;
+  public readonly uid?: string;
   public readonly rsvp_time: number;
   public readonly rsvp_status: boolean;
 
@@ -26,9 +26,9 @@ export class RSVP extends BaseObject {
     return rsvpSchema;
   }
 
-  constructor(data: IRSVPModel) {
+  constructor(data: IRsvpApiModel) {
     super();
-    this.uid = data.uid || null;
+    this.uid = data.uid;
     this.rsvp_time = data.rsvp_time;
     this.rsvp_status = data.rsvp_status || false;
   }

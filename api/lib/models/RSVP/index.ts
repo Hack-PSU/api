@@ -9,8 +9,6 @@ interface IRSVPDataMapper extends IDataMapper < RSVP > {
 
   tableName: string;
 
-  getCountQuery(opts?: IUowOpts): Promise<squel.Select>;
-
   // To Be Done
   // rsvpStatus (id: UidType): Promise<IDbResult<boolean>>;
 

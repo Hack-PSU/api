@@ -43,6 +43,11 @@ export class AdminScannerController extends ScannerController implements IExpres
       '/register',
       (req, res, next) => this.confirmRegisterScannerHandler(req, res, next),
     );
+    app.get(
+      '/registrations',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.READ_ALL),
+      (req, res, next) => this.getAllRegistrationsHandler(res, next),
+    );
   }
 
   private async registerNewScannerHandler(
@@ -179,5 +184,31 @@ export class AdminScannerController extends ScannerController implements IExpres
       return Util.errorHandler500(error, next);
     }
 
+  }
+
+  /**
+   * @api {get} /admin/scanner/registrations Obtain all registrations
+   * @apiVersion 2.0.0
+   * @apiName Obtain all registrations (Scanner)
+   *
+   * @apiGroup Admin
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   * @apiSuccess {Array} Registrations
+   * @apiUse IllegalArgumentError
+   */
+
+  private async getAllRegistrationsHandler(res: Response, next: NextFunction) {
+    let result: IDbResult<IUserStatistics>;
+    try {
+      result = await this.adminStatisticsDataMapper.getAllUserData({
+        byHackathon: true,
+      });
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+    const response = new ResponseBody('Success', 200, result);
+    return this.sendResponse(res, response);
   }
 }

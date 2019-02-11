@@ -5,7 +5,7 @@ import { IUowOpts } from '../../services/database/svc/uow.service';
 import { RSVP } from './RSVP';
 import { RSVPDataMapperImpl } from './RSVP-data-mapper-impl';
 
-interface IRSVPDataMapper extends IDataMapper < RSVP > {
+interface IRSVPDataMapper extends IDataMapper<RSVP> {
 
   tableName: string;
 

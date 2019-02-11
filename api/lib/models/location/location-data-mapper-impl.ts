@@ -74,7 +74,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       }),
     )
       .pipe(
-        map((location: Location) => ({ result: 'Success', data: location })),
+        map((location: Location[]) => ({ result: 'Success', data: location.cleanRepresentation })),
       )
       .toPromise();
   }
@@ -83,13 +83,11 @@ export class LocationDataMapperImpl extends GenericDataMapper
     const query = squel
       .select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName, 'location')
-      .field('location.*')
-      .field('location.location_name')
-      .join('HACKATHON', 'h', 'h.uid=location.hackathon and h.active=true')
       .toString()
       .concat(';');
+    const params = [];
     return from(
-      this.sql.query<Location>(query, [], { stream: true, cache: true }),
+      this.sql.query<Location>(query, params, { stream: true, cache: true }),
     )
       .pipe(
         map((location: Stream<Location>) => ({
@@ -111,7 +109,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<number>(query, params, { stream: true, cache: true }),
     )
-      .pipe(map((result: number) => ({ result: 'Success', data: result })))
+      .pipe(map((result: number[]) => ({ result: 'Success', data: result[0] })))
       .toPromise();
   }
 
@@ -137,7 +135,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
         stream: false,
       }),
     )
-      .pipe(map(() => ({ result: 'Success', data: object })))
+      .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
       .toPromise();
   }
 
@@ -164,7 +162,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
         stream: false,
       }),
     )
-      .pipe(map(() => ({ result: 'Success', data: object })))
+      .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
       .toPromise();
   }
 }

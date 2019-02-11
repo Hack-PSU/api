@@ -19,7 +19,7 @@ export class Location extends BaseObject {
     return this.uid;
   }
 
-  public readonly uid: UidType;
+  public uid: UidType;
   public location_name: string;
 
   constructor(data: ILocationApiModel) {

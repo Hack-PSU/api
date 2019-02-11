@@ -87,7 +87,8 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
       .join('HACKATHON', 'h', 'h.uid=event.hackathon and h.active=true')
       .toString()
       .concat(';');
-    return from(this.sql.query<Event>(query, [], { stream: true, cache: true }))
+    const params = [];
+    return from(this.sql.query<Event>(query, params, { stream: true, cache: true }))
       .pipe(
         map((event: Stream<Event>) => ({ result: 'Success', data: event })),
       )

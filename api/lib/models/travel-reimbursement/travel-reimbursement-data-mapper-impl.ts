@@ -82,8 +82,8 @@ export class TravelReimbursementDataMapperImpl extends GenericDataMapper
       { stream: false, cache: true },
     ))
       .pipe(
-        map((travelReimbursement: TravelReimbursement) => ({
-          data: travelReimbursement,
+        map((travelReimbursement: TravelReimbursement[]) => ({
+          data: travelReimbursement[0],
           result: 'Success',
         })),
       )
@@ -144,7 +144,7 @@ export class TravelReimbursementDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 

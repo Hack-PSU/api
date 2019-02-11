@@ -3,6 +3,8 @@ import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
+import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
+import { Stream } from 'ts-stream';
 import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
 import {
@@ -20,14 +22,11 @@ import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
 
-function mockedQuery<T>(query, params) {
-  // @ts-ignore
-  return Promise.resolve({ query, params });
-}
-
 let registerDataMapper: IRegisterDataMapper;
 let activeHackathonDataMapper: IActiveHackathonDataMapper;
-let mysqlUow;
+let mysqlUow: MysqlUow;
+const mysqlUowMock = mock(MysqlUow);
+
 const acl: IAcl = new RBAC();
 const validRegistration = new Registration({
   academicYear: AcademicYear.FRESHMAN,
@@ -58,8 +57,6 @@ const validRegistration = new Registration({
 
 describe('TEST: Register data mapper', () => {
   beforeEach(() => {
-    // Configure Mock MysqlUow
-    mysqlUow = Substitute.for<MysqlUow>();
     // Configure Active Hackathon Data Mapper
     activeHackathonDataMapper = Substitute.for<IActiveHackathonDataMapper>();
     (activeHackathonDataMapper.activeHackathon as any).returns(of(new ActiveHackathon({
@@ -69,30 +66,39 @@ describe('TEST: Register data mapper', () => {
       uid: 'test uid',
     })));
     (activeHackathonDataMapper.tableName as any).mimicks(() => 'HACKATHON');
-    // Configure Register Data Mapper
-    registerDataMapper = new RegisterDataMapperImpl(
-      acl,
-      mysqlUow,
-      activeHackathonDataMapper,
-      new Logger(),
-    );
-    // Configure mocked methods for mysql
-    mysqlUow.query().mimicks(mockedQuery);
   });
 
   describe('TEST: Registration read', () => {
+    beforeEach(() => {
+      when(mysqlUowMock.query(anyString(), anything(), anything()))
+        .thenResolve([]);
+      mysqlUow = instance(mysqlUowMock);
+      // Configure Register Data Mapper
+      registerDataMapper = new RegisterDataMapperImpl(
+        acl,
+        mysqlUow,
+        activeHackathonDataMapper,
+        new Logger(),
+      );
+    });
+    afterEach(() => {
+      reset(mysqlUowMock);
+    });
     // @ts-ignore
     it('generates the correct sql to read a registration based on the provided uid', async () => {
       // GIVEN: A registration with a valid ID to read from
       const uid = 'test uid';
       // WHEN: Retrieving data for this registration
-      const result = await registerDataMapper.get(uid);
+      await registerDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT * FROM `REGISTRATION` WHERE (uid= ?) ORDER BY time DESC;';
       const expectedParams = [uid];
-      expect((result.data as any).query).to.equal(expectedSQL);
-      expect((result.data as any).params).to.deep.equal(expectedParams);
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
     it(
       'generates the correct sql to read a registration with specific fields based on the provided uid',
@@ -101,27 +107,48 @@ describe('TEST: Register data mapper', () => {
         // GIVEN: A registration with a valid ID to read from
         const uid = 'test uid';
         // WHEN: Retrieving a single field for this registration
-        const result = await registerDataMapper.get(uid, { fields: ['test field'] });
+        await registerDataMapper.get(uid, { fields: ['test field'] });
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT `test field` FROM `REGISTRATION` WHERE (uid= ?) ORDER BY time DESC;';
         const expectedParams = [uid];
-        expect((result.data as any).query).to.equal(expectedSQL);
-        expect((result.data as any).params).to.deep.equal(expectedParams);
+        const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+          .first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
+        expect(generatedParams).to.deep.equal(expectedParams);
       },
     );
   });
 
   describe('TEST: Registration read all', () => {
+    beforeEach(() => {
+      when(mysqlUowMock.query(anyString(), anything(), anything()))
+        .thenResolve(Stream.from<Registration>([]));
+      mysqlUow = instance(mysqlUowMock);
+      // Configure Register Data Mapper
+      registerDataMapper = new RegisterDataMapperImpl(
+        acl,
+        mysqlUow,
+        activeHackathonDataMapper,
+        new Logger(),
+      );
+    });
+    afterEach(() => {
+      reset(mysqlUowMock);
+    });
     // @ts-ignore
     it('generates the correct sql to read all registrations', async () => {
       // GIVEN: A registration data mapper instance
       // WHEN: Retrieving all registration data
-      const result = await registerDataMapper.getAll();
+      await registerDataMapper.getAll();
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid);';
-      expect((result.data as any).query).to.equal(expectedSQL);
+      const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN ' +
+        '`HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid);';
+      const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
     });
 
     it(
@@ -131,11 +158,14 @@ describe('TEST: Register data mapper', () => {
         // GIVEN: A registration data mapper instance
         // WHEN: Retrieving one field for all registration data
         // WHEN: Retrieving data for this registration
-        const result = await registerDataMapper.getAll({ fields: ['test field'] });
+        await registerDataMapper.getAll({ fields: ['test field'] });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT `test field` FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid);';
-        expect((result.data as any).query).to.equal(expectedSQL);
+        const expectedSQL = 'SELECT `test field` FROM `REGISTRATION` `registration`' +
+          ' INNER JOIN `HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid);';
+        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
       },
     );
 
@@ -145,13 +175,17 @@ describe('TEST: Register data mapper', () => {
       async () => {
         // GIVEN: A registration data mapper instance
         // WHEN: Retrieving all registration data after an offset
-        const result = await registerDataMapper.getAll({ startAt: 100 });
+        await registerDataMapper.getAll({ startAt: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid) OFFSET ?;';
+        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` ' +
+          'INNER JOIN `HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid) OFFSET ?;';
         const expectedParams = [100];
-        expect((result.data as any).query).to.equal(expectedSQL);
-        expect((result.data as any).params).to.deep.equal(expectedParams);
+        const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+          .first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
+        expect(generatedParams).to.deep.equal(expectedParams);
       },
     );
 
@@ -161,13 +195,17 @@ describe('TEST: Register data mapper', () => {
       async () => {
         // GIVEN: A registration data mapper instance
         // WHEN: Retrieving n-many registrations data after an offset
-        const result = await registerDataMapper.getAll({ count: 100 });
+        await registerDataMapper.getAll({ count: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid) LIMIT ?;';
+        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration`' +
+          ' INNER JOIN `HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid) LIMIT ?;';
         const expectedParams = [100];
-        expect((result.data as any).query).to.equal(expectedSQL);
-        expect((result.data as any).params).to.deep.equal(expectedParams);
+        const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+          .first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
+        expect(generatedParams).to.deep.equal(expectedParams);
       },
     );
 
@@ -178,18 +216,21 @@ describe('TEST: Register data mapper', () => {
         // GIVEN: A hackathon to read registrations for
         const hackathonUid = 'test uid';
         // WHEN: Retrieving all registrations data for the given hackathon
-        const result = await registerDataMapper.getAll({
+        /* const result = */
+        await registerDataMapper.getAll({
           byHackathon: true,
           hackathon: hackathonUid,
         });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid)' +
-          ' WHERE (hackathon.uid = ?);';
+        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` ' +
+          '`hackathon` ON (registration.hackathon = hackathon.uid) WHERE (hackathon.uid = ?);';
         const expectedParams = [hackathonUid];
-        expect((result.data as any).query).to.equal(expectedSQL);
-        expect((result.data as any).params).to.deep.equal(expectedParams);
-        expect((result.data as any).query).to.equal(expectedSQL);
+        const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
+          .first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
+        expect(generatedParams).to.deep.equal(expectedParams);
       },
     );
 
@@ -200,27 +241,49 @@ describe('TEST: Register data mapper', () => {
         // GIVEN: A hackathon to read registrations for
         const hackathonUid = 'test uid';
         // WHEN: Retrieving all registrations data for the given hackathon
-        const result = await registerDataMapper.getAll({
+        await registerDataMapper.getAll({
           hackathon: hackathonUid,
         });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON (reg.hackathon = hackathon.uid);';
-        expect((result.data as any).query).to.equal(expectedSQL);
+        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` ' +
+          '`hackathon` ON (registration.hackathon = hackathon.uid);';
+        const [generatedSQL] = capture<string>(mysqlUowMock.query)
+          .first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
       },
     );
   });
 
   describe('TEST: Registration count', () => {
+    beforeEach(() => {
+      when(mysqlUowMock.query(anyString(), anything(), anything()))
+        .thenResolve([]);
+      mysqlUow = instance(mysqlUowMock);
+      // Configure Register Data Mapper
+      registerDataMapper = new RegisterDataMapperImpl(
+        acl,
+        mysqlUow,
+        activeHackathonDataMapper,
+        new Logger(),
+      );
+    });
+    afterEach(() => {
+      reset(mysqlUowMock);
+    });
     // @ts-ignore
     it('generates the correct sql to count all registrations', async () => {
       // GIVEN: A registration data mapper instance
       // WHEN: Counting registration data
-      const result = await registerDataMapper.getCount();
+      await registerDataMapper.getCount();
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT COUNT(uid) AS "registration_count" FROM `REGISTRATION`;';
-      expect((result.data as any).query).to.equal(expectedSQL);
+      const [generatedSQL] = capture<string>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
     });
     // @ts-ignore
     it('generates the correct sql to count all registrations by hackathon', async () => {
@@ -235,21 +298,77 @@ describe('TEST: Register data mapper', () => {
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT COUNT(uid) AS "registration_count" FROM `REGISTRATION` WHERE (hackathon = ?);';
       const expectedParams = [hackathonUid];
-      expect((result.data as any).query).to.equal(expectedSQL);
-      expect((result.data as any).params).to.deep.equal(expectedParams);
+      const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
   describe('TEST: Registration insert', () => {
-    // @ts-ignore
+    beforeEach(() => {
+      when(mysqlUowMock.query(anyString(), anything(), anything()))
+        .thenResolve([{}]);
+      mysqlUow = instance(mysqlUowMock);
+      // Configure Register Data Mapper
+      registerDataMapper = new RegisterDataMapperImpl(
+        acl,
+        mysqlUow,
+        activeHackathonDataMapper,
+        new Logger(),
+      );
+    });
+    afterEach(() => {
+      reset(mysqlUowMock);
+    });
+
     it('inserts the registration', async () => {
       // GIVEN: A registration to insert
       const registration = validRegistration;
       // WHEN: Retrieving number of events
-      const result = await registerDataMapper.insert(registration);
+      await registerDataMapper.insert(registration);
 
-      // THEN: Returns inserted event
-      expect((result.data as any)).to.deep.equal(registration.cleanRepresentation);
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'INSERT INTO `REGISTRATION` (`firstname`, `lastname`, `gender`, ' +
+        '`shirt_size`, `dietary_restriction`, `allergies`, `travel_reimbursement`, ' +
+        '`first_hackathon`, `university`, `email`, `academic_year`, `major`, `phone`, ' +
+        '`race`, `resume`, `coding_experience`, `uid`, `eighteenBeforeEvent`, `mlh_coc`, ' +
+        '`mlh_dcp`, `referral`, `project`, `expectations`, `veteran`, `time`, `hackathon`) ' +
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
+      const expectedParams = [
+        validRegistration.firstname,
+        validRegistration.lastname,
+        validRegistration.gender,
+        validRegistration.shirt_size,
+        validRegistration.dietary_restriction,
+        validRegistration.allergies,
+        validRegistration.travel_reimbursement,
+        validRegistration.first_hackathon,
+        validRegistration.university,
+        validRegistration.email,
+        validRegistration.academic_year,
+        validRegistration.major,
+        validRegistration.phone,
+        validRegistration.race,
+        null,
+        validRegistration.coding_experience,
+        validRegistration.uid,
+        validRegistration.eighteenBeforeEvent,
+        validRegistration.mlh_coc,
+        validRegistration.mlh_dcp,
+        validRegistration.referral,
+        validRegistration.project,
+        validRegistration.expectations,
+        validRegistration.veteran,
+        validRegistration.time,
+        'test uid',
+      ];
+      const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
 
     // @ts-ignore
@@ -283,7 +402,7 @@ describe('TEST: Register data mapper', () => {
       });
       // WHEN: Adding an invalid registration
       try {
-        const result = await registerDataMapper.insert(registration);
+        await registerDataMapper.insert(registration);
       } catch (error) {
         // THEN: Error is thrown for invalid firstname
         expect(error.data.message)
@@ -296,28 +415,101 @@ describe('TEST: Register data mapper', () => {
   });
 
   describe('TEST: Registration delete', () => {
+    beforeEach(() => {
+      when(mysqlUowMock.query(anyString(), anything(), anything()))
+        .thenResolve([{}]);
+      mysqlUow = instance(mysqlUowMock);
+      // Configure Register Data Mapper
+      registerDataMapper = new RegisterDataMapperImpl(
+        acl,
+        mysqlUow,
+        activeHackathonDataMapper,
+        new Logger(),
+      );
+    });
+    afterEach(() => {
+      reset(mysqlUowMock);
+    });
     // @ts-ignore
     it('causes the registration to get deleted', async () => {
       // GIVEN: A registration with a valid ID
       const uid = 'test uid';
-      // WHEN: Deleting this event
-      const result = await registerDataMapper.delete(uid);
+      // WHEN: Deleting this registration
+      await registerDataMapper.delete(uid);
 
-      // THEN: A successful delete operation causes a successful response
-      expect(result.data).to.equal(undefined);
-      expect(result.result).to.equal('Success');
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'DELETE FROM `REGISTRATION` WHERE (uid = ?);';
+      const expectedParams = [uid];
+      const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
   describe('TEST: Registration update', () => {
+    beforeEach(() => {
+      when(mysqlUowMock.query(anyString(), anything(), anything()))
+        .thenResolve([{}]);
+      mysqlUow = instance(mysqlUowMock);
+      // Configure Register Data Mapper
+      registerDataMapper = new RegisterDataMapperImpl(
+        acl,
+        mysqlUow,
+        activeHackathonDataMapper,
+        new Logger(),
+      );
+    });
+    afterEach(() => {
+      reset(mysqlUowMock);
+    });
     // @ts-ignore
     it('updates the registration', async () => {
       // GIVEN: A registration to update
       const registration = validRegistration;
       // WHEN: Updating the registration
-      const result = await registerDataMapper.update(registration);
-      // THEN: Returns updated event
-      expect((result.data as any)).to.deep.equal(registration.cleanRepresentation);
+      await registerDataMapper.update(registration);
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'UPDATE `REGISTRATION` SET `firstname` = ?, `lastname` = ?, `gender` = ?,' +
+        ' `shirt_size` = ?, `dietary_restriction` = ?, `allergies` = ?, `travel_reimbursement` = ?,' +
+        ' `first_hackathon` = ?, `university` = ?, `email` = ?, `academic_year` = ?, `major` = ?,' +
+        ' `phone` = ?, `race` = ?, `resume` = ?, `coding_experience` = ?, `uid` = ?,' +
+        ' `eighteenBeforeEvent` = ?, `mlh_coc` = ?, `mlh_dcp` = ?, `referral` = ?, `project` = ?,' +
+        ' `expectations` = ?, `veteran` = ?, `time` = ? WHERE (uid = ?);';
+      const expectedParams = [
+        validRegistration.firstname,
+        validRegistration.lastname,
+        validRegistration.gender,
+        validRegistration.shirt_size,
+        validRegistration.dietary_restriction,
+        validRegistration.allergies,
+        validRegistration.travel_reimbursement,
+        validRegistration.first_hackathon,
+        validRegistration.university,
+        validRegistration.email,
+        validRegistration.academic_year,
+        validRegistration.major,
+        validRegistration.phone,
+        validRegistration.race,
+        null,
+        validRegistration.coding_experience,
+        validRegistration.uid,
+        validRegistration.eighteenBeforeEvent,
+        validRegistration.mlh_coc,
+        validRegistration.mlh_dcp,
+        validRegistration.referral,
+        validRegistration.project,
+        validRegistration.expectations,
+        validRegistration.veteran,
+        validRegistration.time,
+        'test uid',
+      ];
+      const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
 
     // @ts-ignore
@@ -351,7 +543,7 @@ describe('TEST: Register data mapper', () => {
       });
       // WHEN: Updating an invalid registration
       try {
-        const result = await registerDataMapper.update(registration);
+        await registerDataMapper.update(registration);
       } catch (error) {
         // THEN: Error is thrown for invalid firstname
         expect(error.data.message)
@@ -364,31 +556,70 @@ describe('TEST: Register data mapper', () => {
   });
 
   describe('TEST: Registration submit', () => {
+    beforeEach(() => {
+      when(mysqlUowMock.query(anyString(), anything(), anything()))
+        .thenResolve([{}]);
+      mysqlUow = instance(mysqlUowMock);
+      // Configure Register Data Mapper
+      registerDataMapper = new RegisterDataMapperImpl(
+        acl,
+        mysqlUow,
+        activeHackathonDataMapper,
+        new Logger(),
+      );
+    });
+    afterEach(() => {
+      reset(mysqlUowMock);
+    });
     // @ts-ignore
     it('submits the registration', async () => {
       // GIVEN: Registration to submit
       const registration = validRegistration;
       // WHEN: Registration is submitted
-      const result = await registerDataMapper.submit(registration);
-      // THEN: Submission is successful
-      expect(result.data)
-        .to
-        .equal(true);
+      await registerDataMapper.submit(registration);
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'UPDATE `REGISTRATION` SET `submitted` = ? WHERE (uid = ?) AND (hackathon = ?);';
+      const expectedParams = [true, validRegistration.uid, 'test uid'];
+      const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
   describe('TEST: Registration read current', () => {
+    beforeEach(() => {
+      when(mysqlUowMock.query(anyString(), anything(), anything()))
+        .thenResolve([{}]);
+      mysqlUow = instance(mysqlUowMock);
+      // Configure Register Data Mapper
+      registerDataMapper = new RegisterDataMapperImpl(
+        acl,
+        mysqlUow,
+        activeHackathonDataMapper,
+        new Logger(),
+      );
+    });
+    afterEach(() => {
+      reset(mysqlUowMock);
+    });
     // @ts-ignore
     it('generates the correct sql to get the current registration', async () => {
       // GIVEN: A valid registration ID
       const uid = 'test registration';
       // WHEN: The current registration version is retrieved
-      const result = await registerDataMapper.getCurrent(uid);
+      await registerDataMapper.getCurrent(uid);
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT registration.*, registration.pin - hackathon.base_pin AS "pin" FROM `REGISTRATION` `registration`' +
         ' INNER JOIN `HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid and hackathon.active = 1)' +
         ' WHERE (registration.uid= ?);';
-      expect((result.data as any).query).to.equal(expectedSQL);
+      const expectedParams = [uid];
+      const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
 
     it(
@@ -403,17 +634,35 @@ describe('TEST: Register data mapper', () => {
         const expectedSQL = 'SELECT firstname, registration.pin - hackathon.base_pin AS "pin" FROM `REGISTRATION` `registration`' +
           ' INNER JOIN `HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid and hackathon.active = 1)' +
           ' WHERE (registration.uid= ?);';
-        expect((result.data as any).query).to.equal(expectedSQL);
+        const [generatedSQL] = capture<string>(mysqlUowMock.query)
+          .first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
       },
     );
   });
 
   describe('TEST: Registration get stats', () => {
+    beforeEach(() => {
+      when(mysqlUowMock.query(anyString(), anything(), anything()))
+        .thenResolve([{}]);
+      mysqlUow = instance(mysqlUowMock);
+      // Configure Register Data Mapper
+      registerDataMapper = new RegisterDataMapperImpl(
+        acl,
+        mysqlUow,
+        activeHackathonDataMapper,
+        new Logger(),
+      );
+    });
+    afterEach(() => {
+      reset(mysqlUowMock);
+    });
     // @ts-ignore
     it('generates the correct sql to get the current registration statistics', async () => {
       // GIVEN: A registration data mapper
       // WHEN: The registration statistics are retrieved
-      const result = await registerDataMapper.getRegistrationStats();
+      await registerDataMapper.getRegistrationStats();
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT "academic_year" AS "CATEGORY", academic_year AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
         ' GROUP BY academic_year UNION (SELECT "coding_experience" AS "CATEGORY", coding_experience AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
@@ -425,7 +674,10 @@ describe('TEST: Register data mapper', () => {
         ' UNION (SELECT "gender" AS "CATEGORY", gender AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION` GROUP BY gender)' +
         ' UNION (SELECT "first_hackathon" AS "CATEGORY", first_hackathon AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION` GROUP BY first_hackathon)' +
         ' UNION (SELECT "veteran" AS "CATEGORY", veteran AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION` GROUP BY veteran);';
-      expect((result.data as any).query).to.equal(expectedSQL);
+      const [generatedSQL] = capture<string>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
     });
 
     // @ts-ignore
@@ -458,12 +710,30 @@ describe('TEST: Register data mapper', () => {
         ' GROUP BY first_hackathon) UNION (SELECT "veteran" AS "CATEGORY", veteran AS "OPTION", COUNT(*) AS "COUNT" FROM `REGISTRATION`' +
         ' INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = REGISTRATION.hackathon) WHERE (hackathon.uid = ?) GROUP BY veteran);';
       const expectedParams = [hackathonUid, hackathonUid, hackathonUid, hackathonUid, hackathonUid, hackathonUid, hackathonUid, hackathonUid, hackathonUid];
-      expect((result.data as any).query).to.equal(expectedSQL);
-      expect((result.data as any).params).to.deep.equal(expectedParams);
+      const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
   describe('TEST: Registration get email from uid', () => {
+    beforeEach(() => {
+      when(mysqlUowMock.query(anyString(), anything(), anything()))
+        .thenResolve([{}]);
+      mysqlUow = instance(mysqlUowMock);
+      // Configure Register Data Mapper
+      registerDataMapper = new RegisterDataMapperImpl(
+        acl,
+        mysqlUow,
+        activeHackathonDataMapper,
+        new Logger(),
+      );
+    });
+    afterEach(() => {
+      reset(mysqlUowMock);
+    });
     // @ts-ignore
     it('generates the correct sql to get the email from registrtation', async () => {
       // GIVEN: A valid registration ID
@@ -473,8 +743,11 @@ describe('TEST: Register data mapper', () => {
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT `email` FROM `REGISTRATION` WHERE (uid = ?);';
       const expectedParams = [uid];
-      expect((result.data as any).query).to.equal(expectedSQL);
-      expect((result.data as any).params).to.deep.equal(expectedParams);
+      const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 });

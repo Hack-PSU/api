@@ -61,7 +61,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiSuccess {Array} Array of all users
    */
   private async getRegistrationStatisticsHandler(res: Response, next: NextFunction) {
-    let result: IDbResult<IUserStatistics>;
+    let result: IDbResult<IUserStatistics[]>;
     try {
       result = await this.adminStatisticsDataMapper.getAllUserData({
         byHackathon: !res.locals.allHackathons,
@@ -91,7 +91,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
     res: Response,
     next: NextFunction,
   ) {
-    let result: IDbResult<IRegistrationStats>;
+    let result: IDbResult<IRegistrationStats[]>;
     try {
       result = await this.registerDataMapper.getRegistrationStats({
         byHackathon: !res.locals.allHackathons,
@@ -119,7 +119,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
     res: Response,
     next: NextFunction,
   ) {
-    let result: IDbResult<IUserCount>;
+    let result: IDbResult<IUserCount[]>;
     try {
       result = await this.adminStatisticsDataMapper.getUserCountByCategory({
         byHackathon: !res.locals.allHackathons,

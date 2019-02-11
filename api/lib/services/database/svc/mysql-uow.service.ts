@@ -76,14 +76,14 @@ export class MysqlUow implements IUow {
     return this.connectionPromise
       .pipe(
         mergeMap((connection: PoolConnection) => {
-          return new Promise<T | ReadableStream<T>>(async (resolve, reject) => {
+          return new Promise<T[] | ReadableStream<T>>(async (resolve, reject) => {
             if (opts.cache) { // Check cache
               try {
-                const result: T = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
+                const result: T[] = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
                 if (result !== null) {
                   if (opts.stream) {
                     this.complete(connection);
-                    return resolve(Stream.from<T>([result]));
+                    return resolve(Stream.from<T>(result));
                   }
                   this.complete(connection);
                   return resolve(result);
@@ -94,7 +94,7 @@ export class MysqlUow implements IUow {
               }
             }
             connection.beginTransaction(() => {
-              connection.query(query, params, (err: MysqlError, result: T) => {
+              connection.query(query, params, (err: MysqlError, result: T[]) => {
                 if (err) {
                   connection.rollback();
                   reject(err);
@@ -104,7 +104,7 @@ export class MysqlUow implements IUow {
                   .catch(cacheError => this.logger.error(cacheError));
                 if (opts.stream) {
                   this.complete(connection);
-                  return resolve(Stream.from([result]));
+                  return resolve(Stream.from(result));
                 }
                 this.complete(connection);
                 return resolve(result);

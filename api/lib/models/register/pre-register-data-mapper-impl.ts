@@ -83,7 +83,7 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
       { stream: false, cache: true },
     ))
       .pipe(
-        map((event: PreRegistration) => ({ result: 'Success', data: event })),
+        map((event: PreRegistration[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
@@ -125,9 +125,9 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     const query = this.getCountQuery().toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
+      this.sql.query<number>(query.text, query.values, { stream: false, cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 

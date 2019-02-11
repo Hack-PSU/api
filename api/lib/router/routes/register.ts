@@ -1,33 +1,21 @@
 import { validate } from 'email-validator';
 import express, { NextFunction, Request, Response, Router } from 'express';
-import * as fs from 'fs';
 import { Inject, Injectable } from 'injection-js';
-import * as path from 'path';
 import { map } from 'rxjs/operators';
-import { IExpressController, ResponseBody } from '..';
+import { IExpressController } from '..';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { Util } from '../../JSCommon/util';
 import { IActiveHackathonDataMapper } from '../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper, Registration } from '../../models/register';
 import { PreRegistration } from '../../models/register/pre-registration';
+import { IPreregistrationProcessor } from '../../processors/pre-registration-processor';
+import { IRegistrationProcessor } from '../../processors/registration-processor';
 import { IFirebaseAuthService } from '../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IEmailService } from '../../services/communication/email';
-import { IDataMapper } from '../../services/database';
 import { Logger } from '../../services/logging/logging';
 import { IStorageService } from '../../services/storage';
 import { ParentRouter } from '../router-types';
-
-// TODO: Refactor this to retrieve email template from cloud storage?
-const EMAIL_TEMPLATE_PATH = '../../assets/emails/email_template.html';
-const REGISTRATION_EMAIL_BODY = '../../assets/emails/registration_body.html';
-const emailTemplate = fs.readFileSync(path.join(__dirname, EMAIL_TEMPLATE_PATH), 'utf-8');
-const registrationEmailBody = fs.readFileSync(
-  path.join(__dirname, REGISTRATION_EMAIL_BODY),
-  'utf-8',
-);
-const emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
 
 @Injectable()
 export class RegistrationController extends ParentRouter implements IExpressController {
@@ -36,12 +24,11 @@ export class RegistrationController extends ParentRouter implements IExpressCont
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
-    @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IRegistrationProcessor') private readonly registrationProcessor: IRegistrationProcessor,
+    @Inject('IPreregistrationProcessor') private readonly preregistrationProcessor: IPreregistrationProcessor,
     @Inject('IRegisterDataMapper') private readonly aclPerm: IAclPerm,
-    @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IDataMapper<PreRegistration>,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IStorageService') private readonly storageService: IStorageService,
-    @Inject('IEmailService') private readonly emailService: IEmailService,
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
     super();
@@ -53,9 +40,9 @@ export class RegistrationController extends ParentRouter implements IExpressCont
     if (!this.authService) {
       return;
     }
-    if (!this.registerDataMapper) {
-      return;
-    }
+    // if (!this.registerDataMapper) {
+    //   return;
+    // }
     // Unauthenticated routes
     app.post('/pre', (req, res, next) => this.preRegistrationHandler(req, res, next));
     // Use authentication
@@ -100,7 +87,7 @@ export class RegistrationController extends ParentRouter implements IExpressCont
 
   /**
    * @api {post} /register/pre Preregister for HackPSU
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Add Pre-Registration
    * @apiGroup Pre Registration
    * @apiParam {String} email The email ID to register with
@@ -123,12 +110,7 @@ export class RegistrationController extends ParentRouter implements IExpressCont
       );
     }
     try {
-      const result = await this.preRegDataMapper.insert(preRegistration);
-      const res = new ResponseBody(
-        'Success',
-        200,
-        { result: 'Success', data: { preRegistration, result } },
-      );
+      const res = await this.preregistrationProcessor.processPreregistration(preRegistration);
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -173,7 +155,7 @@ export class RegistrationController extends ParentRouter implements IExpressCont
   private async registrationHandler(request: Request, response: Response, next: NextFunction) {
     // Validate incoming registration
     try {
-      this.registerDataMapper.normaliseRegistrationData(request.body);
+      this.registrationProcessor.normaliseRegistrationData(request.body);
       request.body.uid = response.locals.user.uid;
       request.body.email = response.locals.user.email;
       this.validateRegistrationFields(request.body);
@@ -205,29 +187,10 @@ export class RegistrationController extends ParentRouter implements IExpressCont
       );
     }
     try {
-      const result = await this.registerDataMapper.insert(registration);
-      const submission = await this.registerDataMapper.submit(registration);
-      await this.sendRegistrationEmail(registration);
-      const res = new ResponseBody(
-        'Success',
-        200,
-        { result: 'Success', data: { registration, result, submission } },
-      );
+      const res = await this.registrationProcessor.processRegistration(registration);
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
-  }
-
-  private async sendRegistrationEmail(registration: Registration) {
-    const html = emailHtml;
-    const preparedHtml = await this.emailService.emailSubstitute(html, registration.firstname);
-    const request = this.emailService.createEmailRequest(
-      registration.email,
-      preparedHtml,
-      'Thank you for your Registration',
-      '',
-    );
-    return this.emailService.sendEmail(request);
   }
 }

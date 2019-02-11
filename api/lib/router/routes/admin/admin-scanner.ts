@@ -3,28 +3,26 @@ import { Inject, Injectable } from 'injection-js';
 import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
+import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { RfidAssignment } from '../../../models/scanner/rfid-assignment';
-import {
-  AuthLevel,
-  IApikeyAuthService,
-  IFirebaseAuthService,
-} from '../../../services/auth/auth-types';
+import { IApikeyAuthService, IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../../services/database';
-import { ParentRouter } from '../../router-types';
+import { ScannerController } from './scanner-controller-abstract';
 
 @Injectable()
-export class AdminScannerController extends ParentRouter implements IExpressController {
+export class AdminScannerController extends ScannerController implements IExpressController {
   public router: Router;
 
   constructor(
-    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
-    @Inject('IScannerAuthService') private readonly scannerAuthService: IApikeyAuthService,
-    @Inject('IScannerDataMapper') private readonly scannerDataMapper: IScannerDataMapper,
-    @Inject('IScannerDataMapper') private readonly scannerAcl: IAclPerm,
+    @Inject('IAuthService') authService: IFirebaseAuthService,
+    @Inject('IScannerAuthService') scannerAuthService: IApikeyAuthService,
+    @Inject('IScannerDataMapper') scannerAcl: IAclPerm,
+    @Inject('IScannerDataMapper') scannerDataMapper: IScannerDataMapper,
+    @Inject('IRegisterDataMapper') registerDataMapper: IRegisterDataMapper,
   ) {
-    super();
+    super(authService, scannerAuthService, scannerAcl, scannerDataMapper, registerDataMapper);
     this.router = Router();
     this.routes(this.router);
   }
@@ -45,46 +43,11 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
       '/register',
       (req, res, next) => this.confirmRegisterScannerHandler(req, res, next),
     );
-  }
-
-  private async verifyScannerPermissionsMiddleware(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-    operation: AclOperations | AclOperations[],
-  ) {
-    /**
-     * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
-     */
-    try {
-      if (response.locals.user) {
-        if (!response.locals.user.privilege) {
-          response.locals.user.privilege = AuthLevel.PARTICIPANT;
-        }
-        if (this.authService.verifyAclRaw(
-          this.scannerAcl,
-          operation,
-          response.locals.user,
-        )) {
-          return next();
-        }
-      }
-      if (!request.headers.macaddr) {
-        return Util.standardErrorHandler(
-          new HttpError('could not find mac address of device', 400),
-          next,
-        );
-      }
-      if (await this.scannerAuthService.checkAuthentication(
-        request.headers.apikey as string,
-        request.headers.macaddr as string,
-      )) {
-        return next();
-      }
-    } catch (error) {
-      return Util.standardErrorHandler(new HttpError(error.message || error, 401), next);
-    }
-    return Util.standardErrorHandler(new HttpError('Could not verify authentication', 401), next);
+    app.get(
+      '/registrations',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.READ_ALL),
+      (req, res, next) => this.getAllRegistrationsHandler(res, next),
+    );
   }
 
   private async registerNewScannerHandler(
@@ -221,5 +184,31 @@ export class AdminScannerController extends ParentRouter implements IExpressCont
       return Util.errorHandler500(error, next);
     }
 
+  }
+
+  /**
+   * @api {get} /admin/scanner/registrations Obtain all registrations
+   * @apiVersion 2.0.0
+   * @apiName Obtain all registrations (Scanner)
+   *
+   * @apiGroup Admin
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   * @apiSuccess {Array} Registrations
+   * @apiUse IllegalArgumentError
+   */
+
+  private async getAllRegistrationsHandler(res: Response, next: NextFunction) {
+    let result: IDbResult<IUserStatistics>;
+    try {
+      result = await this.adminStatisticsDataMapper.getAllUserData({
+        byHackathon: true,
+      });
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+    const response = new ResponseBody('Success', 200, result);
+    return this.sendResponse(res, response);
   }
 }

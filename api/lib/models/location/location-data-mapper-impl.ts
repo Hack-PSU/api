@@ -74,7 +74,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       }),
     )
       .pipe(
-        map((location: Location[]) => ({ result: 'Success', data: location.cleanRepresentation })),
+        map((location: Location[]) => ({ result: 'Success', data: location[0] })),
       )
       .toPromise();
   }

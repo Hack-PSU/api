@@ -90,7 +90,7 @@ export class RSVPDataMapperImpl extends GenericDataMapper
       { stream: false, cache: true },
     ))
       .pipe(
-        map((event: RSVP) => ({ result: 'Success', data: event })),
+        map((event: RSVP[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
@@ -146,9 +146,9 @@ export class RSVPDataMapperImpl extends GenericDataMapper
           'hackathon = ?',
           await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
-              this.activeHackathonDataMapper.activeHackathon
-                .pipe(map(hackathon => hackathon.uid))
-                .toPromise()),
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
         );
     }
     return queryBuilder;
@@ -166,8 +166,8 @@ export class RSVPDataMapperImpl extends GenericDataMapper
       .setFieldsRows([object.dbRepresentation])
       .set(
         'hackathon',
-        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
-      .toPromise(),
+        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)
+        ).toPromise(),
     )
     .toParam();
     query.text = query.text.concat(';');

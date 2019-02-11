@@ -1,7 +1,7 @@
 import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import squel from 'squel';
+import * as squel from 'squel';
 import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
@@ -17,7 +17,7 @@ import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { RSVP } from './RSVP';
 
 @Injectable()
-export class RSVPDataMapperImpl extends GenericDataMapper
+export class RsvpApiDataMapperImpl extends GenericDataMapper
     implements IAclPerm, IDataMapper<RSVP> {
 
   public COUNT: string = 'rsvp:count';

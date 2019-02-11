@@ -145,7 +145,7 @@ export class RSVPDataMapperImpl extends GenericDataMapper
         .where(
           'hackathon = ?',
           await (opts.hackathon ?
-              Promise.resolve(opts.hackathon) :
+            Promise.resolve(opts.hackathon) :
               this.activeHackathonDataMapper.activeHackathon
                 .pipe(map(hackathon => hackathon.uid))
                 .toPromise()),

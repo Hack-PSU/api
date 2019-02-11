@@ -69,7 +69,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Hackathon[]>(query.text, query.values, { stream: false, cache: true }))
+    return from(this.sql.query<Hackathon>(query.text, query.values, { stream: false, cache: true }))
       .pipe(
         map((event: Hackathon[]) => ({ result: 'Success', data: event[0] })),
       )
@@ -95,9 +95,9 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .toString()
       .concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: true, cache: true }),
+      this.sql.query<number>(query, [], { stream: false, cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 

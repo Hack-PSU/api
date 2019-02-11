@@ -41,10 +41,10 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       ],
     );
   }
-  public delete(object: Category): Promise<IDbResult<void>> {
+  public delete(id: UidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, Category)
+      .where(`${this.pkColumnName} = ?`, id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -69,7 +69,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     query.text = query.text.concat(';');
     return from(this.sql.query<Category>(query.text, query.values, { stream: false, cache: true }))
       .pipe(
-        map((category: Category) => ({ result: 'Success', data: category })),
+        map((category: Category[]) => ({ result: 'Success', data: category[0] })),
       )
       .toPromise();
   }
@@ -87,14 +87,14 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     })
       .from(this.tableName, 'category');
     if (opts && opts.fields) {
-        queryBuilder = queryBuilder.fields(opts.fields);
-      }
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
     if (opts && opts.startAt) {
-        queryBuilder = queryBuilder.offset(opts.startAt);
-      }
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
     if (opts && opts.count) {
-        queryBuilder = queryBuilder.limit(opts.count);
-      }
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
 
     const query = queryBuilder
         .toString()
@@ -123,7 +123,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<number>(query, [], { stream: true, cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
@@ -142,7 +142,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 
@@ -162,7 +162,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 

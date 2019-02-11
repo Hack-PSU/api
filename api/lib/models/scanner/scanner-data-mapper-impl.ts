@@ -13,6 +13,7 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import BaseObject from '../BaseObject';
+import { Category } from '../category';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { IScannerDataMapper } from './index';
 import { RfidAssignment } from './rfid-assignment';
@@ -32,7 +33,10 @@ export class ScannerDataMapperImpl extends GenericDataMapper
           result: 'Duplicate detected',
         };
       default:
-        return { result: 'Error', data: object.cleanRepresentation };
+        return {
+          data: object.cleanRepresentation,
+          result: 'Error',
+        };
     }
   }
   public COUNT: string = 'rfidassignment:count';
@@ -66,8 +70,41 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('This method is not supported by this class');
   }
 
-  public get(object: UidType, opts?: IUowOpts): Promise<IDbResult<RfidAssignment>> {
-    throw new MethodNotImplementedError('This method is not supported by this class');
+  /**
+   * Returns an RFID assignment object from a wid
+   * @param {UidType} object
+   * @param {IUowOpts} opts
+   * @returns {Promise<IDbResult<RfidAssignment>>}
+   */
+  public async get(wid: UidType, opts?: IUowOpts): Promise<IDbResult<RfidAssignment>> {
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName);
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon.uid = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    queryBuilder = queryBuilder
+      .where(`${this.pkColumnName}= ?`, wid);
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<RfidAssignment>(query.text, query.values, { stream: false, cache: true }))
+      .pipe(
+        map((rfidAssignment: RfidAssignment[]) => ({ result: 'Success', data: rfidAssignment[0] })),
+      )
+      .toPromise();
   }
 
   public getAll(opts?: IUowOpts): Promise<IDbResult<tsStream<RfidAssignment>>> {

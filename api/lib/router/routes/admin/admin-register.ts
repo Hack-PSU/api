@@ -142,7 +142,8 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
       );
     }
     try {
-      this.registerDataMapper.normaliseRegistrationData(req.body.registration);
+      // TODO: Use the processor here
+      // this.registerDataMapper.normaliseRegistrationData(req.body.registration);
       req.body.registration.uid = res.locals.user.uid;
       req.body.registrationemail = res.locals.user.email;
       this.validateRegistrationFields(req.body.registration);

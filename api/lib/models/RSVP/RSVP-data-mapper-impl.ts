@@ -7,18 +7,18 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDbResult } from '../../services/database';
+import { IDataMapper, IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
-import { IRSVPDataMapper } from './index';
+// import { IRSVPDataMapper } from './index';
 import { RSVP } from './RSVP';
 
 @Injectable()
 export class RSVPDataMapperImpl extends GenericDataMapper
-    implements IAclPerm, IRSVPDataMapper {
+    implements IAclPerm, IDataMapper<RSVP> {
 
   public COUNT: string = 'rsvp:count';
   public CREATE: string = 'rsvp:create';
@@ -127,16 +127,6 @@ export class RSVPDataMapperImpl extends GenericDataMapper
   }
 
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
-    const query = (await this.getCountQuery(opts)).toParam();
-    query.text = query.text.concat(';');
-    return from(
-      this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
-        ).pipe(
-          map((result: number) => ({ result: 'Success', data: result })),
-        ).toPromise();
-  }
-
-  public async getCountQuery(opts?: IUowOpts) {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'rsvp_count');
@@ -151,7 +141,14 @@ export class RSVPDataMapperImpl extends GenericDataMapper
               .toPromise()),
         );
     }
-    return queryBuilder;
+    const query = queryBuilder
+      .toString()
+      .concat(';');
+    return from(
+      this.sql.query<number>(query, [], { stream: true, cache: true }),
+    ).pipe(
+      map((result: number) => ({ result: 'Success', data: result })),
+    ).toPromise();
   }
 
   public async insert(object: RSVP): Promise<IDbResult<RSVP>> {

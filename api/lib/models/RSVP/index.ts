@@ -1,11 +1,15 @@
-import { UidType } from '../../JSCommon/common-types';
-import { IDataMapper, IDbResult } from '../../services/database';
+// import { UidType } from '../../JSCommon/common-types';
+import * as squel from 'squel';
+import { IDataMapper } from '../../services/database';
+import { IUowOpts } from '../../services/database/svc/uow.service';
 import { RSVP } from './RSVP';
 import { RSVPDataMapperImpl } from './RSVP-data-mapper-impl';
 
 interface IRSVPDataMapper extends IDataMapper < RSVP > {
 
   tableName: string;
+
+  getCountQuery(opts?: IUowOpts): Promise<squel.Select>;
 
   // To Be Done
   // rsvpStatus (id: UidType): Promise<IDbResult<boolean>>;

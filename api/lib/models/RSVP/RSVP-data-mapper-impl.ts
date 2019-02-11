@@ -126,8 +126,8 @@ export class RSVPDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
-    const query = this.getCountQuery().toParam();
+  public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
+    const query = (await this.getCountQuery(opts)).toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
@@ -136,11 +136,22 @@ export class RSVPDataMapperImpl extends GenericDataMapper
         ).toPromise();
   }
 
-  public getCountQuery() {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+  public async getCountQuery(opts?: IUowOpts) {
+    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'rsvp_count');
-    return query;
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon = ?',
+          await (opts.hackathon ?
+              Promise.resolve(opts.hackathon) :
+              this.activeHackathonDataMapper.activeHackathon
+                .pipe(map(hackathon => hackathon.uid))
+                .toPromise()),
+        );
+    }
+    return queryBuilder;
   }
 
   public async insert(object: RSVP): Promise<IDbResult<RSVP>> {
@@ -187,7 +198,7 @@ export class RSVPDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  //IN-PROGRESS
+  // IN-PROGRESS
   // public async rsvpStatus(id: UidType): Promise<IDbResult<boolean>> {
   //   const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
   //     .from(this.tableName)

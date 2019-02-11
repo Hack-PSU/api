@@ -29,16 +29,19 @@ export class AdminCheckoutController extends ScannerController implements IExpre
   }
 
   public routes(app: Router): void {
+    // Get all checked out items
     app.get(
       '/',
       this.authService.verifyAcl(this.scannerAcl, AclOperations.READ_ALL),
       (req, res, next) => this.getAllCheckoutObjectHandler(res, next),
     );
+    // Get all items that can be checked out
     app.get(
       '/items',
       this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.READ_ALL),
       (req, res, next) => this.getAllCheckoutItemsHandler(res, next),
     );
+    // Create a new checkout request
     app.post(
       '/',
       (req, res, next) => this.verifyScannerPermissionsMiddleware(
@@ -50,6 +53,7 @@ export class AdminCheckoutController extends ScannerController implements IExpre
       (req, res, next) => this.getUserByRfidBand(req, res, next),
       (req, res, next) => this.createCheckoutRequestHandler(req, res, next),
     );
+    // Return a checked out item
     app.post(
       '/return',
       (req, res, next) => this.verifyScannerPermissionsMiddleware(

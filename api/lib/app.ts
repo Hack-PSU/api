@@ -79,7 +79,10 @@ export class App extends ParentRouter {
         // Setup routers
         this.routerConfig();
       })
-      .catch(error => console.error(error));
+      .catch((error) => {
+        // tslint:disable-next-line:no-console
+        console.error(error);
+      });
   }
 
   /**

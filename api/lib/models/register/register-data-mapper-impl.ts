@@ -270,6 +270,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       'veteran',
     ];
     let queryBuilder;
+    // tslint:disable-next-line:prefer-for-of
     for (let i = 0; i < columnNames.length; i += 1) {
       queryBuilder = !queryBuilder ?
         await this.getSelectQueryForOptionName(columnNames[i], opts) :

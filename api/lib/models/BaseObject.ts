@@ -6,7 +6,7 @@ const ajvValidator = new ajv();
  * @class BaseObject
  * The base object definition for any table in the database
  */
-export default abstract class BaseObject {
+export default abstract class  BaseObject {
 
   /**
    * Returns a representation of the object that can be added directly to the database

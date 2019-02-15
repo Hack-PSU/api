@@ -4,13 +4,13 @@ import * as multer from 'multer';
 import { IFile, IGcsStorageEngineOpts } from '../storage-types';
 
 export class GcsStorageEngine implements multer.StorageEngine {
-  private gcobj: Storage.Storage;
+  private gcobj: Storage;
   private gcsBucket: Storage.Bucket;
   private readonly filenameGenerator: (req: express.Request, file: any) => string;
   private metadata: Storage.WriteStreamOptions;
 
   constructor(opts: IGcsStorageEngineOpts) {
-    this.gcobj = Storage({
+    this.gcobj = new Storage({
       keyFilename: opts.keyFilename,
       projectId: opts.projectId,
     });

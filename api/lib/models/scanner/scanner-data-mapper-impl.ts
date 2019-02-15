@@ -13,7 +13,6 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import BaseObject from '../BaseObject';
-import { Category } from '../category';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { IScannerDataMapper } from './index';
 import { RfidAssignment } from './rfid-assignment';

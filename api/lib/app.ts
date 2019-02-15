@@ -50,7 +50,7 @@ export class App extends ParentRouter {
 
     // render the error page
     response.status(error.status || 500);
-    const res = new ResponseBody('Error', error.status || 500, error.body);
+    const res = new ResponseBody('Error', error.status || 500, { result: '', data: error.body });
     this.sendResponse(response, res);
     next();
   }

@@ -4,7 +4,8 @@ import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { ICheckoutItemsDataMapper } from '../../../models/checkout-items';
-import { CheckoutObject, ICheckoutObjectDataMapper } from '../../../models/checkout-object';
+import { ICheckoutObjectDataMapper } from '../../../models/checkout-object';
+import { CheckoutObject } from '../../../models/checkout-object/checkout-object';
 import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { IApikeyAuthService, IFirebaseAuthService } from '../../../services/auth/auth-types';
@@ -26,6 +27,8 @@ export class AdminCheckoutController extends ScannerController implements IExpre
     @Inject('ICheckoutItemsDataMapper') private readonly checkoutItemsAcl: IAclPerm,
   ) {
     super(authService, scannerAuthService, scannerAcl, scannerDataMapper, registerDataMapper);
+    this.router = Router();
+    this.routes(this.router);
   }
 
   public routes(app: Router): void {

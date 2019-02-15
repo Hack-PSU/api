@@ -135,7 +135,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
         stream: false,
       }),
     )
-      .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
+      .pipe(map(() => ({ result: 'Success', data: object })))
       .toPromise();
   }
 
@@ -162,7 +162,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
         stream: false,
       }),
     )
-      .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
+      .pipe(map(() => ({ result: 'Success', data: object })))
       .toPromise();
   }
 }

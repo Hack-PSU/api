@@ -130,6 +130,9 @@ export class FirebaseAuthService implements IFirebaseAuthService {
       /**
        * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
        */
+      if (!response.locals.user) {
+        response.locals.user = {};
+      }
       if (!response.locals.user.privilege) {
         response.locals.user.privilege = AuthLevel.PARTICIPANT;
       }

@@ -3,7 +3,6 @@ import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
 import { Stream } from 'ts-stream';
-import { CheckoutItems, ICheckoutItemsDataMapper } from '.';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -14,6 +13,8 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
+import { CheckoutItems } from './checkout-items';
+import { ICheckoutItemsDataMapper } from './index';
 
 /**
  * TODO: Change 'CHECKOUT_DATA' to reference the checkoutObjectDataMapper and add documentation

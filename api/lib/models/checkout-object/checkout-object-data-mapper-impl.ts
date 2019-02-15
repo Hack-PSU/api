@@ -3,7 +3,6 @@ import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
 import { Stream } from 'ts-stream';
-import { CheckoutObject, ICheckoutObjectDataMapper } from '.';
 import { EpochNumber, UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -14,6 +13,8 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
+import { CheckoutObject } from './checkout-object';
+import { ICheckoutObjectDataMapper } from './index';
 
 @Injectable()
 export class CheckoutObjectDataMapperImpl extends GenericDataMapper

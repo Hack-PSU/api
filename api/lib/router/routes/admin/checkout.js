@@ -60,16 +60,6 @@ const router = express.Router();
 //     });
 // });
 
-// /**
-//  * @api {get} /firebase/checkout/ Get all checked out items
-//  * @apiVersion 1.0.0
-//  * @apiName Get list of checkout
-//  * @apiGroup Item Checkout
-//  * @apiUse AuthArgumentRequired
-//  * @apiPermission TeamMemberPermission
-//  * @apiSuccess {String} Success
-//  * @apiUse IllegalArgumentError
-//  */
 // router.get('/', verifyACL(2), (req, res, next) => {
 //   CheckoutObject.getAll(req.uow, {
 //     count: res.locals.limit,
@@ -124,6 +114,7 @@ router.post('/items', verifyACL(3), (req, res, next) => {
  * @apiGroup Item Checkout
  * @apiUse AuthArgumentRequired
  * @apiPermission TeamMemberPermission
+ *
  * @apiSuccess {String} Success
  * @apiUse IllegalArgumentError
  */

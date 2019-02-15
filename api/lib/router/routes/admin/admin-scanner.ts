@@ -3,6 +3,7 @@ import { Inject, Injectable } from 'injection-js';
 import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
+import { IAdminStatisticsDataMapper, IUserStatistics } from '../../../models/admin/statistics';
 import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { RfidAssignment } from '../../../models/scanner/rfid-assignment';
@@ -16,6 +17,7 @@ export class AdminScannerController extends ScannerController implements IExpres
   public router: Router;
 
   constructor(
+    @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
     @Inject('IAuthService') authService: IFirebaseAuthService,
     @Inject('IScannerAuthService') scannerAuthService: IApikeyAuthService,
     @Inject('IScannerDataMapper') scannerAcl: IAclPerm,
@@ -198,9 +200,8 @@ export class AdminScannerController extends ScannerController implements IExpres
    * @apiSuccess {Array} Registrations
    * @apiUse IllegalArgumentError
    */
-
   private async getAllRegistrationsHandler(res: Response, next: NextFunction) {
-    let result: IDbResult<IUserStatistics>;
+    let result: IDbResult<IUserStatistics[]>;
     try {
       result = await this.adminStatisticsDataMapper.getAllUserData({
         byHackathon: true,

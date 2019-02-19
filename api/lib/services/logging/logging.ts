@@ -1,9 +1,10 @@
-import { express } from '@google-cloud/logging-bunyan';
 import * as bunyan from 'bunyan';
 import devNull from 'dev-null';
 import { Request } from 'express';
 import { Injectable } from 'injection-js';
 import 'reflect-metadata';
+// tslint:disable:no-var-requires
+const { express } = require('@google-cloud/logging-bunyan');
 // const loggingBunyan = new LoggingBunyan();
 
 const LOGGER_NAME = 'hackpsu-api';

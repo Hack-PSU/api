@@ -13,12 +13,11 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
-// import { IRSVPDataMapper } from './index';
-import { RSVP } from './RSVP';
+import { Rsvp } from './rsvp';
 
 @Injectable()
-export class RsvpApiDataMapperImpl extends GenericDataMapper
-    implements IAclPerm, IDataMapper<RSVP> {
+export class RsvpDataMapperImpl extends GenericDataMapper
+  implements IAclPerm, IDataMapper<Rsvp> {
 
   public COUNT: string = 'rsvp:count';
   public CREATE: string = 'rsvp:create';
@@ -74,7 +73,7 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<RSVP>> {
+  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Rsvp>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.fields) {
@@ -84,18 +83,18 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName} = ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<RSVP>(
+    return from(this.sql.query<Rsvp>(
       query.text,
       query.values,
       { stream: false, cache: true },
     ))
       .pipe(
-        map((event: RSVP[]) => ({ result: 'Success', data: event[0] })),
+        map((event: Rsvp[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<RSVP>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Rsvp>>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.startAt) {
@@ -118,10 +117,10 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
       .toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<RSVP>(query.text, query.values, { stream: true, cache: true },
+    return from(this.sql.query<Rsvp>(query.text, query.values, { stream: true, cache: true },
     ))
       .pipe(
-        map((event: Stream<RSVP>) => ({ result: 'Success', data: event })),
+        map((event: Stream<Rsvp>) => ({ result: 'Success', data: event })),
       )
       .toPromise();
   }
@@ -151,7 +150,7 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public async insert(object: RSVP): Promise<IDbResult<RSVP>> {
+  public async insert(object: Rsvp): Promise<IDbResult<Rsvp>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -176,7 +175,7 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public update(object: RSVP): Promise<IDbResult<RSVP>> {
+  public update(object: Rsvp): Promise<IDbResult<Rsvp>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');

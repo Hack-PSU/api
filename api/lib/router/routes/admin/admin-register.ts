@@ -5,6 +5,7 @@ import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IRegisterDataMapper, Registration } from '../../../models/register';
+import { IRegistrationProcessor } from '../../../processors/registration-processor';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { Logger } from '../../../services/logging/logging';
@@ -17,6 +18,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IRegistrationProcessor') private readonly registrationProcessor: IRegistrationProcessor,
     @Inject('IRegisterDataMapper') private readonly acl: IAclPerm,
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
@@ -33,7 +35,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
     );
     app.post(
       '/update',
-      this.authService.verifyAcl(this.acl, AclOperations.COUNT),
+      this.authService.verifyAcl(this.acl, AclOperations.UPDATE),
       (req, res, next) => this.updateRegistrationHandler(req, res, next),
     );
     app.get(
@@ -49,8 +51,8 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
       throw new HttpError('No registration provided', 400);
     }
     if (!validate(registration.email)) {
-      this.logger.error('IEmail used for registration is invalid');
-      throw new HttpError('IEmail used for registration is invalid', 400);
+      this.logger.error('Email used for registration is invalid');
+      throw new HttpError('Email used for registration is invalid', 400);
     }
     if (!registration.eighteenBeforeEvent) {
       this.logger.error('User must be over eighteen years of age to register');
@@ -129,7 +131,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @apiVersion 2.0.0
    * @apiName Update Registration
    * @apiGroup Admin Registration
-   * @apiPermission DirectorPermission
+   * @apiPermission UserPermission
    * @apiParam {Object} registration The updated registration object.
    * @apiUse AuthArgumentRequired
    */
@@ -142,10 +144,9 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
       );
     }
     try {
-      // TODO: Use the processor here
-      // this.registerDataMapper.normaliseRegistrationData(req.body.registration);
+      await this.registrationProcessor.normaliseRegistrationData(req.body.registration);
       req.body.registration.uid = res.locals.user.uid;
-      req.body.registrationemail = res.locals.user.email;
+      req.body.registration.email = res.locals.user.email;
       this.validateRegistrationFields(req.body.registration);
     } catch (error) {
       return Util.standardErrorHandler(

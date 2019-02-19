@@ -6,7 +6,7 @@ import { Util } from '../../../JSCommon/util';
 import { IAdminStatisticsDataMapper, IUserStatistics } from '../../../models/admin/statistics';
 import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
-import { RfidAssignment } from '../../../models/scanner/rfid-assignment';
+import { IScannerProcessor } from '../../../processors/scanner-processor';
 import { IApikeyAuthService, IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../../services/database';
@@ -18,6 +18,7 @@ export class AdminScannerController extends ScannerController implements IExpres
 
   constructor(
     @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
+    @Inject('IAdminScannerProcessor') private readonly scannerProcessor: IScannerProcessor,
     @Inject('IAuthService') authService: IFirebaseAuthService,
     @Inject('IScannerAuthService') scannerAuthService: IApikeyAuthService,
     @Inject('IScannerDataMapper') scannerAcl: IAclPerm,
@@ -115,45 +116,7 @@ export class AdminScannerController extends ScannerController implements IExpres
     }
 
     try {
-      let response: ResponseBody;
-      if (Array.isArray(req.body.assignments)) {
-        const assignments: RfidAssignment[] = req.body.assignments.map(
-          assignment => new RfidAssignment(assignment));
-        const result = await this.scannerDataMapper
-          .addRfidAssignments(assignments);
-
-        // Find response status to send
-        const status = Math.max(
-          ...result.data.map(
-            (individualResult) => {
-              switch (individualResult.result) {
-                case 'Error':
-                  return 500;
-                case 'Duplicate detected':
-                  return 409;
-                case 'Bad input':
-                  return 400;
-                default:
-                  return 200;
-              }
-            },
-          ),
-        );
-
-        response = new ResponseBody(
-          'Success',
-          status,
-          result,
-        );
-      } else {
-        const assignment = new RfidAssignment(req.body.assignments);
-        const result = await this.scannerDataMapper.insert(assignment);
-        response = new ResponseBody(
-          'Success',
-          200,
-          result as IDbResult<RfidAssignment>,
-        );
-      }
+      const response = await this.scannerProcessor.processRfidAssignments(req.body.assignments);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.standardErrorHandler(error, next);
@@ -196,21 +159,13 @@ export class AdminScannerController extends ScannerController implements IExpres
       );
     }
     try {
-      const result = await this.scannerAuthService
-        .checkPinAuthentication(parseInt(request.body.pin, 10));
-      if (!result) {
-        return Util.standardErrorHandler(
-          new HttpError('invalid authentication pin provided', 401),
-          next,
-        );
-      }
-      const apiToken = await this.scannerAuthService.generateApiKey(request.headers.macaddr as string);
-      return this.sendResponse(
-        response,
-        new ResponseBody('Success', 200, { result: 'Success', data: apiToken }),
+      const res = await this.scannerProcessor.processorScannerConfirmation(
+        parseInt(request.body.pin, 10),
+        request.headers.macaddr as string,
       );
+      return this.sendResponse(response, res);
     } catch (error) {
-      return Util.errorHandler500(error, next);
+      return Util.standardErrorHandler(error, next);
     }
 
   }

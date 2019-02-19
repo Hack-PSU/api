@@ -9,14 +9,16 @@ import {
   IUserStatistics,
 } from '../../../models/admin/statistics';
 import { IAttendanceDataMapper } from '../../../models/attendance/attendance-data-mapper-impl';
+import { IExtraCreditDataMapper } from '../../../models/extra-credit';
 import {
   IPreRegisterDataMapper,
   IRegisterDataMapper,
   IRegistrationStats,
 } from '../../../models/register';
+import { Rsvp } from '../../../models/RSVP/rsvp';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { IDbResult } from '../../../services/database';
+import { IDataMapper, IDbResult } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
 import { ParentRouter } from '../../router-types';
 
@@ -27,6 +29,8 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
+    @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IExtraCreditDataMapper,
+    @Inject('IRsvpDataMapper') private readonly rsvpDataMapper: IDataMapper<Rsvp>,
     @Inject('IAdminStatisticsDataMapper') private readonly acl: IAclPerm,
     @Inject('IAttendanceDataMapper') private readonly attendanceDataMapper: IAttendanceDataMapper,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
@@ -39,7 +43,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   }
 
   public routes(app: Router): void {
-    app.use(this.authService.verifyAcl(this.acl, AclOperations.STATISTICS));
+    app.use(this.authService.verifyAcl(this.acl, AclOperations.READ));
     app.get(
       '/',
       (req, res, next) => this.getStatistics(req, res, next),
@@ -199,19 +203,18 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiSuccess {Array} All RSVP'ed users
    */
   private async getRsvpHandler(res: Response, next: NextFunction) {
-    // try {
-    //   const result = await this.rsvpDataMapper.getAll({
-    //     byHackathon: !res.locals.allHackathons,
-    //     count: res.locals.limit,
-    //     hackathon: res.locals.hackathon,
-    //     startAt: res.locals.offset,
-    //   });
-    //   const response = new ResponseBody('Success', 200, result);
-    //   return this.sendResponse(res, response);
-    // } catch (error) {
-    //   return Util.errorHandler500(error, next);
-    // }
-    return Util.standardErrorHandler(new HttpError('This method is not supported yet', 501), next);
+    try {
+      const result = await this.rsvpDataMapper.getAll({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 
   /**
@@ -226,19 +229,18 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiSuccess {Array} All RSVP'ed users
    */
   private async getRsvpCountHandler(res: Response, next: NextFunction) {
-    // try {
-    //   const result = await this.rsvpDataMapper.getCount({
-    //     byHackathon: !res.locals.allHackathons,
-    //     count: res.locals.limit,
-    //     hackathon: res.locals.hackathon,
-    //     startAt: res.locals.offset,
-    //   });
-    //   const response = new ResponseBody('Success', 200, result);
-    //   return this.sendResponse(res, response);
-    // } catch (error) {
-    //   return Util.errorHandler500(error, next);
-    // }
-    return Util.standardErrorHandler(new HttpError('This method is not supported yet', 501), next);
+    try {
+      const result = await this.rsvpDataMapper.getCount({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 
   /**
@@ -308,19 +310,18 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiSuccess {Array} All Attendance data
    */
   private async getExtraCreditClassesHandler(res: Response, next: NextFunction) {
-    // try {
-    //   const result = await this.extraCreditDataMapper.getAllClasses({
-    //     byHackathon: !res.locals.allHackathons,
-    //     count: res.locals.limit,
-    //     hackathon: res.locals.hackathon,
-    //     startAt: res.locals.offset,
-    //   });
-    //   const response = new ResponseBody('Success', 200, result);
-    //   return this.sendResponse(res, response);
-    // } catch (error) {
-    //   return Util.errorHandler500(error, next);
-    // }
-    return Util.standardErrorHandler(new HttpError('This method is not supported yet', 501), next);
+    try {
+      const result = await this.extraCreditDataMapper.getAllClasses({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 
   /**

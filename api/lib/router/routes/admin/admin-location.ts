@@ -51,7 +51,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
 
   /**
    * @api {get} /admin/location Get the list of existing locations
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Location List
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
@@ -71,7 +71,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
 
   /**
    * @api {post} /admin/location Create a new location
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Create Location
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
@@ -102,7 +102,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
 
   /**
    * @api {post} /admin/location/update Update name of a location
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Update Location
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
@@ -140,7 +140,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
 
   /**
    * @api {post} /admin/location/delete Remove a location
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Remove Location
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission

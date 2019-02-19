@@ -106,15 +106,15 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
     const uid = new NodeTimeUuid().toString();
+    object.uid = uid;
     return this.activeHackathonDataMapper.activeHackathon
       .pipe(
         map(hackathon => hackathon.uid),
-        switchMap(reference => from(
+        switchMap(reference =>
           this.rtdb.query<Update>(
             RtdbQueryType.SET,
             `${reference}/${uid}`,
             object.dbRepresentation,
-          ),
         )),
         map(result => ({ result: 'Success', data: result as Update })),
       ).toPromise();

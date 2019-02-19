@@ -18,8 +18,10 @@ export abstract class ParentRouter {
     ParentRouter.setResponseHeaders(eResponse);
     if (response.body.data instanceof Stream) {
       return new Promise((resolve, reject) => {
-        new NodeReadable((response.body.data as Stream<any>)
-          .map(data => JSON.stringify(data)))
+        new NodeReadable(
+          (response.body.data as Stream<any>)
+            .map(data => JSON.stringify(data)),
+        )
           .pipe(eResponse.type('json').status(response.status))
           .on('end', () => {
             resolve(eResponse);

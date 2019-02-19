@@ -8,7 +8,7 @@ import {
   IUserCount,
   IUserStatistics,
 } from '../../../models/admin/statistics';
-import { Attendance } from '../../../models/attendance/attendance';
+import { IAttendanceDataMapper } from '../../../models/attendance/attendance-data-mapper-impl';
 import {
   IPreRegisterDataMapper,
   IRegisterDataMapper,
@@ -16,7 +16,7 @@ import {
 } from '../../../models/register';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { IDataMapper, IDbResult } from '../../../services/database';
+import { IDbResult } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
 import { ParentRouter } from '../../router-types';
 
@@ -28,7 +28,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
     @Inject('IAdminStatisticsDataMapper') private readonly acl: IAclPerm,
-    @Inject('IAttendanceDataMapper') private readonly attendanceDataMapper: IDataMapper<Attendance>,
+    @Inject('IAttendanceDataMapper') private readonly attendanceDataMapper: IAttendanceDataMapper,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IPreRegisterDataMapper,
     @Inject('BunyanLogger') private readonly logger: Logger,
@@ -48,7 +48,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
 
   /**
    * @api {get} /admin/data/?type=registration_stats Get all user data
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get list of all users
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
@@ -59,6 +59,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiUse AuthArgumentRequired
    *
    * @apiSuccess {Array} Array of all users
+   * @apiUse ResponseBodyDescription
    */
   private async getRegistrationStatisticsHandler(res: Response, next: NextFunction) {
     let result: IDbResult<IUserStatistics[]>;
@@ -78,7 +79,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
 
   /**
    * @api {get} /admin/data/?type=registration_category_count Get the count of category data
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Registration Statistics Count
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
@@ -86,6 +87,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiUse AuthArgumentRequired
    *
    * @apiSuccess {Array} number of users that selected particular categories for registrations
+   * @apiUse ResponseBodyDescription
    */
   private async getRegistrationStatisticsCountHandler(
     res: Response,
@@ -106,14 +108,15 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
 
   /**
    * @api {get} /admin/data/?type=stats_count Get number of users by interaction type (Pre registration, Registration, RSVP, Event scans)
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get User Count
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
+   * @apiSuccess {ResponseBody} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
+   * @apiUse ResponseBodyDescription
    */
   private async getUserCountByCategoryHandler(
     res: Response,
@@ -134,14 +137,15 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
 
   /**
    * @api {get} /admin/data/?type=preregistration_count Get a count of Preregistered Users
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName get count preregistration
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} number of preregistered users
+   * @apiSuccess {ResponseBody} number of preregistered users
+   * * @apiUse ResponseBodyDescription
    */
   private async getPreRegistrationCountHandler(res: Response, next: NextFunction) {
     let result: IDbResult<number>;
@@ -159,7 +163,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
 
   /**
    * @api {get} /admin/data/?type=preregistration Get all pre-registered users
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Pre-registration
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
@@ -185,7 +189,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
 
   /**
    * @api {get} /admin/data/?type=rsvp Get all RSVP'ed users
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get RSVP
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
@@ -212,7 +216,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
 
   /**
    * @api {get} /admin/data/?type=rsvp_count Get number of RSVP'ed users
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get RSVP Count
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
@@ -239,7 +243,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
 
   /**
    * @api {get} /admin/data/?type=attendance Get all attendance data
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Attendance
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
@@ -247,6 +251,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiUse AuthArgumentRequired
    *
    * @apiSuccess {Array} All Attendance data
+   *
    */
   private async getAttendanceHandler(res: Response, next: NextFunction) {
     try {
@@ -264,8 +269,36 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   }
 
   /**
+   * @api {get} /admin/data/?type=attendance&aggregator=event Get all attendance data by event
+   * @apiVersion 2.0.0
+   * @apiName Get Attendance by event
+   * @apiGroup Admin Statistics
+   * @apiPermission TeamMemberPermission
+   * @apiParam [event] {String} The uid of an event to filter by
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {ResponseBody} All Attendance data aggregated by event
+   * @apiUse ResponseBodyDescription
+   */
+  private async getAttendanceByEventHandler(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await this.attendanceDataMapper.getAttendanceByEvent({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+        event: req.query.event,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
    * @api {get} /admin/data/?type=extra_credit_classes Get all extra credit classes
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Extra Credit Classes
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
@@ -320,7 +353,12 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
       case 'rsvp_count':
         return this.getRsvpCountHandler(res, next);
       case 'attendance':
-        return this.getAttendanceHandler(res, next);
+        switch (req.query.aggregator) {
+          case 'event':
+            return this.getAttendanceByEventHandler(req, res, next);
+          default:
+            return this.getAttendanceHandler(res, next);
+        }
       case 'extra_credit_classes':
         return this.getExtraCreditClassesHandler(res, next);
       default:

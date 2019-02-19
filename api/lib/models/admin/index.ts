@@ -9,7 +9,7 @@ import UserRecord = admin.auth.UserRecord;
 interface IEmail {
   name: string;
   substitutions: Map<string, string>;
-  emailId: string;
+  email: string;
 }
 
 interface IAdminDataMapper extends IDataMapper<any> {

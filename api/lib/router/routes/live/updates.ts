@@ -4,9 +4,9 @@ import { HttpError, RouteNotImplementedError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IUpdateDataMapper } from '../../../models/update';
 import { Update } from '../../../models/update/update';
+import { IUpdateProcessor } from '../../../processors/update-processor';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { IPushNotifService } from '../../../services/communication/push-notification';
 import { Logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
@@ -16,22 +16,22 @@ export class UpdatesController extends LiveController {
   protected static baseRoute = 'updates/';
 
   constructor(
-    @Inject('IAuthService') private authService: IFirebaseAuthService,
-    @Inject('IUpdateDataMapper') private dataMapper: IUpdateDataMapper,
-    @Inject('IUpdateDataMapper') private acl: IAclPerm,
-    @Inject('IPushNotifService') private notificationService: IPushNotifService,
-    @Inject('BunyanLogger') private logger: Logger,
+    @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
+    @Inject('IUpdateProcessor') private readonly updateProcessor: IUpdateProcessor,
+    @Inject('IUpdateDataMapper') private readonly updateDataMapper: IUpdateDataMapper,
+    @Inject('IUpdateDataMapper') private readonly acl: IAclPerm,
+    @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
     super();
     this.routes(this.router);
   }
 
   public routes(app: express.Router): void {
-    if (!this.authService || !this.dataMapper || !this.acl || !this.notificationService) {
+    if (!this.authService || !this.updateDataMapper || !this.acl) {
       return;
     }
     // Unauthenticated route
-    app.get('/reference', (req, res, next) => this.getUpdateReferenceHandler(req, res, next));
+    app.get('/reference', (req, res, next) => this.getUpdateReferenceHandler(res, next));
     // Use authentication
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
@@ -39,7 +39,7 @@ export class UpdatesController extends LiveController {
       .get(
         '/',
         this.authService.verifyAcl(this.acl, AclOperations.READ),
-        (req, res, next) => this.getUpdateHandler(req, res, next),
+        (req, res, next) => this.getUpdateHandler(res, next),
       )
       .post(
         '/',
@@ -76,7 +76,7 @@ export class UpdatesController extends LiveController {
 
   /**
    * @api {post} /live/updates/ Add a new update
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName New update
    * @apiGroup Updates
    * @apiPermission TeamMemberPermission
@@ -105,19 +105,7 @@ export class UpdatesController extends LiveController {
     }
     const generatedUpdate = new Update(request.body);
     try {
-      const update = await this.dataMapper.insert(generatedUpdate);
-      // Send out push notification and pass along stream
-      if (generatedUpdate.push_notification) {
-        try {
-          await this.notificationService.sendNotification(
-            generatedUpdate.update_title,
-            generatedUpdate.update_text,
-          );
-        } catch (error) {
-          this.logger.error(error);
-        }
-      }
-      const res = new ResponseBody('Success', 200, update);
+      const res = await this.updateProcessor.processUpdate(generatedUpdate);
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -127,19 +115,18 @@ export class UpdatesController extends LiveController {
   /**
    * This function gets the Firebase Database reference for live updates
    * @api {get} /live/updates/reference Get the db reference for updates
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Update reference
    * @apiGroup Updates
    *
    * @apiSuccess {String} The database reference to the current updates.
    */
   private async getUpdateReferenceHandler(
-    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
     try {
-      const reference = await this.dataMapper.getReference();
+      const reference = await this.updateDataMapper.getReference();
       const res = new ResponseBody('Success', 200, reference);
       return this.sendResponse(response, res);
     } catch (error) {
@@ -149,7 +136,7 @@ export class UpdatesController extends LiveController {
 
   /**
    * @api {get} /live/updates/ Get all the updates
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Updates
    * @apiGroup Updates
    * @apiPermission UserPermission
@@ -159,12 +146,11 @@ export class UpdatesController extends LiveController {
    * @apiSuccess {Array} Array of current updates.
    */
   private async getUpdateHandler(
-    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
     try {
-      const stream = await this.dataMapper.getAll();
+      const stream = await this.updateDataMapper.getAll();
       const res = new ResponseBody('Success', 200, stream);
       return this.sendResponse(response, res);
     } catch (error) {

@@ -4,22 +4,15 @@ import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import {
-  CheckoutObject,
-  CheckoutObjectDataMapperImpl,
-  ICheckoutObjectDataMapper,
-} from '../../../lib/models/checkout-object';
+import { ICheckoutObjectDataMapper } from '../../../lib/models/checkout-object';
+import { CheckoutObject } from '../../../lib/models/checkout-object/checkout-object';
+import { CheckoutObjectDataMapperImpl } from '../../../lib/models/checkout-object/checkout-object-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
-
-function mockedQuery<T>(query, params) {
-  // @ts-ignore
-  return Promise.resolve({ query, params });
-}
 
 let checkoutObjectDataMapper: ICheckoutObjectDataMapper;
 let activeHackathonDataMapper;

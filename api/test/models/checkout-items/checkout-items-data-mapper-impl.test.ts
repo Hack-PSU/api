@@ -4,11 +4,9 @@ import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import {
-  CheckoutItems,
-  CheckoutItemsDataMapperImpl,
-  ICheckoutItemsDataMapper,
-} from '../../../lib/models/checkout-items';
+import { ICheckoutItemsDataMapper } from '../../../lib/models/checkout-items';
+import { CheckoutItems } from '../../../lib/models/checkout-items/checkout-items';
+import { CheckoutItemsDataMapperImpl } from '../../../lib/models/checkout-items/checkout-items-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';

@@ -13,7 +13,8 @@
     "object-literal-shorthand": false,
     "object-shorthand-properties-first": false,
     "prefer-array-literal": false,
-    "function-name": false
+    "function-name": false,
+    "no-implicit-dependencies": [true, "dev"]
   },
   "rulesDirectory": []
 }

@@ -37,12 +37,6 @@ export class RegistrationController extends ParentRouter implements IExpressCont
   }
 
   public routes(app: Router): void {
-    if (!this.authService) {
-      return;
-    }
-    // if (!this.registerDataMapper) {
-    //   return;
-    // }
     // Unauthenticated routes
     app.post('/pre', (req, res, next) => this.preRegistrationHandler(req, res, next));
     // Use authentication
@@ -119,7 +113,7 @@ export class RegistrationController extends ParentRouter implements IExpressCont
 
   /**
    * @api {post} /register/ Register for HackPSU
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Add Registration
    * @apiGroup Registration
    * @apiPermission UserPermission

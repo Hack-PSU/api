@@ -58,7 +58,7 @@ export class EventsController extends LiveController {
   /**
    * Delete an event
    * @api {post} /live/event/delete Delete an existing event
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Update Event
    * @apiGroup Events
    * @apiPermission TeamMemberPermission
@@ -88,7 +88,7 @@ export class EventsController extends LiveController {
   /**
    * Updates an existing event
    * @api {put} /live/event/ Update an existing event
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Update Event
    * @apiGroup Events
    * @apiPermission >= TeamMemberPermission
@@ -130,7 +130,7 @@ export class EventsController extends LiveController {
   /**
    * Create a new event
    * @api {post} /live/event/ Add a new event
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName New Event
    * @apiGroup Events
    * @apiPermission >= TeamMemberPermission
@@ -186,7 +186,7 @@ export class EventsController extends LiveController {
   /**
    * This function gets all the events for the current hackathon
    * @api {get} /live/events/ Get all the events
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get events
    * @apiGroup Events
    *

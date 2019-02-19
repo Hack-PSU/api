@@ -11,15 +11,17 @@ import { LocationDataMapperImpl } from '../../../models/location/location-data-m
 import { PreRegisterDataMapperImpl, RegisterDataMapperImpl } from '../../../models/register';
 import { ScannerDataMapperImpl } from '../../../models/scanner/scanner-data-mapper-impl';
 import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';
+import { AdminProcessor } from '../../../processors/admin-processor';
 import { IndexProcessor } from '../../../processors/index-processor';
 import { PreRegistrationProcessor } from '../../../processors/pre-registration-processor';
 import { RegistrationProcessor } from '../../../processors/registration-processor';
+import { UpdateProcessor } from '../../../processors/update-processor';
 import { IndexController } from '../../../router/routes';
 import {
-    AdminHackathonController,
-    AdminLocationController,
-    AdminRegisterController,
-    AdminStatisticsController,
+  AdminHackathonController,
+  AdminLocationController,
+  AdminRegisterController,
+  AdminStatisticsController,
 } from '../../../router/routes/admin';
 import { AdminController } from '../../../router/routes/admin/';
 import { AdminCheckoutController } from '../../../router/routes/admin/admin-checkout';
@@ -68,6 +70,8 @@ export class ExpressProvider {
           { provide: 'IIndexProcessor', useClass: IndexProcessor },
           { provide: 'IRegistrationProcessor', useClass: RegistrationProcessor },
           { provide: 'IPreregistrationProcessor', useClass: PreRegistrationProcessor },
+        { provide: 'IAdminProcessor', useClass: AdminProcessor },
+        { provide: 'IUpdateProcessor', useClass: UpdateProcessor },
 
           // Data Mappers
           { provide: 'IUpdateDataMapper', useClass: UpdateDataMapperImpl },

@@ -1,8 +1,10 @@
 import { Inject, Injectable } from 'injection-js';
+import { default as _ } from 'lodash';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
 import { Stream } from 'ts-stream';
+import { IEventStatUowOpts } from '.';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -12,16 +14,70 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
+import { IRegisterDataMapper } from '../register';
 import { Attendance } from './attendance';
 
 export const TABLE_NAME = 'ATTENDANCE';
+
+export interface IAttendanceDataMapper extends IDataMapper<Attendance> {
+  getAttendanceByEvent(opts?: IEventStatUowOpts): Promise<{ result: string; data: any }>;
+}
 
 /**
  * TODO: Add documentation
  */
 @Injectable()
 export class AttendanceDataMapperImpl extends GenericDataMapper
-  implements IAclPerm, IDataMapper<Attendance> {
+  implements IAclPerm, IAttendanceDataMapper {
+
+  get tableName() {
+    return TABLE_NAME;
+  }
+
+  private static extractRegistrationDetails(attendanceValue: any) {
+    return _.pick(
+      attendanceValue,
+      [
+        'uid',
+        'firstname',
+        'lastname',
+        'gender',
+        'shirt_size',
+        'dietary_restriction',
+        'allergies',
+        'travel_reimbursement',
+        'first_hackathon',
+        'university',
+        'email',
+        'academic_year',
+        'major',
+        'resume',
+        'phone',
+        'race',
+        'coding_experience',
+        'referral',
+        'project',
+        'expectations',
+        'veteran',
+        'pin',
+        'hackathon',
+      ],
+    );
+  }
+
+  private static extractEventDetails(attendanceValue: any) {
+    return _.pick(
+      attendanceValue,
+      [
+        'event_uid',
+        'event_start_time',
+        'event_end_time',
+        'event_title',
+        'event_description',
+        'event_type',
+      ],
+    );
+  }
 
   public readonly CREATE: string = 'attendance:create';
   public readonly DELETE: string = 'attendance:delete';
@@ -31,14 +87,11 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
   public readonly COUNT: string = 'attendance:count';
   protected pkColumnName: string = 'uid';
 
-  get tableName() {
-    return TABLE_NAME;
-  }
-
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
     @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
+    @Inject('IRegisterDataMapper') protected readonly registerDataMapper: IRegisterDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
@@ -126,6 +179,74 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
       this.sql.query<number>(query, [], { stream: false, cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
+    ).toPromise();
+  }
+
+  public async getAttendanceByEvent(opts?: IEventStatUowOpts) {
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName, 'attendance')
+      .join(
+        this.registerDataMapper.tableName,
+        'registration',
+        'attendance.user_uid = registration.uid',
+      )
+      .distinct();
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder.where(
+        'hackathon_id = ?',
+        await (opts.hackathon ?
+          Promise.resolve(opts.hackathon) :
+          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+            .toPromise()),
+      );
+      queryBuilder = queryBuilder.where(
+        'registration.hackathon = ?',
+        await (opts.hackathon ?
+          Promise.resolve(opts.hackathon) :
+          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+            .toPromise()),
+      );
+    }
+    if (opts && opts.event) {
+      queryBuilder = queryBuilder.where('attendance.event_uid = ?', opts.event);
+    }
+    const query = queryBuilder
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query<any>(query.text, query.values, { stream: true, cache: true }),
+    ).pipe(
+      map((result: Stream<any>) => {
+        // Reduce the result to a condensed object
+        return result.reduce(
+          (currentAggregation, nextAttendance) => {
+            if (currentAggregation[nextAttendance.event_uid]) {
+              currentAggregation[nextAttendance.event_uid].attendees
+                .push(AttendanceDataMapperImpl.extractRegistrationDetails(nextAttendance));
+            } else {
+              currentAggregation[nextAttendance.event_uid] = {
+                ...AttendanceDataMapperImpl.extractEventDetails(nextAttendance),
+                attendees: [AttendanceDataMapperImpl.extractRegistrationDetails(nextAttendance)],
+              };
+            }
+            return currentAggregation;
+          },
+          {},
+        );
+      }),
+      map(async result => ({ result: 'Success', data: await result })),
     ).toPromise();
   }
 

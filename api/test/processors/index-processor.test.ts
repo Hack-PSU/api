@@ -4,7 +4,7 @@ import { IndexProcessor } from '../../lib/processors/index-processor';
 
 let indexProcessor: IndexProcessor;
 
-describe('TEST: Index Controller', () => {
+describe('TEST: Index Processor', () => {
   it('responds with \'Welcome to HackPSU response body\'', async () => {
     // GIVEN: Index Processor instance
     indexProcessor = new IndexProcessor();

@@ -68,7 +68,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
 
   /**
    * @api {get} /admin/register Get registered hackers
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Registered Hackers
    * @apiGroup Admin Registration
    * @apiPermission TeamMemberPermission
@@ -100,7 +100,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
 
   /**
    * @api {get} /admin/register/count Get a count of Registered Users
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName get count of registration
    * @apiGroup Admin Registration
    * @apiPermission TeamMemberPermission
@@ -126,7 +126,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
 
   /**
    * @api {post} /admin/register/update Update an existing registration
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Update Registration
    * @apiGroup Admin Registration
    * @apiPermission DirectorPermission

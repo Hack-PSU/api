@@ -111,7 +111,7 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
             );
             await this.emailService.sendEmail(
               this.emailService.createEmailRequest(
-                email.emailId,
+                email.email,
                 substitutedHtml,
                 subject,
                 fromEmail,
@@ -119,7 +119,7 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
             );
             successfulEmails.push(new EmailHistory(
               senderUid,
-              email.emailId,
+              email.email,
               substitutedHtml,
               subject,
               email.name,
@@ -129,7 +129,7 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
           } catch (error) {
             failedEmails.push(new EmailHistory(
               senderUid,
-              email.emailId,
+              email.email,
               html,
               subject,
               email.name,

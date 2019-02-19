@@ -56,7 +56,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   /**
    * @api {post} /admin/hackathon Add a new non-active hackathon
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Add new hackathon
    * @apiGroup Admin Hackathon
    * @apiPermission DirectorPermission
@@ -116,7 +116,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   /**
    * @api {post} /admin/hackathon/active Mark a hackathon as active
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Add Active hackathon
    * @apiGroup Admin Hackathon
    * @apiPermission DirectorPermission
@@ -156,7 +156,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   /**
    * @api {post} /admin/hackathon/update Update non-active hackathon
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Update hackathon
    * @apiGroup Hackathon
    * @apiPermission DirectorPermission
@@ -206,7 +206,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   /**
    * @api {get} /admin/hackathon Get all hackathons
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Hackathons
    * @apiGroup Admin Hackathon
    * @apiPermission TeamMemberPermission
@@ -236,7 +236,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   /**
    * @api {get} /admin/hackathon/count Get a count of hackathons
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName get count of hackathon
    * @apiGroup Admin Hackathon
    * @apiPermission TeamMemberPermission

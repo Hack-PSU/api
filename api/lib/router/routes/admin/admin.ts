@@ -103,7 +103,11 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiSuccess {String} Authorized admin
    */
   private mainHandler(res: Response) {
-    const r = new ResponseBody('Authorized admin', 200, { result: 'success', data: {} });
+    const r = new ResponseBody(
+      'Authorized admin',
+      200,
+      { result: 'success', data: res.locals.user },
+    );
     return this.sendResponse(res, r);
   }
 

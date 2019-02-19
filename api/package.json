@@ -15,11 +15,10 @@
     "prod": "APP_ENV=prod npnm run build && npm start",
     "apidoc": "apidoc -i ./lib/router -o dist/doc/",
     "debug": "node --inspect ./dist/bin/www",
-    "prepare": "npm run gcp-build",
-    "pretest": "npm run gcp-build",
+    "prepare": "tsc -p .",
+    "pretest": "tsc -p .",
     "posttest": "npm run coveralls",
-    "lint": "tslint -p .",
-    "gcp-build": "tsc -p ."
+    "lint": "tslint -p ."
   },
   "nyc": {
     "extension": [

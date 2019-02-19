@@ -1,12 +1,12 @@
+import * as traceAgent from '@google-cloud/trace-agent';
+traceAgent.start();
+import * as debugAgent from '@google-cloud/debug-agent';
+debugAgent.start();
 import dotenv from 'dotenv';
-
 dotenv.config();
 import 'source-map-support/register';
 import { ExpressProvider } from './services/common/injector/providers';
-
 ExpressProvider.config();
-import * as debugAgent from '@google-cloud/debug-agent';
-import * as traceAgent from '@google-cloud/trace-agent';
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -21,10 +21,6 @@ import * as controllers from './router/routes/controllers';
 import { Logger } from './services/logging/logging';
 // Setup cloud specific trace and debug
 
-if (Util.getCurrentEnv() === Environment.PRODUCTION) {
-  traceAgent.start();
-  debugAgent.start();
-}
 
 export class App extends ParentRouter {
   private static notFoundHandler(request, response, next: NextFunction) {
@@ -60,9 +56,6 @@ export class App extends ParentRouter {
       .then(() => {
         // Set proxy settings
         this.app.set('trust proxy', true);
-
-        // Setup database handlers
-        // this.uowConfig();
 
         // Setup CORS and other security options
         this.securityConfig();

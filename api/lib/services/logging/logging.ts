@@ -5,7 +5,6 @@ import { Injectable } from 'injection-js';
 import 'reflect-metadata';
 // tslint:disable:no-var-requires
 const { express } = require('@google-cloud/logging-bunyan');
-// const loggingBunyan = new LoggingBunyan();
 
 const LOGGER_NAME = 'hackpsu-api';
 
@@ -41,7 +40,7 @@ export class Logger {
 
   public async mw() {
     const { mw } = await express.middleware({
-      level: 'info',
+      level: 'trace',
       logName: LOGGER_NAME,
     });
     return mw;

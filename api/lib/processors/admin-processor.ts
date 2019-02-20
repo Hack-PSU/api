@@ -114,8 +114,8 @@ export class AdminProcessor implements IAdminProcessor {
       goodEmails,
       html,
       subject,
-      fromEmail,
       userId,
+      fromEmail,
     );
     const totalFailures = badEmails.concat(failedEmails);
     // If all failed, respond accordingly

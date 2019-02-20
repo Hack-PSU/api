@@ -106,8 +106,15 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
-    throw new MethodNotImplementedError('this action is not supported');
+  public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
+    const query = (await this.getCountQuery(opts))
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query<number>(query.text, query.values, { cache: true }),
+    ).pipe(
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
+    ).toPromise();
   }
 
   public async insert(object: RfidAssignment): Promise<IDbResult<RfidAssignment>> {
@@ -185,5 +192,23 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     ).pipe(
       map(() => ({ result: 'Success', data: scan.cleanRepresentation })),
     ).toPromise();
+  }
+
+  public async getCountQuery(opts?: IUowOpts) {
+    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+      .from(this.tableName)
+      .field(`COUNT(${this.pkColumnName})`, 'checkin_count');
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    return queryBuilder;
   }
 }

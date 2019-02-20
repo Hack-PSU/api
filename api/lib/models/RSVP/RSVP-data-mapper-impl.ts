@@ -6,17 +6,18 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDataMapper, IDbResult } from '../../services/database';
+import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
+import { IRsvpDataMapper } from './index';
 import { Rsvp } from './rsvp';
 
 @Injectable()
 export class RsvpDataMapperImpl extends GenericDataMapper
-  implements IAclPerm, IDataMapper<Rsvp> {
+  implements IAclPerm, IRsvpDataMapper {
 
   public COUNT: string = 'rsvp:count';
   public CREATE: string = 'rsvp:create';
@@ -26,7 +27,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
   public UPDATE: string = 'rsvp:update';
   public tableName: string = 'RSVP';
 
-  protected pkColumnName: string = 'uid';
+  protected pkColumnName: string = 'user_id';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -125,25 +126,11 @@ export class RsvpDataMapperImpl extends GenericDataMapper
   }
 
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
-    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from(this.tableName)
-      .field(`COUNT(${this.pkColumnName})`, 'rsvp_count');
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder
-        .where(
-          'hackathon = ?',
-          await (opts.hackathon ?
-            Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon
-              .pipe(map(hackathon => hackathon.uid))
-              .toPromise()),
-        );
-    }
-    const query = queryBuilder
-      .toString()
-      .concat(';');
+    const query = (await this.getCountQuery(opts))
+      .toParam();
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query, [], { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
@@ -192,6 +179,24 @@ export class RsvpDataMapperImpl extends GenericDataMapper
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
     ).toPromise();
+  }
+
+  public async getCountQuery(opts?: IUowOpts): Promise<squel.Select> {
+    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+      .from(this.tableName)
+      .field(`COUNT(${this.pkColumnName})`, 'rsvp_count');
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    return queryBuilder;
   }
 
   // IN-PROGRESS

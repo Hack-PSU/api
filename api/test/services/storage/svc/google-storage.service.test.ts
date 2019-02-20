@@ -36,7 +36,7 @@ describe('TEST: Google Storage Service', () => {
         stream: process.stdin,
       };
       // WHEN: checking if file should be allowed
-      // @ts-ignore
+
       storageService._fileFilter(mockReq(), illegalFile, (error, result) => {
         if (error) {
           return done(error);

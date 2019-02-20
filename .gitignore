@@ -113,3 +113,4 @@ venv.bak/
 !.elasticbeanstalk/*.global.yml
 .idea
 *.iml
+.nyc_output

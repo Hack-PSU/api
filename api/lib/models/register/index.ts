@@ -15,7 +15,7 @@ interface IRegisterDataMapper extends IDataMapper<Registration | Registration[]>
 
   getCurrent(id: UidType, opts?: IUowOpts): Promise<IDbResult<Registration>>;
 
-  getRegistrationStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats>>;
+  getRegistrationStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats[]>>;
 
   getEmailByUid(uid: UidType): Promise<IDbResult<string>>;
 
@@ -24,8 +24,6 @@ interface IRegisterDataMapper extends IDataMapper<Registration | Registration[]>
    * a given table column
    */
   getSelectQueryForOptionName(fieldname: string, opts?: IUowOpts): Promise<squel.Select>;
-
-  normaliseRegistrationData(registration: any): void;
 
   getCountQuery(opts?: IUowOpts): Promise<squel.Select>;
 }

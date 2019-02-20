@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { MysqlError, PoolConnection } from 'mysql';
 import { defer, from, Observable } from 'rxjs';
 import { catchError, mergeMap } from 'rxjs/operators';
-import { ReadableStream, Stream } from 'ts-stream';
 import { HttpError } from '../../../JSCommon/errors';
 import { Logger } from '../../logging/logging';
 import { ICacheService } from '../cache/cache';
@@ -71,20 +70,16 @@ export class MysqlUow implements IUow {
   public query<T>(
     query: string,
     params: string | string[] = [],
-    opts: IQueryOpts = { stream: false, cache: false },
+    opts: IQueryOpts = { cache: false },
   ) {
     return this.connectionPromise
       .pipe(
         mergeMap((connection: PoolConnection) => {
-          return new Promise<T | ReadableStream<T>>(async (resolve, reject) => {
+          return new Promise<T[]>(async (resolve, reject) => {
             if (opts.cache) { // Check cache
               try {
-                const result: T = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
+                const result: T[] = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
                 if (result !== null) {
-                  if (opts.stream) {
-                    this.complete(connection);
-                    return resolve(Stream.from<T>([result]));
-                  }
                   this.complete(connection);
                   return resolve(result);
                 }
@@ -94,7 +89,7 @@ export class MysqlUow implements IUow {
               }
             }
             connection.beginTransaction(() => {
-              connection.query(query, params, (err: MysqlError, result: T) => {
+              connection.query(query, params, (err: MysqlError, result: T[]) => {
                 if (err) {
                   connection.rollback();
                   reject(err);
@@ -102,10 +97,6 @@ export class MysqlUow implements IUow {
                 // Add result to cache
                 this.cacheService.set(`${query}${(params as string[]).join('')}`, result)
                   .catch(cacheError => this.logger.error(cacheError));
-                if (opts.stream) {
-                  this.complete(connection);
-                  return resolve(Stream.from([result]));
-                }
                 this.complete(connection);
                 return resolve(result);
               });

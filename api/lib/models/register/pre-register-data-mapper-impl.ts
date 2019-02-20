@@ -2,9 +2,8 @@ import { Inject } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
-import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
+import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
@@ -61,7 +60,7 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
@@ -80,15 +79,15 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<PreRegistration>(
       query.text,
       query.values,
-      { stream: false, cache: true },
+      { cache: true },
     ))
       .pipe(
-        map((event: PreRegistration) => ({ result: 'Success', data: event })),
+        map((event: PreRegistration[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<PreRegistration>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<PreRegistration[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName);
     if (opts && opts.startAt) {
@@ -113,10 +112,13 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<PreRegistration>(
       query.text,
       query.values,
-      { stream: true, cache: true },
+      { cache: true },
     ))
       .pipe(
-        map((event: Stream<PreRegistration>) => ({ result: 'Success', data: event })),
+        map((preRegistrations: PreRegistration[]) => ({
+          result: 'Success',
+          data: preRegistrations,
+        })),
       )
       .toPromise();
   }
@@ -125,17 +127,16 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     const query = this.getCountQuery().toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
   public getCountQuery() {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+    return squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'preregistration_count');
-    return query;
   }
 
   public async insert(object: PreRegistration): Promise<IDbResult<PreRegistration>> {
@@ -156,7 +157,7 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
@@ -176,9 +177,10 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
+
 }

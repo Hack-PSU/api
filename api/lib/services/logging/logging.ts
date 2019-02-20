@@ -1,9 +1,10 @@
-import { express } from '@google-cloud/logging-bunyan';
 import * as bunyan from 'bunyan';
+import devNull from 'dev-null';
 import { Request } from 'express';
 import { Injectable } from 'injection-js';
 import 'reflect-metadata';
-// const loggingBunyan = new LoggingBunyan();
+// tslint:disable:no-var-requires
+const { express } = require('@google-cloud/logging-bunyan');
 
 const LOGGER_NAME = 'hackpsu-api';
 
@@ -14,19 +15,32 @@ export class Logger {
   private request?: any;
 
   constructor() {
-    this.bunyan = bunyan.createLogger({
-      name: LOGGER_NAME,
-      streams: [
-        // stdout logging
-        { stream: process.stdout, level: 'info' },
-        { stream: process.stderr, level: 'error' },
-      ],
-    });
+    switch (process.env.APP_ENV) {
+      case 'TEST':
+      case 'test':
+        this.bunyan = bunyan.createLogger({
+          name: LOGGER_NAME,
+          streams: [
+            // stdout logging
+            { stream: devNull(), level: 'debug' },
+          ],
+        });
+        break;
+      default:
+        this.bunyan = bunyan.createLogger({
+          name: LOGGER_NAME,
+          streams: [
+            // stdout logging
+            { stream: process.stdout, level: 'info' },
+            { stream: process.stderr, level: 'error' },
+          ],
+        });
+    }
   }
 
   public async mw() {
     const { mw } = await express.middleware({
-      level: 'info',
+      level: 'trace',
       logName: LOGGER_NAME,
     });
     return mw;

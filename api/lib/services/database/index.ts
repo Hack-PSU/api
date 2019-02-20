@@ -1,4 +1,3 @@
-import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { IUowOpts } from './svc/uow.service';
 
@@ -13,7 +12,7 @@ export interface IDataMapper<T> {
 
   delete(object: T | UidType): Promise<IDbResult<void>>;
 
-  getAll(opts?: IUowOpts): Promise<IDbResult<Stream<T>>>;
+  getAll(opts?: IUowOpts): Promise<IDbResult<T[]>>;
 
   getCount(opts?: IUowOpts): Promise<IDbResult<number>>;
 }

@@ -1,14 +1,17 @@
 import express from 'express';
-import { Injectable } from 'injection-js';
+import { Inject, Injectable } from 'injection-js';
 import 'reflect-metadata';
-import { IExpressController, ResponseBody } from '..';
+import { IExpressController } from '..';
+import { IIndexProcessor } from '../../processors/index-processor';
 import { ParentRouter } from '../router-types';
 
 @Injectable()
 export class IndexController extends ParentRouter implements IExpressController {
   public readonly router: express.Router;
 
-  constructor() {
+  constructor(
+    @Inject('IIndexProcessor') private readonly indexProcessor: IIndexProcessor,
+  ) {
     super();
     this.router = express.Router();
     this.routes(this.router);
@@ -19,11 +22,7 @@ export class IndexController extends ParentRouter implements IExpressController 
   }
 
   private indexHandler(response: express.Response) {
-    const r: ResponseBody = new ResponseBody(
-      'Welcome to the HackPSU API!',
-      200,
-      { result: 'Success', data: {} },
-    );
+    const r = this.indexProcessor.processIndex();
     return this.sendResponse(response, r);
   }
 }

@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -54,7 +53,7 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
@@ -70,14 +69,14 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
       .where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Event>(query.text, query.values, { stream: false, cache: true }))
+    return from(this.sql.query<Event>(query.text, query.values, { cache: true }))
       .pipe(
-        map((event: Event) => ({ result: 'Success', data: event })),
+        map((event: Event[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
 
-  public getAll(): Promise<IDbResult<Stream<Event>>> {
+  public getAll(): Promise<IDbResult<Event[]>> {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName, 'event')
       .field('event.*')
@@ -87,9 +86,10 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
       .join('HACKATHON', 'h', 'h.uid=event.hackathon and h.active=true')
       .toString()
       .concat(';');
-    return from(this.sql.query<Event>(query, [], { stream: true, cache: true }))
+    const params = [];
+    return from(this.sql.query<Event>(query, params, { cache: true }))
       .pipe(
-        map((event: Stream<Event>) => ({ result: 'Success', data: event })),
+        map((event: Event[]) => ({ result: 'Success', data: event })),
       )
       .toPromise();
   }
@@ -102,9 +102,9 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
       .concat(';');
     const params = [];
     return from(
-      this.sql.query<number>(query, params, { stream: true, cache: true }),
+      this.sql.query<number>(query, params, { cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
@@ -121,7 +121,7 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
     ).toPromise();
@@ -141,7 +141,7 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
     ).toPromise();

@@ -1,16 +1,17 @@
+// tslint:disable-next-line:import-name
 import Storage from '@google-cloud/storage';
 import * as express from 'express';
 import * as multer from 'multer';
 import { IFile, IGcsStorageEngineOpts } from '../storage-types';
 
 export class GcsStorageEngine implements multer.StorageEngine {
-  private gcobj: Storage.Storage;
+  private gcobj: Storage;
   private gcsBucket: Storage.Bucket;
   private readonly filenameGenerator: (req: express.Request, file: any) => string;
   private metadata: Storage.WriteStreamOptions;
 
   constructor(opts: IGcsStorageEngineOpts) {
-    this.gcobj = Storage({
+    this.gcobj = new Storage({
       keyFilename: opts.keyFilename,
       projectId: opts.projectId,
     });
@@ -30,7 +31,7 @@ export class GcsStorageEngine implements multer.StorageEngine {
       const filename = this.filenameGenerator(req, file);
       const gcFile = this.gcsBucket.file(filename);
       return file.stream.pipe(gcFile.createWriteStream(this.metadata))
-        .on('error', (err) => cb(err))
+        .on('error', err => cb(err))
         .on('finish', () => cb(undefined, {
           filename,
           path: `https://${this.gcsBucket.name}.storage.googleapis.com/${filename}`,

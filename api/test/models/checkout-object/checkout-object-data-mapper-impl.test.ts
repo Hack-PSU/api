@@ -2,31 +2,26 @@
 import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
-import { CheckoutObject, 
-         ICheckoutObjectDataMapper, 
-         CheckoutObjectDataMapperImpl } from '../../../lib/models/checkout-object';
+import { of } from 'rxjs';
+import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
+import { ICheckoutObjectDataMapper } from '../../../lib/models/checkout-object';
+import { CheckoutObject } from '../../../lib/models/checkout-object/checkout-object';
+import { CheckoutObjectDataMapperImpl } from '../../../lib/models/checkout-object/checkout-object-data-mapper-impl';
+import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
+import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
-import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
-import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
-import { of } from 'rxjs';
-
-function mockedQuery<T>(query, params) {
-  // @ts-ignore
-  return Promise.resolve({ query, params });
-}
 
 let checkoutObjectDataMapper: ICheckoutObjectDataMapper;
 let activeHackathonDataMapper;
-let mysqlUow;
+let mysqlUow: MysqlUow;
+const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
 
 describe('TEST: CheckoutObject Data Mapper', () => {
   beforeEach(() => {
-    // Configure Mock MysqlUow
-    mysqlUow = Substitute.for<MysqlUow>();
     // Configure Active Hackathon Data Mapper
     activeHackathonDataMapper = Substitute.for<IActiveHackathonDataMapper>();
     activeHackathonDataMapper.activeHackathon.returns(of(new ActiveHackathon({
@@ -36,6 +31,9 @@ describe('TEST: CheckoutObject Data Mapper', () => {
       uid: 'test uid',
     })));
     activeHackathonDataMapper.tableName.returns('HACKATHON');
+    when(mysqlUowMock.query(anyString(), anything(), anything()))
+      .thenResolve([]);
+    mysqlUow = instance(mysqlUowMock);
     // Configure CheckoutObject Data Mapper
     checkoutObjectDataMapper = new CheckoutObjectDataMapperImpl(
       acl,
@@ -43,8 +41,10 @@ describe('TEST: CheckoutObject Data Mapper', () => {
       activeHackathonDataMapper,
       new Logger(),
     );
-    // Configure mocked methods for mysql
-    mysqlUow.query().mimicks(mockedQuery);
+  });
+
+  afterEach(() => {
+    reset(mysqlUowMock);
   });
 
   describe('TEST: CheckoutObject get', () => {
@@ -53,13 +53,16 @@ describe('TEST: CheckoutObject Data Mapper', () => {
       // GIVEN: An item with a valid ID to read from
       const uid = 'test uid';
       // WHEN: Retrieving data for this item
-      const result = await checkoutObjectDataMapper.get(uid);
+      await checkoutObjectDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` WHERE (uid= ?);';
       const expectedParams = [uid];
-      expect((result.data as any).query).to.equal(expectedSQL);
-      expect((result.data as any).params).to.deep.equal(expectedParams);
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
@@ -68,11 +71,13 @@ describe('TEST: CheckoutObject Data Mapper', () => {
     it('generates the correct sql to read all Object', async () => {
       // GIVEN: A checkout object data mapper instance
       // WHEN: Retrieving all checkout object data
-      const result = await checkoutObjectDataMapper.getAll();
+      await checkoutObjectDataMapper.getAll();
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject`;';
-      expect((result.data as any).query).to.equal(expectedSQL);
+      const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
     });
     it(
       'generates the correct sql to read all objects with specific fields',
@@ -81,11 +86,13 @@ describe('TEST: CheckoutObject Data Mapper', () => {
         // GIVEN: A checkout object data mapper instance
         // WHEN: Retrieving one field for all checkout object data
         // WHEN: Retrieving data for this item
-        const result = await checkoutObjectDataMapper.getAll({ fields: ['test field'] });
+        await checkoutObjectDataMapper.getAll({ fields: ['test field'] });
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT `test field` FROM `CHECKOUT_DATA` `checkoutObject`;';
-        expect((result.data as any).query).to.equal(expectedSQL);
+        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
       },
     );
 
@@ -95,11 +102,13 @@ describe('TEST: CheckoutObject Data Mapper', () => {
       async () => {
         // GIVEN: A checkout object data mapper instance
         // WHEN: Retrieving all checkout object data after an offset
-        const result = await checkoutObjectDataMapper.getAll({ startAt: 100 });
+        await checkoutObjectDataMapper.getAll({ startAt: 100 });
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` OFFSET 100;';
-        expect((result.data as any).query).to.equal(expectedSQL);
+        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
       },
     );
 
@@ -109,11 +118,13 @@ describe('TEST: CheckoutObject Data Mapper', () => {
       async () => {
         // GIVEN: A checkout object data mapper instance
         // WHEN: Retrieving n-many checkout object data after an offset
-        const result = await checkoutObjectDataMapper.getAll({ count: 100 });
+        await checkoutObjectDataMapper.getAll({ count: 100 });
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` LIMIT 100;';
-        expect((result.data as any).query).to.equal(expectedSQL);
+        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
       },
     );
 
@@ -124,14 +135,16 @@ describe('TEST: CheckoutObject Data Mapper', () => {
         // GIVEN: A hackathon to read objects for
         const hackathonUid = 'test uid';
         // WHEN: Retrieving all object data for the given hackathon
-        const result = await checkoutObjectDataMapper.getAll({
+        await checkoutObjectDataMapper.getAll({
           byHackathon: true,
           hackathon: hackathonUid,
         });
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` WHERE (hackathon_id = \'test uid\');';
-        expect((result.data as any).query).to.equal(expectedSQL);
+        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
       },
     );
 
@@ -142,18 +155,18 @@ describe('TEST: CheckoutObject Data Mapper', () => {
         // GIVEN: A hackathon to read objects for
         const hackathonUid = 'test uid';
         // WHEN: Retrieving all object data for the given hackathon
-        const result = await checkoutObjectDataMapper.getAll({
+        await checkoutObjectDataMapper.getAll({
           hackathon: hackathonUid,
         });
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject`;';
-        expect((result.data as any).query).to.equal(expectedSQL);
+        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
       },
     );
   });
-
-  
 
   describe('TEST: CheckoutObject delete', () => {
     // @ts-ignore
@@ -161,11 +174,16 @@ describe('TEST: CheckoutObject Data Mapper', () => {
       // GIVEN: An item with a valid ID to read from
       const uid = 'test uid';
       // WHEN: Deleting this item
-      const result = await checkoutObjectDataMapper.delete(uid);
+      await checkoutObjectDataMapper.delete(uid);
 
-      // THEN: A successful delete operation causes a successful response
-      expect(result.data).to.equal(undefined);
-      expect(result.result).to.equal('Success');
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'DELETE FROM `CHECKOUT_DATA` WHERE (uid = ?);';
+      const expectedParams = [uid];
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
@@ -174,11 +192,13 @@ describe('TEST: CheckoutObject Data Mapper', () => {
     it('generates the expected SQL to retrieve the number of Object', async () => {
       // GIVEN: Instance of a checkout object data mapper
       // WHEN: Retrieving number of items
-      const result = await checkoutObjectDataMapper.getCount();
+      await checkoutObjectDataMapper.getCount();
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT COUNT(uid) AS "count" FROM `CHECKOUT_DATA`;';
-      expect((result.data as any).query).to.equal(expectedSQL);
+      const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
     });
   });
 
@@ -186,20 +206,32 @@ describe('TEST: CheckoutObject Data Mapper', () => {
     // @ts-ignore
     it('inserts the item', async () => {
       // GIVEN: An item to insert
-      const hackathonUid = 'test hackathon'
+      const hackathonUid = 'test hackathon';
       const testCheckoutObject = new CheckoutObject({
-        uid: 0,
-        item_id: 1,
-        user_id: 'test name',
         checkout_time: Date.now(),
+        hackathon: hackathonUid,
+        item_id: 1,
         return_time: Date.now(),
-        hackathon:  hackathonUid,
+        user_id: 'test name',
       });
       // WHEN: Inserting item
-      const result = await checkoutObjectDataMapper.insert(testCheckoutObject);
+      await checkoutObjectDataMapper.insert(testCheckoutObject);
 
-      // THEN: Returns inserted item
-      expect((result.data as any)).to.deep.equal(testCheckoutObject.cleanRepresentation);
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'INSERT INTO `CHECKOUT_DATA` (`item_id`, `user_id`, `checkout_time`, ' +
+        '`return_time`, `hackathon`) VALUES (?, ?, ?, ?, ?);';
+      const expectedParams = [
+        testCheckoutObject.item_id,
+        testCheckoutObject.user_id,
+        testCheckoutObject.checkout_time,
+        testCheckoutObject.return_time,
+        testCheckoutObject.hackathon,
+      ];
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
@@ -207,20 +239,19 @@ describe('TEST: CheckoutObject Data Mapper', () => {
     // @ts-ignore
     it('returns the item', async () => {
       // GIVEN: An item to return
-      const hackathonUid = 'test name'
-      const testCheckoutObject = new CheckoutObject({
-        uid: 0,
-        item_id: 1,
-        user_id: 'test name',
-        checkout_time: Date.now(),
-        return_time: Date.now(),
-        hackathon:  hackathonUid,
-      });
+      const returnTime = Date.now();
+      const returnId = 1;
       // WHEN: Returning item
-      const result = await checkoutObjectDataMapper.returnItem(testCheckoutObject);
+      await checkoutObjectDataMapper.returnItem(returnTime, returnId);
 
-      // THEN: Returns returned item
-      expect((result.data as any)).to.deep.equal(testCheckoutObject.cleanRepresentation);
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'UPDATE `CHECKOUT_DATA` SET `return_time` = ? WHERE (uid = ?);';
+      const expectedParams = [returnTime, returnId];
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
@@ -228,20 +259,35 @@ describe('TEST: CheckoutObject Data Mapper', () => {
     // @ts-ignore
     it('updates the item', async () => {
       // GIVEN: An item to insert
-      const hackathonUid = 'test name'
+      const hackathonUid = 'test name';
       const testCheckoutObject = new CheckoutObject({
-        uid: 0,
         item_id: 1,
         user_id: 'test name',
         checkout_time: Date.now(),
         return_time: Date.now(),
         hackathon:  hackathonUid,
       });
+      testCheckoutObject.uid = 0;
       // WHEN: Updating item
-      const result = await checkoutObjectDataMapper.update(testCheckoutObject);
+      await checkoutObjectDataMapper.update(testCheckoutObject);
 
-      // THEN: Returns updated item
-      expect((result.data as any)).to.deep.equal(testCheckoutObject.cleanRepresentation);
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'UPDATE `CHECKOUT_DATA` SET `item_id` = ?, `user_id` = ?, ' +
+        '`checkout_time` = ?, `return_time` = ?, `hackathon` = ?, `uid` = ? WHERE (uid = ?);';
+      const expectedParams = [
+        testCheckoutObject.item_id,
+        testCheckoutObject.user_id,
+        testCheckoutObject.checkout_time,
+        testCheckoutObject.return_time,
+        testCheckoutObject.hackathon,
+        testCheckoutObject.uid,
+        testCheckoutObject.uid,
+      ];
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 });

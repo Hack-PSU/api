@@ -2,11 +2,10 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import tsStream from 'ts-stream';
 import { UidType } from '../../../JSCommon/common-types';
 import { MethodNotImplementedError } from '../../../JSCommon/errors';
 import { AuthLevel, IFirebaseAuthService } from '../../../services/auth/auth-types';
-import { IAcl, IAdminStatisticsPerm } from '../../../services/auth/RBAC/rbac-types';
+import { IAcl, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../../services/database';
 import { GenericDataMapper } from '../../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../../services/database/svc/mysql-uow.service';
@@ -17,13 +16,12 @@ import { IAdminStatisticsDataMapper, IUserCount, IUserStatistics } from './index
 
 @Injectable()
 export class AdminStatisticsDataMapperImpl extends GenericDataMapper
-  implements IAdminStatisticsDataMapper, IAdminStatisticsPerm {
-  public STATISTICS: string = 'statistics:read';
+  implements IAdminStatisticsDataMapper, IAclPerm {
+  public READ: string = 'statistics:read';
   // Undefined properties for Statistics data mapper
   public COUNT: string;
   public CREATE: string;
   public DELETE: string;
-  public READ: string;
   public READ_ALL: string;
   public UPDATE: string;
   public tableName: string;
@@ -39,7 +37,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
   ) {
     super(acl);
     super.addRBAC(
-      this.STATISTICS,
+      this.READ,
       [AuthLevel.TEAM_MEMBER],
       undefined,
       [AuthLevel[AuthLevel.VOLUNTEER]],
@@ -54,7 +52,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public getAll(opts?: IUowOpts): Promise<IDbResult<tsStream<any>>> {
+  public getAll(opts?: IUowOpts): Promise<IDbResult<any[]>> {
     throw new MethodNotImplementedError('this action is not supported');
   }
 
@@ -70,7 +68,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public async getUserCountByCategory(opts?: IUowOpts): Promise<IDbResult<IUserCount>> {
+  public async getUserCountByCategory(opts?: IUowOpts): Promise<IDbResult<IUserCount[]>> {
     let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(
         // squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
@@ -117,13 +115,13 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
       .toString();
     query = query.concat(';');
     return from(
-      this.sql.query<IUserCount>(query, [], { stream: false, cache: true }),
+      this.sql.query<IUserCount>(query, [], { cache: true }),
     ).pipe(
-      map((result: IUserCount) => ({ result: 'Success', data: result })),
+      map((result: IUserCount[]) => ({ result: 'Success', data: result })),
     ).toPromise();
   }
 
-  public async getAllUserData(opts?: IUowOpts): Promise<IDbResult<IUserStatistics>> {
+  public async getAllUserData(opts?: IUowOpts): Promise<IDbResult<IUserStatistics[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
       .distinct()
       .field('pre_reg.uid', 'pre_uid')
@@ -166,9 +164,9 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<IUserStatistics>(query.text, query.values, { stream: true, cache: true }),
+      this.sql.query<IUserStatistics>(query.text, query.values, { cache: true }),
     ).pipe(
-      map((result: IUserStatistics) => ({ result: 'Success', data: result })),
+      map((result: IUserStatistics[]) => ({ result: 'Success', data: result })),
     ).toPromise();
   }
 }

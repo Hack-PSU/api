@@ -1,3 +1,4 @@
+// tslint:disable-next-line:import-name
 import Storage from '@google-cloud/storage';
 import * as express from 'express';
 

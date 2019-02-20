@@ -1,70 +1,59 @@
-import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import {
   ActiveHackathonDataMapperImpl,
   IActiveHackathonDataMapper,
 } from '../../../lib/models/hackathon/active-hackathon';
+import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
 
-function mockedQuery<T>(query, params) {
-  // @ts-ignore
-  return Promise.resolve(queryHandleFunction(query, params));
-}
-
-let queryHandleFunction: (query, params) => any;
-
-function queryHandler(query, params) {
-  return { query, params };
-}
-
 let hackathonDataMapper: IActiveHackathonDataMapper;
-let mysqlUow;
+let mysqlUow: MysqlUow;
+const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
 
 describe('TEST: Active Hackathon data mapper', () => {
   beforeEach(() => {
     // Configure Mock MysqlUow
-    mysqlUow = Substitute.for<MysqlUow>();
-
+    when(mysqlUowMock.query(anything(), anything(), anything()))
+      .thenResolve([]);
+    when(mysqlUowMock.query(
+      anything(),
+      anything(),
+    ))
+      .thenResolve([new ActiveHackathon({ basePin: 0, endTime: Date.now(), name: 'test' })]);
+    mysqlUow = instance(mysqlUowMock);
     // Configure Hackathon Data Mapper
     hackathonDataMapper = new ActiveHackathonDataMapperImpl(
       acl,
       mysqlUow,
       new Logger(),
     );
-    // Configure mocked methods for mysql
-    queryHandleFunction = queryHandler;
-    mysqlUow.query().mimicks(mockedQuery);
   });
 
   describe('TEST: Make hackathon active', () => {
-    let query: string;
-    let values: any[];
-    beforeEach(() => {
-      queryHandleFunction = (q, p) => {
-        query = q;
-        values = p;
-      };
-    });
-
     it(
       'generates the correct SQL to mark the current active hackathon as inactive and marks the provided hackathon as active',
       async () => {
         // GIVEN: A hackathon with a valid ID
         const uid = 'test uid';
         // WHEN: Making this hackathon  active
-        const result = await hackathonDataMapper.makeActive(uid);
+        await hackathonDataMapper.makeActive(uid);
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'UPDATE `HACKATHON` SET `active` = ?, `end_time` = ? WHERE (active = ?);' +
-          'UPDATE `HACKATHON` SET `active` = ?, `base_pin` = (SELECT MAX(pin) FROM REGISTRATION FOR UPDATE) WHERE (uid = ?);';
+        const expectedSQL = 'UPDATE `HACKATHON` SET `active` = ?, `end_time` = ? ' +
+          'WHERE (active = ?);UPDATE `HACKATHON` SET `active` = ?, `base_pin` = ' +
+          '(SELECT MAX(pin) FROM REGISTRATION FOR UPDATE) WHERE (uid = ?);';
         const expectedParams = [false, true, true, uid];
-        expect(query).to.equal(expectedSQL);
-        expect(values.slice(0, 1).concat(values.slice(2))).to.deep.equal(expectedParams);
-        expect(parseInt(values[1], 10)).to.be.approximately(Date.now(), 100);
+        const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+          .first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
+        expect(generatedParams.slice(0, 1).concat(generatedParams.slice(2))).to.deep.equal(expectedParams);
+        expect(parseInt(generatedParams[1], 10)).to.be.approximately(Date.now(), 100);
       },
     );
   });

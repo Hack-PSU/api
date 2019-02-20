@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -33,7 +32,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
-    @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
+    @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
@@ -55,19 +54,6 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     );
   }
 
-  public normaliseRegistrationData(registration: any) {
-    /** Converting boolean strings to booleans types in registration */
-    registration.travelReimbursement = registration.travelReimbursement && registration.travelReimbursement === 'true';
-
-    registration.firstHackathon = registration.firstHackathon && registration.firstHackathon === 'true';
-
-    registration.eighteenBeforeEvent = registration.eighteenBeforeEvent && registration.eighteenBeforeEvent === 'true';
-
-    registration.mlhcoc = registration.mlhcoc && registration.mlhcoc === 'true';
-
-    registration.mlhdcp = registration.mlhdcp && registration.mlhdcp === 'true';
-  }
-
   public delete(id: UidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
@@ -75,13 +61,13 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
   }
 
-  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Registration[]>> {
+  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Registration>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.fields) {
@@ -92,18 +78,18 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .order('time', false);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Registration[]>(
+    return from(this.sql.query<Registration>(
       query.text,
       query.values,
-      { stream: false, cache: true },
+      { cache: true },
     ))
       .pipe(
-        map((event: Registration[]) => ({ result: 'Success', data: event })),
+        map((event: Registration[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Registration>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Registration[]>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -140,10 +126,10 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<Registration>(
       query.text,
       query.values,
-      { stream: true, cache: true },
+      { cache: true },
     ))
       .pipe(
-        map((registrationStream: Stream<Registration>) => ({ result: 'Success', data: registrationStream })),
+        map((registrations: Registration[]) => ({ result: 'Success', data: registrations })),
       )
       .toPromise();
   }
@@ -152,9 +138,9 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     const query = (await this.getCountQuery(opts)).toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
@@ -194,7 +180,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
@@ -217,7 +203,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: true })),
     ).toPromise();
@@ -237,7 +223,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
@@ -262,15 +248,15 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<Registration>(
       query.text,
       query.values,
-      { stream: false, cache: true },
+      { cache: true },
     ))
       .pipe(
-        map((event: Registration) => ({ result: 'Success', data: event })),
+        map((event: Registration[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
 
-  public async getRegistrationStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats>> {
+  public async getRegistrationStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats[]>> {
     const columnNames = [
       'academic_year',
       'coding_experience',
@@ -283,6 +269,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       'veteran',
     ];
     let queryBuilder;
+    // tslint:disable-next-line:prefer-for-of
     for (let i = 0; i < columnNames.length; i += 1) {
       queryBuilder = !queryBuilder ?
         await this.getSelectQueryForOptionName(columnNames[i], opts) :
@@ -293,10 +280,10 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<IRegistrationStats>(
       query.text,
       query.values,
-      { stream: true, cache: true },
+      { cache: true },
     ))
       .pipe(
-        map((event: IRegistrationStats) => ({ result: 'Success', data: event })),
+        map((event: IRegistrationStats[]) => ({ result: 'Success', data: event })),
       )
       .toPromise();
   }
@@ -314,7 +301,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<string>(
       query.text,
       query.values,
-      { stream: false, cache: true },
+      { cache: true },
     ))
       .pipe(
         map((email: string) => ({ result: 'Success', data: email })),

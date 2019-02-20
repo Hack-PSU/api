@@ -2,11 +2,10 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import tsStream, { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
-import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { AuthLevel } from '../../services/auth/auth-types';
+import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
@@ -59,7 +58,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public getAll(opts?: IUowOpts): Promise<IDbResult<tsStream<ExtraCreditAssignment>>> {
+  public getAll(opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName);
     if (opts && opts.startAt) {
@@ -71,10 +70,10 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
       .toParam()
 
-      query.text = query.text.concat(';');
-    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { stream: true, cache: true }))
+    query.text = query.text.concat(';');
+    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: true }))
       .pipe(
-        map((classes: Stream<ExtraCreditAssignment>) => ({ result: 'Success', data: classes })),
+        map((classes: ExtraCreditAssignment[]) => ({ result: 'Success', data: classes })),
       )
       .toPromise();
   }
@@ -83,7 +82,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public async getAllClasses(opts?: IUowOpts): Promise<IDbResult<Stream<ExtraCreditClass>>> {
+  public async getAllClasses(opts?: IUowOpts): Promise<IDbResult<ExtraCreditClass[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.classesTableName);
     if (opts && opts.startAt) {
@@ -96,9 +95,9 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toParam()
 
       query.text = query.text.concat(';');
-    return from(this.sql.query<ExtraCreditClass>(query.text, query.values, { stream: true, cache: true }))
+    return from(this.sql.query<ExtraCreditClass>(query.text, query.values, { cache: true }))
       .pipe(
-        map((classes: Stream<ExtraCreditClass>) => ({ result: 'Success', data: classes })),
+        map((classes: ExtraCreditClass[]) => ({ result: 'Success', data: classes })),
       )
       .toPromise();
   }
@@ -115,7 +114,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();

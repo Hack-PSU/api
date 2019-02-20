@@ -1,6 +1,6 @@
-import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
+import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
 import { Event, EventType } from '../../../lib/models/event';
 import { EventDataMapperImpl } from '../../../lib/models/event/event-data-mapper-impl';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
@@ -9,25 +9,24 @@ import { IDataMapper } from '../../../lib/services/database';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
 
-// GLOBAL REQUIREMENTS
-function mockedQuery<T>(query, params) {
-  // @ts-ignore
-  return Promise.resolve({ query, params });
-}
-
 let eventDataMapper: IDataMapper<Event>;
-let mysqlUow;
+let mysqlUow: MysqlUow;
+const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
 
 describe('TEST: Event Data Mapper', () => {
 
   beforeEach(() => {
     // Configure Mock MysqlUow
-    mysqlUow = Substitute.for<MysqlUow>();
+    when(mysqlUowMock.query(anyString(), anything(), anything()))
+      .thenResolve([]);
+    mysqlUow = instance(mysqlUowMock);
     // Configure Event Data Mapper
     eventDataMapper = new EventDataMapperImpl(acl, mysqlUow, new Logger());
-    // Configure mocked methods for mysql
-    mysqlUow.query().mimicks(mockedQuery);
+  });
+
+  afterEach(() => {
+    reset(mysqlUowMock);
   });
 
   describe('TEST: Event read', () => {
@@ -36,13 +35,16 @@ describe('TEST: Event Data Mapper', () => {
       // GIVEN: An event with a valid ID to read from
       const uid = 'test uid';
       // WHEN: Retrieving data for this event
-      const result = await eventDataMapper.get(uid);
+      await eventDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT * FROM `EVENTS` WHERE (uid= ?);';
       const expectedParams = [uid];
-      expect((result.data as any).query).to.equal(expectedSQL);
-      expect((result.data as any).params).to.deep.equal(expectedParams);
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
@@ -52,11 +54,16 @@ describe('TEST: Event Data Mapper', () => {
       // GIVEN: An event with a valid ID to read from
       const uid = 'test uid';
       // WHEN: Retrieving data for this event
-      const result = await eventDataMapper.delete(uid);
+      await eventDataMapper.delete(uid);
 
-      // THEN: A successful delete operation causes a successful response
-      expect(result.data).to.equal(undefined);
-      expect(result.result).to.equal('Success');
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'DELETE FROM `EVENTS` WHERE (uid = ?);';
+      const expectedParams = [uid];
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
@@ -69,7 +76,9 @@ describe('TEST: Event Data Mapper', () => {
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT COUNT(uid) AS "count" FROM `EVENTS`;';
-      expect((result.data as any).query).to.equal(expectedSQL);
+      const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
     });
   });
 
@@ -85,10 +94,25 @@ describe('TEST: Event Data Mapper', () => {
         eventType: EventType.WORKSHOP,
       });
       // WHEN: Retrieving number of events
-      const result = await eventDataMapper.insert(testEvent);
+      await eventDataMapper.insert(testEvent);
 
-      // THEN: Returns inserted event
-      expect((result.data as any)).to.equal(testEvent);
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'INSERT INTO `EVENTS` (`uid`, `event_location`, `event_start_time`, ' +
+        '`event_end_time`, `event_title`, `event_description`, `event_type`) VALUES (?, ?, ?, ?, ?, ?, ?);';
+      const expectedParams = [
+        testEvent.uid,
+        testEvent.event_location,
+        testEvent.event_start_time,
+        testEvent.event_end_time,
+        testEvent.event_title,
+        testEvent.event_description,
+        testEvent.event_type,
+      ];
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 
@@ -105,10 +129,27 @@ describe('TEST: Event Data Mapper', () => {
         uid: 'test uid',
       });
       // WHEN: Retrieving number of events
-      const result = await eventDataMapper.update(testEvent);
+      await eventDataMapper.update(testEvent);
 
-      // THEN: Returns inserted event
-      expect((result.data as any)).to.equal(testEvent);
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'UPDATE `EVENTS` SET `uid` = ?, `event_location` = ?, ' +
+        '`event_start_time` = ?, `event_end_time` = ?, `event_title` = ?,' +
+        ' `event_description` = ?, `event_type` = ? WHERE (uid = ?);';
+      const expectedParams = [
+        testEvent.uid,
+        testEvent.event_location,
+        testEvent.event_start_time,
+        testEvent.event_end_time,
+        testEvent.event_title,
+        testEvent.event_description,
+        testEvent.event_type,
+        testEvent.uid,
+      ];
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
 });

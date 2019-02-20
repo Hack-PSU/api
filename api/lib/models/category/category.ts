@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
-import BaseObject from '../BaseObject';
 import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
+import BaseObject from '../BaseObject';
 
 const categorySchema = jsonAssetLoader('categorySchema');
 

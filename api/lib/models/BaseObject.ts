@@ -3,10 +3,10 @@ import ajv from 'ajv';
 
 const ajvValidator = new ajv();
 /**
- * @Abstract
- * @type {BaseObject}
+ * @class BaseObject
+ * The base object definition for any table in the database
  */
-export default abstract class BaseObject {
+export default abstract class  BaseObject {
 
   /**
    * Returns a representation of the object that can be added directly to the database
@@ -18,7 +18,7 @@ export default abstract class BaseObject {
   public get dbRepresentation() {
     return Object.entries(this)
       .filter(kv => !this.disallowedPropertiesInternal.has(kv[0]))
-      .filter(kv => kv[1])
+      .filter(kv => kv[1] !== undefined || kv[1] !== null)
       .reduce((accumulator, currentValue) => {
         accumulator[currentValue[0]] = currentValue[1];
         return accumulator;
@@ -57,6 +57,7 @@ export default abstract class BaseObject {
   /**
    *
    * @returns {*} The primary key value for this object type
+   * @abstract
    */
   public abstract get id();
 
@@ -69,6 +70,7 @@ export default abstract class BaseObject {
 
   /**
    * @returns {any} The AJV validation schema
+   * @abstract
    */
   protected abstract get schema(): any;
 
@@ -89,7 +91,7 @@ export default abstract class BaseObject {
   //     .toString()
   //     .concat(';');
   //   const params = [];
-  //   return uow.query(query, params, { stream: true, cache: true });
+  //   return uow.query(query, params, { , cache: true });
   // }
 
   // /**
@@ -106,7 +108,7 @@ export default abstract class BaseObject {
   //     .toString()
   //     .concat(';');
   //   const params = [];
-  //   return uow.query(query, params, { stream: true, cache: true });
+  //   return uow.query(query, params, { , cache: true });
   // }
 
   /*********** PROPERTIES *************/
@@ -145,7 +147,7 @@ export default abstract class BaseObject {
   //  */
   // public get(opts?: IUowOpts) {
   //   if (opts && opts.query) {
-  //     return this.uow.query(opts.query.text, opts.query.values, { stream: false, cache: true });
+  //     return this.uow.query(opts.query.text, opts.query.values, { cache: true });
   //   }
   //   const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
   //     .from(this.tableName)
@@ -153,7 +155,7 @@ export default abstract class BaseObject {
   //     .where(`${this.columnName}= ?`, this.id)
   //     .toParam();
   //   query.text = query.text.concat(';');
-  //   return this.uow.query(query.text, query.values, { stream: false, cache: true });
+  //   return this.uow.query(query.text, query.values, { cache: true });
   // }
 
   // /**
@@ -162,7 +164,7 @@ export default abstract class BaseObject {
   //  */
   // public add(opts?: IUowOpts) {
   //   if (opts && opts.query) {
-  //     return this.uow.query(opts.query.text, opts.query.values, { stream: false, cache: false });
+  //     return this.uow.query(opts.query.text, opts.query.values, { cache: false });
   //   }
   //   const validation = this.validate();
   //   if (!validation.result) {
@@ -175,7 +177,7 @@ export default abstract class BaseObject {
   //     .setFieldsRows([this.dbRepresentation])
   //     .toParam();
   //   query.text = query.text.concat(';');
-  //   return this.uow.query(query.text, query.values, { stream: false, cache: false });
+  //   return this.uow.query(query.text, query.values, { cache: false });
   // }
 
   // /**
@@ -184,7 +186,7 @@ export default abstract class BaseObject {
   //  */
   // public update(opts?: IUowOpts) {
   //   if (opts && opts.query) {
-  //     return this.uow.query(opts.query.text, opts.query.values, { stream: false, cache: false });
+  //     return this.uow.query(opts.query.text, opts.query.values, { cache: false });
   //   }
   //   const validation = this.validate();
   //   if (!validation.result) {
@@ -196,7 +198,7 @@ export default abstract class BaseObject {
   //     .where(`${this.columnName} = ?`, this.id)
   //     .toParam();
   //   query.text = query.text.concat(';');
-  //   return this.uow.query(query.text, query.values, { stream: false, cache: false });
+  //   return this.uow.query(query.text, query.values, { cache: false });
   // }
 
   // /**
@@ -205,7 +207,7 @@ export default abstract class BaseObject {
   //  */
   // public delete(opts?: IUowOpts) {
   //   if (opts && opts.query) {
-  //     return this.uow.query(opts.query.text, opts.query.values, { stream: false, cache: false });
+  //     return this.uow.query(opts.query.text, opts.query.values, { cache: false });
   //   }
   //
   //   const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
@@ -214,6 +216,6 @@ export default abstract class BaseObject {
   //     .toParam();
   //   query.text = query.text.concat(';');
   //
-  //   return this.uow.query(query.text, query.values, { stream: false, cache: false });
+  //   return this.uow.query(query.text, query.values, { cache: false });
   // }
 }

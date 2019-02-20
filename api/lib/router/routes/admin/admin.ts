@@ -1,19 +1,16 @@
-import ajv, { ErrorObject } from 'ajv';
 import { validate } from 'email-validator';
 import { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { IExpressController, ResponseBody } from '../..';
-import jsonAssetLoader from '../../../assets/schemas/json-asset-loader';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IAdminDataMapper } from '../../../models/admin';
 import { ExtraCreditAssignment } from '../../../models/extra-credit/extra-credit-assignment';
+import { IAdminProcessor } from '../../../processors/admin-processor';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDataMapper } from '../../../services/database';
 import { ParentRouter } from '../../router-types';
-
-const emailObjectSchema = jsonAssetLoader('emailObjectSchema');
 
 @Injectable()
 export class AdminController extends ParentRouter implements IExpressController {
@@ -43,32 +40,13 @@ export class AdminController extends ParentRouter implements IExpressController 
     return next();
   }
 
-  private static validateEmails(emails: any[]): { goodEmails: any[]; badEmails: any[] } {
-    // Run validation
-    const validator = new ajv({ allErrors: true });
-    const validateFunction = validator.compile(emailObjectSchema);
-    const goodEmails: any[] = [];
-    const badEmails: any[] = [];
-    emails.map((emailObject) => {
-      if (validate(emailObject)) {
-        goodEmails.push(emailObject);
-      } else {
-        badEmails.push({
-          ...emailObject,
-          error: validator.errorsText(validateFunction.errors as ErrorObject[]),
-        });
-      }
-      return true;
-    });
-    return { goodEmails, badEmails };
-  }
-
   public router: Router;
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IAdminDataMapper') private readonly adminDataMapper: IAdminDataMapper,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,
+    @Inject('IAdminProcessor') private readonly adminProcessor: IAdminProcessor,
     @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IDataMapper<ExtraCreditAssignment>,
     @Inject('IExtraCreditDataMapper') private readonly extraCreditAcl: IAclPerm,
   ) {
@@ -83,9 +61,9 @@ export class AdminController extends ParentRouter implements IExpressController 
     }
     // Use authentication
     app.use('/scanner', Util.getInstance('AdminScannerController').router);
+    app.use('/checkout', Util.getInstance('AdminCheckoutController').router);
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     app.use((req, res, next) => AdminController.parseCommonRequestFields(req, res, next));
-    // AdminController.registerRouter('checkout', 'CheckoutController');
     AdminController.registerRouter('register', 'AdminRegisterController', 2);
     AdminController.registerRouter('data', 'AdminStatisticsController', 2);
     AdminController.registerRouter('hackathon', 'AdminHackathonController', 2);
@@ -115,31 +93,37 @@ export class AdminController extends ParentRouter implements IExpressController 
 
   /**
    * @api {get} /admin/ Get Authentication Status
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Authentication Status
    * @apiGroup Admin
    * @apiPermission TeamMemberPermission
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {String} Authorized admin
+   * @apiSuccess {UserRecord} User details including privilege level
+   * @apiUse ResponseBodyDescription
    */
   private mainHandler(res: Response) {
-    const r = new ResponseBody('Authorized admin', 200, { result: 'success', data: {} });
+    const r = new ResponseBody(
+      'Authorized admin',
+      200,
+      { result: 'Success', data: res.locals.user },
+    );
     return this.sendResponse(res, r);
   }
 
   /**
    * @api {get} /admin/userid Get the uid corresponding to an email
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get User Id
    * @apiGroup Admin
    * @apiPermission DirectorPermission
    *
    * @apiUse AuthArgumentRequired
    * @apiParam {string} email The email to query user id by
-   * @apiSuccess {object} Object {uid, displayName}
+   * @apiSuccess {UserRecord} Object {uid, displayName, privilege, admin}
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async getUserIdHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.query ||
@@ -165,7 +149,7 @@ export class AdminController extends ParentRouter implements IExpressController 
 
   /**
    * @api {post} /admin/email Send communication email to recipients
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Send communication emails
    *
    * @apiGroup Admin
@@ -196,6 +180,7 @@ export class AdminController extends ParentRouter implements IExpressController 
    *                  }
    * @apiSuccess (200) {Object[]} Responses All responses from the emails sent
    * @apiSuccess (207) {Object[]} Partial-Success An array of success responses as well as failure objects
+   * @apiUse ResponseBodyDescription
    */
 
   /**
@@ -226,58 +211,16 @@ export class AdminController extends ParentRouter implements IExpressController 
         next,
       );
     }
-    const { goodEmails, badEmails } = AdminController.validateEmails(req.body.emails);
-
-    if (goodEmails.length === 0) {
-      // Respond with error immediately
-      return Util.standardErrorHandler(
-        new HttpError(
-          'Emails could not be parsed properly',
-          400,
-        ),
-        next,
-      );
-    }
-    // Send the good emails
+    // Send the emails
     try {
-      const { successfulEmails, failedEmails } = await this.adminDataMapper.sendEmails(
-        goodEmails,
+      const response = await this.adminProcessor.validateAndSendEmails(
+        req.body.emails,
         req.body.html,
         req.body.subject,
         req.body.fromEmail,
         res.locals.user.uid,
       );
-      const totalFailures = badEmails.concat(failedEmails);
-      // If all failed, respond accordingly
-      if (successfulEmails.length === 0) {
-        return Util.errorHandler500(
-          new HttpError(
-            { failures: totalFailures, text: 'Could not send emails' },
-            500,
-          ),
-          next,
-        );
-      }
-
-      await this.adminDataMapper.addEmailHistory(successfulEmails, totalFailures);
-      if (totalFailures.length !== 0) {
-        return this.sendResponse(
-          res,
-          new ResponseBody(
-            'Some emails failed to send',
-            207,
-            { result: 'partial success', data: { successfulEmails, totalFailures } },
-          ),
-        );
-      }
-      return this.sendResponse(
-        res,
-        new ResponseBody(
-          'Successfully sent all emails',
-          200,
-          { result: 'success', data: successfulEmails },
-        ),
-      );
+      return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
@@ -285,7 +228,7 @@ export class AdminController extends ParentRouter implements IExpressController 
 
   /**
    * @api {post} /admin/makeadmin Change a user's privileges
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Elevate user
    *
    * @apiGroup Admin
@@ -294,8 +237,8 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiUse AuthArgumentRequired
    * @apiParam {String} uid The UID or email of the user to change admin privileges
    * @apiParam {Number} privilege The privilege level to set to {1: Volunteer, 2: Team Member, 3: Exec, 4: Tech-Exec, 5: Finance Director}
-   * @apiSuccess {String} Success
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async makeAdminHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.body || !req.body.uid) {
@@ -330,17 +273,18 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {post} /admin/extra_credit setting user with the class they are receiving extra credit
+   * @api {post} /admin/extra_credit Track an extra credit class for a student
    * @apiName Assign Extra Credit
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiGroup Admin
    * @apiPermission DirectorPermission
    *
    * @apiParam {String} uid - the id associated with the student
    * @apiParam {String} cid - the id associated with the class
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
+   * @apiSuccess {ExtraCreditAssignment} The inserted extra credit assignment
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async addExtraCreditAssignmentHandler(
     req: Request,

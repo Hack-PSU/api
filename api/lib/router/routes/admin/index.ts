@@ -10,4 +10,4 @@ export {
   AdminHackathonController,
   AdminRegisterController,
   AdminStatisticsController,
-};
+  };

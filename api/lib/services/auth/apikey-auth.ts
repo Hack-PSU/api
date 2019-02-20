@@ -4,6 +4,8 @@ import randomNumberCsprng from 'random-number-csprng';
 import { default as uuid } from 'uuid/v4';
 import { HttpError } from '../../JSCommon/errors';
 import { IFirebaseService } from '../common/firebase/firebase-types/firebase-service';
+import { RateLimiter } from '../common/rate-limiter/rate-limiter';
+import { RateLimiterService } from '../common/rate-limiter/rate-limiter.service';
 import { Apikey, IApikeyAuthService, IApiToken, IPinAuthenticator } from './auth-types';
 
 @Injectable()
@@ -16,6 +18,7 @@ export class ApikeyAuthService implements IApikeyAuthService {
   private static validatePinAuthenticator(pin: IPinAuthenticator): boolean {
     return pin.valid && moment(pin.expiryTime).isAfter(moment());
   }
+  private rateLimiter: RateLimiter;
 
   private db: FirebaseFirestore.Firestore;
   private readonly APIKEY_COLLECTION = 'apikey';
@@ -24,8 +27,10 @@ export class ApikeyAuthService implements IApikeyAuthService {
 
   constructor(
     @Inject('FirebaseService') private firebaseService: IFirebaseService,
+    @Inject('RateLimiterService') private rateLimiterService: RateLimiterService,
   ) {
     this.db = this.firebaseService.admin.firestore();
+    this.rateLimiter = rateLimiterService.instance(200);
   }
 
   public async checkAuthentication(token?: Apikey, macAddress?: string): Promise<boolean> {
@@ -67,6 +72,7 @@ export class ApikeyAuthService implements IApikeyAuthService {
   }
 
   public async checkPinAuthentication(pin: number): Promise<boolean> {
+    this.rateLimiter.makeRequest();
     const doc = await this.db.collection(this.PINS_COLLECTION).doc(pin.toString()).get();
     if (!doc.exists) {
       return false;

@@ -1,6 +1,6 @@
 {
   "name": "hackpsu-api",
-  "version": "0.2.1",
+  "version": "2.0.0",
   "engines": {
     "node": "~8"
   },
@@ -8,18 +8,17 @@
   "scripts": {
     "build": "tsc",
     "dev": "nodemon ./dist/bin/www",
-    "start": "grunt && node ./dist/bin/www",
+    "start": "node ./dist/bin/www",
     "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls",
     "watch": "grunt && nodemon ./dist/bin/www --inspect",
     "test": "nyc mocha",
     "prod": "APP_ENV=prod npnm run build && npm start",
     "apidoc": "apidoc -i ./lib/router -o dist/doc/",
     "debug": "node --inspect ./dist/bin/www",
-    "prepare": "npm run gcp-build",
-    "pretest": "npm run gcp-build",
+    "prepare": "tsc -p .",
+    "pretest": "tsc -p .",
     "posttest": "npm run coveralls",
-    "lint": "tslint -p .",
-    "gcp-build": "tsc -p ."
+    "lint": "tslint -p ."
   },
   "nyc": {
     "extension": [
@@ -43,7 +42,7 @@
     "all": true
   },
   "dependencies": {
-    "@fluffy-spoon/substitute": "1.0.66",
+    "@fluffy-spoon/substitute": "1.70.0",
     "@google-cloud/debug-agent": "2.6.0",
     "@google-cloud/logging-bunyan": "0.9.5",
     "@google-cloud/monitoring": "0.5.0",
@@ -65,21 +64,28 @@
     "chance": "1.0.16",
     "cookie-parser": "~1.4.3",
     "cors": "2.8.5",
+    "dev-null": "latest",
     "dotenv": "6.0.0",
     "email-validator": "1.2.3",
     "express": "4.16.3",
     "express-query-boolean": "latest",
     "firebase": "5.5.5",
     "firebase-admin": "5.12.0",
+    "grunt": "1.0.3",
+    "grunt-contrib-copy": "1.0.0",
+    "grunt-env": "0.4.4",
+    "grunt-exec": "3.0.0",
+    "grunt-run": "0.8.1",
     "helmet": "3.12.1",
     "injection-js": "2.2.1",
-    "lodash": "4.17.10",
+    "limiter": "1.1.4",
+    "lodash": "4.17.11",
     "mailchimp-api-v3": "1.12.0",
-    "mocha": "5.2.0",
     "moment": "2.24.0",
     "multer": "1.4.1",
     "multer-google-storage": "1.2.1",
     "mysql": "2.15.0",
+    "node-cipher": "6.3.3",
     "node-time-uuid": "0.1.5",
     "pug": "2.0.3",
     "random-number-csprng": "1.0.2",
@@ -91,9 +97,7 @@
     "source-map-support": "0.5.9",
     "squel": "5.12.2",
     "streaming-json-stringify": "3.1.0",
-    "ts-stream": "2.0.0",
-    "tslint": "5.11.0",
-    "tslint-config-airbnb": "5.11.0",
+    "typescript": "3.2.2",
     "uuid": "3.2.1"
   },
   "devDependencies": {
@@ -105,24 +109,19 @@
     "eslint-config-airbnb-base": "12.1.0",
     "eslint-plugin-import": "2.9.0",
     "eslint-plugin-json": "1.2.0",
-    "grunt": "1.0.3",
-    "grunt-contrib-copy": "1.0.0",
-    "grunt-env": "0.4.4",
-    "grunt-exec": "3.0.0",
-    "grunt-run": "0.8.1",
     "mocha": "5.2.0",
-    "node-cipher": "6.3.3",
     "nodemon": "1.18.4",
-    "nyc": "13.1.0",
+    "nyc": "13.3.0",
+    "ts-mockito": "2.3.1",
     "ts-node": "7.0.1",
-    "typescript": "3.2.2",
-    "typings": "2.1.1"
+    "tslint": "5.11.0",
+    "tslint-config-airbnb": "5.11.0"
   },
   "apidoc": {
     "name": "HackPSU RESTful Web API",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "RESTFul API for all HackPSU connections",
-    "url": "https://api.hackpsu.org/v1",
+    "url": "https://api.hackpsu.org/v2",
     "header": {
       "title": "HackPSU RESTful Web API",
       "file": "header.md"

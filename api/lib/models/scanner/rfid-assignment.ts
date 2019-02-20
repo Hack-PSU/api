@@ -11,6 +11,11 @@ interface IRfidAssignmentApiModel {
   hackathon?: UidType;
 }
 
+/**
+ * @class RfidAssignment
+ * @extends BaseObject
+ * An assignment for an rfid band to a user
+ */
 export class RfidAssignment extends BaseObject {
   public get id(): string | number {
     return this.rfid_uid;

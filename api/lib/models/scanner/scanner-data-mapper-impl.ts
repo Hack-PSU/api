@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import tsStream from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -69,11 +68,41 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('This method is not supported by this class');
   }
 
-  public get(object: UidType, opts?: IUowOpts): Promise<IDbResult<RfidAssignment>> {
-    throw new MethodNotImplementedError('This method is not supported by this class');
+  /**
+   * Returns an RFID assignment object from a wid
+   */
+  public async get(wid: UidType, opts?: IUowOpts): Promise<IDbResult<RfidAssignment>> {
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName);
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon.uid = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    queryBuilder = queryBuilder
+      .where(`${this.pkColumnName}= ?`, wid);
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<RfidAssignment>(query.text, query.values, { cache: true }))
+      .pipe(
+        map((rfidAssignment: RfidAssignment[]) => ({ result: 'Success', data: rfidAssignment[0] })),
+      )
+      .toPromise();
   }
 
-  public getAll(opts?: IUowOpts): Promise<IDbResult<tsStream<RfidAssignment>>> {
+  public getAll(opts?: IUowOpts): Promise<IDbResult<any[]>> {
     throw new MethodNotImplementedError('this action is not supported');
   }
 
@@ -99,7 +128,7 @@ export class ScannerDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
@@ -152,7 +181,7 @@ export class ScannerDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: scan.cleanRepresentation })),
     ).toPromise();

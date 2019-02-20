@@ -287,7 +287,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiName Get Attendance by event
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
-   * @apiParam [event] {String} The uid of an event to filter by
+   * @apiParam [uid] {String} The uid of an event to filter by
    * @apiUse AuthArgumentRequired
    *
    * @apiSuccess {EventUid-Registration[]} All Attendance data aggregated by event
@@ -302,7 +302,36 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
-        event: req.query.event,
+        uid: req.query.uid,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /admin/data/?type=attendance&aggregator=user Get all attendance data by user
+   * @apiVersion 2.0.0
+   * @apiName Get Attendance by user
+   * @apiGroup Admin Statistics
+   * @apiPermission TeamMemberPermission
+   * @apiParam [uid] {String} The uid of a user to filter by
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {UserUid-Event[]} All Attendance data aggregated by event
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
+   */
+  private async getAttendanceByUserHandler(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await this.attendanceDataMapper.getAttendanceByUser({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+        uid: req.query.uid,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -372,6 +401,8 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         switch (req.query.aggregator) {
           case 'event':
             return this.getAttendanceByEventHandler(req, res, next);
+          case 'user':
+            return this.getAttendanceByUserHandler(req, res, next);
           default:
             return this.getAttendanceHandler(res, next);
         }

@@ -3,7 +3,7 @@ import { default as _ } from 'lodash';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { IEventStatUowOpts } from '.';
+import { IStatUowOpts } from '.';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -19,7 +19,9 @@ import { Attendance } from './attendance';
 export const TABLE_NAME = 'ATTENDANCE';
 
 export interface IAttendanceDataMapper extends IDataMapper<Attendance> {
-  getAttendanceByEvent(opts?: IEventStatUowOpts): Promise<{ result: string; data: any }>;
+  getAttendanceByEvent(opts?: IStatUowOpts): Promise<{ result: string; data: any }>;
+
+  getAttendanceByUser(opts?: IStatUowOpts): Promise<{ result: string; data: any }>;
 }
 
 /**
@@ -178,7 +180,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public async getAttendanceByEvent(opts?: IEventStatUowOpts) {
+  public async getAttendanceByUser(opts?: IStatUowOpts) {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -215,8 +217,77 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
             .toPromise()),
       );
     }
-    if (opts && opts.event) {
-      queryBuilder = queryBuilder.where('attendance.event_uid = ?', opts.event);
+    if (opts && opts.uid) {
+      queryBuilder = queryBuilder.where('attendance.user_uid = ?', opts.uid);
+    }
+    const query = queryBuilder
+      .order('event_start_time')
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query<any>(query.text, query.values, { cache: true }),
+    ).pipe(
+      map((result: Attendance[]) => {
+        // Reduce the result to a condensed object
+        return result.reduce(
+          (currentAggregation, nextAttendance) => {
+            if (currentAggregation[nextAttendance.user_uid]) {
+              currentAggregation[nextAttendance.user_uid].events
+                .push(AttendanceDataMapperImpl.extractEventDetails(nextAttendance));
+            } else {
+              currentAggregation[nextAttendance.user_uid] = {
+                ...AttendanceDataMapperImpl.extractRegistrationDetails(nextAttendance),
+                events: [AttendanceDataMapperImpl.extractEventDetails(nextAttendance)],
+              };
+            }
+            return currentAggregation;
+          },
+          {},
+        );
+      }),
+      map((result: any) => ({ result: 'Success', data: result })),
+    ).toPromise();
+  }
+
+  public async getAttendanceByEvent(opts?: IStatUowOpts) {
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName, 'attendance')
+      .join(
+        this.registerDataMapper.tableName,
+        'registration',
+        'attendance.user_uid = registration.uid',
+      )
+      .distinct();
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder.where(
+        'hackathon_id = ?',
+        await (opts.hackathon ?
+          Promise.resolve(opts.hackathon) :
+          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+            .toPromise()),
+      );
+      queryBuilder = queryBuilder.where(
+        'registration.hackathon = ?',
+        await (opts.hackathon ?
+          Promise.resolve(opts.hackathon) :
+          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+            .toPromise()),
+      );
+    }
+    if (opts && opts.uid) {
+      queryBuilder = queryBuilder.where('attendance.event_uid = ?', opts.uid);
     }
     const query = queryBuilder
       .toParam();

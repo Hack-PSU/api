@@ -5,7 +5,7 @@ import { map } from 'rxjs/operators';
 import squel from 'squel';
 import { IEmail } from '.';
 import { UidType } from '../../JSCommon/common-types';
-import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
+import { HttpError } from '../../JSCommon/errors';
 import { ICustomPermissions } from '../../services/auth';
 import { AuthLevel, IFirebaseAuthService } from '../../services/auth/auth-types';
 import { IAcl, IAdminAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -13,14 +13,13 @@ import { IEmailService } from '../../services/communication/email';
 import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
-import { IUowOpts } from '../../services/database/svc/uow.service';
 import { IAdminDataMapper } from './index';
 import { EmailHistory } from './types/email-history';
 import UserRecord = admin.auth.UserRecord;
 
 @Injectable()
-export class AdminDataMapperImpl extends GenericDataMapper implements IAdminDataMapper,
-                                                                      IAdminAclPerm {
+export class AdminDataMapperImpl extends GenericDataMapper
+  implements IAdminDataMapper, IAdminAclPerm {
   public GET_EMAIL: string = 'admin:get_email';
   public SEND_EMAIL: string = 'admin:send_email';
   public CREATE: string = 'admin:create';
@@ -56,30 +55,6 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
       undefined,
       [AuthLevel[AuthLevel.DIRECTOR]],
     );
-  }
-
-  public delete(object: UidType | any): Promise<IDbResult<void>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
-  public get(object: UidType, opts?: IUowOpts): Promise<IDbResult<any>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
-  public getAll(opts?: IUowOpts): Promise<IDbResult<any[]>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
-  public getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
-  public insert(object: any): Promise<IDbResult<any>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
-  public update(object: any): Promise<IDbResult<any>> {
-    throw new MethodNotImplementedError('this action is not supported');
   }
 
   public async getEmailFromId(id: UidType): Promise<IDbResult<UserRecord>> {
@@ -150,6 +125,7 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
         ...(failedEmails.map(email => email.dbRepresentation)),
       ])
       .toParam();
+    query.text = query.text.concat(';');
     return from(
       this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(

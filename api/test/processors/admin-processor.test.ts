@@ -3,9 +3,10 @@ import { expect } from 'chai';
 // tslint:disable-next-line:import-name
 import _ from 'lodash';
 import 'mocha';
-import { instance, mock, reset, verify } from 'ts-mockito';
+import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { HttpError } from '../../lib/JSCommon/errors';
 import { AdminDataMapperImpl } from '../../lib/models/admin';
+import { EmailHistory } from '../../lib/models/admin/types/email-history';
 import { AdminProcessor } from '../../lib/processors/admin-processor';
 
 // Global mocks
@@ -96,6 +97,21 @@ describe('TEST: Admin Processor', () => {
   });
 
   describe('TEST: Send emails', () => {
+    before(() => {
+      when(adminDMMock.sendEmails(anything(), anything(), anything(), anything(), anything()))
+        .thenResolve({
+          successfulEmails: [new EmailHistory(
+            'test uid',
+            'test recpient',
+            'test content',
+            'test subject',
+            'test name',
+            Date.now(),
+            'success',
+          )], failedEmails: [],
+        });
+      adminDataMapper = instance(adminDMMock);
+    });
     it('it processes a valid list of emails to send', async () => {
       // GIVEN: An admin processor
       const adminProcessor = new AdminProcessor(
@@ -131,6 +147,8 @@ describe('TEST: Admin Processor', () => {
         'test uid',
         'test@email.com',
       )).once();
+      // THEN: The emails were added to the email sending history
+      verify(adminDMMock.addEmailHistory(anything(), anything())).once();
     });
   });
 });

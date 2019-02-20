@@ -1,5 +1,5 @@
 /* eslint-disable max-len,no-param-reassign,consistent-return */
-router.use('/checkout', checkout);
+// router.use('/checkout', checkout);
 
 /** ********************** ROUTES ******************************** */
 

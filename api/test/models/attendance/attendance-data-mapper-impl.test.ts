@@ -8,6 +8,7 @@ import { Attendance } from '../../../lib/models/attendance/attendance';
 import { AttendanceDataMapperImpl } from '../../../lib/models/attendance/attendance-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
+import { IRegisterDataMapper } from '../../../lib/models/register';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { IDataMapper } from '../../../lib/services/database';
@@ -16,6 +17,7 @@ import { Logger } from '../../../lib/services/logging/logging';
 
 let attendanceDataMapper: IDataMapper<Attendance>;
 let activeHackathonDataMapper;
+let registerDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
@@ -31,6 +33,7 @@ describe('TEST: Attendance data mapper', () => {
       uid: 'test uid',
     })));
     activeHackathonDataMapper.tableName.returns('HACKATHON');
+    registerDataMapper = Substitute.for<IRegisterDataMapper>();
   });
 
   describe('TEST: Attendance read all', () => {
@@ -44,6 +47,7 @@ describe('TEST: Attendance data mapper', () => {
         acl,
         mysqlUow,
         activeHackathonDataMapper,
+        registerDataMapper,
         new Logger(),
       );
     });
@@ -161,6 +165,7 @@ describe('TEST: Attendance data mapper', () => {
         acl,
         mysqlUow,
         activeHackathonDataMapper,
+        registerDataMapper,
         new Logger(),
       );
     });

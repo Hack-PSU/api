@@ -4,7 +4,6 @@ import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Stream } from 'ts-stream';
 import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
 import {
@@ -124,7 +123,7 @@ describe('TEST: Register data mapper', () => {
   describe('TEST: Registration read all', () => {
     beforeEach(() => {
       when(mysqlUowMock.query(anyString(), anything(), anything()))
-        .thenResolve(Stream.from<Registration>([]));
+        .thenResolve([]);
       mysqlUow = instance(mysqlUowMock);
       // Configure Register Data Mapper
       registerDataMapper = new RegisterDataMapperImpl(
@@ -290,7 +289,7 @@ describe('TEST: Register data mapper', () => {
       // GIVEN: A hackathon to read registrations for
       const hackathonUid = 'test uid';
       // WHEN: Counting registration data
-      const result = await registerDataMapper.getCount({
+      await registerDataMapper.getCount({
         byHackathon: true,
         hackathon: hackathonUid,
       });
@@ -629,7 +628,7 @@ describe('TEST: Register data mapper', () => {
         // GIVEN: A valid registration ID
         const uid = 'test registration';
         // WHEN: The current registration version is retrieved
-        const result = await registerDataMapper.getCurrent(uid, { fields: ['firstname'] });
+        await registerDataMapper.getCurrent(uid, { fields: ['firstname'] });
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT firstname, registration.pin - hackathon.base_pin AS "pin" FROM `REGISTRATION` `registration`' +
           ' INNER JOIN `HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid and hackathon.active = 1)' +
@@ -685,7 +684,7 @@ describe('TEST: Register data mapper', () => {
       // GIVEN: A registration data mapper
       // WHEN: The registration statistics are retrieved
       const hackathonUid = 'test hackathon';
-      const result = await registerDataMapper.getRegistrationStats({
+      await registerDataMapper.getRegistrationStats({
         byHackathon: true,
         hackathon: hackathonUid,
       });
@@ -739,7 +738,7 @@ describe('TEST: Register data mapper', () => {
       // GIVEN: A valid registration ID
       const uid = 'test registration';
       // WHEN: The current registration version is retrieved
-      const result = await registerDataMapper.getEmailByUid(uid);
+      await registerDataMapper.getEmailByUid(uid);
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT `email` FROM `REGISTRATION` WHERE (uid = ?);';
       const expectedParams = [uid];

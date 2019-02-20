@@ -12,6 +12,8 @@ import { MysqlUow } from '../../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../../services/database/svc/uow.service';
 import { IActiveHackathonDataMapper } from '../../hackathon/active-hackathon';
 import { IPreRegisterDataMapper, IRegisterDataMapper } from '../../register';
+import { IRsvpDataMapper } from '../../RSVP';
+import { IScannerDataMapper } from '../../scanner';
 import { IAdminStatisticsDataMapper, IUserCount, IUserStatistics } from './index';
 
 @Injectable()
@@ -33,6 +35,8 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     @Inject('MysqlUow') private readonly sql: MysqlUow,
     @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IPreRegisterDataMapper,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IRsvpDataMapper') private readonly rsvpDataMapper: IRsvpDataMapper,
+    @Inject('IScannerDataMapper') private readonly scannerDataMapper: IScannerDataMapper,
     @Inject('IActiveHackathonDataMapper') private readonly hackathonDataMapper: IActiveHackathonDataMapper,
   ) {
     super(acl);
@@ -44,78 +48,28 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     );
   }
 
-  public delete(object: UidType | any): Promise<IDbResult<void>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
-  public get(object: UidType, opts?: IUowOpts): Promise<IDbResult<any>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
-  public getAll(opts?: IUowOpts): Promise<IDbResult<any[]>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
-  public getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
-  public insert(object: any): Promise<IDbResult<any>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
-  public update(object: any): Promise<IDbResult<any>> {
-    throw new MethodNotImplementedError('this action is not supported');
-  }
-
   public async getUserCountByCategory(opts?: IUowOpts): Promise<IDbResult<IUserCount[]>> {
-    let query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(
-        // squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-        //   .from(this.preRegDataMapper.tableName, 'prereg')
-        //   .field('COUNT(prereg.uid)', 'pre_count'),
         this.preRegDataMapper.getCountQuery(),
         'a',
       )
       .join(
         await this.registerDataMapper.getCountQuery(opts),
-        // squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-        //     .from(this.registerDataMapper.tableName, 'registration')
-        //     .field('COUNT(registration.uid)', 'reg_count')
-        //     .join(
-        //       Hackathon.TABLE_NAME,
-        //       'hackathon',
-        //       'hackathon.uid = registration.hackathon AND hackathon.active = 1'
         'b',
       )
       .join(
-        // TODO: Change to a getCount query from an RSVP data mapper
-        squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-          .from('RSVP', 'rsvp')
-          .field('COUNT(rsvp.user_id)', 'rsvp_count')
-          .join(
-            'HACKATHON',
-            'hackathon',
-            'hackathon.uid = rsvp.hackathon AND hackathon.active = 1',
-          ),
+        await this.rsvpDataMapper.getCountQuery(opts),
         'c',
       )
       .join(
-        // TODO: Change to a getCount query from an scanner assignment data mapper
-        squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-          .from('RFID_ASSIGNMENTS', 'rfid')
-          .field('COUNT(rfid.user_uid)', 'checkin_count')
-          .join(
-            'HACKATHON',
-            'hackathon',
-            'hackathon.uid = rfid.hackathon AND hackathon.active = 1',
-          ),
+        await this.scannerDataMapper.getCountQuery(opts),
         'd',
       )
-      .toString();
-    query = query.concat(';');
+      .toParam();
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<IUserCount>(query, [], { cache: true }),
+      this.sql.query<IUserCount>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: IUserCount[]) => ({ result: 'Success', data: result })),
     ).toPromise();

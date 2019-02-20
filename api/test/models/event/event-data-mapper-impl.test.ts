@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Event, EventType } from '../../../lib/models/event';
+import { Event, EventType } from '../../../lib/models/event/event';
 import { EventDataMapperImpl } from '../../../lib/models/event/event-data-mapper-impl';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
@@ -72,7 +72,7 @@ describe('TEST: Event Data Mapper', () => {
     it('generates the expected SQL to retrieve the number of events', async () => {
       // GIVEN: Instance od an event data mapper
       // WHEN: Retrieving number of events
-      const result = await eventDataMapper.getCount();
+      await eventDataMapper.getCount();
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT COUNT(uid) AS "count" FROM `EVENTS`;';

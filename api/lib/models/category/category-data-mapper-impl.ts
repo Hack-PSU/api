@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -48,7 +47,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
@@ -67,7 +66,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Category>(query.text, query.values, { stream: false, cache: true }))
+    return from(this.sql.query<Category>(query.text, query.values, { cache: true }))
       .pipe(
         map((category: Category[]) => ({ result: 'Success', data: category[0] })),
       )
@@ -76,11 +75,10 @@ export class CategoryDataMapperImpl extends GenericDataMapper
 
   /**
    *
-   * @param uow
-   * @param opts
+   * @param opts?
    * @return {Promise<Stream>}
    */
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Category>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Category[]>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -99,17 +97,15 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
         .toString()
         .concat(';');
-    return from(this.sql.query<Category>(query, [], { stream: true, cache: true }))
+    return from(this.sql.query<Category>(query, [], { cache: true }))
         .pipe(
-          map((categoryStream: Stream<Category>) => ({ result: 'Success', data: categoryStream })),
+          map((categories: Category[]) => ({ result: 'Success', data: categories })),
         )
         .toPromise();
   }
 
   /**
    * Returns a count of the number of Category objects.
-   * @param uow
-   * @returns {Promise<Readable>}
    */
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     const query = squel.select({
@@ -121,7 +117,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .toString()
       .concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: true, cache: true }),
+      this.sql.query<number>(query, [], { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
@@ -140,7 +136,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
@@ -160,7 +156,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();

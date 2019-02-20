@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import tsStream, { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -60,7 +59,7 @@ export class TravelReimbursementDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
@@ -79,7 +78,7 @@ export class TravelReimbursementDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<TravelReimbursement>(
       query.text,
       query.values,
-      { stream: false, cache: true },
+      { cache: true },
     ))
       .pipe(
         map((travelReimbursement: TravelReimbursement[]) => ({
@@ -90,7 +89,7 @@ export class TravelReimbursementDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<tsStream<TravelReimbursement>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<TravelReimbursement[]>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -127,11 +126,11 @@ export class TravelReimbursementDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<TravelReimbursement>(
       query.text,
       query.values,
-      { stream: true, cache: true },
+      { cache: true },
     ))
       .pipe(
-        map((reimbursementStream: Stream<TravelReimbursement>) => ({
-          data: reimbursementStream,
+        map((reimbursements: TravelReimbursement[]) => ({
+          data: reimbursements,
           result: 'Success',
         })),
       )
@@ -142,17 +141,16 @@ export class TravelReimbursementDataMapperImpl extends GenericDataMapper
     const query = this.getCountQuery().toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, query.values, { stream: true, cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
   public getCountQuery() {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+    return squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'reimbursement_count');
-    return query;
   }
 
   public async insert(object: TravelReimbursement): Promise<IDbResult<TravelReimbursement>> {
@@ -173,7 +171,7 @@ export class TravelReimbursementDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
@@ -193,7 +191,7 @@ export class TravelReimbursementDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();

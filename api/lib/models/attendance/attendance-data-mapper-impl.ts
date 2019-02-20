@@ -3,7 +3,6 @@ import { default as _ } from 'lodash';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { Stream } from 'ts-stream';
 import { IEventStatUowOpts } from '.';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -107,11 +106,10 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
 
   /**
    *
-   * @param uow
-   * @param opts
+   * @param opts?
    * @return {Promise<Stream>}
    */
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Attendance>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Attendance[]>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -139,10 +137,10 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
         .toString()
         .concat(';');
-    return from(this.sql.query<Attendance>(query, [], { stream: true, cache: true }))
+    return from(this.sql.query<Attendance>(query, [], { cache: true }))
         .pipe(
-          map((attendanceStream: Stream<Attendance>) => ({
-            data: attendanceStream,
+          map((attendances: Attendance[]) => ({
+            data: attendances,
             result: 'Success',
           })),
         )
@@ -151,8 +149,6 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
 
   /**
    * Returns a count of the number of Attendance objects.
-   * @param uow
-   * @returns {Promise<Readable>}
    */
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     let queryBuilder = squel.select({
@@ -176,7 +172,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
       .toString()
       .concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: false, cache: true }),
+      this.sql.query<number>(query, [], { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
@@ -226,9 +222,9 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<any>(query.text, query.values, { stream: true, cache: true }),
+      this.sql.query<any>(query.text, query.values, { cache: true }),
     ).pipe(
-      map((result: Stream<any>) => {
+      map((result: Attendance[]) => {
         // Reduce the result to a condensed object
         return result.reduce(
           (currentAggregation, nextAttendance) => {
@@ -246,7 +242,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
           {},
         );
       }),
-      map(async result => ({ result: 'Success', data: await result })),
+      map((result: any) => ({ result: 'Success', data: result })),
     ).toPromise();
   }
 

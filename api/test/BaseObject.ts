@@ -48,7 +48,7 @@ describe('TEST: Object CRUD tests', () => {
     // When: Call a query.
     const mysqlExpectation = uow.query.withArgs(sinon.match.any, sinon.match.any);
     const mysqlExpectationStream = uow.query
-      .withArgs(sinon.match.any, sinon.match.any, { stream: true });
+      .withArgs(sinon.match.any, sinon.match.any, {  });
     const firebaseExpectation = uowrtdb.query
       .withArgs(sinon.match.any, sinon.match.any, sinon.match.any);
     const firebaseExpectation2 = uowrtdb.query

@@ -2,7 +2,6 @@ import { Inject } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -13,8 +12,6 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { Hackathon } from './hackathon';
-
-// import { IHackathonDataMapper } from './index';
 
 export class HackathonDataMapperImpl extends GenericDataMapper
   implements IDataMapper<Hackathon>, IAclPerm {
@@ -69,21 +66,21 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Hackathon>(query.text, query.values, { stream: false, cache: true }))
+    return from(this.sql.query<Hackathon>(query.text, query.values, { cache: true }))
       .pipe(
         map((event: Hackathon[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
 
-  public getAll(): Promise<IDbResult<Stream<Hackathon>>> {
+  public getAll(): Promise<IDbResult<Hackathon[]>> {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
       .toString()
       .concat(';');
-    return from(this.sql.query<Hackathon>(query, [], { stream: true, cache: true }))
+    return from(this.sql.query<Hackathon>(query, [], { cache: true }))
       .pipe(
-        map((event: Stream<Hackathon>) => ({ result: 'Success', data: event })),
+        map((hackathons: Hackathon[]) => ({ result: 'Success', data: hackathons })),
       )
       .toPromise();
   }
@@ -95,7 +92,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .toString()
       .concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: false, cache: true }),
+      this.sql.query<number>(query, [], { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
@@ -120,7 +117,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
@@ -142,7 +139,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: currentObject.cleanRepresentation })),
     ).toPromise();

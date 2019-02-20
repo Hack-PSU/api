@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import tsStream from 'ts-stream';
 import { UidType } from '../../../JSCommon/common-types';
 import { MethodNotImplementedError } from '../../../JSCommon/errors';
 import { AuthLevel, IFirebaseAuthService } from '../../../services/auth/auth-types';
@@ -53,7 +52,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public getAll(opts?: IUowOpts): Promise<IDbResult<tsStream<any>>> {
+  public getAll(opts?: IUowOpts): Promise<IDbResult<any[]>> {
     throw new MethodNotImplementedError('this action is not supported');
   }
 
@@ -116,7 +115,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
       .toString();
     query = query.concat(';');
     return from(
-      this.sql.query<IUserCount>(query, [], { stream: false, cache: true }),
+      this.sql.query<IUserCount>(query, [], { cache: true }),
     ).pipe(
       map((result: IUserCount[]) => ({ result: 'Success', data: result })),
     ).toPromise();
@@ -165,7 +164,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<IUserStatistics>(query.text, query.values, { stream: true, cache: true }),
+      this.sql.query<IUserStatistics>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: IUserStatistics[]) => ({ result: 'Success', data: result })),
     ).toPromise();

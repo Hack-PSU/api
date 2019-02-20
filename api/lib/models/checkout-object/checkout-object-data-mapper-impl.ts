@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { Stream } from 'ts-stream';
 import { EpochNumber, UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -51,7 +50,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
@@ -70,14 +69,14 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<CheckoutObject>(query.text, query.values, { stream: false, cache: true }))
+    return from(this.sql.query<CheckoutObject>(query.text, query.values, { cache: true }))
       .pipe(
         map((checkoutObject: CheckoutObject[]) => ({ result: 'Success', data: checkoutObject[0] })),
       )
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<CheckoutObject>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<CheckoutObject[]>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -104,9 +103,9 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
         .toString()
         .concat(';');
-    return from(this.sql.query<CheckoutObject>(query, [], { stream: true, cache: true }))
+    return from(this.sql.query<CheckoutObject>(query, [], { cache: true }))
         .pipe(
-          map((checkoutObjectStream: Stream<CheckoutObject>) => ({ result: 'Success', data: checkoutObjectStream })),
+          map((checkoutObjects: CheckoutObject[]) => ({ result: 'Success', data: checkoutObjects })),
         )
         .toPromise();
   }
@@ -125,7 +124,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .toString()
       .concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: false, cache: true }),
+      this.sql.query<number>(query, [], { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
@@ -144,7 +143,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
@@ -161,7 +160,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
@@ -181,7 +180,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();

@@ -1,3 +1,4 @@
+// Setup cloud specific trace and debug
 import * as traceAgent from '@google-cloud/trace-agent';
 traceAgent.start();
 import * as debugAgent from '@google-cloud/debug-agent';
@@ -19,8 +20,6 @@ import { Environment, Util } from './JSCommon/util';
 import { ParentRouter, ResponseBody } from './router/router-types';
 import * as controllers from './router/routes/controllers';
 import { Logger } from './services/logging/logging';
-// Setup cloud specific trace and debug
-
 
 export class App extends ParentRouter {
   private static notFoundHandler(request, response, next: NextFunction) {

@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -67,7 +66,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
         .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
@@ -86,7 +85,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<Rsvp>(
       query.text,
       query.values,
-      { stream: false, cache: true },
+      { cache: true },
     ))
       .pipe(
         map((event: Rsvp[]) => ({ result: 'Success', data: event[0] })),
@@ -94,7 +93,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Rsvp>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Rsvp[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.startAt) {
@@ -117,10 +116,10 @@ export class RsvpDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
       .toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Rsvp>(query.text, query.values, { stream: true, cache: true },
+    return from(this.sql.query<Rsvp>(query.text, query.values, { cache: true },
     ))
       .pipe(
-        map((event: Stream<Rsvp>) => ({ result: 'Success', data: event })),
+        map((rsvps: Rsvp[]) => ({ result: 'Success', data: rsvps })),
       )
       .toPromise();
   }
@@ -144,7 +143,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
       .toString()
       .concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: true, cache: true }),
+      this.sql.query<number>(query, [], { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
@@ -169,7 +168,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
     .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
     ).toPromise();
@@ -189,7 +188,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
     ).toPromise();
@@ -210,7 +209,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
   //   return from(this.sql.query<boolean>(
   //       query.text,
   //       query.values,
-  //       { stream: true, cache: true },
+  //       { , cache: true },
   //     ))
   //     .pipe(
   //       map((status: boolean) => ({ result: 'Success', data: status })),

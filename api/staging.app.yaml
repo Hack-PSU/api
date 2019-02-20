@@ -9,3 +9,5 @@ automatic_scaling:
 env_variables:
   GCLOUD_ENV: "staging"
   APP_ENV: "STAGING"
+beta_settings:
+  cloud_sql_instances: hackpsu18:us-central1:hackpsu18

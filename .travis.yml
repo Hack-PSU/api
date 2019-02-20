@@ -1,6 +1,8 @@
 sudo: false
 language: node_js
 cache: yarn
+services:
+  - mysql
 branches:
   only:
   - master
@@ -10,6 +12,8 @@ node_js:
 before_install:
 - npm i -g node-cipher
 - npm i -g grunt-cli
+- grunt travis --test
+- ./create_db.sh
 install:
 - cd api && npm install
 - grunt prep

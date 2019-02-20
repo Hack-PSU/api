@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import tsStream, { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -53,7 +52,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public getAll(opts?: IUowOpts): Promise<IDbResult<tsStream<ExtraCreditAssignment>>> {
+  public getAll(opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName);
     if (opts && opts.startAt) {
@@ -65,9 +64,9 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
       .toString()
       .concat(';');
-    return from(this.sql.query<ExtraCreditAssignment>(query, [], { stream: true, cache: true }))
+    return from(this.sql.query<ExtraCreditAssignment>(query, [], { cache: true }))
       .pipe(
-        map((classes: Stream<ExtraCreditAssignment>) => ({ result: 'Success', data: classes })),
+        map((classes: ExtraCreditAssignment[]) => ({ result: 'Success', data: classes })),
       )
       .toPromise();
   }
@@ -76,7 +75,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public async getAllClasses(opts?: IUowOpts): Promise<IDbResult<Stream<ExtraCreditClass>>> {
+  public async getAllClasses(opts?: IUowOpts): Promise<IDbResult<ExtraCreditClass[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.classesTableName);
     if (opts && opts.startAt) {
@@ -88,9 +87,9 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
       .toString()
       .concat(';');
-    return from(this.sql.query<ExtraCreditClass>(query, [], { stream: true, cache: true }))
+    return from(this.sql.query<ExtraCreditClass>(query, [], { cache: true }))
       .pipe(
-        map((classes: Stream<ExtraCreditClass>) => ({ result: 'Success', data: classes })),
+        map((classes: ExtraCreditClass[]) => ({ result: 'Success', data: classes })),
       )
       .toPromise();
   }
@@ -107,7 +106,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();

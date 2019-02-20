@@ -1,4 +1,3 @@
-import { Stream } from 'ts-stream';
 import { IDataMapper, IDbResult } from '../../services/database';
 import { Update } from './update';
 

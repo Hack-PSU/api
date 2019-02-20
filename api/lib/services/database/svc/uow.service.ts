@@ -46,6 +46,5 @@ export interface IUowOpts {
 }
 
 export interface IQueryOpts {
-  stream?: boolean;
   cache?: boolean;
 }

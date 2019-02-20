@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import { EpochNumber, UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
-import { EventType } from '../event';
+import { EventType } from '../event/event';
 
 export const TABLE_NAME = 'ATTENDANCE';
 
@@ -14,6 +14,7 @@ export class Attendance extends BaseObject {
   public scan_time: EpochNumber;
   public user_uid: UidType;
   public location_name: string;
+  public event_uid: UidType;
   public event_start_time: EpochNumber;
   public event_end_time: EpochNumber;
   public event_title: string;

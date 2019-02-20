@@ -2,7 +2,6 @@ import { Inject } from 'injection-js';
 import { default as NodeTimeUuid } from 'node-time-uuid';
 import { from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { Stream } from 'ts-stream';
 import { IUpdateDataMapper, UpdateIdType } from '.';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -56,7 +55,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
         switchMap(reference => this.rtdb.query<void>(
           RtdbQueryType.DELETE,
           `${reference}/${id}`,
-          { stream: false, cache: false },
+          { cache: false },
         )),
         map(() => ({ result: 'Success', data: undefined })),
       )
@@ -70,21 +69,21 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
         switchMap(reference => this.rtdb.query<Update>(
           RtdbQueryType.GET,
           `${reference}/${id}`,
-          { stream: true, cache: true },
+          { cache: true },
         )),
         map(result => ({ result: 'Success', data: result as Update })),
       ).toPromise();
   }
 
-  public getAll(): Promise<IDbResult<Stream<Update>>> {
+  public getAll(): Promise<IDbResult<Update[]>> {
     return this.activeHackathonDataMapper.activeHackathon
       .pipe(
         map(hackathon => hackathon.uid),
         switchMap((result) => {
           const reference = `/updates/${result}`;
-          return from(this.rtdb.query<Stream<Update>>(RtdbQueryType.GET, reference, undefined));
+          return from(this.rtdb.query<Update[]>(RtdbQueryType.GET, reference, undefined));
         }),
-        map(data => ({ result: 'Success', data: data as Stream<Update> })),
+        map(data => ({ result: 'Success', data: data as Update[] })),
       ).toPromise();
   }
 

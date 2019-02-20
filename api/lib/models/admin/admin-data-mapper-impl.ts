@@ -3,7 +3,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import tsStream from 'ts-stream';
 import { IEmail } from '.';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
@@ -67,7 +66,7 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public getAll(opts?: IUowOpts): Promise<IDbResult<tsStream<any>>> {
+  public getAll(opts?: IUowOpts): Promise<IDbResult<any[]>> {
     throw new MethodNotImplementedError('this action is not supported');
   }
 
@@ -152,7 +151,7 @@ export class AdminDataMapperImpl extends GenericDataMapper implements IAdminData
       ])
       .toParam();
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();

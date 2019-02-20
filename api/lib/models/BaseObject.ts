@@ -91,7 +91,7 @@ export default abstract class  BaseObject {
   //     .toString()
   //     .concat(';');
   //   const params = [];
-  //   return uow.query(query, params, { stream: true, cache: true });
+  //   return uow.query(query, params, { , cache: true });
   // }
 
   // /**
@@ -108,7 +108,7 @@ export default abstract class  BaseObject {
   //     .toString()
   //     .concat(';');
   //   const params = [];
-  //   return uow.query(query, params, { stream: true, cache: true });
+  //   return uow.query(query, params, { , cache: true });
   // }
 
   /*********** PROPERTIES *************/
@@ -147,7 +147,7 @@ export default abstract class  BaseObject {
   //  */
   // public get(opts?: IUowOpts) {
   //   if (opts && opts.query) {
-  //     return this.uow.query(opts.query.text, opts.query.values, { stream: false, cache: true });
+  //     return this.uow.query(opts.query.text, opts.query.values, { cache: true });
   //   }
   //   const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
   //     .from(this.tableName)
@@ -155,7 +155,7 @@ export default abstract class  BaseObject {
   //     .where(`${this.columnName}= ?`, this.id)
   //     .toParam();
   //   query.text = query.text.concat(';');
-  //   return this.uow.query(query.text, query.values, { stream: false, cache: true });
+  //   return this.uow.query(query.text, query.values, { cache: true });
   // }
 
   // /**
@@ -164,7 +164,7 @@ export default abstract class  BaseObject {
   //  */
   // public add(opts?: IUowOpts) {
   //   if (opts && opts.query) {
-  //     return this.uow.query(opts.query.text, opts.query.values, { stream: false, cache: false });
+  //     return this.uow.query(opts.query.text, opts.query.values, { cache: false });
   //   }
   //   const validation = this.validate();
   //   if (!validation.result) {
@@ -177,7 +177,7 @@ export default abstract class  BaseObject {
   //     .setFieldsRows([this.dbRepresentation])
   //     .toParam();
   //   query.text = query.text.concat(';');
-  //   return this.uow.query(query.text, query.values, { stream: false, cache: false });
+  //   return this.uow.query(query.text, query.values, { cache: false });
   // }
 
   // /**
@@ -186,7 +186,7 @@ export default abstract class  BaseObject {
   //  */
   // public update(opts?: IUowOpts) {
   //   if (opts && opts.query) {
-  //     return this.uow.query(opts.query.text, opts.query.values, { stream: false, cache: false });
+  //     return this.uow.query(opts.query.text, opts.query.values, { cache: false });
   //   }
   //   const validation = this.validate();
   //   if (!validation.result) {
@@ -198,7 +198,7 @@ export default abstract class  BaseObject {
   //     .where(`${this.columnName} = ?`, this.id)
   //     .toParam();
   //   query.text = query.text.concat(';');
-  //   return this.uow.query(query.text, query.values, { stream: false, cache: false });
+  //   return this.uow.query(query.text, query.values, { cache: false });
   // }
 
   // /**
@@ -207,7 +207,7 @@ export default abstract class  BaseObject {
   //  */
   // public delete(opts?: IUowOpts) {
   //   if (opts && opts.query) {
-  //     return this.uow.query(opts.query.text, opts.query.values, { stream: false, cache: false });
+  //     return this.uow.query(opts.query.text, opts.query.values, { cache: false });
   //   }
   //
   //   const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
@@ -216,6 +216,6 @@ export default abstract class  BaseObject {
   //     .toParam();
   //   query.text = query.text.concat(';');
   //
-  //   return this.uow.query(query.text, query.values, { stream: false, cache: false });
+  //   return this.uow.query(query.text, query.values, { cache: false });
   // }
 }

@@ -56,8 +56,11 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
    *
+   * // TODO: Update when implemented
+   * @apiDescription NOTE: This route is not implemented yet
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Array} Array containing all locations in the database
+   * @apiSuccess {Location[]} Array of locations
+   * @apiUse ResponseBodyDescription
    */
   private getAllLocationsHandler(res: Response, next: NextFunction) {
     // Location.getAll(req.uow, {
@@ -75,11 +78,14 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiName Create Location
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
+   * // TODO: Update when implemented
+   * @apiDescription NOTE: This route is not implemented yet
    *
    * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
+   * @apiSuccess {Location} The inserted location
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async createLocationHandler(req: Request, res: Response, next: NextFunction) {
     // if (!req.body ||
@@ -102,6 +108,8 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
 
   /**
    * @api {post} /admin/location/update Update name of a location
+   * // TODO: Update when implemented
+   * @apiDescription NOTE: This route is not implemented yet
    * @apiVersion 2.0.0
    * @apiName Update Location
    * @apiGroup Admin Location
@@ -110,8 +118,9 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
    * @apiParam {String} locationName - the new name that is being updated with the name associated with the uid
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
+   * @apiSuccess {Location} The updated location
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async updateLocationHandler(
     req: Request,
@@ -144,11 +153,13 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiName Remove Location
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
+   * // TODO: Update when implemented
+   * @apiDescription NOTE: This route is not implemented yet
    *
    * @apiParam {String} uid - the uid of the location that is being selected for removal
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async deleteLocationHandler(
     req: Request,

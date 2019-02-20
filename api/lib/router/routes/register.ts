@@ -85,8 +85,9 @@ export class RegistrationController extends ParentRouter implements IExpressCont
    * @apiName Add Pre-Registration
    * @apiGroup Pre Registration
    * @apiParam {String} email The email ID to register with
-   * @apiSuccess {String} Success
+   * @apiSuccess {PreRegistration} The inserted pre registration
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async preRegistrationHandler(request: Request, response: Response, next: NextFunction) {
     if (!request.body ||
@@ -143,8 +144,9 @@ export class RegistrationController extends ParentRouter implements IExpressCont
    * @apiParam {String} expectations What the user expects to get from the hackathon
    * @apiParam {String} veteran=false Is the user a veteran?
    *
-   * @apiSuccess {String} Success
+   * @apiSuccess {Registration} The inserted registration
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async registrationHandler(request: Request, response: Response, next: NextFunction) {
     // Validate incoming registration

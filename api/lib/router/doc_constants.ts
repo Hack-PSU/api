@@ -58,3 +58,10 @@
  *        }
  *      }
  */
+/**
+ * @apiDefine RequestOpts
+ * @apiParam [byHackathon] {boolean} Get data by hackathon
+ * @apiParam [count] {number} Number of responses to return
+ * @apiParam [hackathon] {String} uid of hackathon to get results by. byHackathon must be true
+ * @apiParam [startAt] {number} offset to paginate results
+ */

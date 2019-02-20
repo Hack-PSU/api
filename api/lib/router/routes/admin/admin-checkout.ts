@@ -82,8 +82,9 @@ export class AdminCheckoutController extends ScannerController implements IExpre
    * NOTE: One of userId or wid must be provided for this route to work
    * @apiUse AuthArgumentRequired
    * @apiPermission TeamMemberPermission
-   * @apiSuccess {String} Success
+   * @apiSuccess {CheckoutObject} The inserted checkout object
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async createCheckoutRequestHandler(
     req: Request,
@@ -135,8 +136,8 @@ export class AdminCheckoutController extends ScannerController implements IExpre
    * @apiParam {number} returnTime=now Epoch time for when the object was returned
    * @apiUse AuthArgumentRequired
    * @apiPermission TeamMemberPermission
-   * @apiSuccess {String} Success
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async returnObjectHandler(
     req: Request,
@@ -180,8 +181,9 @@ export class AdminCheckoutController extends ScannerController implements IExpre
    * @apiGroup Item Checkout
    * @apiUse AuthArgumentRequired
    * @apiPermission TeamMemberPermission
-   * @apiSuccess {String} Success
+   * @apiSuccess {CheckoutObject[]} All Checkout instances
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async getAllCheckoutObjectHandler(
     res: Response,
@@ -208,8 +210,9 @@ export class AdminCheckoutController extends ScannerController implements IExpre
    * @apiGroup Item Checkout
    * @apiUse AuthArgumentRequired
    * @apiPermission TeamMemberPermission
-   * @apiSuccess {String} Success
+   * @apiSuccess {CheckoutItem[]} All items in inventory for checkout
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async getAllCheckoutItemsHandler(res: Response, next: NextFunction) {
     try {

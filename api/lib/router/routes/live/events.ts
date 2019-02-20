@@ -42,10 +42,10 @@ export class EventsController extends LiveController {
         this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
         (req, res, next) => this.postEventHandler(req, res, next),
       )
-      .put(
-        '/',
+      .post(
+        '/update',
         this.authService.verifyAcl(this.aclPerm, AclOperations.UPDATE),
-        (req, res, next) => this.putEventHandler(req, res, next),
+        (req, res, next) => this.updateEventHandler(req, res, next),
       )
       .post(
         '/delete',
@@ -64,8 +64,8 @@ export class EventsController extends LiveController {
    *
    * @apiParam {String} uid - The uid of the event.
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async deleteEventHandler(
     request: express.Request,
@@ -86,11 +86,11 @@ export class EventsController extends LiveController {
 
   /**
    * Updates an existing event
-   * @api {put} /live/event/ Update an existing event
+   * @api {post} /live/event/update Update an existing event
    * @apiVersion 2.0.0
    * @apiName Update Event
    * @apiGroup Events
-   * @apiPermission >= TeamMemberPermission
+   * @apiPermission TeamMemberPermission
    *
    * @apiParam {String} uid - The uid of the event.
    * @apiParam {String} eventLocation - The uid of the location for the event.
@@ -100,10 +100,11 @@ export class EventsController extends LiveController {
    * @apiParam {String} eventDescription - The description of the event.
    * @apiParam {Enum} eventType - The type of the event. Accepted values: ["food","workshop","activity"]
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
+   * @apiSuccess {Event} The updated event
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
-  private async putEventHandler(
+  private async updateEventHandler(
     request: express.Request,
     response: express.Response,
     next: express.NextFunction,
@@ -132,7 +133,7 @@ export class EventsController extends LiveController {
    * @apiVersion 2.0.0
    * @apiName New Event
    * @apiGroup Events
-   * @apiPermission >= TeamMemberPermission
+   * @apiPermission TeamMemberPermission
    *
    * @apiParam {String} eventLocation - The uid of the location for the event.
    * @apiParam {String} eventStartTime - The unix time for the start of the event.
@@ -141,8 +142,9 @@ export class EventsController extends LiveController {
    * @apiParam {String} eventDescription - The description of the event.
    * @apiParam {Enum} eventType - The type of the event. Accepted values: ["food","workshop","activity"]
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
+   * @apiSuccess {Event} The inserted event
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async postEventHandler(
     request: express.Request,
@@ -189,7 +191,8 @@ export class EventsController extends LiveController {
    * @apiName Get events
    * @apiGroup Events
    *
-   * @apiSuccess {Array} Array of current events.
+   * @apiSuccess {Event[]} Array of current events
+   * @apiUse ResponseBodyDescription
    */
   private async getEventHandler(
     response: express.Response,

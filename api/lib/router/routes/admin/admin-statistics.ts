@@ -62,8 +62,9 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} Array of all users
+   * @apiSuccess {UserStatistics[]} Array of all users
    * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
    */
   private async getRegistrationStatisticsHandler(res: Response, next: NextFunction) {
     let result: IDbResult<IUserStatistics[]>;
@@ -90,8 +91,9 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} number of users that selected particular categories for registrations
+   * @apiSuccess {number[]} number of users that selected particular categories for registrations
    * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
    */
   private async getRegistrationStatisticsCountHandler(
     res: Response,
@@ -119,8 +121,9 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ResponseBody} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
+   * @apiSuccess {number[]} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
    * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
    */
   private async getUserCountByCategoryHandler(
     res: Response,
@@ -148,8 +151,9 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ResponseBody} number of preregistered users
-   * * @apiUse ResponseBodyDescription
+   * @apiSuccess {number} number of preregistered users
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
    */
   private async getPreRegistrationCountHandler(res: Response, next: NextFunction) {
     let result: IDbResult<number>;
@@ -174,7 +178,9 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} all preregistered users
+   * @apiSuccess {PreRegistration[]} all preregistered users
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
    */
   private async getPreRegistrationHandler(res: Response, next: NextFunction) {
     try {
@@ -200,7 +206,9 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} All RSVP'ed users
+   * @apiSuccess {Rsvp[]} Array of Rsvp
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
    */
   private async getRsvpHandler(res: Response, next: NextFunction) {
     try {
@@ -226,7 +234,9 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} All RSVP'ed users
+   * @apiSuccess {number} number of rsvp
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
    */
   private async getRsvpCountHandler(res: Response, next: NextFunction) {
     try {
@@ -252,8 +262,9 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} All Attendance data
-   *
+   * @apiSuccess {Attendance[]} All Attendance data
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
    */
   private async getAttendanceHandler(res: Response, next: NextFunction) {
     try {
@@ -279,8 +290,10 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiParam [event] {String} The uid of an event to filter by
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ResponseBody} All Attendance data aggregated by event
+   * @apiSuccess {EventUid-Registration[]} All Attendance data aggregated by event
    * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
+   * @apiUse RequestOpts
    */
   private async getAttendanceByEventHandler(req: Request, res: Response, next: NextFunction) {
     try {
@@ -307,7 +320,9 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} All Attendance data
+   * @apiSuccess {ExtraCreditClasses} Array of extra credit classes
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
    */
   private async getExtraCreditClassesHandler(res: Response, next: NextFunction) {
     try {

@@ -65,8 +65,9 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    * @apiParam {number} endTime Epoch time for when the hackathon ends
    *
    * @apiUse AuthArgumentRequired
+   * @apiUse ResponseBodyDescription
    *
-   * @apiSuccess (200) {Object} Added new hackathon
+   * @apiSuccess (200) {Hackathon} The inserted hackathon
    */
   private async createHackathonHandler(
     req: Request,
@@ -117,13 +118,15 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
   /**
    * @api {post} /admin/hackathon/active Mark a hackathon as active
    * @apiVersion 2.0.0
+   * @apiDescription Ends the currently active hackathon and marks the provided hackathon as active
    * @apiName Add Active hackathon
    * @apiGroup Admin Hackathon
    * @apiPermission DirectorPermission
    * @apiParam {string} uid ID of the hackathon entry to mark active
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess (200) {String} Added new active hackathon
+   * @apiSuccess (200) {Hackathon} Newly "activated" hackathon
+   * @apiUse ResponseBodyDescription
    */
   private async makeHackathonActiveHandler(
     req: Request,
@@ -166,7 +169,8 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess (200) {String} Updated non-active hackathon
+   * @apiSuccess (200) {Hackathon} The updated hackathon
+   * @apiUse ResponseBodyDescription
    */
   private async updateHackathonHandler(
     req: Request,
@@ -216,7 +220,8 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} Array of hackathons
+   * @apiSuccess {Hackathon[]} Array of hackathons
+   * @apiUse ResponseBodyDescription
    */
   private async getAllHackathonHandler(
     res: Response,
@@ -242,7 +247,8 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    * @apiPermission TeamMemberPermission
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} number of hackathons
+   * @apiSuccess {number} the number of hackathons
+   * @apiUse ResponseBodyDescription
    */
   private async countHackathonHandler(res: Response, next: NextFunction) {
     try {

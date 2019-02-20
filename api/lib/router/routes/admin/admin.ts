@@ -100,13 +100,14 @@ export class AdminController extends ParentRouter implements IExpressController 
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {String} Authorized admin
+   * @apiSuccess {UserRecord} User details including privilege level
+   * @apiUse ResponseBodyDescription
    */
   private mainHandler(res: Response) {
     const r = new ResponseBody(
       'Authorized admin',
       200,
-      { result: 'success', data: res.locals.user },
+      { result: 'Success', data: res.locals.user },
     );
     return this.sendResponse(res, r);
   }
@@ -120,8 +121,9 @@ export class AdminController extends ParentRouter implements IExpressController 
    *
    * @apiUse AuthArgumentRequired
    * @apiParam {string} email The email to query user id by
-   * @apiSuccess {object} Object {uid, displayName}
+   * @apiSuccess {UserRecord} Object {uid, displayName, privilege, admin}
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async getUserIdHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.query ||
@@ -178,6 +180,7 @@ export class AdminController extends ParentRouter implements IExpressController 
    *                  }
    * @apiSuccess (200) {Object[]} Responses All responses from the emails sent
    * @apiSuccess (207) {Object[]} Partial-Success An array of success responses as well as failure objects
+   * @apiUse ResponseBodyDescription
    */
 
   /**
@@ -234,8 +237,8 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiUse AuthArgumentRequired
    * @apiParam {String} uid The UID or email of the user to change admin privileges
    * @apiParam {Number} privilege The privilege level to set to {1: Volunteer, 2: Team Member, 3: Exec, 4: Tech-Exec, 5: Finance Director}
-   * @apiSuccess {String} Success
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async makeAdminHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.body || !req.body.uid) {
@@ -270,7 +273,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {post} /admin/extra_credit setting user with the class they are receiving extra credit
+   * @api {post} /admin/extra_credit Track an extra credit class for a student
    * @apiName Assign Extra Credit
    * @apiVersion 2.0.0
    * @apiGroup Admin
@@ -279,8 +282,9 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiParam {String} uid - the id associated with the student
    * @apiParam {String} cid - the id associated with the class
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
+   * @apiSuccess {ExtraCreditAssignment} The inserted extra credit assignment
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async addExtraCreditAssignmentHandler(
     req: Request,

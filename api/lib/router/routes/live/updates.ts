@@ -46,10 +46,10 @@ export class UpdatesController extends LiveController {
         this.authService.verifyAcl(this.acl, AclOperations.CREATE),
         (req, res, next) => this.postUpdateHandler(req, res, next),
       )
-      .put(
-        '/',
+      .post(
+        '/update',
         this.authService.verifyAcl(this.acl, AclOperations.UPDATE),
-        (req, res, next) => this.putEventHandler(req, res, next),
+        (req, res, next) => this.updateEventHandler(req, res, next),
       )
       .post(
         '/delete',
@@ -66,7 +66,7 @@ export class UpdatesController extends LiveController {
     next(new RouteNotImplementedError('Update deletion is not supported at this time'));
   }
 
-  private putEventHandler(
+  private updateEventHandler(
     request: express.Request,
     response: express.Response,
     next: express.NextFunction,
@@ -86,8 +86,9 @@ export class UpdatesController extends LiveController {
    * @apiParam {String} [updateImage] - The url of the image part of the update.
    * @apiParam {Boolean} [pushNotification] - Whether to send out a push notification with this update.
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {String} Success
+   * @apiSuccess {Update} The added update
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async postUpdateHandler(
     request: express.Request,
@@ -120,6 +121,7 @@ export class UpdatesController extends LiveController {
    * @apiGroup Updates
    *
    * @apiSuccess {String} The database reference to the current updates.
+   * @apiUse ResponseBodyDescription
    */
   private async getUpdateReferenceHandler(
     response: express.Response,
@@ -143,7 +145,8 @@ export class UpdatesController extends LiveController {
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} Array of current updates.
+   * @apiSuccess {Update[]} Array of current updates.
+   * @apiUse ResponseBodyDescription
    */
   private async getUpdateHandler(
     response: express.Response,

@@ -82,7 +82,8 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} Array of registered hackers
+   * @apiSuccess {Registration[]} Array of registered hackers
+   * @apiUse ResponseBodyDescription
    */
   private async getAllRegistrationHandler(res: Response, next: NextFunction) {
     let result;
@@ -110,7 +111,8 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @apiParam {boolean} allHackathons Whether to retrieve data for all hackathons
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} number of registered users
+   * @apiSuccess {number} number of registered users
+   * @apiUse ResponseBodyDescription
    */
   private async countRegistrationHandler(res: Response, next: NextFunction) {
     let result;
@@ -132,8 +134,9 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @apiName Update Registration
    * @apiGroup Admin Registration
    * @apiPermission UserPermission
-   * @apiParam {Object} registration The updated registration object.
+   * @apiParam {Registration} The updated registration object.
    * @apiUse AuthArgumentRequired
+   * @apiUse ResponseBodyDescription
    */
   private async updateRegistrationHandler(req: Request, res: Response, next: NextFunction) {
     // Validate incoming registration

@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle,no-param-reassign,class-methods-use-this */
 import ajv from 'ajv';
+import { default as _ } from 'lodash';
 
 const ajvValidator = new ajv();
 /**
@@ -16,13 +17,10 @@ export default abstract class  BaseObject {
    * @private
    */
   public get dbRepresentation() {
-    return Object.entries(this)
-      .filter(kv => !this.disallowedPropertiesInternal.has(kv[0]))
-      .filter(kv => kv[1] !== undefined || kv[1] !== null)
-      .reduce((accumulator, currentValue) => {
-        accumulator[currentValue[0]] = currentValue[1];
-        return accumulator;
-      },      {});
+    return _(this)
+      .omit(Array.from(this.disallowedPropertiesInternal.values()))
+      .omitBy(_.isNil)
+      .value();
   }
 
   /**

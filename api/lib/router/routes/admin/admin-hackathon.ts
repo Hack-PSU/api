@@ -92,6 +92,9 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
     }
     req.body.startTime = parseInt(req.body.startTime, 10);
 
+    if (req.body.basePin) {
+      req.body.basePin = parseInt(req.body.basePin, 10);
+    }
     let hackathon: Hackathon;
     try {
       hackathon = new Hackathon(req.body);

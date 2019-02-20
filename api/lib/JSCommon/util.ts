@@ -23,8 +23,7 @@ export class Util {
   }
 
   public static errorHandler500(err, handler) {
-    const error = new HttpError(err.message || err, 500);
-    handler(error);
+    this.standardErrorHandler(err, handler);
   }
 
   public static standardErrorHandler(err, handler) {

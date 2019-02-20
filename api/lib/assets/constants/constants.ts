@@ -13,7 +13,7 @@ export class Constants {
     host: Util.readEnv('SQL_HOSTNAME', 'localhost') || Util.readEnv('RDS_HOSTNAME', 'localhost'),
     multipleStatements: true,
     // Required for GCP
-    password: Util.readEnv('SQL_PASSWORD', 'secret') || Util.readEnv('RDS_PASSWORD', 'secret'),
+    password: Util.readEnv('SQL_PASSWORD', '') || Util.readEnv('RDS_PASSWORD', ''),
     port: parseInt(Util.readEnv('SQL_PORT', '3306'), 10),
     socketPath: `/cloudsql/${Util.readEnv('INSTANCE_CONNECTION_NAME', '')}`,
     timeout: 60 * 60 * 1000,

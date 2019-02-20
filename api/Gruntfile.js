@@ -37,8 +37,8 @@ function decryptProduction() {
 }
 
 function decryptTest() {
-  decryptFile('privatekey.aes');
-  decryptFile('gcs_config.json.aes');
+  decryptFile('privatekey.staging.aes');
+  decryptFile('gcs_config_staging.json.aes');
   decryptFile('.test.env.aes');
   decryptFile('hackpsu-18-serviceaccount.json.aes');
 }

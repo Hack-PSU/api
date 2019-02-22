@@ -136,7 +136,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
       this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
-    let query = 'CALL assignTeam (?,?,?,@projectID_out); SELECT @projectID_out as projectID;';
+    const query = 'CALL assignTeam (?,?,?,@projectID_out); SELECT @projectID_out as projectID;';
     const list = [object.project_name, object.team.join(','), object.categories.join(',')];
     return from(
       this.sql.query<UidType>(query, list, { stream: false, cache: false }),

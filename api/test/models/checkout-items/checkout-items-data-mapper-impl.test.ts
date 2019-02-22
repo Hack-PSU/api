@@ -21,7 +21,6 @@ let activeHackathonDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
-
 describe('TEST: CheckoutItems Data Mapper', () => {
   beforeEach(() => {
     // Configure Active Hackathon Data Mapper
@@ -36,7 +35,7 @@ describe('TEST: CheckoutItems Data Mapper', () => {
     when(mysqlUowMock.query(anyString(), anything(), anything()))
       .thenResolve([]);
     mysqlUow = instance(mysqlUowMock);
-    // Configure Category Data Mapper
+    // Configure Checkout Items Data Mapper
     checkoutItemsDataMapper = new CheckoutItemsDataMapperImpl(
       acl,
       mysqlUow,
@@ -44,6 +43,13 @@ describe('TEST: CheckoutItems Data Mapper', () => {
       checkoutObjectDataMapperImpl,
       new Logger(),
     );
+    // Configure Checkout Object Data Mapper
+    checkoutObjectDataMapperImpl = new CheckoutObjectDataMapperImpl(
+      acl,
+      mysqlUow,
+      activeHackathonDataMapper,
+      new Logger(),
+    )
   });
   afterEach(() => {
     reset(mysqlUowMock);
@@ -107,7 +113,7 @@ describe('TEST: CheckoutItems Data Mapper', () => {
         await checkoutItemsDataMapper.getAll({ startAt: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CHECKOUT_ITEMS` `checkoutItems` OFFSET 100;';
+        const expectedSQL = 'SELECT * FROM `CHECKOUT_ITEMS` `checkoutItems` OFFSET ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -123,7 +129,7 @@ describe('TEST: CheckoutItems Data Mapper', () => {
         await checkoutItemsDataMapper.getAll({ count: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CHECKOUT_ITEMS` `checkoutItems` LIMIT 100;';
+        const expectedSQL = 'SELECT * FROM `CHECKOUT_ITEMS` `checkoutItems` LIMIT ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -167,6 +173,7 @@ describe('TEST: CheckoutItems Data Mapper', () => {
       const expectedParams = [];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
+        console.log(generatedSQL);
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
       expect(generatedSQL).to.equal(expectedSQL);
       expect(generatedParams).to.deep.equal(expectedParams);

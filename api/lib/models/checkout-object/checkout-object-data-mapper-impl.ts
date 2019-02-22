@@ -100,10 +100,9 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
                 this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
             );
     }
-    const query = queryBuilder
-        .toString()
-        .concat(';');
-    return from(this.sql.query<CheckoutObject>(query, [], { cache: true }))
+    const query = queryBuilder.toParam()
+    query.text = query.text.concat(';');
+    return from(this.sql.query<CheckoutObject>(query.text, [], { cache: true }))
         .pipe(
           map((checkoutObjects: CheckoutObject[]) => ({ result: 'Success', data: checkoutObjects })),
         )

@@ -32,7 +32,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
 
   public tableName = 'CHECKOUT_ITEMS';
   protected pkColumnName: string = 'uid';
-
+  
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,

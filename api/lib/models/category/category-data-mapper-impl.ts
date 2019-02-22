@@ -64,8 +64,10 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     }
     queryBuilder = queryBuilder
       .where(`${this.pkColumnName}= ?`, id);
-    const query = queryBuilder.toParam();
-    query.text = query.text.concat(';');
+    const query = queryBuilder
+      .toParam();
+    query.text = query.text
+      .concat(';');
     return from(this.sql.query<Category>(query.text, query.values, { cache: true }))
       .pipe(
         map((category: Category[]) => ({ result: 'Success', data: category[0] })),
@@ -93,11 +95,9 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
-
-    const query = queryBuilder
-        .toString()
-        .concat(';');
-    return from(this.sql.query<Category>(query, [], { cache: true }))
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<Category>(query.text, [], { cache: true }))
         .pipe(
           map((categories: Category[]) => ({ result: 'Success', data: categories })),
         )
@@ -114,10 +114,10 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toString()
-      .concat(';');
+      .toParam();
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query, [], { cache: true }),
+      this.sql.query<number>(query.text, [], { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

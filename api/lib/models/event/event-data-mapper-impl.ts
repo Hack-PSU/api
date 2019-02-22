@@ -84,10 +84,11 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
       .order('event_start_time', true)
       .join('LOCATIONS', 'location', 'event_location=location.uid')
       .join('HACKATHON', 'h', 'h.uid=event.hackathon and h.active=true')
-      .toString()
+      .toParam();
+    query.text = query.text
       .concat(';');
     const params = [];
-    return from(this.sql.query<Event>(query, params, { cache: true }))
+    return from(this.sql.query<Event>(query.text, params, { cache: true }))
       .pipe(
         map((event: Event[]) => ({ result: 'Success', data: event })),
       )
@@ -98,11 +99,11 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toString()
-      .concat(';');
+      .toParam();
+    query.text = query.text.concat(';');
     const params = [];
     return from(
-      this.sql.query<number>(query, params, { cache: true }),
+      this.sql.query<number>(query.text, params, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

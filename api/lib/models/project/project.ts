@@ -1,10 +1,10 @@
 import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
+import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
-import {UidType} from '../../JSCommon/common-types';
 
 const projectSchema = jsonAssetLoader('projectRegistrationSchema');
 
-export interface IProjectModel {
+export interface IProjectApiModel {
   project_name: string;
   team: string[];
   categories: string[];
@@ -27,7 +27,7 @@ export class Project extends BaseObject {
     return projectSchema;
   }
 
-  constructor(data: IProjectModel) {
+  constructor(data: IProjectApiModel) {
     super();
     this.project_name = data.projectId;
     this.team = data.team;

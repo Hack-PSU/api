@@ -39,7 +39,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     super(acl);
     super.addRBAC(
       [this.DELETE],
-      [AuthLevel.DIRECTOR, AuthLevel.TECHNOLOGY],
+      [AuthLevel.TECHNOLOGY],
       undefined,
       [AuthLevel[AuthLevel.TEAM_MEMBER]],
     );
@@ -136,9 +136,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
       this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
-    let query = 'CALL ';
-    query = query.concat('assignTeam');
-    query = query.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;');
+    let query = 'CALL assignTeam (?,?,?,@projectID_out); SELECT @projectID_out as projectID;';
     const list = [object.project_name, object.team.join(','), object.categories.join(',')];
     return from(
       this.sql.query<UidType>(query, list, { stream: false, cache: false }),
@@ -177,7 +175,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
       .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
     const list = [object.projectId, Math.min(...object.categories.map(c => parseInt(c, 10)))];
     return from(
-      this.sql.query<number>(query, list, { stream: true, cache: false }),
+      this.sql.query<number>(query, list, { stream: false, cache: false }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: object[0] })),
     ).toPromise();

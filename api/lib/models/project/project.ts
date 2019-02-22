@@ -17,7 +17,7 @@ export class Project extends BaseObject {
   public readonly project_name: string;
   public readonly team: string[];
   public readonly categories: string[];
-  public readonly projectId: UidType;
+  public projectId: UidType;
 
   public get id() {
     return this.projectId;

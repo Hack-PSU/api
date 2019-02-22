@@ -84,7 +84,7 @@ module.exports.Project = class Project extends BaseObject {
     let prepped = 'CALL ';
     prepped = prepped.concat('assignTable')
       .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
-    const list = [this.projectId, Math.min(...this.categories.map(c => parseInt(c, 10)))];
+    const list = [this.projectId, Math.min(...this.categories.map(c =>  (c, 10)))];
     return this.uow.query(prepped, list);
   }
 

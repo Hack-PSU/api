@@ -3,8 +3,8 @@ import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
 import { Stream } from 'ts-stream';
-import { HttpError } from '../../JSCommon/errors';
-import { MethodNotImplementedError } from '../../JSCommon/errors';
+import { UidType } from '../../JSCommon/common-types';
+import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
@@ -61,7 +61,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     );
   }
 
-  public delete(projectID: string): Promise<IDbResult<void>> {
+  public delete(projectID: UidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
       .where(`${this.pkColumnName} = ?`, projectID)
@@ -74,7 +74,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public get(projectID: string, opts?: IUowOpts): Promise<IDbResult<Project>> {
+  public get(projectID: UidType, opts?: IUowOpts): Promise<IDbResult<Project>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.fields) {
@@ -99,10 +99,14 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('This method is not implemented');
   }
 
+  public getByUser(uid: UidType): Promise<IDbResult<Project>> {
+    //const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true });
+  }
+
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
-      .field(`COUNT(${this.pkColumnName})`, 'rsvp_count');
+      .field(`COUNT(${this.pkColumnName})`, 'project_count');
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
         .where(
@@ -120,12 +124,12 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<number>(query, [], { stream: true, cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
   // need to be checked for conversion
-  public async insert(object: Project): Promise<IDbResult<Project>> {
+  public async insert(object: Project): Promise<IDbResult<UidType>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -134,12 +138,12 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     }
     let query = 'CALL ';
     query = query.concat('assignTeam');
-    query = query.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;')
+    query = query.concat('(?,?,?,@projectID_out); SELECT @projectID_out as projectID;');
     const list = [object.project_name, object.team.join(','), object.categories.join(',')];
     return from(
-      this.sql.query<void>(query, list, { stream: false, cache: false }),
+      this.sql.query<UidType>(query, list, { stream: false, cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map((result: UidType[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
@@ -166,15 +170,16 @@ export class ProjectDataMapperImpl extends GenericDataMapper
   // Currently not being called anywhere so a further work will be needed
   public assignTable(object: Project): Promise<IDbResult<any>> {
     throw new MethodNotImplementedError('this action is not yet supported');
-    // let query = 'CALL ';
-    // query = query.concat('assignTable')
-    //   .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
-    // const list = [object.projectId, Math.min(...object.categories.map(c => parseInt(c, 10)))];
-    // return from(
-    //   this.sql.query<any>(query, list, { stream: true, cache: false }),
-    // ).pipe(
-    //   map(() => ({ result: 'Success', data: object })),
-    // ).toPromise();
+
+    let query = 'CALL ';
+    query = query.concat('assignTable')
+      .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
+    const list = [object.projectId, Math.min(...object.categories.map(c => parseInt(c, 10)))];
+    return from(
+      this.sql.query<any>(query, list, { stream: true, cache: false }),
+    ).pipe(
+      map(() => ({ result: 'Success', data: object })),
+    ).toPromise();
 
   }
 }

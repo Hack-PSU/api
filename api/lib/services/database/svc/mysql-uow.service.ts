@@ -70,7 +70,7 @@ export class MysqlUow implements IUow {
    */
   public query<T>(
     query: string,
-    params: string | string[] = [],
+    params: (string | number | boolean)[] = [],
     opts: IQueryOpts = { stream: false, cache: false },
   ) {
     return this.connectionPromise

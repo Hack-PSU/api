@@ -1,5 +1,6 @@
 import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
 import BaseObject from '../BaseObject';
+import {UidType} from '../../JSCommon/common-types';
 
 const projectSchema = jsonAssetLoader('projectRegistrationSchema');
 
@@ -7,7 +8,7 @@ export interface IProjectModel {
   project_name: string;
   team: string[];
   categories: string[];
-  projectId: string;
+  projectId: UidType;
 
 }
 
@@ -16,7 +17,7 @@ export class Project extends BaseObject {
   public readonly project_name: string;
   public readonly team: string[];
   public readonly categories: string[];
-  public readonly projectId: string;
+  public readonly projectId: UidType;
 
   public get id() {
     return this.projectId;

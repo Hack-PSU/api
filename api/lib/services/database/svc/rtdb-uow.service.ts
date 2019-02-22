@@ -33,23 +33,23 @@ export class RtdbUow implements IUow {
    * @param [data] {Object} Data if query is SET
    * @returns {Promise<DataSnapshot>}
    */
-  public query<T>(query: RtdbQueryType, reference: string, data?: any): Promise<T | tsStream<T>> {
+  public query<T>(query: RtdbQueryType, reference: string[], data?: any): Promise<T | tsStream<T>> {
     if (Util.getCurrentEnv() === Environment.DEBUG) {
       this.logger.info({ query, reference, data });
     }
     this.db.goOnline();
     switch (query) {
       case RtdbQueryType.GET:
-        return this._get<T>(reference);
+        return this._get<T>(reference[0]);
       case RtdbQueryType.SET:
-        return this._set<T>(data, reference);
+        return this._set<T>(data, reference[0]);
       case RtdbQueryType.REF:
-        return Promise.resolve(this.db.ref(reference)
+        return Promise.resolve(this.db.ref(reference[0])
           .toString() as unknown as T);
       case RtdbQueryType.COUNT:
-        return this._count<T>(reference);
+        return this._count<T>(reference[0]);
       case RtdbQueryType.UPDATE:
-        return this._set<T>(data, reference);
+        return this._set<T>(data, reference[0]);
       default:
         return Promise.reject(new Error('Illegal query'));
     }

@@ -19,7 +19,7 @@ export interface IUow {
    * @param {IQueryOpts} opts Options to modify behavior
    * @returns {Promise<any>}
    */
-  query<T>(query: string | number, params: string | string[], opts: IQueryOpts): Promise<any>;
+  query<T>(query: string | number, params: (string | number | boolean)[], opts: IQueryOpts): Promise<any>;
 
   /**
    * Commit a previously started transaction to the database.

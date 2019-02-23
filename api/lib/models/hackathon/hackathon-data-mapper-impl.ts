@@ -127,7 +127,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
 
   public async update(object: Hackathon): Promise<IDbResult<Hackathon>> {
     const currentDbObject = await this.get(object.id);
-    const currentObject = Hackathon.merge(currentDbObject.data, object);
+    const currentObject = object.merge(currentDbObject.data, object);
     const validation = currentObject.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');

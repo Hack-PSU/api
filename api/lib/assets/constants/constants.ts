@@ -28,6 +28,11 @@ export class Constants {
         // which is equivalent to the number 1.
         return (bytes[0] === 1);
       }
+      if (field.type === 'TINY') {
+        // For TINYINT, which is used as a boolean in the database
+        // Convert it to boolean value
+        return field.string() === '1';
+      }
       return (useDefaultTypeCasting());
     },
     user: Util.readEnv('SQL_USER', 'user') || Util.readEnv('RDS_USERNAME', 'user'),

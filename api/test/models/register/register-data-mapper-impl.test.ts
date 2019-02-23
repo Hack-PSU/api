@@ -52,6 +52,8 @@ const validRegistration = new Registration({
   uid: 'test uid',
   university: 'test university',
   veteran: VeteranOptions.NODISCLOSE,
+  time: Date.now(),
+  submitted: true,
 });
 
 describe('TEST: Register data mapper', () => {
@@ -70,7 +72,7 @@ describe('TEST: Register data mapper', () => {
   describe('TEST: Registration read', () => {
     beforeEach(() => {
       when(mysqlUowMock.query(anyString(), anything(), anything()))
-        .thenResolve([]);
+        .thenResolve([{ time: Date.now() }]);
       mysqlUow = instance(mysqlUowMock);
       // Configure Register Data Mapper
       registerDataMapper = new RegisterDataMapperImpl(
@@ -330,18 +332,16 @@ describe('TEST: Register data mapper', () => {
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'INSERT INTO `REGISTRATION` (`firstname`, `lastname`, `gender`, ' +
-        '`shirt_size`, `dietary_restriction`, `allergies`, `travel_reimbursement`, ' +
-        '`first_hackathon`, `university`, `email`, `academic_year`, `major`, `phone`, ' +
-        '`race`, `resume`, `coding_experience`, `uid`, `eighteenBeforeEvent`, `mlh_coc`, ' +
-        '`mlh_dcp`, `referral`, `project`, `expectations`, `veteran`, `time`, `hackathon`) ' +
-        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
+        '`shirt_size`, `travel_reimbursement`, `first_hackathon`, `university`, `email`, ' +
+        '`academic_year`, `major`, `phone`, `race`, `coding_experience`, `uid`, ' +
+        '`eighteenBeforeEvent`, `mlh_coc`, `mlh_dcp`, `referral`, `project`, `expectations`, ' +
+        '`veteran`, `time`, `submitted`, `hackathon`) ' +
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
       const expectedParams = [
         validRegistration.firstname,
         validRegistration.lastname,
         validRegistration.gender,
         validRegistration.shirt_size,
-        validRegistration.dietary_restriction,
-        validRegistration.allergies,
         validRegistration.travel_reimbursement,
         validRegistration.first_hackathon,
         validRegistration.university,
@@ -350,7 +350,6 @@ describe('TEST: Register data mapper', () => {
         validRegistration.major,
         validRegistration.phone,
         validRegistration.race,
-        null,
         validRegistration.coding_experience,
         validRegistration.uid,
         validRegistration.eighteenBeforeEvent,
@@ -361,6 +360,7 @@ describe('TEST: Register data mapper', () => {
         validRegistration.expectations,
         validRegistration.veteran,
         validRegistration.time,
+        true,
         'test uid',
       ];
       const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
@@ -398,13 +398,15 @@ describe('TEST: Register data mapper', () => {
         uid: 'test uid',
         university: 'test university',
         veteran: VeteranOptions.NODISCLOSE,
+        time: Date.now(),
+        submitted: true,
       });
       // WHEN: Adding an invalid registration
       try {
         await registerDataMapper.insert(registration);
       } catch (error) {
         // THEN: Error is thrown for invalid firstname
-        expect(error.data.message)
+        expect(error.body.message)
           .to
           .equal('data.firstname should NOT be shorter than 1 characters');
         return;
@@ -467,22 +469,22 @@ describe('TEST: Register data mapper', () => {
     it('updates the registration', async () => {
       // GIVEN: A registration to update
       const registration = validRegistration;
+      validRegistration.hackathon = 'test uid';
       // WHEN: Updating the registration
       await registerDataMapper.update(registration);
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'UPDATE `REGISTRATION` SET `firstname` = ?, `lastname` = ?, `gender` = ?,' +
-        ' `shirt_size` = ?, `dietary_restriction` = ?, `allergies` = ?, `travel_reimbursement` = ?,' +
-        ' `first_hackathon` = ?, `university` = ?, `email` = ?, `academic_year` = ?, `major` = ?,' +
-        ' `phone` = ?, `race` = ?, `resume` = ?, `coding_experience` = ?, `uid` = ?,' +
-        ' `eighteenBeforeEvent` = ?, `mlh_coc` = ?, `mlh_dcp` = ?, `referral` = ?, `project` = ?,' +
-        ' `expectations` = ?, `veteran` = ?, `time` = ? WHERE (uid = ?);';
+      const expectedSQL = 'UPDATE `REGISTRATION` SET `time` = ?, `firstname` = ?, `lastname` = ?, ' +
+        '`gender` = ?, `shirt_size` = ?, `travel_reimbursement` = ?, `first_hackathon` = ?, ' +
+        '`university` = ?, `email` = ?, `academic_year` = ?, `major` = ?, `phone` = ?, `race` = ?,' +
+        ' `coding_experience` = ?, `uid` = ?, `eighteenBeforeEvent` = ?, `mlh_coc` = ?, ' +
+        '`mlh_dcp` = ?, `referral` = ?, `project` = ?, `expectations` = ?, `veteran` = ?, ' +
+        '`submitted` = ?, `hackathon` = ? WHERE (uid = ?) AND (hackathon = ?);';
       const expectedParams = [
+        validRegistration.time,
         validRegistration.firstname,
         validRegistration.lastname,
         validRegistration.gender,
         validRegistration.shirt_size,
-        validRegistration.dietary_restriction,
-        validRegistration.allergies,
         validRegistration.travel_reimbursement,
         validRegistration.first_hackathon,
         validRegistration.university,
@@ -491,7 +493,6 @@ describe('TEST: Register data mapper', () => {
         validRegistration.major,
         validRegistration.phone,
         validRegistration.race,
-        null,
         validRegistration.coding_experience,
         validRegistration.uid,
         validRegistration.eighteenBeforeEvent,
@@ -501,12 +502,14 @@ describe('TEST: Register data mapper', () => {
         validRegistration.project,
         validRegistration.expectations,
         validRegistration.veteran,
-        validRegistration.time,
-        'test uid',
+        true,
+        validRegistration.hackathon,
+        validRegistration.id,
+        validRegistration.hackathon,
       ];
       const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
-        .first();
-      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        .second();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).twice();
       expect(generatedSQL).to.equal(expectedSQL);
       expect(generatedParams).to.deep.equal(expectedParams);
     });
@@ -539,13 +542,15 @@ describe('TEST: Register data mapper', () => {
         uid: 'test uid',
         university: 'test university',
         veteran: VeteranOptions.NODISCLOSE,
+        time: Date.now(),
+        submitted: false,
       });
       // WHEN: Updating an invalid registration
       try {
         await registerDataMapper.update(registration);
       } catch (error) {
         // THEN: Error is thrown for invalid firstname
-        expect(error.data.message)
+        expect(error.body.message)
           .to
           .equal('data.firstname should NOT be shorter than 1 characters');
         return;

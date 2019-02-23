@@ -12,6 +12,7 @@ export enum SQL_ERRORS {
   DUPLICATE_KEY = 1062,
   PARSE_ERROR = 1064,
   SYNTAX_ERROR = 1149,
+  NOT_FOUND = 404,
   FOREIGN_KEY_DELETE_FAILURE = 1217,
   FOREIGN_KEY_INSERT_FAILURE = 1452,
   BAD_NULL_ERROR = 1048,
@@ -49,7 +50,7 @@ export class MysqlUow implements IUow {
    */
   public query<T>(
     query: string,
-    params: string | string[] = [],
+    params: Array<string | boolean | number> = [],
     opts: IQueryOpts = { cache: false },
   ) {
     return this.connectionPromise
@@ -61,6 +62,7 @@ export class MysqlUow implements IUow {
                 const result: T[] = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
                 if (result !== null) {
                   this.complete(connection);
+                  this.logger.info('served requestt from memory cache');
                   return resolve(result);
                 }
               } catch (err) {
@@ -73,6 +75,13 @@ export class MysqlUow implements IUow {
                 if (err) {
                   connection.rollback();
                   reject(err);
+                }
+                if (result.length === 0) {
+                  reject({
+                    sql: connection.format(query, params),
+                    code: 'no data found',
+                    errno: 404,
+                  });
                 }
                 // Add result to cache
                 this.cacheService.set(`${query}${(params as string[]).join('')}`, result)
@@ -136,6 +145,10 @@ export class MysqlUow implements IUow {
       case SQL_ERRORS.BAD_NULL_ERROR:
         throw new HttpError(
           { message: 'a required property was found to be null' }, 400,
+        );
+      case SQL_ERRORS.NOT_FOUND:
+        throw new HttpError(
+          { message: 'no data was found for this query' }, 404,
         );
     }
     // TODO: Handle other known SQL errors here

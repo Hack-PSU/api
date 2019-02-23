@@ -16,10 +16,6 @@ import { CheckoutItems } from './checkout-items';
 import { ICheckoutItemsDataMapper } from './index';
 import { CheckoutObjectDataMapperImpl } from '../checkout-object/checkout-object-data-mapper-impl';
 
-/**
- * TODO: Change 'CHECKOUT_DATA' to reference the checkoutObjectDataMapper and add documentation
- */
-
 @Injectable()
 export class CheckoutItemsDataMapperImpl extends GenericDataMapper
   implements IAclPerm, ICheckoutItemsDataMapper {

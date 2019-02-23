@@ -173,7 +173,6 @@ describe('TEST: CheckoutItems Data Mapper', () => {
       const expectedParams = [];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
-        console.log(generatedSQL);
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
       expect(generatedSQL).to.equal(expectedSQL);
       expect(generatedParams).to.deep.equal(expectedParams);

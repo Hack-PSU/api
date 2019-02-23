@@ -87,8 +87,7 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
       .toParam();
     query.text = query.text
       .concat(';');
-    const params = [];
-    return from(this.sql.query<Event>(query.text, params, { cache: true }))
+    return from(this.sql.query<Event>(query.text, query.values, { cache: true }))
       .pipe(
         map((event: Event[]) => ({ result: 'Success', data: event })),
       )
@@ -101,9 +100,8 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
       .field(`COUNT(${this.pkColumnName})`, 'count')
       .toParam();
     query.text = query.text.concat(';');
-    const params = [];
     return from(
-      this.sql.query<number>(query.text, params, { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

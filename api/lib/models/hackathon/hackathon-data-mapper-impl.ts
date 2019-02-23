@@ -79,7 +79,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text
       .concat(';');
-    return from(this.sql.query<Hackathon>(query.text, [], { cache: true }))
+    return from(this.sql.query<Hackathon>(query.text, query.values, { cache: true }))
       .pipe(
         map((hackathons: Hackathon[]) => ({ result: 'Success', data: hackathons })),
       )
@@ -93,7 +93,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, [], { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

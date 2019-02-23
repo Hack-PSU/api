@@ -138,7 +138,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
 
     let query = queryBuilder.toParam()
     query.text = query.text.concat(';');
-    return from(this.sql.query<Attendance>(query.text, [], { cache: true }))
+    return from(this.sql.query<Attendance>(query.text, query.values, { cache: true }))
         .pipe(
           map((attendances: Attendance[]) => ({
             data: attendances,
@@ -172,7 +172,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
     let query = queryBuilder.toParam()
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, [], { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

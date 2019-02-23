@@ -84,9 +84,8 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .from(this.tableName, 'location')
       .toParam();
     query.text = query.text.concat(';');
-    const params = [];
     return from(
-      this.sql.query<Location>(query.text, params, { cache: true }),
+      this.sql.query<Location>(query.text, query.values, { cache: true }),
     )
       .pipe(
         map((locations: Location[]) => ({
@@ -105,9 +104,8 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text
       .concat(';');
-    const params = [];
     return from(
-      this.sql.query<number>(query.text, params, { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     )
       .pipe(map((result: number[]) => ({ result: 'Success', data: result[0] })))
       .toPromise();

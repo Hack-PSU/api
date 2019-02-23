@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Location } from '../../../lib/models/location';
+import { Location } from '../../../lib/models/location/location';
 import { LocationDataMapperImpl } from '../../../lib/models/location/location-data-mapper-impl';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
@@ -87,15 +87,14 @@ describe('TEST: Location Data Mapper', () => {
     it('inserts the locations', async () => {
       // GIVEN: A location to insert
       const testLocation = new Location({
-        locationName: 'test location',
+        locationName: 'test location'
       });
       // WHEN: Retrieving number of locations
       await locationDataMapper.insert(testLocation);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'INSERT INTO `LOCATIONS` (`uid`, `location_name`) VALUES (?, ?);';
+      const expectedSQL = 'INSERT INTO `LOCATIONS` (`location_name`) VALUES (?);';
       const expectedParams = [
-        testLocation.uid,
         testLocation.location_name,
       ];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
@@ -117,10 +116,10 @@ describe('TEST: Location Data Mapper', () => {
       await locationDataMapper.update(testLocation);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'UPDATE `LOCATIONS` SET `uid` = ?, `location_name` = ? WHERE (uid = ?);';
+      const expectedSQL = 'UPDATE `LOCATIONS` SET `location_name` = ? WHERE (uid = ?);';
       const expectedParams = [
-        testLocation.uid,
         testLocation.location_name,
+        testLocation.uid,
       ];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();

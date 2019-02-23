@@ -20,7 +20,8 @@
     "prepare": "tsc -p .",
     "pretest": "tsc -p .",
     "posttest": "npm run coveralls",
-    "lint": "tslint -p ."
+    "lint": "tslint -p .",
+    "proxy": "grunt exec:sql_proxy"
   },
   "nyc": {
     "extension": [

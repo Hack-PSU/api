@@ -5,6 +5,7 @@ import { IExpressController, ResponseBody } from '../..';
 import { UidType } from '../../../JSCommon/common-types';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
+import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper, Registration } from '../../../models/register';
 import { IRegistrationProcessor } from '../../../processors/registration-processor';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
@@ -19,6 +20,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IRegistrationProcessor') private readonly registrationProcessor: IRegistrationProcessor,
     @Inject('IRegisterDataMapper') private readonly acl: IAclPerm,
     @Inject('BunyanLogger') private readonly logger: Logger,
@@ -195,6 +197,10 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
         next,
       );
     }
+    if (!req.query.hackathon) {
+      const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
+      req.query.hackathon = hackathon.id;
+    }
     let uid: UidType;
     if (req.query.email) {
       ({ uid } = await this.authService.getUserId(req.query.email));
@@ -203,7 +209,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
     }
 
     try {
-      const result = await this.registerDataMapper.get(uid);
+      const result = await this.registerDataMapper.get({ uid, hackathon: req.query.hackathon });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {

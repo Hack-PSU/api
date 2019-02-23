@@ -88,13 +88,13 @@ describe('TEST: Register data mapper', () => {
     // @ts-ignore
     it('generates the correct sql to read a registration based on the provided uid', async () => {
       // GIVEN: A registration with a valid ID to read from
-      const uid = 'test uid';
+      const uid = { uid: 'test uid', hackathon: 'test uid' };
       // WHEN: Retrieving data for this registration
       await registerDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `REGISTRATION` WHERE (uid= ?) ORDER BY time DESC;';
-      const expectedParams = [uid];
+      const expectedSQL = 'SELECT * FROM `REGISTRATION` WHERE (uid= ?) AND (hackathon = ?) ORDER BY time DESC;';
+      const expectedParams = [uid.uid, uid.hackathon];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -106,13 +106,13 @@ describe('TEST: Register data mapper', () => {
       // @ts-ignore
       async () => {
         // GIVEN: A registration with a valid ID to read from
-        const uid = 'test uid';
+        const uid = { uid: 'test uid', hackathon: 'test uid' };
         // WHEN: Retrieving a single field for this registration
         await registerDataMapper.get(uid, { fields: ['test field'] });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT `test field` FROM `REGISTRATION` WHERE (uid= ?) ORDER BY time DESC;';
-        const expectedParams = [uid];
+        const expectedSQL = 'SELECT `test field` FROM `REGISTRATION` WHERE (uid= ?) AND (hackathon = ?) ORDER BY time DESC;';
+        const expectedParams = [uid.uid, uid.hackathon];
         const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
           .first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -434,13 +434,13 @@ describe('TEST: Register data mapper', () => {
     // @ts-ignore
     it('causes the registration to get deleted', async () => {
       // GIVEN: A registration with a valid ID
-      const uid = 'test uid';
+      const uid = { uid: 'test uid', hackathon: 'test uid' };
       // WHEN: Deleting this registration
       await registerDataMapper.delete(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'DELETE FROM `REGISTRATION` WHERE (uid = ?);';
-      const expectedParams = [uid];
+      const expectedSQL = 'DELETE FROM `REGISTRATION` WHERE (uid = ?) AND (hackathon = ?);';
+      const expectedParams = [uid.uid, uid.hackathon];
       const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

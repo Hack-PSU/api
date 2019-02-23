@@ -1,9 +1,9 @@
 import * as squel from 'squel';
-import { IDataMapper } from '../../services/database';
+import { IDataMapperHackathonSpecific } from '../../services/database';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Rsvp } from './rsvp';
 
-interface IRsvpDataMapper extends IDataMapper<Rsvp> {
+interface IRsvpDataMapper extends IDataMapperHackathonSpecific<Rsvp> {
 
   // To Be Done
   // rsvpStatus (id: UidType): Promise<IDbResult<boolean>>;

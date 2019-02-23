@@ -72,7 +72,7 @@ describe('TEST: Update data mapper', () => {
       // @ts-ignore
       async () => {
         // GIVEN: An update with a valid ID to read from
-        const uid = 'test uid';
+        const uid = { uid: 'test uid', hackathon: 'test uid' };
         // WHEN: Retrieving data for this update
         const result = await updateDataMapper.get(uid);
 

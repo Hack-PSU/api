@@ -6,6 +6,7 @@ import { Util } from '../../../JSCommon/util';
 import { ICheckoutItemsDataMapper } from '../../../models/checkout-items';
 import { ICheckoutObjectDataMapper } from '../../../models/checkout-object';
 import { CheckoutObject } from '../../../models/checkout-object/checkout-object';
+import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { IApikeyAuthService, IFirebaseAuthService } from '../../../services/auth/auth-types';
@@ -22,11 +23,19 @@ export class AdminCheckoutController extends ScannerController implements IExpre
     @Inject('ICheckoutObjectDataMapper') scannerAcl: IAclPerm,
     @Inject('IScannerDataMapper') scannerDataMapper: IScannerDataMapper,
     @Inject('IRegisterDataMapper') registerDataMapper: IRegisterDataMapper,
+    @Inject('IActiveHackathonDataMapper') activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('ICheckoutObjectDataMapper') private readonly checkoutObjectDataMapper: ICheckoutObjectDataMapper,
     @Inject('ICheckoutItemsDataMapper') private readonly checkoutItemsDataMapper: ICheckoutItemsDataMapper,
     @Inject('ICheckoutItemsDataMapper') private readonly checkoutItemsAcl: IAclPerm,
   ) {
-    super(authService, scannerAuthService, scannerAcl, scannerDataMapper, registerDataMapper);
+    super(
+      authService,
+      scannerAuthService,
+      scannerAcl,
+      scannerDataMapper,
+      registerDataMapper,
+      activeHackathonDataMapper,
+    );
     this.router = Router();
     this.routes(this.router);
   }

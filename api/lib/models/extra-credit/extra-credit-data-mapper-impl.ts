@@ -2,7 +2,7 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import { UidType } from '../../JSCommon/common-types';
+import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -44,11 +44,14 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     );
   }
 
-  public delete(object: UidType): Promise<IDbResult<void>> {
+  public delete(object: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public get(object: UidType, opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {
+  public get(
+    object: ICompoundHackathonUidType,
+    opts?: IUowOpts,
+  ): Promise<IDbResult<ExtraCreditAssignment>> {
     throw new MethodNotImplementedError('this action is not supported');
   }
 

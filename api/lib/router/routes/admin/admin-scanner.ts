@@ -4,6 +4,7 @@ import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IAdminStatisticsDataMapper, IUserStatistics } from '../../../models/admin/statistics';
+import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { IScannerProcessor } from '../../../processors/scanner-processor';
@@ -19,13 +20,21 @@ export class AdminScannerController extends ScannerController implements IExpres
   constructor(
     @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
     @Inject('IAdminScannerProcessor') private readonly scannerProcessor: IScannerProcessor,
+    @Inject('IActiveHackathonDataMapper') activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IAuthService') authService: IFirebaseAuthService,
     @Inject('IScannerAuthService') scannerAuthService: IApikeyAuthService,
     @Inject('IScannerDataMapper') scannerAcl: IAclPerm,
     @Inject('IScannerDataMapper') scannerDataMapper: IScannerDataMapper,
     @Inject('IRegisterDataMapper') registerDataMapper: IRegisterDataMapper,
   ) {
-    super(authService, scannerAuthService, scannerAcl, scannerDataMapper, registerDataMapper);
+    super(
+      authService,
+      scannerAuthService,
+      scannerAcl,
+      scannerDataMapper,
+      registerDataMapper,
+      activeHackathonDataMapper,
+    );
     this.router = Router();
     this.routes(this.router);
   }

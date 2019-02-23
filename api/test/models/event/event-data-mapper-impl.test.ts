@@ -5,11 +5,10 @@ import { Event, EventType } from '../../../lib/models/event/event';
 import { EventDataMapperImpl } from '../../../lib/models/event/event-data-mapper-impl';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
-import { IDataMapper } from '../../../lib/services/database';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
 
-let eventDataMapper: IDataMapper<Event>;
+let eventDataMapper: EventDataMapperImpl;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
@@ -33,13 +32,13 @@ describe('TEST: Event Data Mapper', () => {
     // @ts-ignore
     it('generates the expected SQL to retrieve an event', async () => {
       // GIVEN: An event with a valid ID to read from
-      const uid = 'test uid';
+      const uid = { uid: 'test uid', hackathon: 'test uid' };
       // WHEN: Retrieving data for this event
       await eventDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `EVENTS` WHERE (uid= ?);';
-      const expectedParams = [uid];
+      const expectedSQL = 'SELECT * FROM `EVENTS` WHERE (uid= ?) AND (hackathon = ?);';
+      const expectedParams = [uid.uid, uid.hackathon];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -52,13 +51,13 @@ describe('TEST: Event Data Mapper', () => {
     // @ts-ignore
     it('causes the event to get deleted', async () => {
       // GIVEN: An event with a valid ID to read from
-      const uid = 'test uid';
+      const uid = { uid: 'test uid', hackathon: 'test uid' };
       // WHEN: Retrieving data for this event
       await eventDataMapper.delete(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'DELETE FROM `EVENTS` WHERE (uid = ?);';
-      const expectedParams = [uid];
+      const expectedSQL = 'DELETE FROM `EVENTS` WHERE (uid = ?) AND (hackathon = ?);';
+      const expectedParams = [uid.uid, uid.hackathon];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

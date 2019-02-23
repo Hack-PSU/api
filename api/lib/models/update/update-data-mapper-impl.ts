@@ -2,7 +2,8 @@ import { Inject } from 'injection-js';
 import { default as NodeTimeUuid } from 'node-time-uuid';
 import { from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { IUpdateDataMapper, UpdateIdType } from '.';
+import { IUpdateDataMapper } from '.';
+import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -48,29 +49,27 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
     );
   }
 
-  public delete(id: UpdateIdType): Promise<IDbResult<void>> {
-    return this.activeHackathonDataMapper.activeHackathon
-      .pipe(
-        map(hackathon => hackathon.uid),
-        switchMap(reference => this.rtdb.query<void>(
-          RtdbQueryType.DELETE,
-          [`${reference}/${id}`],
-          { cache: false },
-        )),
+  public delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
+    return from(
+      this.rtdb.query<void>(
+        RtdbQueryType.DELETE,
+        [`${id.hackathon}/${id.uid}`],
+        { cache: false },
+      ),
+    ).pipe(
         map(() => ({ result: 'Success', data: undefined })),
       )
       .toPromise();
   }
 
-  public get(id: UpdateIdType, opts?: IUowOpts): Promise<IDbResult<Update>> {
-    return this.activeHackathonDataMapper.activeHackathon
+  public get(id: ICompoundHackathonUidType, opts?: IUowOpts): Promise<IDbResult<Update>> {
+    return from(
+      this.rtdb.query<Update>(
+        RtdbQueryType.GET,
+        [`${id.hackathon}/${id.uid}`],
+        { cache: true },
+      ))
       .pipe(
-        map(hackathon => hackathon.uid),
-        switchMap(reference => this.rtdb.query<Update>(
-          RtdbQueryType.GET,
-          [`${reference}/${id}`],
-          { cache: true },
-        )),
         map(result => ({ result: 'Success', data: result as Update })),
       ).toPromise();
   }

@@ -93,7 +93,7 @@ describe('TEST: Attendance data mapper', () => {
         await attendanceDataMapper.getAll({ startAt: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` OFFSET 100;';
+        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` OFFSET ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -109,7 +109,7 @@ describe('TEST: Attendance data mapper', () => {
         await attendanceDataMapper.getAll({ count: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` LIMIT 100;';
+        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` LIMIT ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -129,7 +129,7 @@ describe('TEST: Attendance data mapper', () => {
         });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` WHERE (hackathon_id = \'test uid\');';
+        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` WHERE (hackathon_id = ?);';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -195,7 +195,7 @@ describe('TEST: Attendance data mapper', () => {
       });
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT COUNT(uid) AS "count" FROM `ATTENDANCE` WHERE (hackathon_id = \'test uid\');';
+      const expectedSQL = 'SELECT COUNT(uid) AS "count" FROM `ATTENDANCE` WHERE (hackathon_id = ?);';
       const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
       expect(generatedSQL).to.equal(expectedSQL);

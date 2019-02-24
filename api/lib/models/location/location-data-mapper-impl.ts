@@ -82,11 +82,10 @@ export class LocationDataMapperImpl extends GenericDataMapper
     const query = squel
       .select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName, 'location')
-      .toString()
-      .concat(';');
-    const params = [];
+      .toParam();
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<Location>(query, params, { cache: true }),
+      this.sql.query<Location>(query.text, query.values, { cache: true }),
     )
       .pipe(
         map((locations: Location[]) => ({
@@ -102,11 +101,11 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toString()
+      .toParam();
+    query.text = query.text
       .concat(';');
-    const params = [];
     return from(
-      this.sql.query<number>(query, params, { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     )
       .pipe(map((result: number[]) => ({ result: 'Success', data: result[0] })))
       .toPromise();

@@ -25,6 +25,7 @@
     }
   },
   "required": [
+    "user_id",
     "item_id",
     "checkout_time"
   ]

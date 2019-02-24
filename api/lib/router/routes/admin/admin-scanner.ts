@@ -45,6 +45,20 @@ export class AdminScannerController extends ScannerController implements IExpres
       (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.CREATE),
       (req, res, next) => this.addRfidAssignments(req, res, next),
     );
+    app.post(
+      '/scans',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.CREATE,
+      ),
+      (req, res, next) => this.addScans(req, res, next),
+    );
+    app.post(
+      '/register',
+      (req, res, next) => this.confirmRegisterScannerHandler(req, res, next),
+    );
     app.get(
       '/register',
       (req, res, next) => this.authService.authenticationMiddleware(req, res, next),
@@ -60,10 +74,6 @@ export class AdminScannerController extends ScannerController implements IExpres
         AclOperations.READ_ALL,
       ),
       (req, res, next) => this.getNextEventsHandler(res, next),
-    );
-    app.post(
-      '/register',
-      (req, res, next) => this.confirmRegisterScannerHandler(req, res, next),
     );
     app.get(
       '/registrations',
@@ -103,26 +113,26 @@ export class AdminScannerController extends ScannerController implements IExpres
   /**
    * @api {post} /admin/scanner/assign Assign RFID tags ID to users
    * @apiVersion 2.0.0
-   * @apiName Assign an RFID to a user (Admin)
+   * @apiName Assign an RFID to a user
    *
    * @apiGroup Admin Scanner
    * @apiPermission TeamMemberPermission
-   *
+   * @apiPermission ScannerPermission
+   * @apiUse ApiKeyArgumentRequired
    * @apiUse AuthArgumentRequired
    * @apiParam {Array} assignments An array or single instance of RFID tags to User uid assignments
    * @apiParamExample {json} Request-Example:
    *     [
    *      {
-   *       "rfid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+   *       "wid": "1vyv2boy1v3b4oi12-1234lhb1234b",
    *       "uid": "nbG7b87NB87nB7n98Y7",
    *       "time": 1239712938120
    *     },
    *     { ... }
    *     ]
    * @apiSuccess {RfidAssignment[]} Array of rfid insertion results
-   * @apiUse IllegalArgumentError
-   * @apiPermission ScannerPermission
    * @apiUse ResponseBodyDescription
+   * @apiUse IllegalArgumentError
    */
   private async addRfidAssignments(req: Request, res: Response, next: NextFunction) {
     // Validate incoming request
@@ -138,6 +148,50 @@ export class AdminScannerController extends ScannerController implements IExpres
 
     try {
       const response = await this.scannerProcessor.processRfidAssignments(req.body.assignments);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.standardErrorHandler(error, next);
+    }
+  }
+
+  /**
+   * @api {post} admin/scanner/scans Upload scans from the event
+   * @apiVersion 2.0.0
+   * @apiName Submit scans from the event
+   *
+   * @apiGroup Admin Scanner
+   * @apiPermission TeamMemberPermission
+   * @apiPermission ScannerPermission
+   * @apiUse AuthArgumentRequired
+   * @apiUse ApiKeyArgumentRequired
+   * @apiParam {Array} scans An array of scan objects
+   * @apiParamExample {json} Request-Example:
+   *     [
+   *      {
+   *       "wid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+   *       "scan_location": "nbG7b87NB87nB7n98Y7",
+   *       "scan_time": 1239712938120
+   *     },
+   *     { ... }
+   *     ]
+   * @apiSuccess {Scans[]} Array of scan insertion results
+   * @apiUse ResponseBodyDescription
+   * @apiUse IllegalArgumentError
+   */
+  private async addScans(req: Request, res: Response, next: NextFunction) {
+    // Validate incoming request
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+    if (!req.body.scans) {
+      return Util.standardErrorHandler(
+        new HttpError('Cannot find scans(s) to add', 400),
+        next,
+      );
+    }
+
+    try {
+      const response = await this.scannerProcessor.processScans(req.body.scans);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.standardErrorHandler(error, next);

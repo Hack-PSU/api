@@ -16,6 +16,7 @@ import {
   IRegistrationStats,
 } from '../../../models/register';
 import { Rsvp } from '../../../models/RSVP/rsvp';
+import { IScannerDataMapper } from '../../../models/scanner';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDataMapper, IDbResult } from '../../../services/database';
@@ -35,6 +36,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
     @Inject('IAttendanceDataMapper') private readonly attendanceDataMapper: IAttendanceDataMapper,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IPreRegisterDataMapper,
+    @Inject('IScannerDataMapper') private readonly scannerDataMapper: IScannerDataMapper,
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
     super();
@@ -185,6 +187,62 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   private async getPreRegistrationHandler(res: Response, next: NextFunction) {
     try {
       const result = await this.preRegDataMapper.getAll({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /admin/data/?type=scans Get all event scans
+   * @apiVersion 2.0.0
+   * @apiName Get Scans
+   * @apiGroup Admin Statistics
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {Scan[]} Array of Scans
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
+   */
+  private async getScansHandler(res: Response, next: NextFunction) {
+    try {
+      const result = await this.scannerDataMapper.getAllScans({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /admin/data/?type=wid_assignments Get all wristband assignmetns
+   * @apiVersion 2.0.0
+   * @apiName Get Wristband Assignments
+   * @apiGroup Admin Statistics
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {RfidAssignment[]} Array of Wristband assignments
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
+   */
+  private async getWidAssignments(res: Response, next: NextFunction) {
+    try {
+      const result = await this.scannerDataMapper.getAll({
         byHackathon: !res.locals.allHackathons,
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
@@ -395,6 +453,10 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         return this.getRegistrationStatisticsHandler(res, next);
       case 'rsvp':
         return this.getRsvpHandler(res, next);
+      case 'scans':
+        return this.getScansHandler(res, next);
+      case 'wid_assignments':
+        return this.getWidAssignments(res, next);
       case 'rsvp_count':
         return this.getRsvpCountHandler(res, next);
       case 'attendance':

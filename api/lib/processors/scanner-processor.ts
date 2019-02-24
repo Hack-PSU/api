@@ -4,6 +4,7 @@ import { HttpError } from '../JSCommon/errors';
 import { Event } from '../models/event/event';
 import { IScannerDataMapper } from '../models/scanner';
 import { RfidAssignment } from '../models/scanner/rfid-assignment';
+import { Scan } from '../models/scanner/scan';
 import { ResponseBody } from '../router/router-types';
 import { IApikeyAuthService } from '../services/auth/auth-types';
 import { IDataMapperHackathonSpecific, IDbResult } from '../services/database';
@@ -14,6 +15,8 @@ export interface IScannerProcessor {
   processorScannerConfirmation(pin: number, macAddress: string): Promise<ResponseBody>;
 
   getRelevantEvents(): Promise<ResponseBody>;
+
+  processScans(scans: any | any[]): Promise<ResponseBody>;
 }
 
 @Injectable()
@@ -127,6 +130,48 @@ export class ScannerProcessor implements IScannerProcessor {
       200,
       { data: relevantEvents, result: 'Success' },
     );
+  }
+
+  public async processScans(inputScans: any | any[]): Promise<ResponseBody> {
+    let response: ResponseBody;
+    if (Array.isArray(inputScans)) {
+      const scans: Scan[] = inputScans.map(
+        scan => new Scan(scan));
+      const result = await this.scannerDataMapper.addScans(scans);
+
+      // Find response status to send
+      const status = Math.max(
+        ...result.data.map(
+          (individualResult) => {
+            switch (individualResult.result) {
+              case 'Error':
+                return 500;
+              case 'Duplicate detected':
+                return 409;
+              case 'Bad input':
+                return 400;
+              default:
+                return 200;
+            }
+          },
+        ),
+      );
+
+      response = new ResponseBody(
+        'Success',
+        status,
+        result,
+      );
+    } else {
+      const scan = new Scan(inputScans);
+      const result = await this.scannerDataMapper.addSingleScan(scan);
+      response = new ResponseBody(
+        'Success',
+        200,
+        result as IDbResult<Scan>,
+      );
+    }
+    return response;
   }
 
   private searchForRelevantEvents(data: Event[]): Event[] {

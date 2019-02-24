@@ -4,15 +4,15 @@ import BaseObject from '../BaseObject';
 const rfidAssignmentSchema = jsonAssetLoader('rfidScansSchema');
 
 interface IRfidScanApiModel {
-  rfid_uid: UidType;
-  scan_location: number;
+  wid: UidType;
+  scan_event: UidType;
   scan_time: EpochNumber;
   hackathon?: UidType;
 }
 
 export class Scan extends BaseObject {
   public readonly rfid_uid: UidType;
-  public readonly scan_location: number;
+  public readonly scan_event: UidType;
   public readonly scan_time: EpochNumber;
   public readonly hackathon: UidType | undefined;
 
@@ -26,8 +26,8 @@ export class Scan extends BaseObject {
 
   constructor(data: IRfidScanApiModel) {
     super();
-    this.rfid_uid = data.rfid_uid;
-    this.scan_location = data.scan_location;
+    this.rfid_uid = data.wid;
+    this.scan_event = data.scan_event;
     this.scan_time = data.scan_time;
     this.hackathon = data.hackathon;
   }

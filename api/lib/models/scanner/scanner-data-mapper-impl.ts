@@ -105,8 +105,49 @@ export class ScannerDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getAll(opts?: IUowOpts): Promise<IDbResult<any[]>> {
-    throw new MethodNotImplementedError('this action is not supported');
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<any[]>> {
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName, 'wid_assignments')
+      .join(
+        this.activeHackathonDataMapper.tableName,
+        'hackathon',
+        'wid_assignments.hackathon = hackathon.uid',
+      );
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon.uid = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    const query = queryBuilder
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<RfidAssignment>(
+      query.text,
+      query.values,
+      { cache: true },
+    ))
+      .pipe(
+        map((registrations: RfidAssignment[]) => ({ result: 'Success', data: registrations })),
+      )
+      .toPromise();
   }
 
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
@@ -172,10 +213,28 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     };
   }
 
-  public addScans(scans: Scan[]): Promise<Array<IDbResult<Scan>>> {
-    return Promise.all(scans.map(
-      scan => this.addSingleScan(scan).catch(error => error),
-    ));
+  public async addScans(scans: Scan[]): Promise<IDbResult<Array<IDbResult<Scan>>>> {
+    let resultString: string = 'Success';
+    const result = await Promise.all(
+      scans.map(
+        // Handle any insertion errors here and
+        // change return an IDbResult with result: error
+        async (scan, index) => {
+          try {
+            return await this.addSingleScan(scan);
+          } catch (error) {
+            resultString = 'Error';
+            return ScannerDataMapperImpl.handleInsertionError<Scan>(
+              error,
+              scan[index],
+            );
+          }
+        },
+      ));
+    return {
+      data: result,
+      result: resultString,
+    };
   }
 
   public addSingleScan(scan: Scan): Promise<IDbResult<Scan>> {
@@ -213,5 +272,50 @@ export class ScannerDataMapperImpl extends GenericDataMapper
         );
     }
     return queryBuilder;
+  }
+
+  public async getAllScans(opts?: IUowOpts): Promise<IDbResult<Scan[]>> {
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName, 'scans')
+      .join(
+        this.activeHackathonDataMapper.tableName,
+        'hackathon',
+        'scans.hackathon = hackathon.uid',
+      );
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon.uid = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    const query = queryBuilder
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<Scan>(
+      query.text,
+      query.values,
+      { cache: true },
+    ))
+      .pipe(
+        map((registrations: Scan[]) => ({ result: 'Success', data: registrations })),
+      )
+      .toPromise();
   }
 }

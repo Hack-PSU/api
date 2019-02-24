@@ -15,7 +15,7 @@
     "emitDecoratorMetadata": true,
     "pretty": true,
     "baseUrl": "./src",
-    "rootDir": "./lib",
+    "rootDir": "./src",
     "outDir": "./lib",
     "experimentalDecorators": true,
     "strictNullChecks": true,

@@ -1,1 +1,0 @@
-{"version":3,"file":"response-body.js","sourceRoot":"","sources":["../../../lib/router/router-types/response-body.ts"],"names":[],"mappings":";;AAEA,MAAa,YAAY;IAKvB,YAAY,QAAgB,EAAE,MAAc,EAAE,IAAoB;QAChE,IAAI,CAAC,YAAY,GAAG,QAAQ,CAAC;QAC7B,IAAI,CAAC,MAAM,GAAG,MAAM,CAAC;QACrB,IAAI,CAAC,IAAI,GAAG,IAAI,CAAC;IACnB,CAAC;CACF;AAVD,oCAUC"}

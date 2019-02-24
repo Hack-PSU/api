@@ -4,19 +4,22 @@
   "engines": {
     "node": "~8"
   },
+  "eslintConfig": {
+    "extends": "airbnb-base"
+  },
   "private": true,
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon -r dotenv/config ./dist/bin/www",
-    "start": "node -r dotenv/config ./dist/bin/www",
+    "dev": "nodemon -r dotenv/config ./lib/bin/www",
+    "start": "node -r dotenv/config ./lib/bin/www",
     "prep": "grunt prep",
     "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls",
     "watch": "grunt && npm run debug-watch",
     "test": "nyc mocha",
     "prod": "APP_ENV=prod npnm run build && npm start",
-    "apidoc": "apidoc -i ./lib/router -o dist/doc/",
-    "debug": "node --inspect -r dotenv/config ./dist/bin/www",
-    "debug-watch": "nodemon -r dotenv/config --inspect ./dist/bin/www",
+    "apidoc": "apidoc -i ./src/router -o lib/doc/",
+    "debug": "node --inspect -r dotenv/config ./lib/bin/www",
+    "debug-watch": "nodemon -r dotenv/config --inspect ./lib/bin/www",
     "prepare": "tsc -p .",
     "pretest": "tsc -p .",
     "posttest": "npm run coveralls",

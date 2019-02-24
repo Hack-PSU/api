@@ -27,7 +27,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
   public READ_ALL: string;
   public UPDATE: string = 'project:update';
 
-  public tableName: string = 'PROJECT_TEAM';
+  public tableName: string = 'PROJECT_LIST';
   protected pkColumnName: string = 'projectID';
 
   constructor(
@@ -41,7 +41,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
       [this.DELETE],
       [AuthLevel.TECHNOLOGY],
       undefined,
-      [AuthLevel[AuthLevel.TEAM_MEMBER]],
+      [AuthLevel[AuthLevel.DIRECTOR]],
     );
     super.addRBAC(
       [this.COUNT],
@@ -124,10 +124,37 @@ export class ProjectDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  // public getByUser(uid: UidType): Promise<IDbResult<Project>> {
-  //   const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-  //     .from(this.tableName);
-  // }
+  public async getByUser(uid: UidType, opts?: IUowOpts): Promise<IDbResult<Project>> {
+    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from('PROJECT_TEAM', 'pt')
+      .field('pl.projectName')
+      .field('pt.*')
+      .field('ta.tableNumber')
+      .field('cl.*')
+      .join(this.tableName, 'pl', 'pl.projectID=pl.projectID')
+      .join('PROJECT_CATEGORIES', 'pc', 'pc.projectID = pt.projectID')
+      .join('CATEGORY_LIST', 'cl', 'cl.uid = pc.categoryID ')
+      .left_join('TABLE_ASSIGNMENTS', 'ta', 'ta.projectID=pl.project.ID')
+      .where('pt.userID = ?', uid);
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon = ?',
+          await (opts && opts.hackathon ?
+          Promise.resolve(opts.hackathon) :
+          this.activeHackathonDataMapper.activeHackathon
+            .pipe(map(hackathon => hackathon.uid))
+            .toPromise()),
+        );
+    }
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<Project>(query.text, query.values, { stream: false, cache: true },
+      ))
+      .pipe(map((project: Project[]) => ({ result: 'Success', data: project[0] })),
+      )
+      .toPromise();
+  }
 
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })

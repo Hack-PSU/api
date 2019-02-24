@@ -139,7 +139,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       autoQuoteFieldNames: false,
       autoQuoteTableNames: true,
     })
-      .fields([`i.quantity - (${subquery}) AS available`, 'i.*'])
+      .fields([`i.quantity - (${subquery.text}) AS available`, 'i.*'])
       .from(this.tableName, 'i')
       .left_join(this.checkoutObjectDataMapperImpl.tableName, 'c', 'c.item_id=i.uid')
       .left_join(this.activeHackathonDataMapper.tableName, 'h', 'c.hackathon=h.uid and h.active=1')

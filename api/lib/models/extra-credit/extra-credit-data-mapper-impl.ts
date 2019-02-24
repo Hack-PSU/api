@@ -68,7 +68,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       queryBuilder = queryBuilder.limit(opts.count);
     }
     const query = queryBuilder
-      .toParam()
+      .toParam();
 
     query.text = query.text.concat(';');
     return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: true }))
@@ -92,7 +92,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       queryBuilder = queryBuilder.limit(opts.count);
     }
     const query = queryBuilder
-      .toParam()
+      .toParam();
 
       query.text = query.text.concat(';');
     return from(this.sql.query<ExtraCreditClass>(query.text, query.values, { cache: true }))

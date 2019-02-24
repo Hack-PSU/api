@@ -96,11 +96,37 @@ export class ProjectDataMapperImpl extends GenericDataMapper
   }
 
   public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Project>>> {
-    throw new MethodNotImplementedError('This method is not implemented');
+    let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .from(this.tableName);
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon = ?',
+          await (opts && opts.hackathon ?
+          Promise.resolve(opts.hackathon) :
+          this.activeHackathonDataMapper.activeHackathon
+            .pipe(map(hackathon => hackathon.uid))
+            .toPromise()),
+        );
+    }
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<Project>(query.text, query.values, { stream: true, cache: true },
+      ))
+      .pipe(map((project: Stream<Project>) => ({ result: 'Success', data: project })),
+      )
+      .toPromise();
   }
 
   // public getByUser(uid: UidType): Promise<IDbResult<Project>> {
-  //   //const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true });
+  //   const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+  //     .from(this.tableName);
   // }
 
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {

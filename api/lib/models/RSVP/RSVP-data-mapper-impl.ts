@@ -97,7 +97,7 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
 
   public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<RSVP>>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(this.tableName);
+      .from(this.tableName, 'rsvp');
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -113,15 +113,16 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
             this.activeHackathonDataMapper.activeHackathon
               .pipe(map(hackathon => hackathon.uid))
               .toPromise()),
+        ).where(
+          'rsvp.rsvp_status = ?', true,
         );
     }
-    const query = queryBuilder
-      .toParam();
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<RSVP>(query.text, query.values, { stream: true, cache: true },
     ))
       .pipe(
-        map((event: Stream<RSVP>) => ({ result: 'Success', data: event })),
+        map((rsvpDetails: Stream<RSVP>) => ({ result: 'Success', data: rsvpDetails })),
       )
       .toPromise();
   }

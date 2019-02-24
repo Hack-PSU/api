@@ -72,15 +72,15 @@ describe('TEST: Update data mapper', () => {
       // @ts-ignore
       async () => {
         // GIVEN: An update with a valid ID to read from
-        const uid = 'test uid';
+        const uid = { uid: 'test uid', hackathon: 'test uid' };
         // WHEN: Retrieving data for this update
         const result = await updateDataMapper.get(uid);
 
         // THEN: Generated query matches the expectation
         const expectedQuery = RtdbQueryType.GET;
-        const expectedParams = 'test uid/test uid';
+        const expectedParams = ['test uid/test uid'];
         expect((result.data as any).query).to.equal(expectedQuery);
-        expect((result.data as any).params).to.equal(expectedParams);
+        expect((result.data as any).params).to.deep.equal(expectedParams);
       },
     );
   });
@@ -96,9 +96,9 @@ describe('TEST: Update data mapper', () => {
 
         // THEN: Generated query matches the expectation
         const expectedQuery = RtdbQueryType.REF;
-        const expectedParams = '/updates/test uid';
+        const expectedParams = ['/updates/test uid'];
         expect((result.data as any).query).to.equal(expectedQuery);
-        expect((result.data as any).params).to.equal(expectedParams);
+        expect((result.data as any).params).to.deep.equal(expectedParams);
       },
     );
   });
@@ -112,9 +112,9 @@ describe('TEST: Update data mapper', () => {
 
       // THEN: Generated query matches the expectation
       const expectedQuery = RtdbQueryType.GET;
-      const expectedParams = '/updates/test uid';
+      const expectedParams = ['/updates/test uid'];
       expect((result.data as any).query).to.equal(expectedQuery);
-      expect((result.data as any).params).to.equal(expectedParams);
+      expect((result.data as any).params).to.deep.equal(expectedParams);
     });
   });
 
@@ -127,9 +127,9 @@ describe('TEST: Update data mapper', () => {
 
       // THEN: Generated query matches the expectation
       const expectedQuery = RtdbQueryType.COUNT;
-      const expectedParams = '/updates/test uid';
+      const expectedParams = ['/updates/test uid'];
       expect((result.data as any).query).to.equal(expectedQuery);
-      expect((result.data as any).params).to.equal(expectedParams);
+      expect((result.data as any).params).to.deep.equal(expectedParams);
     });
   });
 
@@ -145,7 +145,7 @@ describe('TEST: Update data mapper', () => {
       const expectedQuery = RtdbQueryType.SET;
       const expectedParams = /test uid\/\w/;
       expect((result.data as any).query).to.equal(expectedQuery);
-      expect((result.data as any).params).to.match(expectedParams);
+      expect((result.data as any).params[0]).to.match(expectedParams);
     });
 
     // @ts-ignore
@@ -184,7 +184,7 @@ describe('TEST: Update data mapper', () => {
       const expectedQuery = RtdbQueryType.UPDATE;
       const expectedParams = /test uid\/test id/;
       expect((result.data as any).query).to.equal(expectedQuery);
-      expect((result.data as any).params).to.match(expectedParams);
+      expect((result.data as any).params[0]).to.match(expectedParams);
     });
 
     // @ts-ignore

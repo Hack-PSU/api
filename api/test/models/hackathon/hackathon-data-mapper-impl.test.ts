@@ -121,13 +121,12 @@ describe('TEST: Hackathon data mapper', () => {
       expect((result.data as any)).to.deep.equal(hackathon.cleanRepresentation);
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'INSERT INTO `HACKATHON` (`uid`, `name`, `start_time`,' +
-        ' `end_time`, `base_pin`, `active`) VALUES (?, ?, ?, ?,' +
-        ' (SELECT MAX(pin) FROM REGISTRATION LOCK IN SHARE MODE), ?);';
+        ' `active`, `base_pin`) VALUES (?, ?, ?, ?,' +
+        ' (SELECT MAX(pin) FROM REGISTRATION LOCK IN SHARE MODE));';
       const expectedParams = [
         validHackathon.uid,
         validHackathon.name,
         validHackathon.start_time,
-        validHackathon.end_time,
         validHackathon.active,
       ];
       const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)

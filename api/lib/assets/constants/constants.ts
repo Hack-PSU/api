@@ -13,7 +13,7 @@ export class Constants {
     host: Util.readEnv('SQL_HOSTNAME', 'localhost') || Util.readEnv('RDS_HOSTNAME', 'localhost'),
     multipleStatements: true,
     // Required for GCP
-    password: Util.readEnv('SQL_PASSWORD', 'secret') || Util.readEnv('RDS_PASSWORD', 'secret'),
+    password: Util.readEnv('SQL_PASSWORD', '') || Util.readEnv('RDS_PASSWORD', ''),
     port: parseInt(Util.readEnv('SQL_PORT', '3306'), 10),
     socketPath: `/cloudsql/${Util.readEnv('INSTANCE_CONNECTION_NAME', '')}`,
     timeout: 60 * 60 * 1000,
@@ -27,6 +27,11 @@ export class Constants {
         // Therefore, our single "bit field" comes back as the bits '0000 0001',
         // which is equivalent to the number 1.
         return (bytes[0] === 1);
+      }
+      if (field.type === 'TINY') {
+        // For TINYINT, which is used as a boolean in the database
+        // Convert it to boolean value
+        return field.string() === '1';
       }
       return (useDefaultTypeCasting());
     },

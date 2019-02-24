@@ -1,13 +1,11 @@
-import { Stream } from 'ts-stream';
 import { IDataMapper, IDbResult } from '../../services/database';
 import { CheckoutItems } from './checkout-items';
-import { CheckoutItemsDataMapperImpl } from './checkout-items-data-mapper-impl';
 
-interface ICheckoutItemsDataMapper extends IDataMapper<CheckoutItems> {
+export interface ICheckoutItemsDataMapper extends IDataMapper<CheckoutItems> {
     /**
      * Returns all available items
      */
-  getAllAvailable(): Promise<IDbResult<Stream<CheckoutItems>>>;
+  getAllAvailable(): Promise<IDbResult<CheckoutItems[]>>;
 
     /**
      * Returns the availability of a specific item
@@ -15,5 +13,3 @@ interface ICheckoutItemsDataMapper extends IDataMapper<CheckoutItems> {
      */
   getAvailable(id: number): Promise<IDbResult<CheckoutItems>>;
 }
-
-export { CheckoutItems, CheckoutItemsDataMapperImpl, ICheckoutItemsDataMapper };

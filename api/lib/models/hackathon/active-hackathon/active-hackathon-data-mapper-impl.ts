@@ -95,7 +95,7 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
       values: activeQuery.values.concat(newHackathonQuery.values),
     };
     return from(
-      this.sql.query<any>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<any>(query.text, query.values, { cache: false }),
     )
       .pipe(
         // Update hackathon observable

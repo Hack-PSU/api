@@ -41,3 +41,27 @@
  * @apiDefine TechnologyAdminPermission Hackathon Technology Team Administrator
  * A logged in administrator with privilege level 4 (Full privilege)
  */
+/**
+ * @apiDefine ScannerPermission Hackathon Scanner
+ * An authenticated scanner with a valid API key
+ */
+/**
+ * @apiDefine ResponseBodyDescription
+ * @apiSuccessExample {json} Success-Response:
+ *      HTTP/1.1 200 OK
+ *     {
+ *        "api_response": "Success",
+ *        "status": 200,
+ *        "body": {
+ *          "result": "Success",
+ *          "data": {...}
+ *        }
+ *      }
+ */
+/**
+ * @apiDefine RequestOpts
+ * @apiParam [byHackathon] {boolean} Get data by hackathon
+ * @apiParam [count] {number} Number of responses to return
+ * @apiParam [hackathon] {String} uid of hackathon to get results by. byHackathon must be true
+ * @apiParam [startAt] {number} offset to paginate results
+ */

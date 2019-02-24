@@ -12,7 +12,7 @@ export interface IRsvpApiModel {
 
 }
 
-export class RSVP extends BaseObject {
+export class Rsvp extends BaseObject {
 
   public readonly uid?: UidType;
   public readonly rsvp_time: number;

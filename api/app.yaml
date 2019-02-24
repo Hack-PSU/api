@@ -7,3 +7,5 @@ automatic_scaling:
   min_instances: 0
 env_variables:
   GCLOUD_ENV: "prod"
+beta_settings:
+  cloud_sql_instances: hackpsu18:us-central1:hackpsu18

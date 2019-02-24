@@ -15,7 +15,7 @@ export class PreRegistrationProcessor implements IPreregistrationProcessor {
 
   constructor(
     @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IDataMapper<PreRegistration>,
-  ){ }
+  ) { }
 
   public async processPreregistration(preRegistration: PreRegistration) {
     const result = await this.preRegDataMapper.insert(preRegistration);

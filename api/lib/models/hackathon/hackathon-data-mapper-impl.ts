@@ -2,7 +2,6 @@ import { Inject } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -13,8 +12,6 @@ import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { Hackathon } from './hackathon';
-
-// import { IHackathonDataMapper } from './index';
 
 export class HackathonDataMapperImpl extends GenericDataMapper
   implements IDataMapper<Hackathon>, IAclPerm {
@@ -69,21 +66,22 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Hackathon>(query.text, query.values, { stream: false, cache: true }))
+    return from(this.sql.query<Hackathon>(query.text, query.values, { cache: true }))
       .pipe(
         map((event: Hackathon[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
 
-  public getAll(): Promise<IDbResult<Stream<Hackathon>>> {
+  public getAll(): Promise<IDbResult<Hackathon[]>> {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .toString()
+      .toParam();
+    query.text = query.text
       .concat(';');
-    return from(this.sql.query<Hackathon>(query, [], { stream: true, cache: true }))
+    return from(this.sql.query<Hackathon>(query.text, query.values, { cache: true }))
       .pipe(
-        map((event: Stream<Hackathon>) => ({ result: 'Success', data: event })),
+        map((hackathons: Hackathon[]) => ({ result: 'Success', data: hackathons })),
       )
       .toPromise();
   }
@@ -92,10 +90,10 @@ export class HackathonDataMapperImpl extends GenericDataMapper
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toString()
-      .concat(';');
+      .toParam();
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: false, cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
@@ -108,19 +106,21 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
-    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+    let queryBuilder = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
-      .setFieldsRows([object.dbRepresentation])
-      .set(
+      .setFieldsRows([object.dbRepresentation]);
+    if (object.base_pin === undefined || object.base_pin === null) {
+      queryBuilder = queryBuilder.set(
         'base_pin',
         squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: false })
           .from('REGISTRATION LOCK IN SHARE MODE')
           .field('MAX(pin)'),
-      )
-      .toParam();
+      );
+    }
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
@@ -128,7 +128,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
 
   public async update(object: Hackathon): Promise<IDbResult<Hackathon>> {
     const currentDbObject = await this.get(object.id);
-    const currentObject = Hackathon.merge(currentDbObject.data, object);
+    const currentObject = object.merge(currentDbObject.data, object);
     const validation = currentObject.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -142,7 +142,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: currentObject.cleanRepresentation })),
     ).toPromise();

@@ -57,14 +57,14 @@ export class RegistrationProcessor implements IRegistrationProcessor {
 
   public normaliseRegistrationData(registration: any) {
     /** Converting boolean strings to booleans types in registration */
-    registration.travelReimbursement = registration.travelReimbursement && registration.travelReimbursement === 'true';
+    registration.travelReimbursement = registration.travelReimbursement === true || registration.travelReimbursement === 'true';
 
-    registration.firstHackathon = registration.firstHackathon && registration.firstHackathon === 'true';
+    registration.firstHackathon = registration.firstHackathon === true || registration.firstHackathon === 'true';
 
-    registration.eighteenBeforeEvent = registration.eighteenBeforeEvent && registration.eighteenBeforeEvent === 'true';
+    registration.eighteenBeforeEvent = registration.eighteenBeforeEvent === true || registration.eighteenBeforeEvent === 'true';
 
-    registration.mlhcoc = registration.mlhcoc && registration.mlhcoc === 'true';
+    registration.mlhcoc = registration.mlhcoc === true || registration.mlhcoc === 'true';
 
-    registration.mlhdcp = registration.mlhdcp && registration.mlhdcp === 'true';
+    registration.mlhdcp = registration.mlhdcp === true || registration.mlhdcp === 'true';
   }
 }

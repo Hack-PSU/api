@@ -62,7 +62,7 @@ export class MysqlUow implements IUow {
                 const result: T[] = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
                 if (result !== null) {
                   this.complete(connection);
-                  this.logger.info('served requestt from memory cache');
+                  this.logger.info('served request from memory cache');
                   return resolve(result);
                 }
               } catch (err) {

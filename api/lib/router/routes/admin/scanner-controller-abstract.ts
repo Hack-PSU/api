@@ -38,14 +38,15 @@ abstract class ScannerController extends ParentRouter {
      * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
      */
     try {
-      if (response.locals.user) {
-        if (!response.locals.user.privilege) {
-          response.locals.user.privilege = AuthLevel.PARTICIPANT;
+      if (request.headers.idtoken) {
+        const decodedToken = await this.authService.checkAuthentication(request.headers.idtoken as string);
+        if (!decodedToken.privilege) {
+          decodedToken.privilege = AuthLevel.PARTICIPANT;
         }
         if (this.authService.verifyAclRaw(
           this.scannerAcl,
           operation,
-          response.locals.user,
+          decodedToken,
         )) {
           return next();
         }

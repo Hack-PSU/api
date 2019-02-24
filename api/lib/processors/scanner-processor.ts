@@ -1,5 +1,5 @@
 import { Inject, Injectable } from 'injection-js';
-import moment from 'moment';
+import moment, { unitOfTime } from 'moment';
 import { HttpError } from '../JSCommon/errors';
 import { Event } from '../models/event/event';
 import { IScannerDataMapper } from '../models/scanner';
@@ -19,13 +19,49 @@ export interface IScannerProcessor {
 @Injectable()
 export class ScannerProcessor implements IScannerProcessor {
 
-  private readonly timePad: Array<number | string>;
+  private static relevantEventsFilter(
+    value: Event,
+    amount: number,
+    unit: unitOfTime.Base,
+  ): boolean {
+    return moment()
+      .isBetween(
+        moment.unix(value.event_start_time / 1000).subtract(amount, unit),
+        moment.unix(value.event_end_time / 1000).add(amount, unit),
+      );
+  }
+
+  private static unitsStepFunction(int: number) {
+    if (int < 0) {
+      throw new Error('Illegal value');
+    }
+    if (int < 5) {
+      return 0;
+    }
+    if (int < 10) {
+      return 1;
+    }
+    if (int < 15) {
+      return 2;
+    }
+    if (int < 20) {
+      return 3;
+    }
+    if (int < 25) {
+      return 4;
+    }
+    return 5;
+  }
+
+  private searchAmount: number;
+  private readonly searchUnits: unitOfTime.Base[];
   constructor(
     @Inject('IScannerDataMapper') protected readonly scannerDataMapper: IScannerDataMapper,
     @Inject('IScannerAuthService') protected readonly scannerAuthService: IApikeyAuthService,
     @Inject('IEventDataMapper') private readonly eventDataMapper: IDataMapperHackathonSpecific<Event>,
   ) {
-    this.timePad = [15, 'minutes'];
+    this.searchAmount = 15;
+    this.searchUnits = ['minutes', 'hours', 'days', 'weeks', 'months', 'years'];
   }
 
   public async processRfidAssignments(inputAssignments: any | any[]) {
@@ -82,7 +118,7 @@ export class ScannerProcessor implements IScannerProcessor {
 
   public async getRelevantEvents(): Promise<ResponseBody> {
     const { data } = await this.eventDataMapper.getAll({ byHackathon: true });
-    const relevantEvents = data.filter(value => this.relevantEventsFilter(value))
+    const relevantEvents = this.searchForRelevantEvents(data)
       .sort((a, b) =>
         a.event_start_time < b.event_start_time ? -1 :
           a.event_start_time === b.event_start_time ? 0 : -1);
@@ -93,12 +129,25 @@ export class ScannerProcessor implements IScannerProcessor {
     );
   }
 
-  private relevantEventsFilter(value: Event): boolean {
-    const result = moment()
-      .isBetween(
-        moment.unix(value.event_start_time / 1000).subtract(...this.timePad),
-        moment.unix(value.event_end_time / 1000).add(...this.timePad),
-      );
-    return result;
+  private searchForRelevantEvents(data: Event[]): Event[] {
+    let result: Event[];
+    let lastUnit = this.searchUnits[0];
+    for (let i = 0; true; i += 1) {
+      if (lastUnit !== this.searchUnits[ScannerProcessor.unitsStepFunction(i)]) {
+        this.searchAmount = 1;
+      }
+      lastUnit = this.searchUnits[ScannerProcessor.unitsStepFunction(i)];
+      result = data.filter(
+        value => ScannerProcessor.relevantEventsFilter(
+          value,
+          this.searchAmount,
+          this.searchUnits[ScannerProcessor.unitsStepFunction(i)],
+        ));
+      this.searchAmount += 2 + i;
+      if (result.length > 0) {
+        this.searchAmount = 15;
+        return result;
+      }
+    }
   }
 }

@@ -74,10 +74,10 @@ export class MysqlUow implements IUow {
               connection.query(query, params, (err: MysqlError, result: T[]) => {
                 if (err) {
                   connection.rollback();
-                  reject(err);
+                  return reject(err);
                 }
                 if (result.length === 0) {
-                  reject({
+                  return reject({
                     sql: connection.format(query, params),
                     code: 'no data found',
                     errno: 404,

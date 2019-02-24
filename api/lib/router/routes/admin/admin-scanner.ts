@@ -49,7 +49,17 @@ export class AdminScannerController extends ScannerController implements IExpres
       '/register',
       (req, res, next) => this.authService.authenticationMiddleware(req, res, next),
       this.authService.verifyAcl(this.scannerAcl, AclOperations.CREATE),
-      (_req, res, next) => this.registerNewScannerHandler(res, next),
+      (req, res, next) => this.registerNewScannerHandler(res, next),
+    );
+    app.get(
+      '/events',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.READ_ALL,
+      ),
+      (req, res, next) => this.getNextEventsHandler(res, next),
     );
     app.post(
       '/register',
@@ -206,5 +216,27 @@ export class AdminScannerController extends ScannerController implements IExpres
     }
     const response = new ResponseBody('Success', 200, result);
     return this.sendResponse(res, response);
+  }
+
+  /**
+   * @api {get} /admin/scanner/events Obtain relevant events
+   * @apiVersion 2.0.0
+   * @apiName Obtain all relevant events (Scanner)
+   *
+   * @apiGroup Admin Scanner
+   * @apiPermission TeamMemberPermission
+   * @apiPermission ScannerPermission
+   * @apiUse AuthArgumentRequired
+   * @apiSuccess {Event[]} Array of current events
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async getNextEventsHandler(res: Response, next: NextFunction) {
+    try {
+      const response = await this.scannerProcessor.getRelevantEvents();
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 }

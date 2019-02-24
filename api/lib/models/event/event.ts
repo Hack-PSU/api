@@ -38,6 +38,7 @@ export class Event extends BaseObject {
   public event_title: string;
   public event_description: string | null;
   public event_type: string;
+  public hackathon?: UidType;
 
   constructor(data: IEventApiModel) {
     super();

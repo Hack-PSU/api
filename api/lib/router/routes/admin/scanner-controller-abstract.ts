@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { UidType } from '../../../JSCommon/common-types';
 import { HttpError } from '../../../JSCommon/errors';
-import { Util } from '../../../JSCommon/util';
+import { Environment, Util } from '../../../JSCommon/util';
 import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper, Registration } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
@@ -31,6 +31,9 @@ abstract class ScannerController extends ParentRouter {
     next: NextFunction,
     operation: AclOperations | AclOperations[],
   ) {
+    if (Util.getCurrentEnv() === Environment.DEBUG) {
+      return next();
+    }
     /**
      * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
      */

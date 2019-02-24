@@ -6,6 +6,7 @@ import { Util } from '../../../JSCommon/util';
 import { ICheckoutItemsDataMapper } from '../../../models/checkout-items';
 import { ICheckoutObjectDataMapper } from '../../../models/checkout-object';
 import { CheckoutObject } from '../../../models/checkout-object/checkout-object';
+import { CheckoutItems } from '../../../models/checkout-items/checkout-items';
 import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { IApikeyAuthService, IFirebaseAuthService } from '../../../services/auth/auth-types';
@@ -66,6 +67,28 @@ export class AdminCheckoutController extends ScannerController implements IExpre
         AclOperations.UPDATE,
       ),
       (req, res, next) => this.returnObjectHandler(req, res, next),
+    );
+    // Create a checkout item
+    app.post(
+      '/items',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.CREATE,
+      ),
+      (req, res, next) => this.addCheckoutItemsHandler(req, res, next),
+    );
+    // Get all available checkout items
+    app.get(
+      '/items/availability',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.READ_ALL,
+      ),
+      (req, res, next) => this.getAllAvailableCheckoutItemsHandler(res, next),
     );
   }
 
@@ -214,12 +237,91 @@ export class AdminCheckoutController extends ScannerController implements IExpre
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-  private async getAllCheckoutItemsHandler(res: Response, next: NextFunction) {
+  private async getAllCheckoutItemsHandler(
+    res: Response, 
+    next: NextFunction
+  ) {
     try {
       const result = await this.checkoutItemsDataMapper.getAll({
         count: res.locals.limit,
         startAt: res.locals.offset,
       });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+/**
+  * @api {post} /admin/checkout/items Add new item for checkout
+  * @apiVersion 2.0.0
+  * @apiName Add new item for checkout
+  * @apiGroup Item Checkout
+  * @apiParam {String} name Name of the item
+  * @apiParam {Number} quantity Quantity of items available
+  * @apiUse AuthArgumentRequired
+  * @apiPermission DirectorPermission
+  * @apiSuccess {CheckoutItem} The added item
+  * @apiUse IllegalArgumentError
+  * @apiUse ResponseBodyDescription
+  */
+  private async addCheckoutItemsHandler(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    // Validate incoming request
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+    if (!req.body.name) {
+      return Util.standardErrorHandler(
+        new HttpError('No name provided', 400),
+        next,
+      );
+    }
+    if (!req.body.quantity) {
+      return Util.standardErrorHandler(
+        new HttpError('No quantity provided', 400),
+        next,
+      );
+    }
+
+    try {
+      const checkoutItems = new CheckoutItems({
+        name: req.body.name,
+        quantity: req.body.quantity,
+      });
+      const result = await this.checkoutItemsDataMapper.insert(checkoutItems);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result,
+      );
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.standardErrorHandler(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /admin/checkout/items Get all items available for checkout
+   * @apiVersion 2.0.0
+   * @apiName Get items for checkout
+   * @apiGroup Item Checkout
+   * @apiUse AuthArgumentRequired
+   * @apiPermission TeamMemberPermission
+   * @apiSuccess {CheckoutItem[]} All available items in inventory for checkout
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async getAllAvailableCheckoutItemsHandler(
+    res: Response, 
+    next: NextFunction
+  ) {
+    try {
+      const result = await this.checkoutItemsDataMapper.getAllAvailable();
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {

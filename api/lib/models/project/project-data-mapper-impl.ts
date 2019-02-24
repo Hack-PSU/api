@@ -27,6 +27,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
   public UPDATE: string = 'project:update';
 
   public tableName: string = 'PROJECT_LIST';
+  public teamTableName: string = 'PROJECT_TEAM';
   protected pkColumnName: string = 'projectID';
 
   constructor(
@@ -125,7 +126,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
 
   public async getByUser(uid: UidType, opts?: IUowOpts): Promise<IDbResult<Project>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from('PROJECT_TEAM', 'pt')
+      .from(this.teamTableName, 'pt')
       .field('pl.projectName')
       .field('pt.*')
       .field('ta.tableNumber')

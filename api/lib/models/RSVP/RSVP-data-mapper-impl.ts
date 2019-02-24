@@ -200,25 +200,5 @@ export class RsvpDataMapperImpl extends GenericDataMapper
     return queryBuilder;
   }
 
-  // IN-PROGRESS
-  // public async rsvpStatus(id: UidType): Promise<IDbResult<boolean>> {
-  //   const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-  //     .from(this.tableName)
-  //     .field('rsvp.rsvp_status')
-  //     .where('rsvp.user_id = ?', id)
-  //     .where('hackathon = ?',
-  //            await this.activeHackathonDataMapper.activeHackathon
-  //         .pipe(map(hackathon => hackathon.uid))
-  //         .toPromise())
-  //     .toParam();
-  //   query.text = query.text.concat(';');
-  //   return from(this.sql.query<boolean>(
-  //       query.text,
-  //       query.values,
-  //       { , cache: true },
-  //     ))
-  //     .pipe(
-  //       map((status: boolean) => ({ result: 'Success', data: status })),
-  //   ).toPromise();
-  // }
+
 }

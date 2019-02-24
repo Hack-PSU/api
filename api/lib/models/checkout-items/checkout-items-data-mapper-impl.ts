@@ -146,6 +146,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       .group('i.uid')
       .toParam();
     query.text = query.text.concat(';');
+    query.values = query.values.concat(subquery.values);
     return from(
       this.sql.query<CheckoutItems>(query.text, query.values, { cache: true }))
       .pipe(

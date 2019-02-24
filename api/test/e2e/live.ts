@@ -5,7 +5,7 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const firebase = require('firebase');
 const nock = require('nock');
-const server = require('../../lib/app');
+const server = require('../../src/app');
 require('../test_helper')();
 
 const should = chai.should();

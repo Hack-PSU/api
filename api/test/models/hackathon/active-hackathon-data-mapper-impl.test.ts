@@ -4,12 +4,12 @@ import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import {
   ActiveHackathonDataMapperImpl,
   IActiveHackathonDataMapper,
-} from '../../../lib/models/hackathon/active-hackathon';
-import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
-import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
-import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
-import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
-import { Logger } from '../../../lib/services/logging/logging';
+} from '../../../src/models/hackathon/active-hackathon';
+import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
+import { RBAC } from '../../../src/services/auth/RBAC/rbac';
+import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
+import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
+import { Logger } from '../../../src/services/logging/logging';
 
 let hackathonDataMapper: IActiveHackathonDataMapper;
 let mysqlUow: MysqlUow;

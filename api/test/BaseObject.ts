@@ -9,14 +9,14 @@ require('dotenv').config();
 
 process.env.SQL_DATABASE = 'test';
 
-const MysqlUow = require('../lib/services/mysql_uow');
-const RtdbUow = require('../lib/services/rtdb_uow');
-const { Update } = require('../lib/models/update/update');
+const MysqlUow = require('../src/services/mysql_uow');
+const RtdbUow = require('../src/services/rtdb_uow');
+const { Update } = require('../src/models/update/update');
 
 const modelFiles = fs.readdirSync('./models')
   .map(a => a.replace(/\.js/g, ''))
   .filter(a => a !== 'BaseObject');
-const models = modelFiles.map(model => require(`../lib`)[model]);
+const models = modelFiles.map(model => require(`../src`)[model]);
 
 chai.use(chaiStream);
 const should = chai.should();

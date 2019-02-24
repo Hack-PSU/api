@@ -4,10 +4,10 @@ import { expect } from 'chai';
 import _ from 'lodash';
 import 'mocha';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
-import { HttpError } from '../../lib/JSCommon/errors';
-import { AdminDataMapperImpl } from '../../lib/models/admin';
-import { EmailHistory } from '../../lib/models/admin/types/email-history';
-import { AdminProcessor } from '../../lib/processors/admin-processor';
+import { HttpError } from '../../src/JSCommon/errors';
+import { AdminDataMapperImpl } from '../../src/models/admin';
+import { EmailHistory } from '../../src/models/admin/types/email-history';
+import { AdminProcessor } from '../../src/processors/admin-processor';
 
 // Global mocks
 const adminDMMock = mock(AdminDataMapperImpl);

@@ -4,25 +4,25 @@ import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, when } from 'ts-mockito';
-import { IAdminStatisticsDataMapper } from '../../../lib/models/admin/statistics';
-import { AdminStatisticsDataMapperImpl } from '../../../lib/models/admin/statistics/admin-statistics-data-mapper-impl';
-import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
-import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
+import { IAdminStatisticsDataMapper } from '../../../src/models/admin/statistics';
+import { AdminStatisticsDataMapperImpl } from '../../../src/models/admin/statistics/admin-statistics-data-mapper-impl';
+import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
+import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
 import {
   IPreRegisterDataMapper,
   IRegisterDataMapper,
   PreRegisterDataMapperImpl,
   RegisterDataMapperImpl,
-} from '../../../lib/models/register';
-import { IRsvpDataMapper } from '../../../lib/models/RSVP';
-import { RsvpDataMapperImpl } from '../../../lib/models/RSVP/RSVP-data-mapper-impl';
-import { IScannerDataMapper } from '../../../lib/models/scanner';
-import { ScannerDataMapperImpl } from '../../../lib/models/scanner/scanner-data-mapper-impl';
-import { IFirebaseAuthService } from '../../../lib/services/auth/auth-types';
-import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
-import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
-import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
-import { Logger } from '../../../lib/services/logging/logging';
+} from '../../../src/models/register';
+import { IRsvpDataMapper } from '../../../src/models/RSVP';
+import { RsvpDataMapperImpl } from '../../../src/models/RSVP/RSVP-data-mapper-impl';
+import { IScannerDataMapper } from '../../../src/models/scanner';
+import { ScannerDataMapperImpl } from '../../../src/models/scanner/scanner-data-mapper-impl';
+import { IFirebaseAuthService } from '../../../src/services/auth/auth-types';
+import { RBAC } from '../../../src/services/auth/RBAC/rbac';
+import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
+import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
+import { Logger } from '../../../src/services/logging/logging';
 
 let registerDataMapper: IRegisterDataMapper;
 let activeHackathonDataMapper: IActiveHackathonDataMapper;

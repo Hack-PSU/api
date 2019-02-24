@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import 'mocha';
-import { IndexProcessor } from '../../lib/processors/index-processor';
+import { IndexProcessor } from '../../src/processors/index-processor';
 
 let indexProcessor: IndexProcessor;
 

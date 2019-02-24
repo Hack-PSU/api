@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import 'mocha';
 import { instance, mock, reset, verify } from 'ts-mockito';
-import { Update } from '../../lib/models/update/update';
-import { UpdateDataMapperImpl } from '../../lib/models/update/update-data-mapper-impl';
-import { UpdateProcessor } from '../../lib/processors/update-processor';
-import { IPushNotifService } from '../../lib/services/communication/push-notification';
-import { OnesignalService } from '../../lib/services/communication/push-notification/onesignal.service';
-import { Logger } from '../../lib/services/logging/logging';
+import { Update } from '../../src/models/update/update';
+import { UpdateDataMapperImpl } from '../../src/models/update/update-data-mapper-impl';
+import { UpdateProcessor } from '../../src/processors/update-processor';
+import { IPushNotifService } from '../../src/services/communication/push-notification';
+import { OnesignalService } from '../../src/services/communication/push-notification/onesignal.service';
+import { Logger } from '../../src/services/logging/logging';
 
 // Global mocks
 const updateDMMock = mock(UpdateDataMapperImpl);

@@ -2,16 +2,16 @@ import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
-import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
-import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
-import { IUpdateDataMapper } from '../../../lib/models/update';
-import { Update } from '../../../lib/models/update/update';
-import { UpdateDataMapperImpl } from '../../../lib/models/update/update-data-mapper-impl';
-import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
-import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
-import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
-import { RtdbQueryType, RtdbUow } from '../../../lib/services/database/svc/rtdb-uow.service';
-import { Logger } from '../../../lib/services/logging/logging';
+import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
+import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
+import { IUpdateDataMapper } from '../../../src/models/update';
+import { Update } from '../../../src/models/update/update';
+import { UpdateDataMapperImpl } from '../../../src/models/update/update-data-mapper-impl';
+import { RBAC } from '../../../src/services/auth/RBAC/rbac';
+import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
+import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
+import { RtdbQueryType, RtdbUow } from '../../../src/services/database/svc/rtdb-uow.service';
+import { Logger } from '../../../src/services/logging/logging';
 
 function mockedQuery<T>(query, params) {
   // @ts-ignore

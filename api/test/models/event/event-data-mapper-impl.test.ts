@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import 'mocha';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Event, EventType } from '../../../lib/models/event/event';
-import { EventDataMapperImpl } from '../../../lib/models/event/event-data-mapper-impl';
-import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
-import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
-import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
-import { Logger } from '../../../lib/services/logging/logging';
+import { Event, EventType } from '../../../src/models/event/event';
+import { EventDataMapperImpl } from '../../../src/models/event/event-data-mapper-impl';
+import { RBAC } from '../../../src/services/auth/RBAC/rbac';
+import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
+import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
+import { Logger } from '../../../src/services/logging/logging';
 
 let eventDataMapper: EventDataMapperImpl;
 let mysqlUow: MysqlUow;

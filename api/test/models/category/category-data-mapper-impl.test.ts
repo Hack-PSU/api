@@ -2,12 +2,12 @@
 import { expect } from 'chai';
 import 'mocha';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Category } from '../../../lib/models/category/category';
-import { CategoryDataMapperImpl } from '../../../lib/models/category/category-data-mapper-impl';
-import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
-import { IDataMapper } from '../../../lib/services/database';
-import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
-import { Logger } from '../../../lib/services/logging/logging';
+import { Category } from '../../../src/models/category/category';
+import { CategoryDataMapperImpl } from '../../../src/models/category/category-data-mapper-impl';
+import { RBAC } from '../../../src/services/auth/RBAC/rbac';
+import { IDataMapper } from '../../../src/services/database';
+import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
+import { Logger } from '../../../src/services/logging/logging';
 
 let categoryDataMapper: IDataMapper<Category>;
 let mysqlUow: MysqlUow;

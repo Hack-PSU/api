@@ -2,7 +2,7 @@
 process.env.APP_ENV = 'test';
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const server = require('../../lib/app');
+const server = require('../../src/app');
 const sql = require('mysql');
 const squel = require('squel');
 const Chance = require('chance');
@@ -15,7 +15,7 @@ require('../test_helper')();
 const chance = new Chance();
 const standardAccessUid = 'N79Hnh4eq8Wapxvhn8jaX2I0kSq2';
 
-const sqlOptions = require('../../lib/assets/constants/constants').sqlConnection;
+const sqlOptions = require('../../src/assets/constants/constants').sqlConnection;
 
 const connection = sql.createConnection(sqlOptions);
 util.promisify(connection.connect);

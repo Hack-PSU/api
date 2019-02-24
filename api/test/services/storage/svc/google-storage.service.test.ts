@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import 'mocha';
 import { mockReq, mockRes } from 'sinon-express-mock';
-import { IFile } from '../../../../lib/services/storage/storage-types';
-import { GoogleStorageService } from '../../../../lib/services/storage/svc/google-storage.service';
+import { IFile } from '../../../../src/services/storage/storage-types';
+import { GoogleStorageService } from '../../../../src/services/storage/svc/google-storage.service';
 
 describe('TEST: Google Storage Service', () => {
   describe('TEST: File filter', () => {

@@ -4,8 +4,8 @@ import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
-import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
+import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
+import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
 import {
   AcademicYear,
   CodingExperience,
@@ -15,11 +15,11 @@ import {
   Registration,
   ShirtSize,
   VeteranOptions,
-} from '../../../lib/models/register';
-import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
-import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
-import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
-import { Logger } from '../../../lib/services/logging/logging';
+} from '../../../src/models/register';
+import { RBAC } from '../../../src/services/auth/RBAC/rbac';
+import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
+import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
+import { Logger } from '../../../src/services/logging/logging';
 
 let registerDataMapper: IRegisterDataMapper;
 let activeHackathonDataMapper: IActiveHackathonDataMapper;

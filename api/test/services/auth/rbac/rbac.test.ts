@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
-import { RBAC } from '../../../../lib/services/auth/RBAC/rbac';
-import { Role } from '../../../../lib/services/auth/RBAC/Role';
+import { RBAC } from '../../../../src/services/auth/RBAC/rbac';
+import { Role } from '../../../../src/services/auth/RBAC/Role';
 
 describe('TEST: RBAC Tests', () => {
   describe('TEST: Verify Access Level', () => {

@@ -9,9 +9,9 @@ import {
   Registration,
   ShirtSize,
   VeteranOptions,
-} from '../../lib/models/register';
-import { RegistrationProcessor } from '../../lib/processors/registration-processor';
-import { SendgridService } from '../../lib/services/communication/email/sendgrid.service';
+} from '../../src/models/register';
+import { RegistrationProcessor } from '../../src/processors/registration-processor';
+import { SendgridService } from '../../src/services/communication/email/sendgrid.service';
 
 // Global mocks
 const registrationDMMock = mock(RegisterDataMapperImpl);

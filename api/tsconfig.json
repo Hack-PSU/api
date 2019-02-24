@@ -14,9 +14,9 @@
     "sourceMap": true,
     "emitDecoratorMetadata": true,
     "pretty": true,
-    "baseUrl": "./lib",
+    "baseUrl": "./src",
     "rootDir": "./lib",
-    "outDir": "./dist",
+    "outDir": "./lib",
     "experimentalDecorators": true,
     "strictNullChecks": true,
     "noImplicitReturns": false,
@@ -28,8 +28,8 @@
     "exclude": ["**/*.js"]
   },
   "include": [
-    "lib/**/*.ts",
-    "lib/bin/*", "test/models/checkout-object/checkout-object-data-mapper-impl.test.ts"
+    "src/**/*.ts",
+    "src/bin/*", "test/models/checkout-object/checkout-object-data-mapper-impl.test.ts"
   ],
   "exclude": [
     "node_modules",

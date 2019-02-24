@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import 'mocha';
-import { MemCacheServiceImpl } from '../../../../lib/services/database/cache/memcache-impl.service';
+import { MemCacheServiceImpl } from '../../../../src/services/database/cache/memcache-impl.service';
 
 describe('TEST: Memcache Implementation test', () => {
   describe('TEST: cache get', () => {

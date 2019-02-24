@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 import 'mocha';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Hackathon } from '../../../lib/models/hackathon/hackathon';
-import { HackathonDataMapperImpl } from '../../../lib/models/hackathon/hackathon-data-mapper-impl';
-import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
-import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
-import { IDataMapper } from '../../../lib/services/database';
-import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
-import { Logger } from '../../../lib/services/logging/logging';
+import { Hackathon } from '../../../src/models/hackathon/hackathon';
+import { HackathonDataMapperImpl } from '../../../src/models/hackathon/hackathon-data-mapper-impl';
+import { RBAC } from '../../../src/services/auth/RBAC/rbac';
+import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
+import { IDataMapper } from '../../../src/services/database';
+import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
+import { Logger } from '../../../src/services/logging/logging';
 
 let hackathonDataMapper: IDataMapper<Hackathon>;
 let mysqlUow: MysqlUow;

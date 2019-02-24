@@ -65,7 +65,7 @@ module.exports = (grunt) => {
       //   cmd: `cd ..; ./prepare_deploy.sh ${grunt.option('production') ? 'prod' : ''}`,
       // },
       sql_proxy: {
-        cmd: './cloud_sql_proxy -instances=hackpsu18:us-central1:hackpsu18=tcp:3306 -credential_file=./lib/hackpsu-18-serviceaccount.json &',
+        cmd: './cloud_sql_proxy -instances=hackpsu18:us-central1:hackpsu18=tcp:3306 -credential_file=./src/hackpsu-18-serviceaccount.json &',
       },
       deploy: {
         cmd: `gcloud app deploy ${grunt.option('production') ? 'app.v2.yaml ' : 'staging.v2.app.yaml'} --quiet --no-user-output-enabled`,
@@ -75,13 +75,13 @@ module.exports = (grunt) => {
       keys: {
         files: [
           {
-            src: 'hackpsu-18-serviceaccount.json', cwd: './', dest: './lib/', expand: true,
+            src: 'hackpsu-18-serviceaccount.json', cwd: './', dest: './src/', expand: true,
           },
           {
-            src: 'config.json', cwd: './', dest: './dist/', expand: true,
+            src: 'config.json', cwd: './', dest: './lib/', expand: true,
           },
           {
-            src: 'gcs_config.json', cwd: './', dest: './dist/', expand: true,
+            src: 'gcs_config.json', cwd: './', dest: './lib/', expand: true,
           },
         ],
       },
@@ -89,22 +89,22 @@ module.exports = (grunt) => {
         files: [
           {
             src: './RSVP_Email.html',
-            cwd: './lib/assets/constants',
-            dest: './dist/assets/constants/',
+            cwd: './src/assets/constants',
+            dest: './lib/assets/constants/',
             expand: true,
           },
           {
-            src: '**', cwd: './lib/assets/emails/', dest: './dist/assets/emails', expand: true,
+            src: '**', cwd: './src/assets/emails/', dest: './lib/assets/emails', expand: true,
           },
           {
-            src: '**', cwd: './lib/assets/schemas/', dest: './dist/assets/schemas', expand: true,
+            src: '**', cwd: './src/assets/schemas/', dest: './lib/assets/schemas', expand: true,
           },
         ],
       },
       binary: {
         files: [
           {
-            src: './www', cwd: './lib/bin/', dest: './dist/bin/', expand: true,
+            src: './www', cwd: './src/bin/', dest: './lib/bin/', expand: true,
           },
         ],
       },

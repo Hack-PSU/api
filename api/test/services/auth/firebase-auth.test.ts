@@ -3,13 +3,13 @@ import { expect } from 'chai';
 import * as firebase from 'firebase-admin';
 import 'mocha';
 import { mockReq, mockRes } from 'sinon-express-mock';
-import { AuthLevel } from '../../../lib/services/auth/auth-types';
-import { FirebaseAuthService } from '../../../lib/services/auth/firebase-auth';
-import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
-import { AclOperations, IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
-import { Role } from '../../../lib/services/auth/RBAC/Role';
-import { IFirebaseService } from '../../../lib/services/common/firebase/firebase-types/firebase-service';
-import { Logger } from '../../../lib/services/logging/logging';
+import { AuthLevel } from '../../../src/services/auth/auth-types';
+import { FirebaseAuthService } from '../../../src/services/auth/firebase-auth';
+import { RBAC } from '../../../src/services/auth/RBAC/rbac';
+import { AclOperations, IAcl } from '../../../src/services/auth/RBAC/rbac-types';
+import { Role } from '../../../src/services/auth/RBAC/Role';
+import { IFirebaseService } from '../../../src/services/common/firebase/firebase-types/firebase-service';
+import { Logger } from '../../../src/services/logging/logging';
 
 // Mocked services
 let firebaseService: IFirebaseService;

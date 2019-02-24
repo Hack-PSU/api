@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import 'mocha';
 import { instance, mock, reset, verify } from 'ts-mockito';
-import { PreRegisterDataMapperImpl } from '../../lib/models/register';
-import { PreRegistration } from '../../lib/models/register/pre-registration';
-import { PreRegistrationProcessor } from '../../lib/processors/pre-registration-processor';
+import { PreRegisterDataMapperImpl } from '../../src/models/register';
+import { PreRegistration } from '../../src/models/register/pre-registration';
+import { PreRegistrationProcessor } from '../../src/processors/pre-registration-processor';
 
 // Global mocks
 const preregistrationDMMock = mock(PreRegisterDataMapperImpl);

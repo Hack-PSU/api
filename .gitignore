@@ -16,3 +16,4 @@ hackpsu-18-serviceaccount.json
 *.iml
 doc/
 .nyc_output/
+lib/

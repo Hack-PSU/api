@@ -2,9 +2,8 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
-import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
+import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
@@ -68,7 +67,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
@@ -87,7 +86,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<Project>(
       query.text,
       query.values,
-      { stream: false, cache: true },
+      { cache: true },
     ))
       .pipe(
         map((event: Project[]) => ({ result: 'Success', data: event[0] })),
@@ -95,7 +94,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<Project>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Project[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.startAt) {
@@ -117,9 +116,9 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Project>(query.text, query.values, { stream: true, cache: true },
+    return from(this.sql.query<Project>(query.text, query.values, { cache: true },
       ))
-      .pipe(map((project: Stream<Project>) => ({ result: 'Success', data: project })),
+      .pipe(map((projects: Project[]) => ({ result: 'Success', data: projects })),
       )
       .toPromise();
   }
@@ -149,7 +148,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Project>(query.text, query.values, { stream: false, cache: true },
+    return from(this.sql.query<Project>(query.text, query.values, { cache: true },
       ))
       .pipe(map((project: Project[]) => ({ result: 'Success', data: project[0] })),
       )
@@ -175,7 +174,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
       .toString()
       .concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: true, cache: true }),
+      this.sql.query<number>(query, [], { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
@@ -192,7 +191,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     const query = 'CALL assignTeam (?,?,?,@projectID_out); SELECT @projectID_out as projectID;';
     const list = [object.project_name, object.team.join(','), object.categories.join(',')];
     return from(
-      this.sql.query<UidType>(query, list, { stream: false, cache: false }),
+      this.sql.query<UidType>(query, list, { cache: false }),
     ).pipe(
       map((result: UidType[]) => {
         object.projectId = result[0];
@@ -215,22 +214,21 @@ export class ProjectDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
     ).toPromise();
   }
 
-  // Currently not being called anywhere so a further work will be needed
   public assignTable(object: Project): Promise<IDbResult<number>> {
     let query = 'CALL ';
     query = query.concat('assignTable')
       .concat('(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;');
     const list = [object.projectId, Math.min(...object.categories.map(c => parseInt(c, 10)))];
     return from(
-      this.sql.query<number>(query, list, { stream: false, cache: false }),
+      this.sql.query<number>(query, list, { cache: false }),
     ).pipe(
-      map((result: number[]) => ({ result: 'Success', data: object[0] })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
 
   }

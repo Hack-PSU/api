@@ -147,7 +147,7 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<number>(query, [], { stream: true, cache: true }),
     ).pipe(
-      map((result: number[]) => ({ result: 'Success', data: result[0] })),
+      map((result: number[]) => ({ result: 'Success', data: result[0]  })),
     ).toPromise();
   }
 

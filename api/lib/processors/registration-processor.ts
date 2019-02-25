@@ -2,9 +2,12 @@ import * as fs from 'fs';
 import { Inject, Injectable } from 'injection-js';
 import * as path from 'path';
 import request from 'request';
+import { UidType } from '../JSCommon/common-types';
+import { Hackathon } from '../models/hackathon';
 import { IRegisterDataMapper, Registration } from '../models/register';
 import { ResponseBody } from '../router/router-types';
 import { IEmailService } from '../services/communication/email';
+import { IDataMapper, IDbResult } from '../services/database';
 
 // TODO: Refactor this to retrieve email template from cloud storage?
 const EMAIL_TEMPLATE_PATH = '../assets/emails/email_template.html';
@@ -19,6 +22,8 @@ const emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
 export interface IRegistrationProcessor {
   processRegistration(registration: Registration): Promise<ResponseBody>;
 
+  getAllRegistrationsByUser(id: UidType): Promise<ResponseBody>;
+
   sendRegistrationEmail(registration: Registration): Promise<[request.Response, {}]>;
 
   normaliseRegistrationData(registration: any): void;
@@ -29,6 +34,7 @@ export class RegistrationProcessor implements IRegistrationProcessor {
 
   constructor(
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IHackathonDataMapper') private readonly hackathonDataMapper: IDataMapper<Hackathon>,
     @Inject('IEmailService') private readonly emailService: IEmailService,
   ) {}
 
@@ -43,9 +49,8 @@ export class RegistrationProcessor implements IRegistrationProcessor {
     );
   }
 
-  public async sendRegistrationEmail(registration: Registration) {
-    const html = emailHtml;
-    const preparedHtml = await this.emailService.emailSubstitute(html, registration.firstname);
+  public async sendRegistrationEmail(registration: Registration): Promise<[request.Response, {}]> {
+    const preparedHtml = await this.emailService.emailSubstitute(emailHtml, registration.firstname);
     const emailData = this.emailService.createEmailRequest(
       registration.email,
       preparedHtml,
@@ -66,5 +71,24 @@ export class RegistrationProcessor implements IRegistrationProcessor {
     registration.mlhcoc = registration.mlhcoc === true || registration.mlhcoc === 'true';
 
     registration.mlhdcp = registration.mlhdcp === true || registration.mlhdcp === 'true';
+  }
+
+  public async getAllRegistrationsByUser(id: UidType): Promise<ResponseBody> {
+    const hackathons = await this.hackathonDataMapper.getAll();
+    const registrations = (await Promise.all(
+      hackathons.data
+        .map(
+          hackathon => this.registerDataMapper
+            .get({ uid: id, hackathon: hackathon.uid })
+            .catch(() => undefined),
+        ),
+    ))
+      .filter(a => a !== undefined)
+      .map((result: IDbResult<Registration>) => result.data);
+    return new ResponseBody(
+      'Success',
+      200,
+      { result: 'Success', data: registrations },
+    );
   }
 }

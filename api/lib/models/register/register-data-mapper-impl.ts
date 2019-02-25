@@ -70,13 +70,14 @@ export class RegisterDataMapperImpl extends GenericDataMapper
 
   public get(id: ICompoundHackathonUidType, opts?: IUowOpts): Promise<IDbResult<Registration>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(this.tableName);
+      .from(this.tableName, 'registration');
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
     queryBuilder = queryBuilder
-      .where(`${this.pkColumnName}= ?`, id.uid)
-      .where('hackathon = ?', id.hackathon)
+      .where(`registration.${this.pkColumnName}= ?`, id.uid)
+      .where('registration.hackathon = ?', id.hackathon)
+      .join('HACKATHON', 'hackathon', 'hackathon.uid = registration.hackathon')
       .order('time', false);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');

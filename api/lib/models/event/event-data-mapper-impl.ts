@@ -102,7 +102,10 @@ export class EventDataMapperImpl extends GenericDataMapper
         .join(
           'HACKATHON',
           'h',
-          'h.uid = event.hackathon and h.uid = ?',
+          'h.uid = event.hackathon',
+        )
+        .where(
+          'h.uid = ?',
           await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
             this.activeHackathonDataMapper.activeHackathon

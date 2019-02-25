@@ -27,12 +27,12 @@ import {
 } from '../../../router/routes/admin';
 import { AdminController } from '../../../router/routes/admin/';
 import { AdminCheckoutController } from '../../../router/routes/admin/admin-checkout';
-import { AdminScannerController } from '../../../router/routes/admin/admin-scanner';
 import { InternalController } from '../../../router/routes/internal';
 import { EventsController } from '../../../router/routes/live/events';
 import { LiveController } from '../../../router/routes/live/live';
 import { UpdatesController } from '../../../router/routes/live/updates';
-import { RegistrationController } from '../../../router/routes/register';
+import { ScannerController } from '../../../router/routes/scanner/scanner';
+import { UsersController } from '../../../router/routes/users';
 import { FirebaseAuthService } from '../../auth';
 import { ApikeyAuthService } from '../../auth/apikey-auth';
 import { RBAC } from '../../auth/RBAC/rbac';
@@ -59,12 +59,12 @@ export class ExpressProvider {
         { provide: 'UpdatesController', useClass: UpdatesController },
         { provide: 'EventsController', useClass: EventsController },
         { provide: 'InternalController', useClass: InternalController },
-        { provide: 'RegistrationController', useClass: RegistrationController },
+        { provide: 'UsersController', useClass: UsersController },
         { provide: 'AdminController', useClass: AdminController },
         { provide: 'AdminRegisterController', useClass: AdminRegisterController },
         { provide: 'AdminStatisticsController', useClass: AdminStatisticsController },
         { provide: 'AdminHackathonController', useClass: AdminHackathonController },
-        { provide: 'AdminScannerController', useClass: AdminScannerController },
+        { provide: 'AdminScannerController', useClass: ScannerController },
           { provide: 'AdminLocationController', useClass: AdminLocationController },
           { provide: 'AdminCheckoutController', useClass: AdminCheckoutController },
 

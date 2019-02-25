@@ -2,10 +2,12 @@ import { validate } from 'email-validator';
 import express, { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { map } from 'rxjs/operators';
-import { IExpressController } from '..';
+import { IExpressController, ResponseBody } from '..';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { Util } from '../../JSCommon/util';
+import { IExtraCreditDataMapper } from '../../models/extra-credit';
+import { ExtraCreditAssignment } from '../../models/extra-credit/extra-credit-assignment';
 import { IActiveHackathonDataMapper } from '../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper, Registration } from '../../models/register';
 import { PreRegistration } from '../../models/register/pre-registration';
@@ -18,14 +20,17 @@ import { IStorageService } from '../../services/storage';
 import { ParentRouter } from '../router-types';
 
 @Injectable()
-export class RegistrationController extends ParentRouter implements IExpressController {
+export class UsersController extends ParentRouter implements IExpressController {
+
+  protected static baseRoute = '/users';
 
   public router: Router;
-
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IRegistrationProcessor') private readonly registrationProcessor: IRegistrationProcessor,
     @Inject('IPreregistrationProcessor') private readonly preregistrationProcessor: IPreregistrationProcessor,
+    @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IExtraCreditDataMapper,
+    @Inject('IExtraCreditDataMapper') private readonly extraCreditPerm: IAclPerm,
     @Inject('IRegisterDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IStorageService') private readonly storageService: IStorageService,
@@ -38,17 +43,27 @@ export class RegistrationController extends ParentRouter implements IExpressCont
 
   public routes(app: Router): void {
     // Unauthenticated routes
-    app.post('/pre', (req, res, next) => this.preRegistrationHandler(req, res, next));
+    app.post('/pre-register', (req, res, next) => this.preRegistrationHandler(req, res, next));
     // Use authentication
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
     app
       .post(
-        '/',
+        '/register',
         this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
         (req, res, next) => this.storageService.upload(req, res, next),
         (req, res, next) => this.registrationHandler(req, res, next),
       );
+    app.get(
+      '/extra-credit',
+      this.authService.verifyAcl(this.extraCreditPerm, AclOperations.READ_ALL_CLASSES),
+      (req, res, next) => this.getExtraCreditClassesHandler(res, next),
+    );
+    app.post(
+      '/extra-credit',
+      this.authService.verifyAcl(this.extraCreditPerm, AclOperations.CREATE),
+      (req, res, next) => this.addExtraCreditAssignmentHandler(req, res, next),
+    );
   }
 
   private async generateFileName(uid: UidType, firstName: string, lastName: string) {
@@ -80,7 +95,7 @@ export class RegistrationController extends ParentRouter implements IExpressCont
   }
 
   /**
-   * @api {post} /register/pre Preregister for HackPSU
+   * @api {post} /users/pre-register Preregister for HackPSU
    * @apiVersion 2.0.0
    * @apiName Add Pre-Registration
    * @apiGroup Pre Registration
@@ -113,7 +128,7 @@ export class RegistrationController extends ParentRouter implements IExpressCont
   }
 
   /**
-   * @api {post} /register/ Register for HackPSU
+   * @api {post} /users/register/ Register for HackPSU
    * @apiVersion 2.0.0
    * @apiName Add Registration
    * @apiGroup Registration
@@ -185,6 +200,77 @@ export class RegistrationController extends ParentRouter implements IExpressCont
     try {
       const res = await this.registrationProcessor.processRegistration(registration);
       return this.sendResponse(response, res);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /users/extra-credit Get all extra credit classes
+   * @apiVersion 2.0.0
+   * @apiName Get Extra Credit Classes
+   * @apiGroup Admin Statistics
+   * @apiPermission UserPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {ExtraCreditClasses[]} Array of extra credit classes
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
+   */
+  private async getExtraCreditClassesHandler(res: Response, next: NextFunction) {
+    try {
+      const result = await this.extraCreditDataMapper.getAllClasses({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {post} /users/extra-credit Track an extra credit class
+   * @apiName Assign Extra Credit
+   * @apiVersion 2.0.0
+   * @apiGroup Admin
+   * @apiPermission DirectorPermission
+   *
+   * @apiParam {String} cid - the id associated with the class
+   * @apiUse AuthArgumentRequired
+   * @apiSuccess {ExtraCreditAssignment} The inserted extra credit assignment
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async addExtraCreditAssignmentHandler(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    console.log(req.body);
+    // Validate incoming request
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+
+    if (!req.body.cid || !parseInt(req.body.cid, 10)) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid class id', 400), next);
+    }
+    req.body.uid = res.locals.user.uid;
+
+    try {
+      const ecAssignment = new ExtraCreditAssignment(req.body);
+      const result = await this.extraCreditDataMapper.insert(ecAssignment);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result,
+      );
+      return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }

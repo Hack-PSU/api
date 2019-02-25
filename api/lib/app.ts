@@ -143,7 +143,7 @@ export class App extends ParentRouter {
     App.registerRouter('', 'IndexController', 2);
     App.registerRouter('live', 'LiveController', 2);
     App.registerRouter('internal', 'InternalController', 2);
-    App.registerRouter('register', 'RegistrationController', 2);
+    App.registerRouter('users', 'UsersController', 2);
     App.registerRouter('admin', 'AdminController', 2);
     App.registeredRoutes.forEach((router, key) => {
       this.app.use(key, Util.getInstance(router).router);

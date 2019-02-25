@@ -14,6 +14,7 @@ import {
   IAcl,
   IAclPerm,
   IAdminAclPerm,
+  IExtraCreditAclPerm,
 } from './RBAC/rbac-types';
 
 @Injectable()
@@ -55,6 +56,10 @@ export class FirebaseAuthService implements IFirebaseAuthService {
       case AclOperations.SEND_EMAIL:
         // Only supported for IAdminAclPerm
         requestPermission = (permission as IAdminAclPerm).SEND_EMAIL;
+        break;
+      case AclOperations.READ_ALL_CLASSES:
+        // Only supported for IExtraCreditAclPerm
+        requestPermission = (permission as IExtraCreditAclPerm).READ_ALL_CLASSES;
         break;
       default:
         requestPermission = '';

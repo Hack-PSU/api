@@ -5,7 +5,7 @@ import squel from 'squel';
 import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
-import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { IAcl, IExtraCreditAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
@@ -18,15 +18,17 @@ import { IExtraCreditDataMapper } from './index';
 
 @Injectable()
 export class ExtraCreditDataMapperImpl extends GenericDataMapper
-  implements IAclPerm, IExtraCreditDataMapper {
-  public COUNT: string;
+  implements IExtraCreditAclPerm, IExtraCreditDataMapper {
+  public COUNT: string = 'extra-credit:count';
   public CREATE: string = 'extra-credit:create';
-  public DELETE: string;
-  public READ: string;
-  public READ_ALL: string;
-  public UPDATE: string;
+  public DELETE: string = 'extra-credit:delete';
+  public READ: string = 'extra-credit:read';
+  public READ_ALL: string = 'extra-credit:read_all';
+  public UPDATE: string = 'extra-credit:update';
   public tableName: string = 'EXTRA_CREDIT_ASSIGNMENT';
   public classesTableName: string = 'EXTRA_CREDIT_CLASSES';
+
+  public READ_ALL_CLASSES: string = 'extra-credit:readall-classes';
   protected pkColumnName: string = 'uid';
 
   constructor(
@@ -40,7 +42,11 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       [this.READ, this.READ_ALL, this.CREATE, this.UPDATE, this.DELETE],
       [AuthLevel.DIRECTOR],
       undefined,
-      [AuthLevel[AuthLevel.VOLUNTEER]],
+      [AuthLevel[AuthLevel.TEAM_MEMBER]],
+    );
+    super.addRBAC(
+      [this.READ_ALL_CLASSES, this.CREATE],
+      [AuthLevel.PARTICIPANT],
     );
   }
 

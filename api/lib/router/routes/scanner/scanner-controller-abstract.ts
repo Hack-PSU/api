@@ -13,7 +13,7 @@ import {
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { ParentRouter } from '../../router-types';
 
-abstract class ScannerController extends ParentRouter {
+abstract class AbstractScannerController extends ParentRouter {
   protected constructor(
     protected readonly authService: IFirebaseAuthService,
     protected readonly scannerAuthService: IApikeyAuthService,
@@ -116,4 +116,4 @@ abstract class ScannerController extends ParentRouter {
   }
 }
 
-export { ScannerController };
+export { AbstractScannerController };

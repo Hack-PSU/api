@@ -11,10 +11,10 @@ import { IScannerProcessor } from '../../../processors/scanner-processor';
 import { IApikeyAuthService, IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../../services/database';
-import { ScannerController } from './scanner-controller-abstract';
+import { AbstractScannerController } from './scanner-controller-abstract';
 
 @Injectable()
-export class AdminScannerController extends ScannerController implements IExpressController {
+export class ScannerController extends AbstractScannerController implements IExpressController {
   public router: Router;
 
   constructor(

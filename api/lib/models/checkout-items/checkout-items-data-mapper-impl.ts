@@ -11,6 +11,7 @@ import { GenericDataMapper } from '../../services/database/svc/generic-data-mapp
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
+import { ICheckoutObjectDataMapper } from '../checkout-object';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { CheckoutItems } from './checkout-items';
 import { ICheckoutItemsDataMapper } from './index';
@@ -37,6 +38,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
     @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
+    @Inject('ICheckoutObjectDataMapper') protected readonly checkoutObjectDataMapperImpl: ICheckoutObjectDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
@@ -95,19 +97,11 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder.
-            where(
-              'hackathon_id = ?',
-              await (opts.hackathon ?
-                Promise.resolve(opts.hackathon) :
-                this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
-            );
-    }
     const query = queryBuilder
-        .toString()
-        .concat(';');
-    return from(this.sql.query<CheckoutItems>(query, [], { cache: true }))
+        .toParam();
+
+    query.text = query.text.concat(';');
+    return from(this.sql.query<CheckoutItems>(query.text, query.values, { cache: true }))
         .pipe(
           map((checkoutItems: CheckoutItems[]) => ({ result: 'Success', data: checkoutItems })),
         )
@@ -179,10 +173,11 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toString()
-      .concat(';');
+      .toParam();
+
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query, [], { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

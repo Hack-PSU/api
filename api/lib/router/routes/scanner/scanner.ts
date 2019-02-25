@@ -41,12 +41,12 @@ export class ScannerController extends AbstractScannerController implements IExp
 
   public routes(app: Router): void {
     app.post(
-      '/assign',
+      '/assignment',
       (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.CREATE),
       (req, res, next) => this.addRfidAssignments(req, res, next),
     );
     app.post(
-      '/scans',
+      '/scan',
       (req, res, next) => this.verifyScannerPermissionsMiddleware(
         req,
         res,
@@ -122,14 +122,16 @@ export class ScannerController extends AbstractScannerController implements IExp
    * @apiUse AuthArgumentRequired
    * @apiParam {Array} assignments An array or single instance of RFID tags to User uid assignments
    * @apiParamExample {json} Request-Example:
-   *     [
-   *      {
-   *       "wid": "1vyv2boy1v3b4oi12-1234lhb1234b",
-   *       "uid": "nbG7b87NB87nB7n98Y7",
-   *       "time": 1239712938120
-   *     },
-   *     { ... }
-   *     ]
+   *     {
+   *       "assignments": [
+   *        {
+   *         "wid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+   *         "uid": "nbG7b87NB87nB7n98Y7",
+   *         "time": 1239712938120
+   *       },
+   *       { ... }
+   *       ]
+   *     }
    * @apiSuccess {RfidAssignment[]} Array of rfid insertion results
    * @apiUse ResponseBodyDescription
    * @apiUse IllegalArgumentError
@@ -166,14 +168,16 @@ export class ScannerController extends AbstractScannerController implements IExp
    * @apiUse ApiKeyArgumentRequired
    * @apiParam {Array} scans An array of scan objects
    * @apiParamExample {json} Request-Example:
-   *     [
-   *      {
-   *       "wid": "1vyv2boy1v3b4oi12-1234lhb1234b",
-   *       "scan_location": "nbG7b87NB87nB7n98Y7",
-   *       "scan_time": 1239712938120
-   *     },
-   *     { ... }
+   *     {
+   *       "scans": [
+   *        {
+   *         "wid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+   *         "scan_event": "nbG7b87NB87nB7n98Y7",
+   *         "scan_time": 1239712938120
+   *        },
+   *        { ... }
    *     ]
+   *   }
    * @apiSuccess {Scans[]} Array of scan insertion results
    * @apiUse ResponseBodyDescription
    * @apiUse IllegalArgumentError

@@ -99,8 +99,10 @@ export class EventDataMapperImpl extends GenericDataMapper
     }
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
-        .where(
-          'hackathon = ?',
+        .join(
+          'HACKATHON',
+          'h',
+          'h.uid = event.hackathon and h.uid = ?',
           await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
             this.activeHackathonDataMapper.activeHackathon
@@ -127,11 +129,10 @@ export class EventDataMapperImpl extends GenericDataMapper
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toString()
-      .concat(';');
-    const params = [];
+      .toParam();
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query, params, { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

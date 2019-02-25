@@ -103,10 +103,9 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
                 this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
             );
     }
-    const query = queryBuilder
-        .toString()
-        .concat(';');
-    return from(this.sql.query<CheckoutObject>(query, [], { cache: true }))
+    const query = queryBuilder.toParam()
+    query.text = query.text.concat(';');
+    return from(this.sql.query<CheckoutObject>(query.text, query.values, { cache: true }))
         .pipe(
           map((checkoutObjects: CheckoutObject[]) => ({ result: 'Success', data: checkoutObjects })),
         )
@@ -117,17 +116,18 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
    * Returns a count of the number of CheckoutObject objects.
    * @returns {Promise<Readable>}
    */
-  public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
+  public getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     const query = squel.select({
       autoQuoteFieldNames: false,
       autoQuoteTableNames: true,
     })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toString()
-      .concat(';');
+      .toParam()
+
+      query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query, [], { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

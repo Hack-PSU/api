@@ -214,6 +214,12 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     if (object.team) {
       queryBuilder = queryBuilder.set('team', object.team.join(','));
     }
+    if (object.categories) {
+      queryBuilder = queryBuilder.set('categories', object.categories.join(','));
+    }
+    if (object.project_name) {
+      queryBuilder = queryBuilder.set('project_name', object.project_name);
+    }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(

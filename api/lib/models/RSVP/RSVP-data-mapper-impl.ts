@@ -23,7 +23,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
   public CREATE: string = 'rsvp:create';
   public DELETE: string = 'rsvp:delete';
   public READ: string = 'rsvp:read';
-  public READ_ALL: string = 'rsvp:delete';
+  public READ_ALL: string = 'rsvp:readall';
   public UPDATE: string = 'rsvp:update';
   public tableName: string = 'RSVP';
 

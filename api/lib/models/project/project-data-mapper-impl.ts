@@ -23,7 +23,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
   public CREATE: string = 'project:create';
   public DELETE: string = 'project:delete';
   public READ: string = 'project:read';
-  public READ_ALL: string;
+  public READ_ALL: string = 'project:readall';
   public UPDATE: string = 'project:update';
 
   public tableName: string = 'PROJECT_LIST';
@@ -61,6 +61,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper
     );
   }
 
+  // TODO: Change parameter to CompoundUidType
   public delete(projectID: UidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
@@ -126,16 +127,16 @@ export class ProjectDataMapperImpl extends GenericDataMapper
 
   public async getByUser(uid: UidType, opts?: IUowOpts): Promise<IDbResult<Project>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(this.teamTableName, 'pt')
-      .field('pl.projectName')
-      .field('pt.*')
-      .field('ta.tableNumber')
-      .field('cl.*')
-      .join(this.tableName, 'pl', 'pl.projectID=pl.projectID')
-      .join('PROJECT_CATEGORIES', 'pc', 'pc.projectID = pt.projectID')
-      .join('CATEGORY_LIST', 'cl', 'cl.uid = pc.categoryID ')
-      .left_join('TABLE_ASSIGNMENTS', 'ta', 'ta.projectID=pl.project.ID')
-      .where('pt.userID = ?', uid);
+      .from(this.teamTableName, 'project_team')
+      .field('project_list.projectName')
+      .field('project_team.*')
+      .field('table_assignment.tableNumber')
+      .field('category_list.*')
+      .join(this.tableName, 'project_list', 'project_list.projectID=project_list.projectID')
+      .join('PROJECT_CATEGORIES', 'project_category', 'project_category.projectID = project_team.projectID')
+      .join('CATEGORY_LIST', 'category_list', 'category_list.uid = project_category.categoryID ')
+      .left_join('TABLE_ASSIGNMENTS', 'table_assignment', 'table_assignment.projectID = project_list.project.ID')
+      .where('project_team.userID = ?', uid);
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
         .where(
@@ -172,16 +173,15 @@ export class ProjectDataMapperImpl extends GenericDataMapper
         );
     }
     const query = queryBuilder
-      .toString()
-      .concat(';');
+      .toParam();
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query, [], { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
-  // need to be checked for conversion
   public async insert(object: Project): Promise<IDbResult<Project>> {
     const validation = object.validate();
     if (!validation.result) {
@@ -208,11 +208,13 @@ export class ProjectDataMapperImpl extends GenericDataMapper
       this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
-    const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+    let queryBuilder = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)
-      .setFields(object.dbRepresentation)
-      .where(`${this.pkColumnName} = ?`, object.id)
-      .toParam();
+      .where(`${this.pkColumnName} = ?`, object.id);
+    if (object.team) {
+      queryBuilder = queryBuilder.set('team', object.team.join(','));
+    }
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<void>(query.text, query.values, { cache: false }),

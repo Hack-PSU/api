@@ -4,17 +4,15 @@ import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import {
-  IAdminStatisticsDataMapper,
-  IUserCount,
-  IUserStatistics,
+  IAdminStatisticsDataMapper, IUserCount, IUserStatistics,
 } from '../../../models/admin/statistics';
 import { IAttendanceDataMapper } from '../../../models/attendance/attendance-data-mapper-impl';
 import { IExtraCreditDataMapper } from '../../../models/extra-credit';
 import {
   IPreRegisterDataMapper,
   IRegisterDataMapper,
-  IRegistrationStats,
 } from '../../../models/register';
+import { IRegistrationStats } from '../../../models/register/registration';
 import { Rsvp } from '../../../models/RSVP/rsvp';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';

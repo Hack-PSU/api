@@ -136,7 +136,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
           );
     }
 
-    let query = queryBuilder.toParam()
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<Attendance>(query.text, query.values, { cache: true }))
         .pipe(
@@ -169,7 +169,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
         );
     }
 
-    let query = queryBuilder.toParam()
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<number>(query.text, query.values, { cache: true }),

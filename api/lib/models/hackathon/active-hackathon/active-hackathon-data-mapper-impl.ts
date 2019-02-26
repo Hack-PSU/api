@@ -25,6 +25,10 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
       ))
         .pipe(
           map((hackathons: ActiveHackathon[]) => hackathons[0]),
+          map((hackathon: ActiveHackathon) => {
+            hackathon.base_pin = parseInt(hackathon.base_pin! as any as string, 10);
+            return hackathon;
+          }),
           shareReplay(),
         );
     }
@@ -113,7 +117,6 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
     })
-      .field('uid')
       .from(this.tableName)
       .where('active = ?', true);
   }

@@ -80,6 +80,16 @@ export class ScannerController extends AbstractScannerController implements IExp
       (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.READ_ALL),
       (req, res, next) => this.getAllRegistrationsHandler(res, next),
     );
+    app.get(
+      '/getpin',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.READ_ALL,
+      ),
+      (req, res, next) => this.getUserByCurrentPin(req, res, next),
+    );
   }
 
   /**
@@ -292,6 +302,23 @@ export class ScannerController extends AbstractScannerController implements IExp
   private async getNextEventsHandler(res: Response, next: NextFunction) {
     try {
       const response = await this.scannerProcessor.getRelevantEvents();
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  private async getUserByCurrentPin(req: Request, res: Response, next: NextFunction) {
+    if (!req.query.pin || !parseInt(req.query.pin, 10)) {
+      return Util.standardErrorHandler(
+        new HttpError('could not find pin to query by', 400),
+        next,
+      );
+    }
+    try {
+      const response = await this.scannerProcessor.getUserByCurrentPin(
+        parseInt(req.query.pin, 10),
+      );
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

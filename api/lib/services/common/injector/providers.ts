@@ -8,7 +8,8 @@ import { ExtraCreditDataMapperImpl } from '../../../models/extra-credit/extra-cr
 import { HackathonDataMapperImpl } from '../../../models/hackathon';
 import { ActiveHackathonDataMapperImpl } from '../../../models/hackathon/active-hackathon';
 import { LocationDataMapperImpl } from '../../../models/location/location-data-mapper-impl';
-import { PreRegisterDataMapperImpl, RegisterDataMapperImpl } from '../../../models/register';
+import { PreRegisterDataMapperImpl } from '../../../models/register/pre-register-data-mapper-impl';
+import { RegisterDataMapperImpl } from '../../../models/register/register-data-mapper-impl';
 import { RsvpDataMapperImpl } from '../../../models/RSVP/RSVP-data-mapper-impl';
 import { ScannerDataMapperImpl } from '../../../models/scanner/scanner-data-mapper-impl';
 import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';

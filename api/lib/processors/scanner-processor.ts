@@ -2,6 +2,8 @@ import { Inject, Injectable } from 'injection-js';
 import moment, { unitOfTime } from 'moment';
 import { HttpError } from '../JSCommon/errors';
 import { Event } from '../models/event/event';
+import { IActiveHackathonDataMapper } from '../models/hackathon/active-hackathon';
+import { IRegisterDataMapper } from '../models/register';
 import { IScannerDataMapper } from '../models/scanner';
 import { RfidAssignment } from '../models/scanner/rfid-assignment';
 import { Scan } from '../models/scanner/scan';
@@ -17,6 +19,8 @@ export interface IScannerProcessor {
   getRelevantEvents(): Promise<ResponseBody>;
 
   processScans(scans: any | any[]): Promise<ResponseBody>;
+
+  getUserByCurrentPin(pin: number): Promise<ResponseBody>;
 }
 
 @Injectable()
@@ -60,6 +64,8 @@ export class ScannerProcessor implements IScannerProcessor {
   private readonly searchUnits: unitOfTime.Base[];
   constructor(
     @Inject('IScannerDataMapper') protected readonly scannerDataMapper: IScannerDataMapper,
+    @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IScannerAuthService') protected readonly scannerAuthService: IApikeyAuthService,
     @Inject('IEventDataMapper') private readonly eventDataMapper: IDataMapperHackathonSpecific<Event>,
   ) {
@@ -174,7 +180,7 @@ export class ScannerProcessor implements IScannerProcessor {
     return response;
   }
 
-  private searchForRelevantEvents(data: Event[]): Event[] {
+  public searchForRelevantEvents(data: Event[]): Event[] {
     let result: Event[];
     let lastUnit = this.searchUnits[0];
     for (let i = 0; true; i += 1) {
@@ -194,5 +200,15 @@ export class ScannerProcessor implements IScannerProcessor {
         return result;
       }
     }
+  }
+
+  public async getUserByCurrentPin(pin: number): Promise<ResponseBody> {
+    const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
+    const registration = await this.registerDataMapper.getByPin(pin, hackathon);
+    return new ResponseBody(
+      'Success',
+      200,
+      registration,
+    );
   }
 }

@@ -9,8 +9,9 @@ import { Util } from '../../JSCommon/util';
 import { IExtraCreditDataMapper } from '../../models/extra-credit';
 import { ExtraCreditAssignment } from '../../models/extra-credit/extra-credit-assignment';
 import { IActiveHackathonDataMapper } from '../../models/hackathon/active-hackathon';
-import { IRegisterDataMapper, Registration } from '../../models/register';
+import { IRegisterDataMapper } from '../../models/register';
 import { PreRegistration } from '../../models/register/pre-registration';
+import { Registration } from '../../models/register/registration';
 import { IPreregistrationProcessor } from '../../processors/pre-registration-processor';
 import { IRegistrationProcessor } from '../../processors/registration-processor';
 import { IFirebaseAuthService } from '../../services/auth/auth-types';
@@ -59,7 +60,7 @@ export class UsersController extends ParentRouter implements IExpressController 
       '/register',
       this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
       (req, res, next) => this.getAllRegistrations(res, next),
-    )
+    );
     app.get(
       '/extra-credit',
       this.authService.verifyAcl(this.extraCreditPerm, AclOperations.READ_ALL_CLASSES),

@@ -11,9 +11,10 @@ import { GenericDataMapper } from '../../services/database/svc/generic-data-mapp
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
+import { Hackathon } from '../hackathon';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
-import { IRegisterDataMapper, IRegistrationStats } from './index';
-import { Registration } from './registration';
+import { IRegisterDataMapper } from './index';
+import { Registration, IRegistrationStats } from './registration';
 
 @Injectable()
 export class RegisterDataMapperImpl extends GenericDataMapper
@@ -354,5 +355,26 @@ export class RegisterDataMapperImpl extends GenericDataMapper
         );
     }
     return queryBuilder.group(fieldname);
+  }
+
+  public getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>> {
+    console.log(hackathon);
+    const query = squel.select({
+      autoQuoteFieldNames: false,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName)
+      .where('hackathon = ?', hackathon.uid)
+      .where('pin = ?', hackathon.base_pin! + pin)
+      .toParam();
+    return from(this.sql.query<Registration>(
+      query.text,
+      query.values,
+      { cache: true },
+    ))
+      .pipe(
+        map((registration: Registration[]) => ({ result: 'Success', data: registration[0] })),
+      )
+      .toPromise();
   }
 }

@@ -220,7 +220,7 @@ export class AdminScannerController extends ScannerController implements IExpres
   }
 
   /**
-   * @api {get} /admin/scanner/users Obtain user by rfid band
+   * @api {get} /admin/scanner/user Obtain user by rfid band
    * @apiVersion 2.0.0
    * @apiName Obtain user information from Rid band (Scanner)
    *

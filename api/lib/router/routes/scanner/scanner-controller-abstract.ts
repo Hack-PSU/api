@@ -90,7 +90,7 @@ abstract class AbstractScannerController extends ParentRouter {
     res: Response,
     next: NextFunction,
   ) {
-    if (!req.body.wid || !req.query.wid) {
+    if (!req.body.wid && !req.query.wid) {
       // Cannot lookup user details by wristband ID
       return next();
     }

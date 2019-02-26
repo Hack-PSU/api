@@ -23,7 +23,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
   public CREATE: string = 'rsvp:create';
   public DELETE: string = 'rsvp:delete';
   public READ: string = 'rsvp:read';
-  public READ_ALL: string = 'rsvp:delete';
+  public READ_ALL: string = 'rsvp:readall';
   public UPDATE: string = 'rsvp:update';
   public tableName: string = 'RSVP';
 
@@ -98,7 +98,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
 
   public async getAll(opts?: IUowOpts): Promise<IDbResult<Rsvp[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(this.tableName);
+      .from(this.tableName, 'rsvp');
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -116,8 +116,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
               .toPromise()),
         );
     }
-    const query = queryBuilder
-      .toParam();
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<Rsvp>(query.text, query.values, { cache: true },
     ))

@@ -1,23 +1,27 @@
 import { expect } from 'chai';
 import 'mocha';
 import { anything, capture, instance, mock, reset, verify } from 'ts-mockito';
+import { HackathonDataMapperImpl } from '../../lib/models/hackathon';
+import { RegisterDataMapperImpl } from '../../lib/models/register/register-data-mapper-impl';
 import {
   AcademicYear,
   CodingExperience,
   Gender,
-  RegisterDataMapperImpl,
   Registration,
   ShirtSize,
   VeteranOptions,
-} from '../../lib/models/register';
+} from '../../lib/models/register/registration';
 import { RegistrationProcessor } from '../../lib/processors/registration-processor';
 import { SendgridService } from '../../lib/services/communication/email/sendgrid.service';
 
 // Global mocks
 const registrationDMMock = mock(RegisterDataMapperImpl);
 const sendgridServiceMock = mock(SendgridService);
+const hackathonDMMock = mock(HackathonDataMapperImpl);
+
 let registrationDataMapper: RegisterDataMapperImpl;
 let emailService: SendgridService;
+let hackathonDataMapper: HackathonDataMapperImpl;
 const registration = new Registration({
   academicYear: AcademicYear.FRESHMAN,
   allergies: null,
@@ -50,6 +54,7 @@ const registration = new Registration({
 describe('TEST: Registration Processor', () => {
   beforeEach(() => {
     registrationDataMapper = instance(registrationDMMock);
+    hackathonDataMapper = instance(hackathonDMMock);
     emailService = instance(sendgridServiceMock);
   });
 
@@ -60,7 +65,11 @@ describe('TEST: Registration Processor', () => {
   describe('TEST: Process Registration', () => {
     it('it processes a valid registration', async () => {
       // GIVEN: A registration processor
-      const registrationProcessor = new RegistrationProcessor(registrationDataMapper, emailService);
+      const registrationProcessor = new RegistrationProcessor(
+        registrationDataMapper,
+        hackathonDataMapper,
+        emailService,
+      );
       // WHEN: Processing the registration
       await registrationProcessor.processRegistration(registration);
       // THEN: Registration was inserted
@@ -75,7 +84,11 @@ describe('TEST: Registration Processor', () => {
   describe('TEST: Send email after registration', () => {
     it('it sends a confirmation email', async () => {
       // GIVEN: A registration processor
-      const registrationProcessor = new RegistrationProcessor(registrationDataMapper, emailService);
+      const registrationProcessor = new RegistrationProcessor(
+        registrationDataMapper,
+        hackathonDataMapper,
+        emailService,
+      );
       // WHEN: Sending the confirmation email
       await registrationProcessor.sendRegistrationEmail(registration);
       // THEN: Generates the substituted HTML

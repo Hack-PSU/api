@@ -102,7 +102,7 @@ abstract class ScannerController extends ParentRouter {
           this.authService.getUserId(rfidAssignment.user_uid),
         ],
       );
-      res.locals.registsaration = registration.data as Registration;
+      res.locals.registration = registration.data as Registration;
       res.locals.userToken = userToken;
       return next();
     } catch (error) {

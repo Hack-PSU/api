@@ -73,7 +73,7 @@ export class ScannerController extends AbstractScannerController implements IExp
         next,
         AclOperations.READ_ALL,
       ),
-      (req, res, next) => this.getNextEventsHandler(res, next),
+      (req, res, next) => this.getNextEventsHandler(req, res, next),
     );
     app.get(
       '/registrations',
@@ -291,6 +291,7 @@ export class ScannerController extends AbstractScannerController implements IExp
    * @apiVersion 2.0.0
    * @apiName Obtain all relevant events (Scanner)
    *
+   * @apiParam [filter] {boolean} whether to filter for relevant events or return all
    * @apiGroup Admin Scanner
    * @apiPermission TeamMemberPermission
    * @apiPermission ScannerPermission
@@ -299,15 +300,29 @@ export class ScannerController extends AbstractScannerController implements IExp
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-  private async getNextEventsHandler(res: Response, next: NextFunction) {
+  private async getNextEventsHandler(req: Request, res: Response, next: NextFunction) {
     try {
-      const response = await this.scannerProcessor.getRelevantEvents();
+      const response = await this.scannerProcessor.getRelevantEvents(req.query.filter);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
   }
 
+  /**
+   * @api {get} /scanner/getpin Get a user's registration by their pin
+   * @apiVersion 2.0.0
+   * @apiName Get User by Pin (Scanner)
+   *
+   * @apiParam pin {number} current pin for the registration
+   * @apiGroup Admin Scanner
+   * @apiPermission TeamMemberPermission
+   * @apiPermission ScannerPermission
+   * @apiUse AuthArgumentRequired
+   * @apiSuccess {Registration} The relevant registration for the provided pin
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
   private async getUserByCurrentPin(req: Request, res: Response, next: NextFunction) {
     if (!req.query.pin || !parseInt(req.query.pin, 10)) {
       return Util.standardErrorHandler(

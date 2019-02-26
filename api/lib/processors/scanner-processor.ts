@@ -16,7 +16,7 @@ export interface IScannerProcessor {
 
   processorScannerConfirmation(pin: number, macAddress: string): Promise<ResponseBody>;
 
-  getRelevantEvents(): Promise<ResponseBody>;
+  getRelevantEvents(filterForRelevant: boolean): Promise<ResponseBody>;
 
   processScans(scans: any | any[]): Promise<ResponseBody>;
 
@@ -125,12 +125,15 @@ export class ScannerProcessor implements IScannerProcessor {
     return new ResponseBody('Success', 200, { result: 'Success', data: apiToken });
   }
 
-  public async getRelevantEvents(): Promise<ResponseBody> {
+  public async getRelevantEvents(filterForRelevant: boolean): Promise<ResponseBody> {
     const { data } = await this.eventDataMapper.getAll({ byHackathon: true });
-    const relevantEvents = this.searchForRelevantEvents(data)
-      .sort((a, b) =>
-        a.event_start_time < b.event_start_time ? -1 :
-          a.event_start_time === b.event_start_time ? 0 : -1);
+    let relevantEvents = data;
+    if (filterForRelevant) {
+      relevantEvents = this.searchForRelevantEvents(data)
+        .sort((a, b) =>
+          a.event_start_time < b.event_start_time ? -1 :
+            a.event_start_time === b.event_start_time ? 0 : -1);
+    }
     return new ResponseBody(
       'Success',
       200,

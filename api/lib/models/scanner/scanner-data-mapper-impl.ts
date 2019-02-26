@@ -87,7 +87,7 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
         .where(
-          'hackathon.uid = ?',
+          'hackathon = ?',
           await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
             this.activeHackathonDataMapper.activeHackathon

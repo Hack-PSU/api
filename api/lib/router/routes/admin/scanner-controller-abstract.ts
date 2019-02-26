@@ -87,15 +87,19 @@ abstract class ScannerController extends ParentRouter {
     res: Response,
     next: NextFunction,
   ) {
-    if (!req.body.wid || !req.query.wid) {
+    console.log('wut');
+    console.log(req.query);
+    if (!req.body.wid && !req.query.wid) {
       // Cannot lookup user details by wristband ID
       return next();
     }
+    console.log('bruh');
     try {
       const { data: rfidAssignment } = await this.scannerDataMapper.get(
-        req.body.wid || !req.query.wid,
+        req.body.wid || req.query.wid,
         { byHackathon: true },
       );
+      console.log(rfidAssignment);
       const [registration, userToken] = await Promise.all(
         [
           this.registerDataMapper.get(rfidAssignment.user_uid),

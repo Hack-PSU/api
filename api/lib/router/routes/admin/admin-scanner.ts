@@ -53,7 +53,7 @@ export class AdminScannerController extends ScannerController implements IExpres
     app.get(
       '/user',
       (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.READ_ALL),
-      (req, res, next) => this.getUserByRfidBand(req,res, next),
+      (req, res, next) => this.getUserByRfidBand(req, res, next),
       (req, res, next) => this.getUserByRfidBandHandler(req, res, next),
     );
   }
@@ -231,15 +231,14 @@ export class AdminScannerController extends ScannerController implements IExpres
    * @apiSuccess {Any} user info
    * @apiUse IllegalArgumentError
    */
-  private async getUserByRfidBandHandler(req: Request, res: Response, next: NextFunction,) {
+  private async getUserByRfidBandHandler(req: Request, res: Response, next: NextFunction) {
     if (!res.locals.userToken) {
       return Util.standardErrorHandler(new HttpError('Invalid rfid band', 400), next);
     }
     try {
       const response = new ResponseBody('Success', 200, { result: 'Success',
-        data: {userToken: res.locals.userToken, registration: res.locals.registration}});
-        return this.sendResponse(res, response);
-
+        data: { userToken: res.locals.userToken, registration: res.locals.registration }});
+      return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }

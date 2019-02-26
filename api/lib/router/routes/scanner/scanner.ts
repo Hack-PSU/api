@@ -263,7 +263,7 @@ export class ScannerController extends AbstractScannerController implements IExp
    * @apiPermission TeamMemberPermission
    * @apiPermission ScannerPermission
    * @apiUse AuthArgumentRequired
-   * @apiUse ApiKeyAuthArgumentRequired
+   * @apiUse ApiKeyArgumentRequired
    * @apiSuccess {Registration[]} Array of current registrations
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
@@ -290,7 +290,7 @@ export class ScannerController extends AbstractScannerController implements IExp
    * @apiPermission TeamMemberPermission
    * @apiPermission ScannerPermission
    * @apiUse AuthArgumentRequired
-   * @apiUse ApiKeyAuthArgumentRequired
+   * @apiUse ApiKeyArgumentRequired
    * @apiSuccess {Event[]} Array of current events
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
@@ -313,7 +313,7 @@ export class ScannerController extends AbstractScannerController implements IExp
    * @apiPermission TeamMemberPermission
    * @apiPermission ScannerPermission
    * @apiUse AuthArgumentRequired
-   * @apiUse ApiKeyAuthArgumentRequired
+   * @apiUse ApiKeyArgumentRequired
    * @apiSuccess {Registration} The relevant registration for the provided pin
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription

@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { UidType } from '../../../JSCommon/common-types';
 import { HttpError } from '../../../JSCommon/errors';
 import { Environment, Util } from '../../../JSCommon/util';
+import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper, Registration } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
 import {
@@ -19,6 +20,7 @@ abstract class ScannerController extends ParentRouter {
     protected readonly scannerAcl: IAclPerm,
     protected readonly scannerDataMapper: IScannerDataMapper,
     private readonly registerDataMapper: IRegisterDataMapper,
+    private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
   ) {
     super();
   }
@@ -98,7 +100,10 @@ abstract class ScannerController extends ParentRouter {
       );
       const [registration, userToken] = await Promise.all(
         [
-          this.registerDataMapper.get(rfidAssignment.user_uid),
+          this.registerDataMapper.get({
+            uid: rfidAssignment.user_uid,
+            hackathon: (await this.activeHackathonDataMapper.activeHackathon.toPromise()).id,
+          }),
           this.authService.getUserId(rfidAssignment.user_uid),
         ],
       );

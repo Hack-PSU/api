@@ -56,7 +56,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   /**
    * @api {post} /admin/hackathon Add a new non-active hackathon
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Add new hackathon
    * @apiGroup Admin Hackathon
    * @apiPermission DirectorPermission
@@ -65,8 +65,9 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    * @apiParam {number} endTime Epoch time for when the hackathon ends
    *
    * @apiUse AuthArgumentRequired
+   * @apiUse ResponseBodyDescription
    *
-   * @apiSuccess (200) {Object} Added new hackathon
+   * @apiSuccess (200) {Hackathon} The inserted hackathon
    */
   private async createHackathonHandler(
     req: Request,
@@ -91,6 +92,9 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
     }
     req.body.startTime = parseInt(req.body.startTime, 10);
 
+    if (req.body.basePin) {
+      req.body.basePin = parseInt(req.body.basePin, 10);
+    }
     let hackathon: Hackathon;
     try {
       hackathon = new Hackathon(req.body);
@@ -116,14 +120,16 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   /**
    * @api {post} /admin/hackathon/active Mark a hackathon as active
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
+   * @apiDescription Ends the currently active hackathon and marks the provided hackathon as active
    * @apiName Add Active hackathon
    * @apiGroup Admin Hackathon
    * @apiPermission DirectorPermission
    * @apiParam {string} uid ID of the hackathon entry to mark active
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess (200) {String} Added new active hackathon
+   * @apiSuccess (200) {Hackathon} Newly "activated" hackathon
+   * @apiUse ResponseBodyDescription
    */
   private async makeHackathonActiveHandler(
     req: Request,
@@ -156,7 +162,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   /**
    * @api {post} /admin/hackathon/update Update non-active hackathon
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Update hackathon
    * @apiGroup Hackathon
    * @apiPermission DirectorPermission
@@ -166,7 +172,8 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess (200) {String} Updated non-active hackathon
+   * @apiSuccess (200) {Hackathon} The updated hackathon
+   * @apiUse ResponseBodyDescription
    */
   private async updateHackathonHandler(
     req: Request,
@@ -206,7 +213,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   /**
    * @api {get} /admin/hackathon Get all hackathons
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Hackathons
    * @apiGroup Admin Hackathon
    * @apiPermission TeamMemberPermission
@@ -216,7 +223,8 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} Array of hackathons
+   * @apiSuccess {Hackathon[]} Array of hackathons
+   * @apiUse ResponseBodyDescription
    */
   private async getAllHackathonHandler(
     res: Response,
@@ -236,13 +244,14 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   /**
    * @api {get} /admin/hackathon/count Get a count of hackathons
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName get count of hackathon
    * @apiGroup Admin Hackathon
    * @apiPermission TeamMemberPermission
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} number of hackathons
+   * @apiSuccess {number} the number of hackathons
+   * @apiUse ResponseBodyDescription
    */
   private async countHackathonHandler(res: Response, next: NextFunction) {
     try {

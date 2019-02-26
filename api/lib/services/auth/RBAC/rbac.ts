@@ -35,6 +35,6 @@ export class RBAC implements IAcl {
   }
 
   public printDebugInformation(logger: Logger) {
-    logger.info(JSON.stringify(this.roles));
+    logger.info(Array.from(this.roles.values()).join(' | '));
   }
 }

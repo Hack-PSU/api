@@ -2,8 +2,7 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import tsStream from 'ts-stream';
-import { UidType } from '../../JSCommon/common-types';
+import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -65,17 +64,17 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     );
   }
 
-  public delete(object: UidType | RfidAssignment): Promise<IDbResult<void>> {
+  public delete(object: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     throw new MethodNotImplementedError('This method is not supported by this class');
   }
 
   /**
    * Returns an RFID assignment object from a wid
-   * @param {UidType} object
-   * @param {IUowOpts} opts
-   * @returns {Promise<IDbResult<RfidAssignment>>}
    */
-  public async get(wid: UidType, opts?: IUowOpts): Promise<IDbResult<RfidAssignment>> {
+  public async get(
+    wid: ICompoundHackathonUidType,
+    opts?: IUowOpts,
+  ): Promise<IDbResult<RfidAssignment>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -96,22 +95,29 @@ export class ScannerDataMapperImpl extends GenericDataMapper
         );
     }
     queryBuilder = queryBuilder
-      .where(`${this.pkColumnName}= ?`, wid);
+      .where(`${this.pkColumnName}= ?`, wid.uid);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<RfidAssignment>(query.text, query.values, { stream: false, cache: true }))
+    return from(this.sql.query<RfidAssignment>(query.text, query.values, { cache: true }))
       .pipe(
         map((rfidAssignment: RfidAssignment[]) => ({ result: 'Success', data: rfidAssignment[0] })),
       )
       .toPromise();
   }
 
-  public getAll(opts?: IUowOpts): Promise<IDbResult<tsStream<RfidAssignment>>> {
+  public getAll(opts?: IUowOpts): Promise<IDbResult<any[]>> {
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
-    throw new MethodNotImplementedError('this action is not supported');
+  public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
+    const query = (await this.getCountQuery(opts))
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query<number>(query.text, query.values, { cache: true }),
+    ).pipe(
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
+    ).toPromise();
   }
 
   public async insert(object: RfidAssignment): Promise<IDbResult<RfidAssignment>> {
@@ -132,7 +138,7 @@ export class ScannerDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
@@ -185,9 +191,27 @@ export class ScannerDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: scan.cleanRepresentation })),
     ).toPromise();
+  }
+
+  public async getCountQuery(opts?: IUowOpts) {
+    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+      .from(this.tableName)
+      .field(`COUNT(${this.pkColumnName})`, 'checkin_count');
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    return queryBuilder;
   }
 }

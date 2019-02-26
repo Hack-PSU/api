@@ -2,9 +2,12 @@ import { validate } from 'email-validator';
 import { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { IExpressController, ResponseBody } from '../..';
+import { UidType } from '../../../JSCommon/common-types';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
+import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper, Registration } from '../../../models/register';
+import { IRegistrationProcessor } from '../../../processors/registration-processor';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { Logger } from '../../../services/logging/logging';
@@ -17,6 +20,8 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
+    @Inject('IRegistrationProcessor') private readonly registrationProcessor: IRegistrationProcessor,
     @Inject('IRegisterDataMapper') private readonly acl: IAclPerm,
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
@@ -28,12 +33,12 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
   public routes(app: Router): void {
     app.get(
       '/',
-      this.authService.verifyAcl(this.acl, AclOperations.READ_ALL),
-      (req, res, next) => this.getAllRegistrationHandler(res, next),
+      this.authService.verifyAcl(this.acl, [AclOperations.READ_ALL, AclOperations.READ]),
+      (req, res, next) => this.getAllRegistrationHandler(req, res, next),
     );
     app.post(
       '/update',
-      this.authService.verifyAcl(this.acl, AclOperations.COUNT),
+      this.authService.verifyAcl(this.acl, AclOperations.UPDATE),
       (req, res, next) => this.updateRegistrationHandler(req, res, next),
     );
     app.get(
@@ -49,8 +54,8 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
       throw new HttpError('No registration provided', 400);
     }
     if (!validate(registration.email)) {
-      this.logger.error('IEmail used for registration is invalid');
-      throw new HttpError('IEmail used for registration is invalid', 400);
+      this.logger.error('Email used for registration is invalid');
+      throw new HttpError('Email used for registration is invalid', 400);
     }
     if (!registration.eighteenBeforeEvent) {
       this.logger.error('User must be over eighteen years of age to register');
@@ -68,7 +73,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
 
   /**
    * @api {get} /admin/register Get registered hackers
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Get Registered Hackers
    * @apiGroup Admin Registration
    * @apiPermission TeamMemberPermission
@@ -77,12 +82,17 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
    * @apiParam {string} hackathon The hackathon uid to get registration details for
    * @apiParam {boolean} allHackathons Whether to retrieve data for all hackathons
-   *
+   * @apiParam {string} [uid] uid of the hacker
+   * @apiParam {string} [email] email of the hacker
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} Array of registered hackers
+   * @apiSuccess {Registration[]} Array of registered hackers
+   * @apiUse ResponseBodyDescription
    */
-  private async getAllRegistrationHandler(res: Response, next: NextFunction) {
+  private async getAllRegistrationHandler(req: Request, res: Response, next: NextFunction) {
+    if (req.query.email || req.query.uid) {
+      return this.getRegistrationHandler(req, res, next);
+    }
     let result;
     try {
       result = await this.registerDataMapper.getAll({
@@ -100,7 +110,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
 
   /**
    * @api {get} /admin/register/count Get a count of Registered Users
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName get count of registration
    * @apiGroup Admin Registration
    * @apiPermission TeamMemberPermission
@@ -108,7 +118,8 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @apiParam {boolean} allHackathons Whether to retrieve data for all hackathons
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Array} number of registered users
+   * @apiSuccess {number} number of registered users
+   * @apiUse ResponseBodyDescription
    */
   private async countRegistrationHandler(res: Response, next: NextFunction) {
     let result;
@@ -126,27 +137,30 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
 
   /**
    * @api {post} /admin/register/update Update an existing registration
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Update Registration
    * @apiGroup Admin Registration
-   * @apiPermission DirectorPermission
-   * @apiParam {Object} registration The updated registration object.
+   * @apiPermission UserPermission
+   * @apiParam {Registration} The updated registration object.
    * @apiUse AuthArgumentRequired
+   * @apiUse ResponseBodyDescription
    */
   private async updateRegistrationHandler(req: Request, res: Response, next: NextFunction) {
     // Validate incoming registration
     if (!req.body || !req.body.registration) {
       return Util.standardErrorHandler(
-        new HttpError('Registration field missing', 400),
+        new HttpError('registration field missing', 400),
+        next,
+      );
+    }
+    if (!req.body.registration.uid) {
+      return Util.standardErrorHandler(
+        new HttpError('registration id missing', 400),
         next,
       );
     }
     try {
-      // TODO: Use the processor here
-      // this.registerDataMapper.normaliseRegistrationData(req.body.registration);
-      req.body.registration.uid = res.locals.user.uid;
-      req.body.registrationemail = res.locals.user.email;
-      this.validateRegistrationFields(req.body.registration);
+      await this.registrationProcessor.normaliseRegistrationData(req.body.registration);
     } catch (error) {
       return Util.standardErrorHandler(
         new HttpError(error.toString(), 400),
@@ -168,8 +182,35 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
       const response = new ResponseBody(
         'Success',
         200,
-        { result: 'Success', data: { registration, result } },
+        result,
       );
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  private async getRegistrationHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.query.email && !req.query.uid) {
+      return Util.standardErrorHandler(
+        new HttpError('either email or uid must be provided', 400),
+        next,
+      );
+    }
+    if (!req.query.hackathon) {
+      const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
+      req.query.hackathon = hackathon.id;
+    }
+    let uid: UidType;
+    if (req.query.email) {
+      ({ uid } = await this.authService.getUserId(req.query.email));
+    } else {
+      uid = req.query.uid;
+    }
+
+    try {
+      const result = await this.registerDataMapper.get({ uid, hackathon: req.query.hackathon });
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

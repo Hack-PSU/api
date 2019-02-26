@@ -37,12 +37,6 @@ export class RegistrationController extends ParentRouter implements IExpressCont
   }
 
   public routes(app: Router): void {
-    if (!this.authService) {
-      return;
-    }
-    // if (!this.registerDataMapper) {
-    //   return;
-    // }
     // Unauthenticated routes
     app.post('/pre', (req, res, next) => this.preRegistrationHandler(req, res, next));
     // Use authentication
@@ -91,8 +85,9 @@ export class RegistrationController extends ParentRouter implements IExpressCont
    * @apiName Add Pre-Registration
    * @apiGroup Pre Registration
    * @apiParam {String} email The email ID to register with
-   * @apiSuccess {String} Success
+   * @apiSuccess {PreRegistration} The inserted pre registration
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async preRegistrationHandler(request: Request, response: Response, next: NextFunction) {
     if (!request.body ||
@@ -119,7 +114,7 @@ export class RegistrationController extends ParentRouter implements IExpressCont
 
   /**
    * @api {post} /register/ Register for HackPSU
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Add Registration
    * @apiGroup Registration
    * @apiPermission UserPermission
@@ -149,8 +144,9 @@ export class RegistrationController extends ParentRouter implements IExpressCont
    * @apiParam {String} expectations What the user expects to get from the hackathon
    * @apiParam {String} veteran=false Is the user a veteran?
    *
-   * @apiSuccess {String} Success
+   * @apiSuccess {Registration} The inserted registration
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
   private async registrationHandler(request: Request, response: Response, next: NextFunction) {
     // Validate incoming registration

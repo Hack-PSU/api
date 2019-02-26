@@ -14,7 +14,6 @@ import {
   IAcl,
   IAclPerm,
   IAdminAclPerm,
-  IAdminStatisticsPerm,
 } from './RBAC/rbac-types';
 
 @Injectable()
@@ -56,10 +55,6 @@ export class FirebaseAuthService implements IFirebaseAuthService {
       case AclOperations.SEND_EMAIL:
         // Only supported for IAdminAclPerm
         requestPermission = (permission as IAdminAclPerm).SEND_EMAIL;
-        break;
-      case AclOperations.STATISTICS:
-        // Only supported for IAdminStatisticsPerm
-        requestPermission = (permission as IAdminStatisticsPerm).STATISTICS;
         break;
       default:
         requestPermission = '';

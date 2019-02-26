@@ -2,8 +2,7 @@
   "compilerOptions": {
     "target": "es6",
     "types": [
-      "node",
-      "Long"
+      "node"
     ],
     "lib": [
       "es2017.object",
@@ -20,6 +19,7 @@
     "outDir": "./dist",
     "experimentalDecorators": true,
     "strictNullChecks": true,
+    "noImplicitReturns": false,
     "removeComments": false,
     "noImplicitAny": false,
     "esModuleInterop": true

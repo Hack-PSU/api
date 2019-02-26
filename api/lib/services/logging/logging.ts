@@ -1,10 +1,10 @@
-import { express } from '@google-cloud/logging-bunyan';
 import * as bunyan from 'bunyan';
 import devNull from 'dev-null';
 import { Request } from 'express';
 import { Injectable } from 'injection-js';
 import 'reflect-metadata';
-// const loggingBunyan = new LoggingBunyan();
+// tslint:disable:no-var-requires
+const { express } = require('@google-cloud/logging-bunyan');
 
 const LOGGER_NAME = 'hackpsu-api';
 
@@ -40,7 +40,7 @@ export class Logger {
 
   public async mw() {
     const { mw } = await express.middleware({
-      level: 'info',
+      level: 'trace',
       logName: LOGGER_NAME,
     });
     return mw;

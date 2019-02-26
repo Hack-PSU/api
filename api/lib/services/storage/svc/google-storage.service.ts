@@ -62,6 +62,22 @@ export class GoogleStorageService implements IStorageService {
     return encodeURI(`https://${this.bucket!}.storage.googleapis.com/${name}`);
   }
 
+  /**
+   * @VisibleForTesting
+   */
+  public _fileFilter(
+    req: Express.Request,
+    file: Express.Multer.File,
+    callback: (error: (Error | null), acceptFile: boolean) => void,
+  ) {
+    try {
+      const result = this.fileFilter!(file as IFile);
+      callback(null, result);
+    } catch (error) {
+      callback(error, false);
+    }
+  }
+
   private _upload(req: express.Request, res: express.Response, next: express.NextFunction) {
     const limits: IFileUploadLimits = {
       fileSize: 1024 * 1024 * 10,
@@ -79,18 +95,5 @@ export class GoogleStorageService implements IStorageService {
       )(req, res, next);
     }
     return uploader.single(this.fieldName)(req, res, next);
-  }
-
-  private _fileFilter(
-    req: Express.Request,
-    file: Express.Multer.File,
-    callback: (error: (Error | null), acceptFile: boolean) => void,
-  ) {
-    try {
-      const result = this.fileFilter!(file as IFile);
-      callback(null, result);
-    } catch (error) {
-      callback(error, false);
-    }
   }
 }

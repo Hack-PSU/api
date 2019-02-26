@@ -50,6 +50,12 @@ export class AdminScannerController extends ScannerController implements IExpres
       (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.READ_ALL),
       (req, res, next) => this.getAllRegistrationsHandler(res, next),
     );
+    app.get(
+      '/user',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.READ_ALL),
+      (req, res, next) => this.getUserByRfidBand(req,res, next),
+      (req, res, next) => this.getUserByRfidBandHandler(req, res, next),
+    );
   }
 
   private async registerNewScannerHandler(
@@ -211,5 +217,31 @@ export class AdminScannerController extends ScannerController implements IExpres
     }
     const response = new ResponseBody('Success', 200, result);
     return this.sendResponse(res, response);
+  }
+
+  /**
+   * @api {get} /admin/scanner/users Obtain user by rfid band
+   * @apiVersion 2.0.0
+   * @apiName Obtain user information from Rid band (Scanner)
+   *
+   * @apiGroup Admin
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   * @apiSuccess {Any} user info
+   * @apiUse IllegalArgumentError
+   */
+  private async getUserByRfidBandHandler(req: Request, res: Response, next: NextFunction,) {
+    if (!res.locals.userToken) {
+      return Util.standardErrorHandler(new HttpError('Invalid rfid band', 400), next);
+    }
+    try {
+      const response = new ResponseBody('Success', 200, { result: 'Success',
+        data: {userToken: res.locals.userToken, registration: res.locals.registration}});
+        return this.sendResponse(res, response);
+
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 }

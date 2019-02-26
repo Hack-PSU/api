@@ -2,33 +2,32 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { Stream } from 'ts-stream';
-import { UidType } from '../../JSCommon/common-types';
+import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDataMapper, IDbResult } from '../../services/database';
+import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
-// import { IRSVPDataMapper } from './index';
-import { RSVP } from './RSVP';
+import { IRsvpDataMapper } from './index';
+import { Rsvp } from './rsvp';
 
 @Injectable()
-export class RsvpApiDataMapperImpl extends GenericDataMapper
-    implements IAclPerm, IDataMapper<RSVP> {
+export class RsvpDataMapperImpl extends GenericDataMapper
+  implements IAclPerm, IRsvpDataMapper {
 
   public COUNT: string = 'rsvp:count';
   public CREATE: string = 'rsvp:create';
   public DELETE: string = 'rsvp:delete';
   public READ: string = 'rsvp:read';
-  public READ_ALL: string = 'rsvp:delete';
+  public READ_ALL: string = 'rsvp:readall';
   public UPDATE: string = 'rsvp:update';
   public tableName: string = 'RSVP';
 
-  protected pkColumnName: string = 'uid';
+  protected pkColumnName: string = 'user_id';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -61,43 +60,45 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
     );
   }
 
-  public delete(id: UidType): Promise<IDbResult<void>> {
+  public delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-        .where(`${this.pkColumnName} = ?`, id)
-        .toParam();
+      .where(`${this.pkColumnName} = ?`, id.uid)
+      .where('hackathon = ?', id.hackathon)
+      .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
   }
 
-  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<RSVP>> {
+  public get(id: ICompoundHackathonUidType, opts?: IUowOpts): Promise<IDbResult<Rsvp>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
     queryBuilder = queryBuilder
-      .where(`${this.pkColumnName} = ?`, id);
+      .where(`${this.pkColumnName} = ?`, id.uid)
+      .where('hackathon = ?', id.hackathon);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<RSVP>(
+    return from(this.sql.query<Rsvp>(
       query.text,
       query.values,
-      { stream: false, cache: true },
+      { cache: true },
     ))
       .pipe(
-        map((event: RSVP[]) => ({ result: 'Success', data: event[0] })),
+        map((event: Rsvp[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Stream<RSVP>>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Rsvp[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(this.tableName);
+      .from(this.tableName, 'rsvp');
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -115,43 +116,28 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
               .toPromise()),
         );
     }
-    const query = queryBuilder
-      .toParam();
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<RSVP>(query.text, query.values, { stream: true, cache: true },
+    return from(this.sql.query<Rsvp>(query.text, query.values, { cache: true },
     ))
       .pipe(
-        map((event: Stream<RSVP>) => ({ result: 'Success', data: event })),
+        map((rsvps: Rsvp[]) => ({ result: 'Success', data: rsvps })),
       )
       .toPromise();
   }
 
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
-    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from(this.tableName)
-      .field(`COUNT(${this.pkColumnName})`, 'rsvp_count');
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder
-        .where(
-          'hackathon = ?',
-          await (opts.hackathon ?
-            Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon
-              .pipe(map(hackathon => hackathon.uid))
-              .toPromise()),
-        );
-    }
-    const query = queryBuilder
-      .toString()
-      .concat(';');
+    const query = (await this.getCountQuery(opts))
+      .toParam();
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query, [], { stream: true, cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
-      map((result: number) => ({ result: 'Success', data: result })),
+      map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
-  public async insert(object: RSVP): Promise<IDbResult<RSVP>> {
+  public async insert(object: Rsvp): Promise<IDbResult<Rsvp>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -170,13 +156,13 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
     .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
     ).toPromise();
   }
 
-  public update(object: RSVP): Promise<IDbResult<RSVP>> {
+  public update(object: Rsvp): Promise<IDbResult<Rsvp>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -190,10 +176,28 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
     ).toPromise();
+  }
+
+  public async getCountQuery(opts?: IUowOpts): Promise<squel.Select> {
+    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+      .from(this.tableName)
+      .field(`COUNT(${this.pkColumnName})`, 'rsvp_count');
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    return queryBuilder;
   }
 
   // IN-PROGRESS
@@ -211,7 +215,7 @@ export class RsvpApiDataMapperImpl extends GenericDataMapper
   //   return from(this.sql.query<boolean>(
   //       query.text,
   //       query.values,
-  //       { stream: true, cache: true },
+  //       { , cache: true },
   //     ))
   //     .pipe(
   //       map((status: boolean) => ({ result: 'Success', data: status })),

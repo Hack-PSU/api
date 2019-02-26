@@ -3,9 +3,11 @@ import { Inject, Injectable } from 'injection-js';
 import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
+import { IAdminStatisticsDataMapper, IUserStatistics } from '../../../models/admin/statistics';
+import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
-import { RfidAssignment } from '../../../models/scanner/rfid-assignment';
+import { IScannerProcessor } from '../../../processors/scanner-processor';
 import { IApikeyAuthService, IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../../services/database';
@@ -16,13 +18,23 @@ export class AdminScannerController extends ScannerController implements IExpres
   public router: Router;
 
   constructor(
+    @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
+    @Inject('IAdminScannerProcessor') private readonly scannerProcessor: IScannerProcessor,
+    @Inject('IActiveHackathonDataMapper') activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IAuthService') authService: IFirebaseAuthService,
     @Inject('IScannerAuthService') scannerAuthService: IApikeyAuthService,
     @Inject('IScannerDataMapper') scannerAcl: IAclPerm,
     @Inject('IScannerDataMapper') scannerDataMapper: IScannerDataMapper,
     @Inject('IRegisterDataMapper') registerDataMapper: IRegisterDataMapper,
   ) {
-    super(authService, scannerAuthService, scannerAcl, scannerDataMapper, registerDataMapper);
+    super(
+      authService,
+      scannerAuthService,
+      scannerAcl,
+      scannerDataMapper,
+      registerDataMapper,
+      activeHackathonDataMapper,
+    );
     this.router = Router();
     this.routes(this.router);
   }
@@ -50,6 +62,19 @@ export class AdminScannerController extends ScannerController implements IExpres
     );
   }
 
+  /**
+   * @api {get} /admin/scanner/register Start a scanner registration
+   * @apiVersion 2.0.0
+   * @apiName Start a scanner registration
+   * @apiDescription NOTE: This method is rate-limited to 200 rpm
+   * @apiGroup Admin Scanner
+   * @apiPermission TeamMemberPermission
+   * @apiSuccess {PinToken} Pin Token containing temporary authentication pin, validity, and other metadata
+   * @apiUse ResponseBodyDescription
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
   private async registerNewScannerHandler(
     response: Response,
     next: NextFunction,
@@ -67,10 +92,10 @@ export class AdminScannerController extends ScannerController implements IExpres
 
   /**
    * @api {post} /admin/scanner/assign Assign RFID tags ID to users
-   * @apiVersion 1.0.0
+   * @apiVersion 2.0.0
    * @apiName Assign an RFID to a user (Admin)
    *
-   * @apiGroup Admin
+   * @apiGroup Admin Scanner
    * @apiPermission TeamMemberPermission
    *
    * @apiUse AuthArgumentRequired
@@ -84,8 +109,10 @@ export class AdminScannerController extends ScannerController implements IExpres
    *     },
    *     { ... }
    *     ]
-   * @apiSuccess {String} Success
+   * @apiSuccess {RfidAssignment[]} Array of rfid insertion results
    * @apiUse IllegalArgumentError
+   * @apiPermission ScannerPermission
+   * @apiUse ResponseBodyDescription
    */
   private async addRfidAssignments(req: Request, res: Response, next: NextFunction) {
     // Validate incoming request
@@ -100,51 +127,28 @@ export class AdminScannerController extends ScannerController implements IExpres
     }
 
     try {
-      let response: ResponseBody;
-      if (Array.isArray(req.body.assignments)) {
-        const assignments: RfidAssignment[] = req.body.assignments.map(
-          assignment => new RfidAssignment(assignment));
-        const result = await this.scannerDataMapper
-          .addRfidAssignments(assignments);
-
-        // Find response status to send
-        const status = Math.max(
-          ...result.data.map(
-            (individualResult) => {
-              switch (individualResult.result) {
-                case 'Error':
-                  return 500;
-                case 'Duplicate detected':
-                  return 409;
-                case 'Bad input':
-                  return 400;
-                default:
-                  return 200;
-              }
-            },
-          ),
-        );
-
-        response = new ResponseBody(
-          'Success',
-          status,
-          result,
-        );
-      } else {
-        const assignment = new RfidAssignment(req.body.assignments);
-        const result = await this.scannerDataMapper.insert(assignment);
-        response = new ResponseBody(
-          'Success',
-          200,
-          result as IDbResult<RfidAssignment>,
-        );
-      }
+      const response = await this.scannerProcessor.processRfidAssignments(req.body.assignments);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.standardErrorHandler(error, next);
     }
   }
 
+  /**
+   * @api {post} /admin/scanner/register Confirm a scanner registration
+   * @apiVersion 2.0.0
+   * @apiName Confirm a scanner registration
+   *
+   * @apiGroup Admin Scanner
+   * @apiPermission ScannerPermission
+   * @apiParam pin {number} A pin generated by calling the GET: /register route
+   * @apiParam macaddr {string} Mac Address of the device registering for API Key
+   * @apiSuccess {ApiToken} API Token containing api key, validity, and other metadata
+   * @apiUse ResponseBodyDescription
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
   private async confirmRegisterScannerHandler(
     request: Request,
     response: Response,
@@ -167,21 +171,13 @@ export class AdminScannerController extends ScannerController implements IExpres
       );
     }
     try {
-      const result = await this.scannerAuthService
-        .checkPinAuthentication(parseInt(request.body.pin, 10));
-      if (!result) {
-        return Util.standardErrorHandler(
-          new HttpError('invalid authentication pin provided', 401),
-          next,
-        );
-      }
-      const apiToken = await this.scannerAuthService.generateApiKey(request.headers.macaddr as string);
-      return this.sendResponse(
-        response,
-        new ResponseBody('Success', 200, { result: 'Success', data: apiToken }),
+      const res = await this.scannerProcessor.processorScannerConfirmation(
+        parseInt(request.body.pin, 10),
+        request.headers.macaddr as string,
       );
+      return this.sendResponse(response, res);
     } catch (error) {
-      return Util.errorHandler500(error, next);
+      return Util.standardErrorHandler(error, next);
     }
 
   }
@@ -191,16 +187,16 @@ export class AdminScannerController extends ScannerController implements IExpres
    * @apiVersion 2.0.0
    * @apiName Obtain all registrations (Scanner)
    *
-   * @apiGroup Admin
+   * @apiGroup Admin Scanner
    * @apiPermission TeamMemberPermission
-   *
+   * @apiPermission ScannerPermission
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Array} Registrations
+   * @apiSuccess {Registration[]} Array of current registrations
    * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
    */
-
   private async getAllRegistrationsHandler(res: Response, next: NextFunction) {
-    let result: IDbResult<IUserStatistics>;
+    let result: IDbResult<IUserStatistics[]>;
     try {
       result = await this.adminStatisticsDataMapper.getAllUserData({
         byHackathon: true,

@@ -1,4 +1,4 @@
-export class Role {
+export class Role extends Object {
   private readonly _name: string;
   private _capability: Set<string>;
   private readonly _action: ((params: any) => boolean) | undefined;
@@ -26,6 +26,7 @@ export class Role {
     action?: (params: any) => (boolean),
     inherits?: string[],
   ) {
+    super();
     this._name = name;
     this._capability = new Set<string>(capability);
     this._action = action;
@@ -48,5 +49,12 @@ export class Role {
       new Set(
         [...(this.inherits ? this.inherits : []), ...(role.inherits ? role.inherits : [])],
       );
+  }
+
+  public toString(): string {
+    return `{ name: ${this.name}, capabilities: ${JSON.stringify(
+      Array.from(this.capability.values()))},inherits: ${this.inherits ?
+      JSON.stringify(Array.from(this.inherits.values())) :
+      undefined},action: ${this.action}`;
   }
 }

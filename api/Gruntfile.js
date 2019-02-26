@@ -6,6 +6,7 @@ const encryptedFiles = {
   'gcs_config_staging.json.aes': 'gcs_config.json',
   '.prod.env.aes': '.env',
   '.staging.env.aes': '.env',
+  '.test.env.aes': '.env',
   'privatekey.aes': 'config.json',
   'privatekey.staging.aes': 'config.json',
   'hackpsu-18-serviceaccount.json.aes': 'hackpsu-18-serviceaccount.json',
@@ -35,6 +36,13 @@ function decryptProduction() {
   decryptFile('hackpsu-18-serviceaccount.json.aes');
 }
 
+function decryptTest() {
+  decryptFile('privatekey.staging.aes');
+  decryptFile('gcs_config_staging.json.aes');
+  decryptFile('.test.env.aes');
+  decryptFile('hackpsu-18-serviceaccount.json.aes');
+}
+
 module.exports = (grunt) => {
   grunt.loadNpmTasks('grunt-exec');
   grunt.loadNpmTasks('grunt-env');
@@ -60,7 +68,7 @@ module.exports = (grunt) => {
         cmd: './cloud_sql_proxy -instances=hackpsu18:us-central1:hackpsu18=tcp:3306 -credential_file=./lib/hackpsu-18-serviceaccount.json &',
       },
       deploy: {
-        cmd: `gcloud app deploy --quiet ${grunt.option('production') ? 'app.yaml' : 'staging.app.yaml'}`,
+        cmd: `gcloud app deploy --quiet ${grunt.option('production') ? 'app.yaml' : 'staging.v2.app.yaml'}`,
       },
     },
     copy: {
@@ -119,11 +127,12 @@ module.exports = (grunt) => {
   grunt.registerTask(
     'decrypt',
     'Decrypt the corresponding files based on environment',
-    () => (grunt.option('production') ? decryptProduction() : decryptStaging()),
+    () => (grunt.option('production') ? decryptProduction() : (grunt.option('test') ? decryptTest() : decryptStaging())),
   );
   grunt.registerTask('default', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'run:doc']);
   grunt.registerTask('start', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'copy:assets']);
   grunt.registerTask('test', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'copy:assets']);
+  grunt.registerTask('travis', ['decrypt', 'copy', 'run:install', 'copy:assets']);
   grunt.registerTask('prep', ['decrypt', 'copy', 'run:doc', 'run:install']);
   grunt.registerTask('deploy', ['prep', 'exec:deploy']);
 };

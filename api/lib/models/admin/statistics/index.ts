@@ -1,5 +1,5 @@
 import { EpochNumber, UidType } from '../../../JSCommon/common-types';
-import { IDataMapper, IDbResult } from '../../../services/database';
+import { IDbResult } from '../../../services/database';
 import { IUowOpts } from '../../../services/database/svc/uow.service';
 import { AcademicYear, CodingExperience, Gender, ShirtSize, VeteranOptions } from '../../register';
 
@@ -53,8 +53,7 @@ interface IUserStatistics {
   user_uid: UidType;
 }
 
-interface IAdminStatisticsDataMapper extends IDataMapper<any> {
-
+interface IAdminStatisticsDataMapper {
   getUserCountByCategory(uowOpts?: IUowOpts): Promise<IDbResult<IUserCount[]>>;
 
   getAllUserData(opts?: IUowOpts): Promise<IDbResult<IUserStatistics[]>>;

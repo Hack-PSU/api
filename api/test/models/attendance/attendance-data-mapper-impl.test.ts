@@ -8,6 +8,7 @@ import { Attendance } from '../../../lib/models/attendance/attendance';
 import { AttendanceDataMapperImpl } from '../../../lib/models/attendance/attendance-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
+import { IRegisterDataMapper } from '../../../lib/models/register';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { IDataMapper } from '../../../lib/services/database';
@@ -16,6 +17,7 @@ import { Logger } from '../../../lib/services/logging/logging';
 
 let attendanceDataMapper: IDataMapper<Attendance>;
 let activeHackathonDataMapper;
+let registerDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
@@ -31,6 +33,7 @@ describe('TEST: Attendance data mapper', () => {
       uid: 'test uid',
     })));
     activeHackathonDataMapper.tableName.returns('HACKATHON');
+    registerDataMapper = Substitute.for<IRegisterDataMapper>();
   });
 
   describe('TEST: Attendance read all', () => {
@@ -44,6 +47,7 @@ describe('TEST: Attendance data mapper', () => {
         acl,
         mysqlUow,
         activeHackathonDataMapper,
+        registerDataMapper,
         new Logger(),
       );
     });
@@ -89,7 +93,7 @@ describe('TEST: Attendance data mapper', () => {
         await attendanceDataMapper.getAll({ startAt: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` OFFSET 100;';
+        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` OFFSET ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -105,7 +109,7 @@ describe('TEST: Attendance data mapper', () => {
         await attendanceDataMapper.getAll({ count: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` LIMIT 100;';
+        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` LIMIT ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -125,7 +129,7 @@ describe('TEST: Attendance data mapper', () => {
         });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` WHERE (hackathon_id = \'test uid\');';
+        const expectedSQL = 'SELECT * FROM `ATTENDANCE` `attendance` WHERE (hackathon_id = ?);';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -161,6 +165,7 @@ describe('TEST: Attendance data mapper', () => {
         acl,
         mysqlUow,
         activeHackathonDataMapper,
+        registerDataMapper,
         new Logger(),
       );
     });
@@ -190,7 +195,7 @@ describe('TEST: Attendance data mapper', () => {
       });
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT COUNT(uid) AS "count" FROM `ATTENDANCE` WHERE (hackathon_id = \'test uid\');';
+      const expectedSQL = 'SELECT COUNT(uid) AS "count" FROM `ATTENDANCE` WHERE (hackathon_id = ?);';
       const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
       expect(generatedSQL).to.equal(expectedSQL);

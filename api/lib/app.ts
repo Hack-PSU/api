@@ -1,12 +1,9 @@
-import dotenv from 'dotenv';
-
-dotenv.config();
-import 'source-map-support/register';
-import { ExpressProvider } from './services/common/injector/providers';
-
-ExpressProvider.config();
-import * as debugAgent from '@google-cloud/debug-agent';
+// Setup cloud specific trace and debug
 import * as traceAgent from '@google-cloud/trace-agent';
+traceAgent.start();
+import * as debugAgent from '@google-cloud/debug-agent';
+debugAgent.start();
+
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -14,17 +11,14 @@ import express, { NextFunction, Request, Response } from 'express';
 import { default as expressQueryBoolean } from 'express-query-boolean';
 import helmet from 'helmet';
 import * as path from 'path';
+import 'source-map-support/register';
 import { HttpError } from './JSCommon/errors';
 import { Environment, Util } from './JSCommon/util';
 import { ParentRouter, ResponseBody } from './router/router-types';
-import * as controllers from './router/routes/controllers';
+import { ExpressProvider } from './services/common/injector/providers';
 import { Logger } from './services/logging/logging';
-// Setup cloud specific trace and debug
 
-if (Util.getCurrentEnv() === Environment.PRODUCTION) {
-  traceAgent.start();
-  debugAgent.start();
-}
+ExpressProvider.config();
 
 export class App extends ParentRouter {
   private static notFoundHandler(request, response, next: NextFunction) {
@@ -41,7 +35,7 @@ export class App extends ParentRouter {
   }
 
   private errorHandler(error: HttpError, request: Request, response: Response, next: NextFunction) {
-    if (Util.getCurrentEnv() === Environment.PRODUCTION || Util.getCurrentEnv() === Environment.DEBUG) {
+    if (Util.getCurrentEnv() !== Environment.TEST) {
       this.logger.error(error);
     }
     // set locals, only providing error in development
@@ -50,7 +44,11 @@ export class App extends ParentRouter {
 
     // render the error page
     response.status(error.status || 500);
-    const res = new ResponseBody('Error', error.status || 500, error.body);
+    const res = new ResponseBody(
+      'Error',
+      error.status || 500,
+      { result: 'Error', data: error.body },
+    );
     this.sendResponse(response, res);
     next();
   }
@@ -60,9 +58,6 @@ export class App extends ParentRouter {
       .then(() => {
         // Set proxy settings
         this.app.set('trust proxy', true);
-
-        // Setup database handlers
-        // this.uowConfig();
 
         // Setup CORS and other security options
         this.securityConfig();
@@ -79,7 +74,10 @@ export class App extends ParentRouter {
         // Setup routers
         this.routerConfig();
       })
-      .catch(error => console.error(error));
+      .catch((error) => {
+        // tslint:disable-next-line:no-console
+        console.error(error);
+      });
   }
 
   /**
@@ -166,12 +164,14 @@ export class App extends ParentRouter {
   }
 
   private async loggerConfig() {
-    const loggingMw = await this.logger.mw();
-    this.app.use(loggingMw);
-    this.app.use((request: Request, response, next) => {
-      this.logger.setContext(request);
-      next();
-    });
+    if (Util.getCurrentEnv() !== Environment.TEST && Util.getCurrentEnv() !== Environment.DEBUG) {
+      const loggingMw = await this.logger.mw();
+      this.app.use(loggingMw);
+      this.app.use((request: Request, response, next) => {
+        this.logger.setContext(request);
+        next();
+      });
+    }
     return;
   }
 }

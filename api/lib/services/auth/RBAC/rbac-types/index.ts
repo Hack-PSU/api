@@ -49,14 +49,6 @@ export interface IAdminAclPerm extends IAclPerm {
 }
 
 /**
- * This interface is an extension of IAclPerm that provides
- * string definitions for more specific administrator actions
- */
-export interface IAdminStatisticsPerm extends IAclPerm {
-  STATISTICS: string;
-}
-
-/**
  * This enum is used as a mapping from operations to
  * An IAcl's member IAclPerm implementation. In order to
  * keep functioning error free, ensure that the enumerable
@@ -72,6 +64,5 @@ export enum AclOperations {
   READ_ALL,
   GET_EMAIL,
   REDUCE_PERMISSION,
-  STATISTICS,
   MAKE_ACTIVE,
 }

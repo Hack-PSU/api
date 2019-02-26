@@ -2,7 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { Stream } from 'ts-stream';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -51,7 +50,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { stream: false, cache: false }),
+      this.sql.query(query.text, query.values, { cache: false }),
     )
       .pipe(map(() => ({ result: 'Success', data: undefined })))
       .toPromise();
@@ -70,7 +69,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<Location>(query.text, query.values, {
         cache: true,
-        stream: false,
+
       }),
     )
       .pipe(
@@ -79,19 +78,18 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getAll(): Promise<IDbResult<Stream<Location>>> {
+  public getAll(): Promise<IDbResult<Location[]>> {
     const query = squel
       .select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName, 'location')
-      .toString()
-      .concat(';');
-    const params = [];
+      .toParam();
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<Location>(query, params, { stream: true, cache: true }),
+      this.sql.query<Location>(query.text, query.values, { cache: true }),
     )
       .pipe(
-        map((location: Stream<Location>) => ({
-          data: location,
+        map((locations: Location[]) => ({
+          data: locations,
           result: 'Success',
         })),
       )
@@ -103,11 +101,11 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toString()
+      .toParam();
+    query.text = query.text
       .concat(';');
-    const params = [];
     return from(
-      this.sql.query<number>(query, params, { stream: true, cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     )
       .pipe(map((result: number[]) => ({ result: 'Success', data: result[0] })))
       .toPromise();
@@ -132,10 +130,10 @@ export class LocationDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<void>(query.text, query.values, {
         cache: false,
-        stream: false,
+
       }),
     )
-      .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
+      .pipe(map(() => ({ result: 'Success', data: object })))
       .toPromise();
   }
 
@@ -159,10 +157,10 @@ export class LocationDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<void>(query.text, query.values, {
         cache: false,
-        stream: false,
+
       }),
     )
-      .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
+      .pipe(map(() => ({ result: 'Success', data: object })))
       .toPromise();
   }
 }

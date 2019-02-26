@@ -4,22 +4,15 @@ import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import {
-  CheckoutObject,
-  CheckoutObjectDataMapperImpl,
-  ICheckoutObjectDataMapper,
-} from '../../../lib/models/checkout-object';
+import { ICheckoutObjectDataMapper } from '../../../lib/models/checkout-object';
+import { CheckoutObject } from '../../../lib/models/checkout-object/checkout-object';
+import { CheckoutObjectDataMapperImpl } from '../../../lib/models/checkout-object/checkout-object-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
-
-function mockedQuery<T>(query, params) {
-  // @ts-ignore
-  return Promise.resolve({ query, params });
-}
 
 let checkoutObjectDataMapper: ICheckoutObjectDataMapper;
 let activeHackathonDataMapper;
@@ -58,13 +51,13 @@ describe('TEST: CheckoutObject Data Mapper', () => {
     // @ts-ignore
     it('generates the expected SQL to retrieve an item', async () => {
       // GIVEN: An item with a valid ID to read from
-      const uid = 'test uid';
+      const uid = { uid: 'test uid', hackathon: 'test uid' };
       // WHEN: Retrieving data for this item
       await checkoutObjectDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` WHERE (uid= ?);';
-      const expectedParams = [uid];
+      const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` WHERE (uid= ?) AND (hackathon = ?);';
+      const expectedParams = [uid.uid, uid.hackathon];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -112,7 +105,7 @@ describe('TEST: CheckoutObject Data Mapper', () => {
         await checkoutObjectDataMapper.getAll({ startAt: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` OFFSET 100;';
+        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` OFFSET ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -128,7 +121,7 @@ describe('TEST: CheckoutObject Data Mapper', () => {
         await checkoutObjectDataMapper.getAll({ count: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` LIMIT 100;';
+        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` LIMIT ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -148,7 +141,7 @@ describe('TEST: CheckoutObject Data Mapper', () => {
         });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` WHERE (hackathon_id = \'test uid\');';
+        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` WHERE (hackathon_id = ?);';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -179,13 +172,13 @@ describe('TEST: CheckoutObject Data Mapper', () => {
     // @ts-ignore
     it('causes the item to get deleted', async () => {
       // GIVEN: An item with a valid ID to read from
-      const uid = 'test uid';
+      const uid = { uid: 'test uid', hackathon: 'test uid' };
       // WHEN: Deleting this item
       await checkoutObjectDataMapper.delete(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'DELETE FROM `CHECKOUT_DATA` WHERE (uid = ?);';
-      const expectedParams = [uid];
+      const expectedSQL = 'DELETE FROM `CHECKOUT_DATA` WHERE (uid = ?) AND (hackathon = ?);';
+      const expectedParams = [uid.uid, uid.hackathon];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

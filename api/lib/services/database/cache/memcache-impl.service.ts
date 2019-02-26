@@ -9,21 +9,6 @@ const DEFAULT_SIZE = 100;
 @Injectable()
 export class MemCacheServiceImpl implements ICacheService {
 
-  // public static instance() {
-  //   if (!MemCacheServiceImpl.instanceInternal) {
-  //     MemCacheServiceImpl.init();
-  //   }
-  //   return MemCacheServiceImpl.instanceInternal;
-  // }
-
-  // /**
-  //  * Initialize the in memory cache
-  //  * @param {number} size Size of the cache
-  //  */
-  // public static init(size = DEFAULT_SIZE) {
-  //   MemCacheServiceImpl.instanceInternal = new MemCacheServiceImpl();
-  // }
-
   public useCache: boolean;
 
   private readonly cache: Map<string, any>;

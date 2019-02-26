@@ -101,7 +101,6 @@ export class ScannerController extends AbstractScannerController implements IExp
    * @apiPermission TeamMemberPermission
    * @apiSuccess {PinToken} Pin Token containing temporary authentication pin, validity, and other metadata
    * @apiUse ResponseBodyDescription
-   * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */

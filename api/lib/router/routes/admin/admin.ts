@@ -60,7 +60,6 @@ export class AdminController extends ParentRouter implements IExpressController 
       return;
     }
     // Use authentication
-    app.use('/scanner', Util.getInstance('AdminScannerController').router);
     app.use('/checkout', Util.getInstance('AdminCheckoutController').router);
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     app.use((req, res, next) => AdminController.parseCommonRequestFields(req, res, next));

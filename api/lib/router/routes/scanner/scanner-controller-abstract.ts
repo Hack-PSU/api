@@ -89,13 +89,13 @@ abstract class AbstractScannerController extends ParentRouter {
     res: Response,
     next: NextFunction,
   ) {
-    if (!req.body.wid) {
+    if (!req.body.wid || !req.query.wid) {
       // Cannot lookup user details by wristband ID
       return next();
     }
     try {
       const { data: rfidAssignment } = await this.scannerDataMapper.get(
-        req.body.wid,
+        req.body.wid || req.query.wid,
         { byHackathon: true },
       );
       const [registration, userToken] = await Promise.all(
@@ -109,7 +109,7 @@ abstract class AbstractScannerController extends ParentRouter {
       );
       res.locals.registration = registration.data as Registration;
       res.locals.userToken = userToken;
-      next();
+      return next();
     } catch (error) {
       return Util.standardErrorHandler(error, next);
     }

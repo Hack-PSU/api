@@ -15,6 +15,7 @@ import 'source-map-support/register';
 import { HttpError } from './JSCommon/errors';
 import { Environment, Util } from './JSCommon/util';
 import { ParentRouter, ResponseBody } from './router/router-types';
+import { ScannerController } from './router/routes/scanner/scanner';
 import { ExpressProvider } from './services/common/injector/providers';
 import { Logger } from './services/logging/logging';
 
@@ -145,6 +146,7 @@ export class App extends ParentRouter {
     App.registerRouter('internal', 'InternalController', 2);
     App.registerRouter('users', 'UsersController', 2);
     App.registerRouter('admin', 'AdminController', 2);
+    App.registerRouter('scanner', 'ScannerController', 2);
     App.registeredRoutes.forEach((router, key) => {
       this.app.use(key, Util.getInstance(router).router);
     });

@@ -83,7 +83,7 @@ export class ScannerController extends AbstractScannerController implements IExp
   }
 
   /**
-   * @api {get} /admin/scanner/register Start a scanner registration
+   * @api {get} /scanner/register Start a scanner registration
    * @apiVersion 2.0.0
    * @apiName Start a scanner registration
    * @apiDescription NOTE: This method is rate-limited to 200 rpm
@@ -111,7 +111,7 @@ export class ScannerController extends AbstractScannerController implements IExp
   }
 
   /**
-   * @api {post} /admin/scanner/assign Assign RFID tags ID to users
+   * @api {post} /scanner/assign Assign RFID tags ID to users
    * @apiVersion 2.0.0
    * @apiName Assign an RFID to a user
    *
@@ -157,7 +157,7 @@ export class ScannerController extends AbstractScannerController implements IExp
   }
 
   /**
-   * @api {post} admin/scanner/scans Upload scans from the event
+   * @api {post} /scanner/scans Upload scans from the event
    * @apiVersion 2.0.0
    * @apiName Submit scans from the event
    *
@@ -203,7 +203,7 @@ export class ScannerController extends AbstractScannerController implements IExp
   }
 
   /**
-   * @api {post} /admin/scanner/register Confirm a scanner registration
+   * @api {post} /scanner/register Confirm a scanner registration
    * @apiVersion 2.0.0
    * @apiName Confirm a scanner registration
    *
@@ -251,7 +251,7 @@ export class ScannerController extends AbstractScannerController implements IExp
   }
 
   /**
-   * @api {get} /admin/scanner/registrations Obtain all registrations
+   * @api {get} /scanner/registrations Obtain all registrations
    * @apiVersion 2.0.0
    * @apiName Obtain all registrations (Scanner)
    *
@@ -277,7 +277,7 @@ export class ScannerController extends AbstractScannerController implements IExp
   }
 
   /**
-   * @api {get} /admin/scanner/events Obtain relevant events
+   * @api {get} /scanner/events Obtain relevant events
    * @apiVersion 2.0.0
    * @apiName Obtain all relevant events (Scanner)
    *

@@ -61,10 +61,10 @@ export class ExpressProvider {
         { provide: 'InternalController', useClass: InternalController },
         { provide: 'UsersController', useClass: UsersController },
         { provide: 'AdminController', useClass: AdminController },
+        { provide: 'ScannerController', useClass: ScannerController },
         { provide: 'AdminRegisterController', useClass: AdminRegisterController },
         { provide: 'AdminStatisticsController', useClass: AdminStatisticsController },
         { provide: 'AdminHackathonController', useClass: AdminHackathonController },
-        { provide: 'AdminScannerController', useClass: ScannerController },
           { provide: 'AdminLocationController', useClass: AdminLocationController },
           { provide: 'AdminCheckoutController', useClass: AdminCheckoutController },
 

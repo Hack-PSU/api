@@ -66,8 +66,6 @@ export interface IFirebaseAuthService extends IAuthService {
     userToken: admin.auth.DecodedIdToken,
     customVerifierParams?: any,
   ): boolean;
-
-  login(email: string, password: string): Promise<any>;
 }
 
 export enum AuthLevel {

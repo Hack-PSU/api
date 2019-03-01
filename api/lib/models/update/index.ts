@@ -1,7 +1,7 @@
-import { IDataMapper, IDbResult } from '../../services/database';
+import { IDataMapperHackathonSpecific, IDbResult } from '../../services/database';
 import { Update } from './update';
 
-export interface IUpdateDataMapper extends IDataMapper<Update> {
+export interface IUpdateDataMapper extends IDataMapperHackathonSpecific<Update> {
   getReference(): Promise<IDbResult<string>>;
 }
 

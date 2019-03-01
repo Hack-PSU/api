@@ -43,6 +43,8 @@ const registration = new Registration({
   uid: 'test uid',
   university: 'test university',
   veteran: VeteranOptions.NODISCLOSE,
+  time: Date.now(),
+  submitted: true,
 });
 
 describe('TEST: Registration Processor', () => {

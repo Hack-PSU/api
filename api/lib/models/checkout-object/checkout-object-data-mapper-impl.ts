@@ -2,7 +2,7 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { EpochNumber, UidType } from '../../JSCommon/common-types';
+import { EpochNumber, ICompoundHackathonUidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -43,10 +43,12 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       [AuthLevel[AuthLevel.VOLUNTEER]],
     );
   }
-  public delete(id: UidType): Promise<IDbResult<void>> {
+
+  public delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, id)
+      .where(`${this.pkColumnName} = ?`, id.uid)
+      .where('hackathon = ?', id.hackathon)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -56,7 +58,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<CheckoutObject>> {
+  public get(id: ICompoundHackathonUidType, opts?: IUowOpts): Promise<IDbResult<CheckoutObject>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -66,7 +68,8 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       queryBuilder = queryBuilder.fields(opts.fields);
     }
     queryBuilder = queryBuilder
-      .where(`${this.pkColumnName}= ?`, id);
+      .where(`${this.pkColumnName}= ?`, id.uid)
+      .where('hackathon = ?', id.hackathon);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<CheckoutObject>(query.text, query.values, { cache: true }))

@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import { UidType } from '../../../JSCommon/common-types';
 import { HttpError } from '../../../JSCommon/errors';
-import { Util } from '../../../JSCommon/util';
+import { Environment, Util } from '../../../JSCommon/util';
+import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper, Registration } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
 import {
@@ -19,6 +20,7 @@ abstract class ScannerController extends ParentRouter {
     protected readonly scannerAcl: IAclPerm,
     protected readonly scannerDataMapper: IScannerDataMapper,
     private readonly registerDataMapper: IRegisterDataMapper,
+    private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
   ) {
     super();
   }
@@ -29,18 +31,22 @@ abstract class ScannerController extends ParentRouter {
     next: NextFunction,
     operation: AclOperations | AclOperations[],
   ) {
+    if (Util.getCurrentEnv() === Environment.DEBUG) {
+      return next();
+    }
     /**
      * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
      */
     try {
-      if (response.locals.user) {
-        if (!response.locals.user.privilege) {
-          response.locals.user.privilege = AuthLevel.PARTICIPANT;
+      if (request.headers.idtoken) {
+        const decodedToken = await this.authService.checkAuthentication(request.headers.idtoken as string);
+        if (!decodedToken.privilege) {
+          decodedToken.privilege = AuthLevel.PARTICIPANT;
         }
         if (this.authService.verifyAclRaw(
           this.scannerAcl,
           operation,
-          response.locals.user,
+          decodedToken,
         )) {
           return next();
         }
@@ -83,24 +89,27 @@ abstract class ScannerController extends ParentRouter {
     res: Response,
     next: NextFunction,
   ) {
-    if (!req.body.wid) {
+    if (!req.body.wid && !req.query.wid) {
       // Cannot lookup user details by wristband ID
       return next();
     }
     try {
       const { data: rfidAssignment } = await this.scannerDataMapper.get(
-        req.body.wid,
+        req.body.wid || req.query.wid,
         { byHackathon: true },
       );
       const [registration, userToken] = await Promise.all(
         [
-          this.registerDataMapper.get(rfidAssignment.user_uid),
+          this.registerDataMapper.get({
+            uid: rfidAssignment.user_uid,
+            hackathon: (await this.activeHackathonDataMapper.activeHackathon.toPromise()).id,
+          }),
           this.authService.getUserId(rfidAssignment.user_uid),
         ],
       );
       res.locals.registration = registration.data as Registration;
       res.locals.userToken = userToken;
-      next();
+      return next();
     } catch (error) {
       return Util.standardErrorHandler(error, next);
     }

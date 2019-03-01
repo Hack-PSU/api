@@ -45,6 +45,7 @@ export enum VeteranOptions {
 }
 
 export interface IRegistrationApiModel {
+  time: number;
   firstName: string;
   lastName: string;
   gender: Gender;
@@ -68,7 +69,8 @@ export interface IRegistrationApiModel {
   referral: string | null;
   projectDesc: string | null;
   expectations: string | null;
-  veteran: VeteranOptions | null;
+  veteran: VeteranOptions;
+  submitted: boolean;
 }
 
 export class Registration extends BaseObject {
@@ -77,32 +79,33 @@ export class Registration extends BaseObject {
     return registeredUserSchema;
   }
 
-  public readonly firstname: string;
-  public readonly lastname: string;
-  public readonly gender: string;
-  public readonly shirt_size: string;
-  public readonly dietary_restriction: string | null;
-  public readonly allergies: string | null;
-  public readonly travel_reimbursement: boolean;
-  public readonly first_hackathon: boolean;
-  public readonly university: string;
-  public readonly email: string;
-  public readonly academic_year: string;
-  public readonly major: string;
-  public readonly phone: string;
-  public readonly race: string | null;
-  public readonly resume: string | null;
-  public readonly coding_experience: string | null;
-  public readonly uid?: string;
-  public readonly eighteenBeforeEvent: boolean;
-  public readonly mlh_coc: boolean;
-  public readonly mlh_dcp: boolean;
-  public readonly referral: string | null;
-  public readonly project: string | null;
-  public readonly expectations: string | null;
-  public readonly veteran: string;
-  public readonly time: number;
-  public readonly hackathon: string;
+  public firstname: string;
+  public lastname: string;
+  public gender: string;
+  public shirt_size: string;
+  public dietary_restriction: string | null;
+  public allergies: string | null;
+  public travel_reimbursement: boolean;
+  public first_hackathon: boolean;
+  public university: string;
+  public email: string;
+  public academic_year: string;
+  public major: string;
+  public phone: string;
+  public race: string | null;
+  public resume: string | null;
+  public coding_experience: string | null;
+  public uid?: string;
+  public eighteenBeforeEvent: boolean;
+  public mlh_coc: boolean;
+  public mlh_dcp: boolean;
+  public referral: string | null;
+  public project: string | null;
+  public expectations: string | null;
+  public veteran: string;
+  public time: number;
+  public hackathon: string;
+  public submitted: boolean;
 
   constructor(data: IRegistrationApiModel) {
     super();
@@ -112,12 +115,9 @@ export class Registration extends BaseObject {
     this.shirt_size = data.shirtSize;
     this.dietary_restriction = data.dietaryRestriction || null;
     this.allergies = data.allergies || null;
-    this.travel_reimbursement = data.travelReimbursement || false;
-    this.first_hackathon = data.firstHackathon || false;
+    this.travel_reimbursement = data.travelReimbursement;
+    this.first_hackathon = data.firstHackathon;
     this.university = data.university;
-    if (!data.email || !validate(data.email)) {
-      throw new Error('IEmail format is invalid');
-    }
     this.email = data.email;
     this.academic_year = data.academicYear;
     this.major = data.major;
@@ -126,14 +126,15 @@ export class Registration extends BaseObject {
     this.resume = data.resume;
     this.coding_experience = data.codingExperience;
     this.uid = data.uid;
-    this.eighteenBeforeEvent = data.eighteenBeforeEvent || false;
-    this.mlh_coc = data.mlhcoc || false;
-    this.mlh_dcp = data.mlhdcp || false;
+    this.eighteenBeforeEvent = data.eighteenBeforeEvent;
+    this.mlh_coc = data.mlhcoc;
+    this.mlh_dcp = data.mlhdcp;
     this.referral = data.referral;
     this.project = data.projectDesc;
     this.expectations = data.expectations;
-    this.veteran = data.veteran || 'no-disclose';
-    this.time = Date.now();
+    this.veteran = data.veteran;
+    this.time = data.time;
+    this.submitted = data.submitted;
     // this.hackathon = data.hackathon;
   }
 

@@ -14,7 +14,7 @@ export interface IRsvpApiModel {
 
 export class Rsvp extends BaseObject {
 
-  public readonly uid?: string;
+  public readonly uid?: UidType;
   public readonly rsvp_time: number;
   public readonly rsvp_status: boolean;
 

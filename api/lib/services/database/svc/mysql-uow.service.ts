@@ -10,36 +10,17 @@ import { IQueryOpts, IUow } from './uow.service';
 
 export enum SQL_ERRORS {
   DUPLICATE_KEY = 1062,
+  PARSE_ERROR = 1064,
+  SYNTAX_ERROR = 1149,
+  NOT_FOUND = 404,
   FOREIGN_KEY_DELETE_FAILURE = 1217,
   FOREIGN_KEY_INSERT_FAILURE = 1452,
+  BAD_NULL_ERROR = 1048,
   CONNECTION_REFUSED = 'ECONNREFUSED',
 }
 
 @Injectable()
 export class MysqlUow implements IUow {
-
-  /**
-   * Converts MySQL errors to HTTP Errors
-   * @param {MysqlError} error
-   */
-  private static sqlErrorHandler(error: MysqlError) {
-    switch (error.errno) {
-      case SQL_ERRORS.DUPLICATE_KEY:
-        throw new HttpError(
-          { message: 'duplicate objects not allowed', error }, 409);
-      case SQL_ERRORS.FOREIGN_KEY_INSERT_FAILURE:
-        throw new HttpError(
-          { message: 'object depends on non-existent dependency', error }, 400);
-      case SQL_ERRORS.FOREIGN_KEY_DELETE_FAILURE:
-        throw new HttpError(
-          { message: 'cannot delete as this object is referenced elsewhere', error }, 400);
-      case SQL_ERRORS.CONNECTION_REFUSED:
-        throw new HttpError(
-          { message: 'could not connect to the database', error }, 500);
-    }
-    // TODO: Handle other known SQL errors here
-    throw error;
-  }
 
   private connectionPromise: Observable<PoolConnection>;
 
@@ -69,7 +50,7 @@ export class MysqlUow implements IUow {
    */
   public query<T>(
     query: string,
-    params: string | string[] = [],
+    params: Array<string | boolean | number> = [],
     opts: IQueryOpts = { cache: false },
   ) {
     return this.connectionPromise
@@ -81,6 +62,7 @@ export class MysqlUow implements IUow {
                 const result: T[] = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
                 if (result !== null) {
                   this.complete(connection);
+                  this.logger.info('served requestt from memory cache');
                   return resolve(result);
                 }
               } catch (err) {
@@ -94,6 +76,13 @@ export class MysqlUow implements IUow {
                   connection.rollback();
                   reject(err);
                 }
+                if (result.length === 0) {
+                  reject({
+                    sql: connection.format(query, params),
+                    code: 'no data found',
+                    errno: 404,
+                  });
+                }
                 // Add result to cache
                 this.cacheService.set(`${query}${(params as string[]).join('')}`, result)
                   .catch(cacheError => this.logger.error(cacheError));
@@ -104,13 +93,13 @@ export class MysqlUow implements IUow {
           });
         }),
         catchError((err: MysqlError) => {
-          MysqlUow.sqlErrorHandler(err);
+          this.sqlErrorHandler(err);
           return from('');
         }),
       )
       .toPromise()
       // Gracefully convert MySQL errors to HTTP Errors
-      .catch((err: MysqlError) => MysqlUow.sqlErrorHandler(err));
+      .catch((err: MysqlError) => this.sqlErrorHandler(err));
   }
 
   public commit(connection: PoolConnection) {
@@ -128,5 +117,41 @@ export class MysqlUow implements IUow {
         return resolve(null);
       });
     });
+  }
+
+  /**
+   * Converts MySQL errors to HTTP Errors
+   * @param {MysqlError} error
+   */
+  private sqlErrorHandler(error: MysqlError) {
+    this.logger.error(error);
+    switch (error.errno) {
+      case SQL_ERRORS.PARSE_ERROR:
+      case SQL_ERRORS.SYNTAX_ERROR:
+        throw new HttpError(
+          { message: 'the mysql query was ill-formed' }, 500);
+      case SQL_ERRORS.DUPLICATE_KEY:
+        throw new HttpError(
+          { message: 'duplicate objects not allowed' }, 409);
+      case SQL_ERRORS.FOREIGN_KEY_INSERT_FAILURE:
+        throw new HttpError(
+          { message: 'object depends on non-existent dependency' }, 400);
+      case SQL_ERRORS.FOREIGN_KEY_DELETE_FAILURE:
+        throw new HttpError(
+          { message: 'cannot delete as this object is referenced elsewhere' }, 400);
+      case SQL_ERRORS.CONNECTION_REFUSED:
+        throw new HttpError(
+          { message: 'could not connect to the database' }, 500);
+      case SQL_ERRORS.BAD_NULL_ERROR:
+        throw new HttpError(
+          { message: 'a required property was found to be null' }, 400,
+        );
+      case SQL_ERRORS.NOT_FOUND:
+        throw new HttpError(
+          { message: 'no data was found for this query' }, 404,
+        );
+    }
+    // TODO: Handle other known SQL errors here
+    throw error;
   }
 }

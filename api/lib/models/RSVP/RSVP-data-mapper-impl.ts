@@ -2,7 +2,7 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { UidType } from '../../JSCommon/common-types';
+import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -23,7 +23,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
   public CREATE: string = 'rsvp:create';
   public DELETE: string = 'rsvp:delete';
   public READ: string = 'rsvp:read';
-  public READ_ALL: string = 'rsvp:delete';
+  public READ_ALL: string = 'rsvp:readall';
   public UPDATE: string = 'rsvp:update';
   public tableName: string = 'RSVP';
 
@@ -60,11 +60,12 @@ export class RsvpDataMapperImpl extends GenericDataMapper
     );
   }
 
-  public delete(id: UidType): Promise<IDbResult<void>> {
+  public delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-        .where(`${this.pkColumnName} = ?`, id)
-        .toParam();
+      .where(`${this.pkColumnName} = ?`, id.uid)
+      .where('hackathon = ?', id.hackathon)
+      .toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query(query.text, query.values, { cache: false }),
@@ -73,14 +74,15 @@ export class RsvpDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Rsvp>> {
+  public get(id: ICompoundHackathonUidType, opts?: IUowOpts): Promise<IDbResult<Rsvp>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
     queryBuilder = queryBuilder
-      .where(`${this.pkColumnName} = ?`, id);
+      .where(`${this.pkColumnName} = ?`, id.uid)
+      .where('hackathon = ?', id.hackathon);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<Rsvp>(
@@ -96,7 +98,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
 
   public async getAll(opts?: IUowOpts): Promise<IDbResult<Rsvp[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(this.tableName);
+      .from(this.tableName, 'rsvp');
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -114,8 +116,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
               .toPromise()),
         );
     }
-    const query = queryBuilder
-      .toParam();
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<Rsvp>(query.text, query.values, { cache: true },
     ))

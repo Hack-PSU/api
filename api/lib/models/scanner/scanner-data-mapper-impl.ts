@@ -2,7 +2,7 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import { UidType } from '../../JSCommon/common-types';
+import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 import { HttpError, MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -64,14 +64,17 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     );
   }
 
-  public delete(object: UidType | RfidAssignment): Promise<IDbResult<void>> {
+  public delete(object: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     throw new MethodNotImplementedError('This method is not supported by this class');
   }
 
   /**
    * Returns an RFID assignment object from a wid
    */
-  public async get(wid: UidType, opts?: IUowOpts): Promise<IDbResult<RfidAssignment>> {
+  public async get(
+    wid: ICompoundHackathonUidType,
+    opts?: IUowOpts,
+  ): Promise<IDbResult<RfidAssignment>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -83,7 +86,7 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
         .where(
-          'hackathon.uid = ?',
+          'hackathon = ?',
           await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
             this.activeHackathonDataMapper.activeHackathon
@@ -92,7 +95,7 @@ export class ScannerDataMapperImpl extends GenericDataMapper
         );
     }
     queryBuilder = queryBuilder
-      .where(`${this.pkColumnName}= ?`, wid);
+      .where(`${this.pkColumnName}= ?`, wid.uid);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<RfidAssignment>(query.text, query.values, { cache: true }))

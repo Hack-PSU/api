@@ -4,6 +4,7 @@ import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { IAdminStatisticsDataMapper, IUserStatistics } from '../../../models/admin/statistics';
+import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { IScannerProcessor } from '../../../processors/scanner-processor';
@@ -19,13 +20,21 @@ export class AdminScannerController extends ScannerController implements IExpres
   constructor(
     @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
     @Inject('IAdminScannerProcessor') private readonly scannerProcessor: IScannerProcessor,
+    @Inject('IActiveHackathonDataMapper') activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IAuthService') authService: IFirebaseAuthService,
     @Inject('IScannerAuthService') scannerAuthService: IApikeyAuthService,
     @Inject('IScannerDataMapper') scannerAcl: IAclPerm,
     @Inject('IScannerDataMapper') scannerDataMapper: IScannerDataMapper,
     @Inject('IRegisterDataMapper') registerDataMapper: IRegisterDataMapper,
   ) {
-    super(authService, scannerAuthService, scannerAcl, scannerDataMapper, registerDataMapper);
+    super(
+      authService,
+      scannerAuthService,
+      scannerAcl,
+      scannerDataMapper,
+      registerDataMapper,
+      activeHackathonDataMapper,
+    );
     this.router = Router();
     this.routes(this.router);
   }
@@ -50,6 +59,12 @@ export class AdminScannerController extends ScannerController implements IExpres
       '/registrations',
       (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.READ_ALL),
       (req, res, next) => this.getAllRegistrationsHandler(res, next),
+    );
+    app.get(
+      '/user',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.READ_ALL),
+      (req, res, next) => this.getUserByRfidBand(req, res, next),
+      (req, res, next) => this.getUserByRfidBandHandler(req, res, next),
     );
   }
 
@@ -197,5 +212,30 @@ export class AdminScannerController extends ScannerController implements IExpres
     }
     const response = new ResponseBody('Success', 200, result);
     return this.sendResponse(res, response);
+  }
+
+  /**
+   * @api {get} /admin/scanner/user Obtain user by rfid band
+   * @apiVersion 2.0.0
+   * @apiName Obtain user information from Rid band (Scanner)
+   *
+   * @apiGroup Admin
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   * @apiSuccess {Any} user info
+   * @apiUse IllegalArgumentError
+   */
+  private async getUserByRfidBandHandler(req: Request, res: Response, next: NextFunction) {
+    if (!res.locals.userToken) {
+      return Util.standardErrorHandler(new HttpError('Invalid rfid band', 400), next);
+    }
+    try {
+      const response = new ResponseBody('Success', 200, { result: 'Success',
+        data: { userToken: res.locals.userToken, registration: res.locals.registration }});
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 }

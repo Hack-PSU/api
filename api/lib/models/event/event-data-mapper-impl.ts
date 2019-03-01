@@ -2,11 +2,11 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { UidType } from '../../JSCommon/common-types';
+import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDataMapper, IDbResult } from '../../services/database';
+import { IDataMapperHackathonSpecific, IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
@@ -14,7 +14,8 @@ import { Logger } from '../../services/logging/logging';
 import { Event } from './event';
 
 @Injectable()
-export class EventDataMapperImpl extends GenericDataMapper implements IDataMapper<Event>, IAclPerm {
+export class EventDataMapperImpl extends GenericDataMapper
+  implements IDataMapperHackathonSpecific<Event>, IAclPerm {
   // ACL permissions
   public readonly CREATE: string = 'event:create';
   public readonly DELETE: string = 'event:delete';
@@ -46,10 +47,11 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
     );
   }
 
-  public delete(id: UidType): Promise<IDbResult<void>> {
+  public delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, id)
+      .where(`${this.pkColumnName} = ?`, id.uid)
+      .where('hackathon = ?', id.hackathon)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -59,14 +61,15 @@ export class EventDataMapperImpl extends GenericDataMapper implements IDataMappe
     ).toPromise();
   }
 
-  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Event>> {
+  public get(id: ICompoundHackathonUidType, opts?: IUowOpts): Promise<IDbResult<Event>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
     queryBuilder = queryBuilder
-      .where(`${this.pkColumnName}= ?`, id);
+      .where(`${this.pkColumnName}= ?`, id.uid)
+      .where('hackathon = ?', id.hackathon);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<Event>(query.text, query.values, { cache: true }))

@@ -106,16 +106,18 @@ export class HackathonDataMapperImpl extends GenericDataMapper
       this.logger.warn(object.dbRepresentation);
       return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
-    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+    let queryBuilder = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
-      .setFieldsRows([object.dbRepresentation])
-      .set(
+      .setFieldsRows([object.dbRepresentation]);
+    if (object.base_pin === undefined || object.base_pin === null) {
+      queryBuilder = queryBuilder.set(
         'base_pin',
         squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: false })
           .from('REGISTRATION LOCK IN SHARE MODE')
           .field('MAX(pin)'),
-      )
-      .toParam();
+      );
+    }
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<void>(query.text, query.values, { cache: false }),
@@ -126,7 +128,7 @@ export class HackathonDataMapperImpl extends GenericDataMapper
 
   public async update(object: Hackathon): Promise<IDbResult<Hackathon>> {
     const currentDbObject = await this.get(object.id);
-    const currentObject = Hackathon.merge(currentDbObject.data, object);
+    const currentObject = object.merge(currentDbObject.data, object);
     const validation = currentObject.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');

@@ -83,7 +83,7 @@ describe('TEST: Event Data Mapper', () => {
   describe('TEST: Event count', () => {
     // @ts-ignore
     it('generates the expected SQL to retrieve the number of events', async () => {
-      // GIVEN: Instance od an event data mapper
+      // GIVEN: Instance of an event data mapper
       // WHEN: Retrieving number of events
       await eventDataMapper.getCount();
 

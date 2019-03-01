@@ -21,10 +21,10 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   implements IExtraCreditAclPerm, IExtraCreditDataMapper {
   public COUNT: string = 'extra-credit:count';
   public CREATE: string = 'extra-credit:create';
-  public DELETE: string = 'extra-credit:delete';
-  public READ: string = 'extra-credit:read';
-  public READ_ALL: string = 'extra-credit:read_all';
-  public UPDATE: string = 'extra-credit:update';
+  public DELETE: string;
+  public READ: string;
+  public READ_ALL: string = 'extra-credit:readall';
+  public UPDATE: string;
   public tableName: string = 'EXTRA_CREDIT_ASSIGNMENT';
   public classesTableName: string = 'EXTRA_CREDIT_CLASSES';
 

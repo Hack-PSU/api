@@ -15,7 +15,7 @@ import { ICheckoutObjectDataMapper } from '../checkout-object';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { CheckoutItems } from './checkout-items';
 import { ICheckoutItemsDataMapper } from './index';
-import { CheckoutObjectDataMapperImpl } from '../checkout-object/checkout-object-data-mapper-impl';
+import { ICheckoutObjectDataMapper } from '../checkout-object/index';
 
 @Injectable()
 export class CheckoutItemsDataMapperImpl extends GenericDataMapper
@@ -34,7 +34,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
     @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
-    @Inject('ICheckoutObjectDataMapper') protected readonly checkoutObjectDataMapperImpl: ICheckoutObjectDataMapper,
+    @Inject('ICheckoutObjectDataMapper') protected readonly checkoutObjectDataMapper: ICheckoutObjectDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
@@ -110,7 +110,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       autoQuoteTableNames: true,
     })
       .fields(['i.quantity - COUNT(c.uid) AS available', 'i.*'])
-      .from(this.checkoutObjectDataMapperImpl.tableName, 'c')
+      .from(this.checkoutObjectDataMapper.tableName, 'c')
       .join(this.tableName, 'i', 'c.item_id=i.uid')
       .join(this.activeHackathonDataMapper.tableName, 'h', 'c.hackathon=h.uid and h.active=1')
       .where('c.uid=?', id)
@@ -132,7 +132,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       autoQuoteFieldNames: false,
       autoQuoteTableNames: false,
     })
-      .from(this.checkoutObjectDataMapperImpl.tableName, 'c')
+      .from(this.checkoutObjectDataMapper.tableName, 'c')
       .field('COUNT(uid)')
       .where('c.item_id=i.uid')
       .toParam();
@@ -142,7 +142,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     })
       .fields([`i.quantity - (${subquery.text}) AS available`, 'i.*'])
       .from(this.tableName, 'i')
-      .left_join(this.checkoutObjectDataMapperImpl.tableName, 'c', 'c.item_id=i.uid')
+      .left_join(this.checkoutObjectDataMapper.tableName, 'c', 'c.item_id=i.uid')
       .left_join(this.activeHackathonDataMapper.tableName, 'h', 'c.hackathon=h.uid and h.active=1')
       .group('i.uid')
       .toParam();

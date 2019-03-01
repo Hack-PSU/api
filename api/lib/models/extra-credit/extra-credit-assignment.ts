@@ -17,7 +17,7 @@ export class ExtraCreditAssignment extends BaseObject {
 
   public readonly class_uid: number;
   public readonly user_uid: UidType;
-  public readonly hackathon: UidType;
+  public hackathon: UidType;
 
   constructor(data: IExtraCreditAssignmentApiModel) {
     super();

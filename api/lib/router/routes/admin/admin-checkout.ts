@@ -71,12 +71,7 @@ export class AdminCheckoutController extends ScannerController implements IExpre
     // Create a checkout item
     app.post(
       '/items',
-      (req, res, next) => this.verifyScannerPermissionsMiddleware(
-        req,
-        res,
-        next,
-        AclOperations.CREATE,
-      ),
+      this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.CREATE),
       (req, res, next) => this.addCheckoutItemsHandler(req, res, next),
     );
     // Get all available checkout items

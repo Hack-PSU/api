@@ -29,7 +29,7 @@ describe('TEST: Location Data Mapper', () => {
     reset(mysqlUowMock);
   });
 
-  describe('TEST: Location read', () => {
+  describe('TEST: Location get', () => {
     // @ts-ignore
     it('generates the expected SQL to retrieve a location', async () => {
       // GIVEN: An location with a valid ID to read from
@@ -46,6 +46,69 @@ describe('TEST: Location Data Mapper', () => {
       expect(generatedSQL).to.equal(expectedSQL);
       expect(generatedParams).to.deep.equal(expectedParams);
     });
+  });
+
+  describe('TEST: Location get all', () => {
+    // @ts-ignore
+    it('generates the correct sql to get all locations', async () => {
+      // GIVEN: A category data mapper instance
+      // WHEN: Retrieving all category data
+      await locationDataMapper.getAll();
+
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'SELECT * FROM `LOCATIONS` `location`;';
+      const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+    });
+
+    it(
+      'generates the correct sql to get all locations with specific fields',
+      // @ts-ignore
+      async () => {
+        // GIVEN: A category data mapper instance
+        // WHEN: Retrieving one field for all category data
+        await locationDataMapper.getAll({ fields: ['test field'] });
+
+        // THEN: Generated SQL matches the expectation
+        const expectedSQL = 'SELECT `test field` FROM `LOCATIONS` `location`;';
+        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
+      },
+    );
+
+    it(
+      'generates the correct sql to get all locations after an offset',
+      // @ts-ignore
+      async () => {
+        // GIVEN: A category data mapper instance
+        // WHEN: Retrieving all category data after an offset
+        await locationDataMapper.getAll({ startAt: 100 });
+
+        // THEN: Generated SQL matches the expectation
+        const expectedSQL = 'SELECT * FROM `LOCATIONS` `location` OFFSET ?;';
+        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
+      },
+    );
+
+    it(
+      'generates the correct sql to get n-many locations',
+      // @ts-ignore
+      async () => {
+        // GIVEN: An category data mapper instance
+        // WHEN: Retrieving n-many categories data after an offset
+        await locationDataMapper.getAll({ count: 100 });
+
+        // THEN: Generated SQL matches the expectation
+        const expectedSQL = 'SELECT * FROM `LOCATIONS` `location` LIMIT ?;';
+        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
+      },
+    );
   });
 
   describe('TEST: Location delete', () => {

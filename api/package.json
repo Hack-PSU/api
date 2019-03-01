@@ -68,7 +68,7 @@
     "chance": "1.0.16",
     "cookie-parser": "^1.4.4",
     "cors": "2.8.5",
-    "dev-null": "^0.1.1",
+    "dev-null": "latest",
     "dotenv": "6.0.0",
     "email-validator": "1.2.3",
     "express": "4.16.3",

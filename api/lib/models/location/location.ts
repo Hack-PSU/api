@@ -1,10 +1,12 @@
+import * as uuid from 'uuid';
 import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
+import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 
 const locationSchema = jsonAssetLoader('locationSchema');
 
 interface ILocationApiModel {
-  uid?: number;
+  uid?: UidType;
   locationName: string;
 }
 
@@ -17,12 +19,12 @@ export class Location extends BaseObject {
     return this.uid;
   }
 
-  public uid?: number;
+  public uid: UidType;
   public location_name: string;
 
   constructor(data: ILocationApiModel) {
     super();
-    this.uid = data.uid;
+    this.uid = data.uid || uuid.v4().replace(/-/g, '');
     this.location_name = data.locationName;
   }
 }

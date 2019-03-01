@@ -78,21 +78,11 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getAll(opts?: IUowOpts): Promise<IDbResult<Location[]>> {
-    let queryBuilder = squel.select({
-      autoQuoteFieldNames: true,
-      autoQuoteTableNames: true,
-    }).from(this.tableName, 'location');
-    if (opts && opts.fields) {
-      queryBuilder = queryBuilder.fields(opts.fields);
-    }
-    if (opts && opts.startAt) {
-      queryBuilder = queryBuilder.offset(opts.startAt);
-    }
-    if (opts && opts.count) {
-      queryBuilder = queryBuilder.limit(opts.count);
-    }
-    const query = queryBuilder.toParam();
+  public getAll(): Promise<IDbResult<Location[]>> {
+    const query = squel
+      .select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(this.tableName, 'location')
+      .toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<Location>(query.text, query.values, { cache: true }),

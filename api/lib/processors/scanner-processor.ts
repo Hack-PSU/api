@@ -26,6 +26,11 @@ export interface IScannerProcessor {
 @Injectable()
 export class ScannerProcessor implements IScannerProcessor {
 
+  /**
+   * This function acts as a filter predicate
+   * It returns true if the current time is within the amount of
+   * time provided
+   */
   private static relevantEventsFilter(
     value: Event,
     amount: number,
@@ -38,30 +43,31 @@ export class ScannerProcessor implements IScannerProcessor {
       );
   }
 
+  /**
+   * This function returns the appropriate unit for the search function implemented in
+   * searchForRelevantEvents(). Based on the iteration number, it will return the appropriate unit
+   */
   private static unitsStepFunction(int: number) {
     if (int < 0) {
       throw new Error('Illegal value');
     }
-    if (int < 5) {
-      return 0;
+    switch (Math.floor(int / 5)) {
+      case 0:
+        return 'minutes';
+      case 1:
+        return 'hours';
+      case 2:
+        return 'days';
+      case 3:
+        return 'weeks';
+      case 4:
+        return 'months';
+      default:
+        return 'years';
     }
-    if (int < 10) {
-      return 1;
-    }
-    if (int < 15) {
-      return 2;
-    }
-    if (int < 20) {
-      return 3;
-    }
-    if (int < 25) {
-      return 4;
-    }
-    return 5;
   }
 
   private searchAmount: number;
-  private readonly searchUnits: unitOfTime.Base[];
   constructor(
     @Inject('IScannerDataMapper') protected readonly scannerDataMapper: IScannerDataMapper,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
@@ -70,7 +76,6 @@ export class ScannerProcessor implements IScannerProcessor {
     @Inject('IEventDataMapper') private readonly eventDataMapper: IDataMapperHackathonSpecific<Event>,
   ) {
     this.searchAmount = 15;
-    this.searchUnits = ['minutes', 'hours', 'days', 'weeks', 'months', 'years'];
   }
 
   public async processRfidAssignments(inputAssignments: any | any[]) {
@@ -183,25 +188,36 @@ export class ScannerProcessor implements IScannerProcessor {
     return response;
   }
 
+  /**
+   * This function searches for "relevant" events with an increasing search radius until
+   * it finds some events to send
+   */
   public searchForRelevantEvents(data: Event[]): Event[] {
     let result: Event[];
-    let lastUnit = this.searchUnits[0];
-    for (let i = 0; true; i += 1) {
-      if (lastUnit !== this.searchUnits[ScannerProcessor.unitsStepFunction(i)]) {
+    // Start search with minutes, and change the units to increase the search radius rapidly
+    let lastUnit = ScannerProcessor.unitsStepFunction(0);
+    let counter = 0;
+    while (true) {
+      const nextUnit = ScannerProcessor.unitsStepFunction(counter);
+      if (lastUnit !== nextUnit) {
+        // Restart search for new unit at search amount 1
         this.searchAmount = 1;
       }
-      lastUnit = this.searchUnits[ScannerProcessor.unitsStepFunction(i)];
+      lastUnit = nextUnit;
       result = data.filter(
         value => ScannerProcessor.relevantEventsFilter(
           value,
           this.searchAmount,
-          this.searchUnits[ScannerProcessor.unitsStepFunction(i)],
+          nextUnit,
         ));
-      this.searchAmount += 2 + i;
+      // Increase the search amount
+      this.searchAmount += 2 + counter;
       if (result.length > 0) {
+        // If events were found, reset the state of this file back to the initial state
         this.searchAmount = 15;
         return result;
       }
+      counter += 1;
     }
   }
 

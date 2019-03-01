@@ -8,6 +8,7 @@ import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { IDataMapper } from '../../../lib/services/database';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
+import { stringify } from 'querystring';
 
 let locationDataMapper: IDataMapper<Location>;
 let mysqlUow: MysqlUow;
@@ -88,9 +89,12 @@ describe('TEST: Location Data Mapper', () => {
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT * FROM `LOCATIONS` `location` OFFSET ?;';
-        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        const expectedParams = [100];
+        const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+          .first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
+        expect(generatedParams).to.deep.equal(expectedParams);
       },
     );
 
@@ -104,9 +108,12 @@ describe('TEST: Location Data Mapper', () => {
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT * FROM `LOCATIONS` `location` LIMIT ?;';
-        const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
+        const expectedParams = [100];
+        const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+          .first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
+        expect(generatedParams).to.deep.equal(expectedParams);
       },
     );
   });

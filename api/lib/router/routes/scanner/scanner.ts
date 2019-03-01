@@ -41,7 +41,7 @@ export class ScannerController extends AbstractScannerController implements IExp
 
   public routes(app: Router): void {
     app.post(
-      '/assignment',
+      '/assign',
       (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.CREATE),
       (req, res, next) => this.addRfidAssignments(req, res, next),
     );

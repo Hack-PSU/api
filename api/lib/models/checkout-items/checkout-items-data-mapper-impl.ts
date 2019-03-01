@@ -15,7 +15,6 @@ import { ICheckoutObjectDataMapper } from '../checkout-object';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { CheckoutItems } from './checkout-items';
 import { ICheckoutItemsDataMapper } from './index';
-import { ICheckoutObjectDataMapper } from '../checkout-object/index';
 
 @Injectable()
 export class CheckoutItemsDataMapperImpl extends GenericDataMapper
@@ -29,7 +28,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
 
   public tableName = 'CHECKOUT_ITEMS';
   protected pkColumnName: string = 'uid';
-  
+
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,

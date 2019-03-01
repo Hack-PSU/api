@@ -103,7 +103,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
       .toParam();
 
-      query.text = query.text.concat(';');
+    query.text = query.text.concat(';');
     return from(this.sql.query<ExtraCreditClass>(query.text, query.values, { cache: true }))
       .pipe(
         map((classes: ExtraCreditClass[]) => ({ result: 'Success', data: classes })),

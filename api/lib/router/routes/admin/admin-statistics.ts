@@ -226,7 +226,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   }
 
   /**
-   * @api {get} /admin/data/?type=wid_assignments Get all wristband assignmetns
+   * @api {get} /admin/data/?type=wid_assignments Get all wristband assignments
    * @apiVersion 2.0.0
    * @apiName Get Wristband Assignments
    * @apiGroup Admin Statistics

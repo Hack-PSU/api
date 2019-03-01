@@ -23,7 +23,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   public CREATE: string = 'extra-credit:create';
   public DELETE: string;
   public READ: string;
-  public READ_ALL: string;
+  public READ_ALL: string = 'extra-credit:readall';
   public UPDATE: string;
   public tableName: string = 'EXTRA_CREDIT_ASSIGNMENT';
   public classesTableName: string = 'EXTRA_CREDIT_CLASSES';

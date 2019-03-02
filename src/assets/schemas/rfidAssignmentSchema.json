@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "rfid_uid": {
+      "type": "string"
+    },
+    "user_uid": {
+      "type": "string"
+    },
+    "time": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "rfid_uid",
+    "user_uid",
+    "time"
+  ]
+}

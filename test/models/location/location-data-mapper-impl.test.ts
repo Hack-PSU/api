@@ -1,14 +1,13 @@
 import { expect } from 'chai';
 import 'mocha';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Location } from '../../../lib/models/location/location';
-import { LocationDataMapperImpl } from '../../../lib/models/location/location-data-mapper-impl';
-import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
-import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
-import { IDataMapper } from '../../../lib/services/database';
-import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
-import { Logger } from '../../../lib/services/logging/logging';
-import { stringify } from 'querystring';
+import { Location } from '../../../src/models/location/location';
+import { LocationDataMapperImpl } from '../../../src/models/location/location-data-mapper-impl';
+import { RBAC } from '../../../src/services/auth/RBAC/rbac';
+import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
+import { IDataMapper } from '../../../src/services/database';
+import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
+import { Logger } from '../../../src/services/logging/logging';
 
 let locationDataMapper: IDataMapper<Location>;
 let mysqlUow: MysqlUow;
@@ -157,7 +156,7 @@ describe('TEST: Location Data Mapper', () => {
     it('inserts the locations', async () => {
       // GIVEN: A location to insert
       const testLocation = new Location({
-        locationName: 'test location'
+        locationName: 'test location',
       });
       // WHEN: Retrieving number of locations
       await locationDataMapper.insert(testLocation);

@@ -1,0 +1,6 @@
+dispatch:
+  - url: "staging.hackpsu18.appspot.com/v1/*"
+    service: staging
+
+  - url: "staging.hackpsu18.appspot.com/v2/*"
+    service: staging-v2

@@ -5,7 +5,7 @@ import BaseObject from '../BaseObject';
 const rfidAssignmentSchema = jsonAssetLoader('rfidAssignmentSchema');
 
 interface IRfidAssignmentApiModel {
-  rfid: UidType;
+  wid: UidType;
   uid: UidType;
   time: EpochNumber;
   hackathon?: UidType;
@@ -32,7 +32,7 @@ export class RfidAssignment extends BaseObject {
 
   constructor(data: IRfidAssignmentApiModel) {
     super();
-    this.rfid_uid = data.rfid;
+    this.rfid_uid = data.wid;
     this.user_uid = data.uid;
     this.time = data.time;
     this.hackathon = data.hackathon;

@@ -2,9 +2,10 @@ import express from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
+import { Event } from '../../../models/event/event';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { IDataMapper } from '../../../services/database';
+import { IDataMapperHackathonSpecific } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
@@ -16,7 +17,7 @@ export class EventsController extends LiveController {
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
-    @Inject('IEventDataMapper') private readonly dataMapper: IDataMapper<Event>,
+    @Inject('IEventDataMapper') private readonly dataMapper: IDataMapperHackathonSpecific<Event>,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
@@ -32,7 +33,7 @@ export class EventsController extends LiveController {
       return;
     }
     // Unauthenticated route
-    app.get('/', (req, res, next) => this.getEventHandler(res, next));
+    app.get('/', (req, res, next) => this.getEventHandler(req, res, next));
     // Use authentication
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
@@ -141,6 +142,7 @@ export class EventsController extends LiveController {
    * @apiParam {String} eventTitle - The title of the event.
    * @apiParam {String} eventDescription - The description of the event.
    * @apiParam {Enum} eventType - The type of the event. Accepted values: ["food","workshop","activity"]
+   * @apiParam {String} [hackathon] - optional uid of hackathon
    * @apiUse AuthArgumentRequired
    * @apiSuccess {Event} The inserted event
    * @apiUse IllegalArgumentError
@@ -177,7 +179,7 @@ export class EventsController extends LiveController {
     }
     try {
       const result = await this.dataMapper.insert(event);
-      const res = new ResponseBody('Success', 200, { result: 'Success', data: { event, result } });
+      const res = new ResponseBody('Success', 200, { result: 'Success', data: result });
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -190,16 +192,22 @@ export class EventsController extends LiveController {
    * @apiVersion 2.0.0
    * @apiName Get events
    * @apiGroup Events
-   *
+   * @apiUse RequestOpts
    * @apiSuccess {Event[]} Array of current events
    * @apiUse ResponseBodyDescription
    */
   private async getEventHandler(
+    request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
     try {
-      const stream = await this.dataMapper.getAll();
+      const stream = await this.dataMapper.getAll({
+        byHackathon: !request.query.allHackathons,
+        count: request.query.limit,
+        hackathon: request.query.hackathon,
+        startAt: request.query.offset,
+      });
       const res = new ResponseBody('Success', 200, stream);
       return this.sendResponse(response, res);
     } catch (error) {

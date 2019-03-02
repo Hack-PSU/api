@@ -60,7 +60,6 @@ export class AdminController extends ParentRouter implements IExpressController 
       return;
     }
     // Use authentication
-    app.use('/scanner', Util.getInstance('AdminScannerController').router);
     app.use('/checkout', Util.getInstance('AdminCheckoutController').router);
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     app.use((req, res, next) => AdminController.parseCommonRequestFields(req, res, next));
@@ -83,11 +82,6 @@ export class AdminController extends ParentRouter implements IExpressController 
       '/makeadmin',
       this.authService.verifyAcl(this.adminAcl, AclOperations.CREATE),
       (req, res, next) => this.makeAdminHandler(req, res, next),
-    );
-    app.post(
-      '/extra_credit',
-      this.authService.verifyAcl(this.extraCreditAcl, AclOperations.CREATE),
-      (req, res, next) => this.addExtraCreditAssignmentHandler(req, res, next),
     );
   }
 
@@ -269,52 +263,6 @@ export class AdminController extends ParentRouter implements IExpressController 
       );
     } catch (error) {
       return Util.standardErrorHandler(error, next);
-    }
-  }
-
-  /**
-   * @api {post} /admin/extra_credit Track an extra credit class for a student
-   * @apiName Assign Extra Credit
-   * @apiVersion 2.0.0
-   * @apiGroup Admin
-   * @apiPermission DirectorPermission
-   *
-   * @apiParam {String} uid - the id associated with the student
-   * @apiParam {String} cid - the id associated with the class
-   * @apiUse AuthArgumentRequired
-   * @apiSuccess {ExtraCreditAssignment} The inserted extra credit assignment
-   * @apiUse IllegalArgumentError
-   * @apiUse ResponseBodyDescription
-   */
-  private async addExtraCreditAssignmentHandler(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) {
-    // Validate incoming request
-    if (!req.body) {
-      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
-    }
-
-    if (!req.body.uid) {
-      return Util.standardErrorHandler(new HttpError('Could not find hacker uid', 400), next);
-    }
-
-    if (!req.body.cid || !parseInt(req.body.cid, 10)) {
-      return Util.standardErrorHandler(new HttpError('Could not find valid class id', 400), next);
-    }
-
-    try {
-      const ecAssignment = new ExtraCreditAssignment(req.body);
-      const result = await this.extraCreditDataMapper.insert(ecAssignment);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-      );
-      return this.sendResponse(res, response);
-    } catch (error) {
-      return Util.errorHandler500(error, next);
     }
   }
 }

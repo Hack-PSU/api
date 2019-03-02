@@ -1,16 +1,22 @@
 import { EpochNumber, UidType } from '../../../JSCommon/common-types';
 import { IDbResult } from '../../../services/database';
 import { IUowOpts } from '../../../services/database/svc/uow.service';
-import { AcademicYear, CodingExperience, Gender, ShirtSize, VeteranOptions } from '../../register';
+import {
+  AcademicYear,
+  CodingExperience,
+  Gender,
+  ShirtSize,
+  VeteranOptions,
+} from '../../register/registration';
 
-interface IUserCount {
+export interface IUserCount {
   pre_count: number;
   reg_count: number;
   rsvp_count: number;
   checkin_count: number;
 }
 
-interface IUserStatistics {
+export interface IUserStatistics {
   // Pre-Registration data
   pre_uid: UidType;
   pin: number;
@@ -53,10 +59,8 @@ interface IUserStatistics {
   user_uid: UidType;
 }
 
-interface IAdminStatisticsDataMapper {
+export interface IAdminStatisticsDataMapper {
   getUserCountByCategory(uowOpts?: IUowOpts): Promise<IDbResult<IUserCount[]>>;
 
   getAllUserData(opts?: IUowOpts): Promise<IDbResult<IUserStatistics[]>>;
 }
-
-export { IAdminStatisticsDataMapper, IUserCount, IUserStatistics };

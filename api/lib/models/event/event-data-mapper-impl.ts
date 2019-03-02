@@ -11,6 +11,7 @@ import { GenericDataMapper } from '../../services/database/svc/generic-data-mapp
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
+import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { Event } from './event';
 
 @Injectable()
@@ -31,6 +32,7 @@ export class EventDataMapperImpl extends GenericDataMapper
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
     @Inject('BunyanLogger') protected readonly logger: Logger,
+    @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
   ) {
     super(acl);
     super.addRBAC(
@@ -79,19 +81,48 @@ export class EventDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getAll(): Promise<IDbResult<Event[]>> {
-    const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Event[]>> {
+    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName, 'event')
       .field('event.*')
       .field('location.location_name')
       .order('event_start_time', true)
-      .join('LOCATIONS', 'location', 'event_location=location.uid')
-      .join('HACKATHON', 'h', 'h.uid=event.hackathon and h.active=true')
+      .join('LOCATIONS', 'location', 'event_location=location.uid');
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .join(
+          'HACKATHON',
+          'h',
+          'h.uid = event.hackathon',
+        )
+        .where(
+          'h.uid = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    const query = queryBuilder
       .toParam();
-    query.text = query.text
-      .concat(';');
+    query.text = query.text.concat(';');
     return from(this.sql.query<Event>(query.text, query.values, { cache: true }))
       .pipe(
+        map((events: Event[]) => events.map((event) => {
+          event.event_start_time = parseInt(event.event_start_time as any as string, 10);
+          event.event_end_time = parseInt(event.event_end_time as any as string, 10);
+          return event;
+        })),
         map((event: Event[]) => ({ result: 'Success', data: event })),
       )
       .toPromise();
@@ -110,22 +141,29 @@ export class EventDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public insert(object: Event): Promise<IDbResult<Event>> {
+  public async insert(object: Event): Promise<IDbResult<Event>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
       this.logger.warn(object.dbRepresentation);
-      return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
+      throw new HttpError(validation.error, 400);
     }
-    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+    let queryBuilder = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
-      .setFieldsRows([object.dbRepresentation])
-      .toParam();
+      .setFieldsRows([object.dbRepresentation]);
+    if (!object.hackathon) {
+      queryBuilder = queryBuilder.set(
+        'hackathon',
+        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+          .toPromise(),
+      );
+    }
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 
@@ -134,7 +172,7 @@ export class EventDataMapperImpl extends GenericDataMapper
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
       this.logger.warn(object.dbRepresentation);
-      return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
+      throw new HttpError(validation.error, 400);
     }
     const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)

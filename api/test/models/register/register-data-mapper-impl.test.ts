@@ -6,16 +6,16 @@ import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
 import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
+import { IRegisterDataMapper } from '../../../lib/models/register';
+import { RegisterDataMapperImpl } from '../../../lib/models/register/register-data-mapper-impl';
 import {
   AcademicYear,
   CodingExperience,
   Gender,
-  IRegisterDataMapper,
-  RegisterDataMapperImpl,
   Registration,
   ShirtSize,
   VeteranOptions,
-} from '../../../lib/models/register';
+} from '../../../lib/models/register/registration';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
@@ -93,7 +93,9 @@ describe('TEST: Register data mapper', () => {
       await registerDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `REGISTRATION` WHERE (uid= ?) AND (hackathon = ?) ORDER BY time DESC;';
+      const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` ' +
+        'INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = registration.hackathon) ' +
+        'WHERE (registration.uid= ?) AND (registration.hackathon = ?) ORDER BY time DESC;';
       const expectedParams = [uid.uid, uid.hackathon];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
@@ -111,7 +113,9 @@ describe('TEST: Register data mapper', () => {
         await registerDataMapper.get(uid, { fields: ['test field'] });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT `test field` FROM `REGISTRATION` WHERE (uid= ?) AND (hackathon = ?) ORDER BY time DESC;';
+        const expectedSQL = 'SELECT `test field` FROM `REGISTRATION` `registration` ' +
+          'INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = registration.hackathon) ' +
+          'WHERE (registration.uid= ?) AND (registration.hackathon = ?) ORDER BY time DESC;';
         const expectedParams = [uid.uid, uid.hackathon];
         const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
           .first();

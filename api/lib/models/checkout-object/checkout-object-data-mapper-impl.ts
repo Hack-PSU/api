@@ -103,7 +103,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
                 this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
             );
     }
-    const query = queryBuilder.toParam()
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<CheckoutObject>(query.text, query.values, { cache: true }))
         .pipe(
@@ -123,9 +123,9 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toParam()
+      .toParam();
 
-      query.text = query.text.concat(';');
+    query.text = query.text.concat(';');
     return from(
       this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(

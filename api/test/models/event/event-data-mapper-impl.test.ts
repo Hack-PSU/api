@@ -1,14 +1,19 @@
+import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
+import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
 import { Event, EventType } from '../../../lib/models/event/event';
 import { EventDataMapperImpl } from '../../../lib/models/event/event-data-mapper-impl';
+import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon';
+import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
 
 let eventDataMapper: EventDataMapperImpl;
+let activeHackathonDataMapper: IActiveHackathonDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
@@ -16,12 +21,21 @@ const acl: IAcl = new RBAC();
 describe('TEST: Event Data Mapper', () => {
 
   beforeEach(() => {
+    // Configure Active Hackathon Data Mapper
+    activeHackathonDataMapper = Substitute.for<IActiveHackathonDataMapper>();
+    (activeHackathonDataMapper.activeHackathon as any).returns(of(new ActiveHackathon({
+      basePin: 0,
+      endTime: null,
+      name: 'test hackathon',
+      uid: 'test uid',
+    })));
+    (activeHackathonDataMapper.tableName as any).mimicks(() => 'HACKATHON');
     // Configure Mock MysqlUow
     when(mysqlUowMock.query(anyString(), anything(), anything()))
       .thenResolve([]);
     mysqlUow = instance(mysqlUowMock);
     // Configure Event Data Mapper
-    eventDataMapper = new EventDataMapperImpl(acl, mysqlUow, new Logger());
+    eventDataMapper = new EventDataMapperImpl(acl, mysqlUow, new Logger(), activeHackathonDataMapper);
   });
 
   afterEach(() => {
@@ -97,7 +111,7 @@ describe('TEST: Event Data Mapper', () => {
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'INSERT INTO `EVENTS` (`uid`, `event_location`, `event_start_time`, ' +
-        '`event_end_time`, `event_title`, `event_type`) VALUES (?, ?, ?, ?, ?, ?);';
+        '`event_end_time`, `event_title`, `event_type`, `hackathon`) VALUES (?, ?, ?, ?, ?, ?, ?);';
       const expectedParams = [
         testEvent.uid,
         testEvent.event_location,
@@ -105,6 +119,7 @@ describe('TEST: Event Data Mapper', () => {
         testEvent.event_end_time,
         testEvent.event_title,
         testEvent.event_type,
+        'test uid',
       ];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();

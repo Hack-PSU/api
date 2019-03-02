@@ -62,7 +62,7 @@ export class MysqlUow implements IUow {
                 const result: T[] = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
                 if (result !== null) {
                   this.complete(connection);
-                  this.logger.info('served requestt from memory cache');
+                  this.logger.info('served request from memory cache');
                   return resolve(result);
                 }
               } catch (err) {
@@ -74,10 +74,10 @@ export class MysqlUow implements IUow {
               connection.query(query, params, (err: MysqlError, result: T[]) => {
                 if (err) {
                   connection.rollback();
-                  reject(err);
+                  return reject(err);
                 }
                 if (result.length === 0) {
-                  reject({
+                  return reject({
                     sql: connection.format(query, params),
                     code: 'no data found',
                     errno: 404,
@@ -129,26 +129,26 @@ export class MysqlUow implements IUow {
       case SQL_ERRORS.PARSE_ERROR:
       case SQL_ERRORS.SYNTAX_ERROR:
         throw new HttpError(
-          { message: 'the mysql query was ill-formed' }, 500);
+          'the mysql query was ill-formed', 500);
       case SQL_ERRORS.DUPLICATE_KEY:
         throw new HttpError(
-          { message: 'duplicate objects not allowed' }, 409);
+          'duplicate objects not allowed', 409);
       case SQL_ERRORS.FOREIGN_KEY_INSERT_FAILURE:
         throw new HttpError(
-          { message: 'object depends on non-existent dependency' }, 400);
+          'object depends on non-existent dependency', 400);
       case SQL_ERRORS.FOREIGN_KEY_DELETE_FAILURE:
         throw new HttpError(
-          { message: 'cannot delete as this object is referenced elsewhere' }, 400);
+          'cannot delete as this object is referenced elsewhere', 400);
       case SQL_ERRORS.CONNECTION_REFUSED:
         throw new HttpError(
-          { message: 'could not connect to the database' }, 500);
+          'could not connect to the database', 500);
       case SQL_ERRORS.BAD_NULL_ERROR:
         throw new HttpError(
-          { message: 'a required property was found to be null' }, 400,
+          'a required property was found to be null', 400,
         );
       case SQL_ERRORS.NOT_FOUND:
         throw new HttpError(
-          { message: 'no data was found for this query' }, 404,
+          'no data was found for this query', 404,
         );
     }
     // TODO: Handle other known SQL errors here

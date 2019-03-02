@@ -11,10 +11,10 @@ import { IScannerProcessor } from '../../../processors/scanner-processor';
 import { IApikeyAuthService, IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../../services/database';
-import { ScannerController } from './scanner-controller-abstract';
+import { AbstractScannerController } from './scanner-controller-abstract';
 
 @Injectable()
-export class AdminScannerController extends ScannerController implements IExpressController {
+export class ScannerController extends AbstractScannerController implements IExpressController {
   public router: Router;
 
   constructor(
@@ -45,15 +45,35 @@ export class AdminScannerController extends ScannerController implements IExpres
       (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.CREATE),
       (req, res, next) => this.addRfidAssignments(req, res, next),
     );
-    app.get(
-      '/register',
-      (req, res, next) => this.authService.authenticationMiddleware(req, res, next),
-      this.authService.verifyAcl(this.scannerAcl, AclOperations.CREATE),
-      (_req, res, next) => this.registerNewScannerHandler(res, next),
+    app.post(
+      '/scan',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.CREATE,
+      ),
+      (req, res, next) => this.addScans(req, res, next),
     );
     app.post(
       '/register',
       (req, res, next) => this.confirmRegisterScannerHandler(req, res, next),
+    );
+    app.get(
+      '/register',
+      (req, res, next) => this.authService.authenticationMiddleware(req, res, next),
+      this.authService.verifyAcl(this.scannerAcl, AclOperations.CREATE),
+      (req, res, next) => this.registerNewScannerHandler(res, next),
+    );
+    app.get(
+      '/events',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.READ_ALL,
+      ),
+      (req, res, next) => this.getNextEventsHandler(req, res, next),
     );
     app.get(
       '/registrations',
@@ -66,10 +86,20 @@ export class AdminScannerController extends ScannerController implements IExpres
       (req, res, next) => this.getUserByRfidBand(req, res, next),
       (req, res, next) => this.getUserByRfidBandHandler(req, res, next),
     );
+    app.get(
+      '/getpin',
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.READ_ALL,
+      ),
+      (req, res, next) => this.getUserByCurrentPin(req, res, next),
+    );
   }
 
   /**
-   * @api {get} /admin/scanner/register Start a scanner registration
+   * @api {get} /scanner/register Start a scanner registration
    * @apiVersion 2.0.0
    * @apiName Start a scanner registration
    * @apiDescription NOTE: This method is rate-limited to 200 rpm
@@ -97,28 +127,30 @@ export class AdminScannerController extends ScannerController implements IExpres
   }
 
   /**
-   * @api {post} /admin/scanner/assign Assign RFID tags ID to users
+   * @api {post} /scanner/assign Assign RFID tags ID to users
    * @apiVersion 2.0.0
-   * @apiName Assign an RFID to a user (Admin)
+   * @apiName Assign an RFID to a user
    *
    * @apiGroup Admin Scanner
    * @apiPermission TeamMemberPermission
-   *
+   * @apiPermission ScannerPermission
+   * @apiUse ApiKeyArgumentRequired
    * @apiUse AuthArgumentRequired
    * @apiParam {Array} assignments An array or single instance of RFID tags to User uid assignments
    * @apiParamExample {json} Request-Example:
-   *     [
-   *      {
-   *       "rfid": "1vyv2boy1v3b4oi12-1234lhb1234b",
-   *       "uid": "nbG7b87NB87nB7n98Y7",
-   *       "time": 1239712938120
-   *     },
-   *     { ... }
-   *     ]
+   *     {
+   *       "assignments": [
+   *        {
+   *         "wid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+   *         "uid": "nbG7b87NB87nB7n98Y7",
+   *         "time": 1239712938120
+   *       },
+   *       { ... }
+   *       ]
+   *     }
    * @apiSuccess {RfidAssignment[]} Array of rfid insertion results
-   * @apiUse IllegalArgumentError
-   * @apiPermission ScannerPermission
    * @apiUse ResponseBodyDescription
+   * @apiUse IllegalArgumentError
    */
   private async addRfidAssignments(req: Request, res: Response, next: NextFunction) {
     // Validate incoming request
@@ -141,17 +173,60 @@ export class AdminScannerController extends ScannerController implements IExpres
   }
 
   /**
-   * @api {post} /admin/scanner/register Confirm a scanner registration
+   * @api {post} /scanner/scans Upload scans from the event
+   * @apiVersion 2.0.0
+   * @apiName Submit scans from the event
+   *
+   * @apiGroup Admin Scanner
+   * @apiPermission TeamMemberPermission
+   * @apiPermission ScannerPermission
+   * @apiUse AuthArgumentRequired
+   * @apiUse ApiKeyArgumentRequired
+   * @apiParam {Array} scans An array of scan objects
+   * @apiParamExample {json} Request-Example:
+   *     {
+   *       "scans": [
+   *        {
+   *         "wid": "1vyv2boy1v3b4oi12-1234lhb1234b",
+   *         "scan_event": "nbG7b87NB87nB7n98Y7",
+   *         "scan_time": 1239712938120
+   *        },
+   *        { ... }
+   *     ]
+   *   }
+   * @apiSuccess {Scans[]} Array of scan insertion results
+   * @apiUse ResponseBodyDescription
+   * @apiUse IllegalArgumentError
+   */
+  private async addScans(req: Request, res: Response, next: NextFunction) {
+    // Validate incoming request
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+    if (!req.body.scans) {
+      return Util.standardErrorHandler(
+        new HttpError('Cannot find scans(s) to add', 400),
+        next,
+      );
+    }
+
+    try {
+      const response = await this.scannerProcessor.processScans(req.body.scans);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.standardErrorHandler(error, next);
+    }
+  }
+
+  /**
+   * @api {post} /scanner/register Confirm a scanner registration
    * @apiVersion 2.0.0
    * @apiName Confirm a scanner registration
    *
    * @apiGroup Admin Scanner
-   * @apiPermission ScannerPermission
    * @apiParam pin {number} A pin generated by calling the GET: /register route
-   * @apiParam macaddr {string} Mac Address of the device registering for API Key
    * @apiSuccess {ApiToken} API Token containing api key, validity, and other metadata
    * @apiUse ResponseBodyDescription
-   * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -189,14 +264,14 @@ export class AdminScannerController extends ScannerController implements IExpres
   }
 
   /**
-   * @api {get} /admin/scanner/registrations Obtain all registrations
+   * @api {get} /scanner/registrations Obtain all registrations
    * @apiVersion 2.0.0
    * @apiName Obtain all registrations (Scanner)
-   *
    * @apiGroup Admin Scanner
    * @apiPermission TeamMemberPermission
    * @apiPermission ScannerPermission
    * @apiUse AuthArgumentRequired
+   * @apiUse ApiKeyArgumentRequired
    * @apiSuccess {Registration[]} Array of current registrations
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
@@ -233,6 +308,60 @@ export class AdminScannerController extends ScannerController implements IExpres
     try {
       const response = new ResponseBody('Success', 200, { result: 'Success',
         data: { userToken: res.locals.userToken, registration: res.locals.registration }});
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /scanner/events Obtain relevant events
+   * @apiVersion 2.0.0
+   * @apiName Obtain all relevant events (Scanner)
+   * @apiParam [filter] {boolean} whether to filter for relevant events or return all
+   * @apiGroup Admin Scanner
+   * @apiPermission TeamMemberPermission
+   * @apiPermission ScannerPermission
+   * @apiUse AuthArgumentRequired
+   * @apiUse ApiKeyArgumentRequired
+   * @apiSuccess {Event[]} Array of current events
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async getNextEventsHandler(req: Request, res: Response, next: NextFunction) {
+    try {
+      const response = await this.scannerProcessor.getRelevantEvents(req.query.filter);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /scanner/getpin Get a user's registration by their pin
+   * @apiVersion 2.0.0
+   * @apiName Get User by Pin (Scanner)
+   * @apiParam pin {number} current pin for the registration
+   * @apiGroup Admin Scanner
+   * @apiPermission TeamMemberPermission
+   * @apiPermission ScannerPermission
+   * @apiUse AuthArgumentRequired
+   * @apiUse ApiKeyArgumentRequired
+   * @apiSuccess {Registration} The relevant registration for the provided pin
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async getUserByCurrentPin(req: Request, res: Response, next: NextFunction) {
+    if (!req.query.pin || !parseInt(req.query.pin, 10)) {
+      return Util.standardErrorHandler(
+        new HttpError('could not find pin to query by', 400),
+        next,
+      );
+    }
+    try {
+      const response = await this.scannerProcessor.getUserByCurrentPin(
+        parseInt(req.query.pin, 10),
+      );
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

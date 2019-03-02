@@ -12,10 +12,10 @@ import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { IApikeyAuthService, IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { ScannerController } from './scanner-controller-abstract';
+import { AbstractScannerController } from '../scanner/scanner-controller-abstract';
 
 @Injectable()
-export class AdminCheckoutController extends ScannerController implements IExpressController {
+export class AdminCheckoutController extends AbstractScannerController implements IExpressController {
   public router: Router;
 
   constructor(

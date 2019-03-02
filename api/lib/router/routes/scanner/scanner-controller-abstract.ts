@@ -3,7 +3,8 @@ import { UidType } from '../../../JSCommon/common-types';
 import { HttpError } from '../../../JSCommon/errors';
 import { Environment, Util } from '../../../JSCommon/util';
 import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
-import { IRegisterDataMapper, Registration } from '../../../models/register';
+import { IRegisterDataMapper } from '../../../models/register';
+import { Registration } from '../../../models/register/registration';
 import { IScannerDataMapper } from '../../../models/scanner';
 import {
   AuthLevel,
@@ -13,7 +14,7 @@ import {
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { ParentRouter } from '../../router-types';
 
-abstract class ScannerController extends ParentRouter {
+abstract class AbstractScannerController extends ParentRouter {
   protected constructor(
     protected readonly authService: IFirebaseAuthService,
     protected readonly scannerAuthService: IApikeyAuthService,
@@ -116,4 +117,4 @@ abstract class ScannerController extends ParentRouter {
   }
 }
 
-export { ScannerController };
+export { AbstractScannerController };

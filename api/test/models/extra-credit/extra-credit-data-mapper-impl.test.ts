@@ -1,19 +1,19 @@
+import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
-import { Substitute } from '@fluffy-spoon/substitute';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
 import { ExtraCreditAssignment } from '../../../lib/models/extra-credit/extra-credit-assignment';
 import { ExtraCreditDataMapperImpl } from '../../../lib/models/extra-credit/extra-credit-data-mapper-impl';
-import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon/index';
 import { ActiveHackathon } from '../../../lib/models/hackathon/active-hackathon/active-hackathon';
+import { IActiveHackathonDataMapper } from '../../../lib/models/hackathon/active-hackathon/index';
 import { RBAC } from '../../../lib/services/auth/RBAC/rbac';
 import { IAcl } from '../../../lib/services/auth/RBAC/rbac-types';
-import { IDataMapper } from '../../../lib/services/database';
+import { IDataMapperHackathonSpecific } from '../../../lib/services/database';
 import { MysqlUow } from '../../../lib/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../lib/services/logging/logging';
 
-let extraCreditDataMapper: IDataMapper<ExtraCreditAssignment>;
+let extraCreditDataMapper: IDataMapperHackathonSpecific<ExtraCreditAssignment>;
 let activeHackathonDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
@@ -40,9 +40,9 @@ describe('TEST: Extra Credit Data Mapper', () => {
     mysqlUow = instance(mysqlUowMock);
     // Configure Extra Credit Data Mapper
     extraCreditDataMapper = new ExtraCreditDataMapperImpl(
-      acl, 
+      acl,
       mysqlUow,
-      activeHackathonDataMapper, 
+      activeHackathonDataMapper,
       new Logger());
   });
 
@@ -149,8 +149,8 @@ describe('TEST: Extra Credit Data Mapper', () => {
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
       },
-      );
-    });
+    );
+  });
 
   describe('TEST: Extra Credit insert', () => {
     // @ts-ignore

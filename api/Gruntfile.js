@@ -68,7 +68,7 @@ module.exports = (grunt) => {
         cmd: './cloud_sql_proxy -instances=hackpsu18:us-central1:hackpsu18=tcp:3306 -credential_file=./lib/hackpsu-18-serviceaccount.json &',
       },
       deploy: {
-        cmd: `gcloud app deploy --quiet ${grunt.option('production') ? 'app.yaml' : 'staging.v2.app.yaml'}`,
+        cmd: `gcloud app deploy ${grunt.option('production') ? 'app.v2.yaml ' : 'staging.v2.app.yaml'} --quiet --no-user-output-enabled`,
       },
     },
     copy: {

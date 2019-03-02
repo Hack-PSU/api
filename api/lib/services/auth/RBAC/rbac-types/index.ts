@@ -37,6 +37,10 @@ export interface IAclPerm {
   COUNT: string;
 }
 
+export interface IExtraCreditAclPerm extends IAclPerm {
+  READ_ALL_CLASSES: string;
+}
+
 /**
  * This interface is an extension of IAclPerm that provides
  * string definitions for more specific administrator actions
@@ -65,4 +69,5 @@ export enum AclOperations {
   GET_EMAIL,
   REDUCE_PERMISSION,
   MAKE_ACTIVE,
+  READ_ALL_CLASSES,
 }

@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "types": [
+      "node"
+    ],
+    "lib": [
+      "es2017.object",
+      "es2016",
+      "dom"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "pretty": true,
+    "baseUrl": "./src",
+    "rootDir": "./src",
+    "outDir": "./lib",
+    "experimentalDecorators": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": false,
+    "removeComments": false,
+    "noImplicitAny": false,
+    "esModuleInterop": true
+  },
+  "tslint": {
+    "exclude": ["**/*.js"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/bin/*", "test/models/checkout-object/checkout-object-data-mapper-impl.test.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "test"
+  ]
+}

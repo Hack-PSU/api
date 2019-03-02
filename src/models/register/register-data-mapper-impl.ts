@@ -358,7 +358,6 @@ export class RegisterDataMapperImpl extends GenericDataMapper
   }
 
   public getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>> {
-    console.log(hackathon);
     const query = squel.select({
       autoQuoteFieldNames: false,
       autoQuoteTableNames: true,

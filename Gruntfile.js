@@ -1,5 +1,6 @@
 // Gruntfile.js
 const nodecipher = require('node-cipher');
+const { spawn } = require('child_process');
 
 const encryptedFiles = {
   'gcs_config.json.aes': 'gcs_config.json',
@@ -64,9 +65,9 @@ module.exports = (grunt) => {
       // prep     : {
       //   cmd: `cd ..; ./prepare_deploy.sh ${grunt.option('production') ? 'prod' : ''}`,
       // },
-      sql_proxy: {
-        cmd: './cloud_sql_proxy -instances=hackpsu18:us-central1:hackpsu18=tcp:3306 -credential_file=./src/hackpsu-18-serviceaccount.json &',
-      },
+      // sql_proxy: {
+      //   cmd: 'nohup ./cloud_sql_proxy -instances=hackpsu18:us-central1:hackpsu18=tcp:3306 -credential_file=./src/hackpsu-18-serviceaccount.json',
+      // },
       deploy: {
         cmd: `gcloud app deploy ${grunt.option('production') ? 'deploy/app.v2.yaml ' : 'deploy/staging.v2.app.yaml'} --quiet --no-user-output-enabled`,
       },
@@ -129,9 +130,10 @@ module.exports = (grunt) => {
     'Decrypt the corresponding files based on environment',
     () => (grunt.option('production') ? decryptProduction() : (grunt.option('test') ? decryptTest() : decryptStaging())),
   );
-  grunt.registerTask('default', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'run:doc']);
-  grunt.registerTask('start', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'copy:assets']);
-  grunt.registerTask('test', ['env:test', 'decrypt', 'copy', 'exec:sql_proxy', 'run:install', 'copy:assets']);
+  // grunt.registerTask('sql_proxy', 'Runs the SQL proxy connection to the database', () => runCloudProxy());
+  grunt.registerTask('default', ['env:test', 'decrypt', 'copy', 'run:install', 'run:doc']);
+  grunt.registerTask('start', ['env:test', 'decrypt', 'copy', 'run:install', 'copy:assets']);
+  grunt.registerTask('test', ['env:test', 'decrypt', 'copy', 'run:install', 'copy:assets']);
   grunt.registerTask('travis', ['decrypt', 'copy', 'run:install', 'copy:assets']);
   grunt.registerTask('prep', ['decrypt', 'copy', 'run:doc', 'run:install']);
   grunt.registerTask('deploy', ['prep', 'exec:deploy']);

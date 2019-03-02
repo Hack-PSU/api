@@ -24,7 +24,7 @@
     "pretest": "tsc -p .",
     "posttest": "npm run coveralls",
     "lint": "tslint -p .",
-    "proxy": "grunt exec:sql_proxy"
+    "proxy": "./cloud_sql_proxy -instances=hackpsu18:us-central1:hackpsu18=tcp:3306 -credential_file=./hackpsu-18-serviceaccount.json &"
   },
   "nyc": {
     "extension": [

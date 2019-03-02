@@ -11,6 +11,7 @@ before_install:
 - npm i -g node-cipher
 - npm i -g grunt-cli
 install:
+- npm install
 - grunt travis --test
 script:
 - npm test

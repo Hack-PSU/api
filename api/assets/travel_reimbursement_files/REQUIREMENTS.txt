@@ -1,5 +1,0 @@
-reportlab
-PyPDF2
-csv
-argparse
-datetime

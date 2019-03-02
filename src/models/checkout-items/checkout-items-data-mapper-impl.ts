@@ -11,13 +11,10 @@ import { GenericDataMapper } from '../../services/database/svc/generic-data-mapp
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
+import { ICheckoutObjectDataMapper } from '../checkout-object';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { CheckoutItems } from './checkout-items';
 import { ICheckoutItemsDataMapper } from './index';
-
-/**
- * TODO: Change 'CHECKOUT_DATA' to reference the checkoutObjectDataMapper and add documentation
- */
 
 @Injectable()
 export class CheckoutItemsDataMapperImpl extends GenericDataMapper
@@ -30,13 +27,13 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
   public readonly UPDATE: string = 'checkoutItems:update';
 
   public tableName = 'CHECKOUT_ITEMS';
-
   protected pkColumnName: string = 'uid';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
     @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
+    @Inject('ICheckoutObjectDataMapper') protected readonly checkoutObjectDataMapper: ICheckoutObjectDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
@@ -95,19 +92,11 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder.
-            where(
-              'hackathon_id = ?',
-              await (opts.hackathon ?
-                Promise.resolve(opts.hackathon) :
-                this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
-            );
-    }
     const query = queryBuilder
-        .toString()
-        .concat(';');
-    return from(this.sql.query<CheckoutItems>(query, [], { cache: true }))
+        .toParam();
+
+    query.text = query.text.concat(';');
+    return from(this.sql.query<CheckoutItems>(query.text, query.values, { cache: true }))
         .pipe(
           map((checkoutItems: CheckoutItems[]) => ({ result: 'Success', data: checkoutItems })),
         )
@@ -120,7 +109,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       autoQuoteTableNames: true,
     })
       .fields(['i.quantity - COUNT(c.uid) AS available', 'i.*'])
-      .from('CHECKOUT_DATA', 'c')
+      .from(this.checkoutObjectDataMapper.tableName, 'c')
       .join(this.tableName, 'i', 'c.item_id=i.uid')
       .join(this.activeHackathonDataMapper.tableName, 'h', 'c.hackathon=h.uid and h.active=1')
       .where('c.uid=?', id)
@@ -142,23 +131,24 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       autoQuoteFieldNames: false,
       autoQuoteTableNames: false,
     })
-      .from('CHECKOUT_DATA', 'c') // Here
+      .from(this.checkoutObjectDataMapper.tableName, 'c')
       .field('COUNT(uid)')
       .where('c.item_id=i.uid')
-      .toString();
+      .toParam();
     const query = squel.select({
       autoQuoteFieldNames: false,
       autoQuoteTableNames: true,
     })
-      .fields([`i.quantity - (${subquery}) AS available`, 'i.*'])
+      .fields([`i.quantity - (${subquery.text}) AS available`, 'i.*'])
       .from(this.tableName, 'i')
-      .left_join('CHECKOUT_DATA', 'c', 'c.item_id=i.uid') // Here
+      .left_join(this.checkoutObjectDataMapper.tableName, 'c', 'c.item_id=i.uid')
       .left_join(this.activeHackathonDataMapper.tableName, 'h', 'c.hackathon=h.uid and h.active=1')
       .group('i.uid')
       .toParam();
     query.text = query.text.concat(';');
+    query.values = subquery.values.concat(query.values);
     return from(
-      this.sql.query<CheckoutItems>(query.text, [], { cache: true }))
+      this.sql.query<CheckoutItems>(query.text, query.values, { cache: true }))
       .pipe(
         map((checkoutItems: CheckoutItems[]) => ({
           data: checkoutItems,
@@ -179,10 +169,11 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'count')
-      .toString()
-      .concat(';');
+      .toParam();
+
+    query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query, [], { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

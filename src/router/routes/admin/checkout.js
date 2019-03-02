@@ -79,47 +79,47 @@ const router = express.Router();
 //     .catch(err => errorHandler500(err, next));
 // });
 
-/**
- * @api {post} /firebase/checkout/items Add new item for checkout
- * @apiVersion 1.0.0
- * @apiName Add new item for checkout
- * @apiGroup Item Checkout
- * @apiParam {String} name Name of the item
- * @apiParam {Number} quantity Quantity of items available
- * @apiUse AuthArgumentRequired
- * @apiPermission DirectorPermission
- * @apiSuccess {String} Success
- * @apiUse IllegalArgumentError
- */
-router.post('/items', verifyACL(3), (req, res, next) => {
-  if (!req.body || !req.name || !req.quantity) {
-    const error = new HttpError('Incorrectly formatted body', 400);
-    return next(error);
-  }
-  const item = new CheckoutItem(req.body, req.uow);
-  return item.add()
-    .then(() => res.status(200).send({ message: 'Success' }))
-    .catch((err) => {
-      const error = new Error();
-      error.status = err.status || 500;
-      error.body = err.message || err;
-      return next(error);
-    });
-});
+// /**
+//  * @api {post} /firebase/checkout/items Add new item for checkout
+//  * @apiVersion 1.0.0
+//  * @apiName Add new item for checkout
+//  * @apiGroup Item Checkout
+//  * @apiParam {String} name Name of the item
+//  * @apiParam {Number} quantity Quantity of items available
+//  * @apiUse AuthArgumentRequired
+//  * @apiPermission DirectorPermission
+//  * @apiSuccess {String} Success
+//  * @apiUse IllegalArgumentError
+//  */
+// router.post('/items', verifyACL(3), (req, res, next) => {
+//   if (!req.body || !req.name || !req.quantity) {
+//     const error = new HttpError('Incorrectly formatted body', 400);
+//     return next(error);
+//   }
+//   const item = new CheckoutItem(req.body, req.uow);
+//   return item.add()
+//     .then(() => res.status(200).send({ message: 'Success' }))
+//     .catch((err) => {
+//       const error = new Error();
+//       error.status = err.status || 500;
+//       error.body = err.message || err;
+//       return next(error);
+//     });
+// });
 
-/**
- * @api {get} /firebase/checkout/items/availability Get availability for items
- * @apiVersion 1.0.0
- * @apiName Get availability for checkout items
- * @apiGroup Item Checkout
- * @apiUse AuthArgumentRequired
- * @apiPermission TeamMemberPermission
- *
- * @apiSuccess {String} Success
- * @apiUse IllegalArgumentError
- */
-router.get('/items/availability', verifyACL(2), (req, res, next) => CheckoutItem.getAllAvailable(req.uow)
-  .then(stream => streamHandler(stream, res, next))
-  .catch(err => errorHandler500(err, next)));
+// /**
+//  * @api {get} /firebase/checkout/items/availability Get availability for items
+//  * @apiVersion 1.0.0
+//  * @apiName Get availability for checkout items
+//  * @apiGroup Item Checkout
+//  * @apiUse AuthArgumentRequired
+//  * @apiPermission TeamMemberPermission
+//  *
+//  * @apiSuccess {String} Success
+//  * @apiUse IllegalArgumentError
+//  */
+// router.get('/items/availability', verifyACL(2), (req, res, next) => CheckoutItem.getAllAvailable(req.uow)
+//   .then(stream => streamHandler(stream, res, next))
+//   .catch(err => errorHandler500(err, next)));
 
-module.exports = router;
+// module.exports = router;

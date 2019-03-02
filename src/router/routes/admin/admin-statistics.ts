@@ -4,17 +4,15 @@ import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import {
-  IAdminStatisticsDataMapper,
-  IUserCount,
-  IUserStatistics,
+  IAdminStatisticsDataMapper, IUserCount, IUserStatistics,
 } from '../../../models/admin/statistics';
 import { IAttendanceDataMapper } from '../../../models/attendance/attendance-data-mapper-impl';
 import { IExtraCreditDataMapper } from '../../../models/extra-credit';
 import {
   IPreRegisterDataMapper,
   IRegisterDataMapper,
-  IRegistrationStats,
 } from '../../../models/register';
+import { IRegistrationStats } from '../../../models/register/registration';
 import { Rsvp } from '../../../models/RSVP/rsvp';
 import { IScannerDataMapper } from '../../../models/scanner';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
@@ -30,13 +28,13 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IAdminStatisticsDataMapper') private readonly adminStatisticsDataMapper: IAdminStatisticsDataMapper,
-    @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IExtraCreditDataMapper,
     @Inject('IRsvpDataMapper') private readonly rsvpDataMapper: IDataMapper<Rsvp>,
     @Inject('IAdminStatisticsDataMapper') private readonly acl: IAclPerm,
     @Inject('IAttendanceDataMapper') private readonly attendanceDataMapper: IAttendanceDataMapper,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IPreRegisterDataMapper') private readonly preRegDataMapper: IPreRegisterDataMapper,
     @Inject('IScannerDataMapper') private readonly scannerDataMapper: IScannerDataMapper,
+    @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IExtraCreditDataMapper,
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
     super();
@@ -228,7 +226,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   }
 
   /**
-   * @api {get} /admin/data/?type=wid_assignments Get all wristband assignmetns
+   * @api {get} /admin/data/?type=wid_assignments Get all wristband assignments
    * @apiVersion 2.0.0
    * @apiName Get Wristband Assignments
    * @apiGroup Admin Statistics
@@ -243,6 +241,34 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   private async getWidAssignments(res: Response, next: NextFunction) {
     try {
       const result = await this.scannerDataMapper.getAll({
+        byHackathon: !res.locals.allHackathons,
+        count: res.locals.limit,
+        hackathon: res.locals.hackathon,
+        startAt: res.locals.offset,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /admin/data/?type=extra_credit_assignments Get all extra credit assignments
+   * @apiVersion 2.0.0
+   * @apiName Get Extra Credit Assignments
+   * @apiGroup Admin Statistics
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {ExtraCreditAssignment[]} Array of Wristband assignments
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
+   */
+  private async getExtraCreditAssignments(res: Response, next: NextFunction) {
+    try {
+      const result = await this.extraCreditDataMapper.getAll({
         byHackathon: !res.locals.allHackathons,
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
@@ -399,34 +425,6 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
   }
 
   /**
-   * @api {get} /admin/data/?type=extra_credit_classes Get all extra credit classes
-   * @apiVersion 2.0.0
-   * @apiName Get Extra Credit Classes
-   * @apiGroup Admin Statistics
-   * @apiPermission TeamMemberPermission
-   *
-   * @apiUse AuthArgumentRequired
-   *
-   * @apiSuccess {ExtraCreditClasses} Array of extra credit classes
-   * @apiUse ResponseBodyDescription
-   * @apiUse RequestOpts
-   */
-  private async getExtraCreditClassesHandler(res: Response, next: NextFunction) {
-    try {
-      const result = await this.extraCreditDataMapper.getAllClasses({
-        byHackathon: !res.locals.allHackathons,
-        count: res.locals.limit,
-        hackathon: res.locals.hackathon,
-        startAt: res.locals.offset,
-      });
-      const response = new ResponseBody('Success', 200, result);
-      return this.sendResponse(res, response);
-    } catch (error) {
-      return Util.errorHandler500(error, next);
-    }
-  }
-
-  /**
    * Handler that parses query type and routes to the appropriate handler
    */
   private getStatistics(req: Request, res: Response, next: NextFunction) {
@@ -457,6 +455,8 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         return this.getScansHandler(res, next);
       case 'wid_assignments':
         return this.getWidAssignments(res, next);
+      case 'extra_credit_assignments':
+        return this.getExtraCreditAssignments(res, next);
       case 'rsvp_count':
         return this.getRsvpCountHandler(res, next);
       case 'attendance':
@@ -468,8 +468,6 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
           default:
             return this.getAttendanceHandler(res, next);
         }
-      case 'extra_credit_classes':
-        return this.getExtraCreditClassesHandler(res, next);
       default:
         return Util.standardErrorHandler(
           new HttpError(

@@ -1,4 +1,3 @@
-import { validate } from 'email-validator';
 import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
 import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';

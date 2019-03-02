@@ -88,7 +88,7 @@ describe('TEST: Category Data Mapper', () => {
         await categoryDataMapper.getAll({ startAt: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CATEGORY_LIST` `category` OFFSET 100;';
+        const expectedSQL = 'SELECT * FROM `CATEGORY_LIST` `category` OFFSET ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -104,7 +104,7 @@ describe('TEST: Category Data Mapper', () => {
         await categoryDataMapper.getAll({ count: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CATEGORY_LIST` `category` LIMIT 100;';
+        const expectedSQL = 'SELECT * FROM `CATEGORY_LIST` `category` LIMIT ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);

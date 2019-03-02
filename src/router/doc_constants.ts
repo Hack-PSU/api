@@ -19,6 +19,7 @@
  * @apiDefine ApiKeyArgumentRequired
  *
  * @apiHeader (Headers) {String} apikey The Api Key
+ * @apiHeader (Headers) {String} macaddr MAC address of the device
  */
 
 /**

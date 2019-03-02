@@ -8,7 +8,8 @@ import { ExtraCreditDataMapperImpl } from '../../../models/extra-credit/extra-cr
 import { HackathonDataMapperImpl } from '../../../models/hackathon';
 import { ActiveHackathonDataMapperImpl } from '../../../models/hackathon/active-hackathon';
 import { LocationDataMapperImpl } from '../../../models/location/location-data-mapper-impl';
-import { PreRegisterDataMapperImpl, RegisterDataMapperImpl } from '../../../models/register';
+import { PreRegisterDataMapperImpl } from '../../../models/register/pre-register-data-mapper-impl';
+import { RegisterDataMapperImpl } from '../../../models/register/register-data-mapper-impl';
 import { RsvpDataMapperImpl } from '../../../models/RSVP/RSVP-data-mapper-impl';
 import { ScannerDataMapperImpl } from '../../../models/scanner/scanner-data-mapper-impl';
 import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';
@@ -27,12 +28,12 @@ import {
 } from '../../../router/routes/admin';
 import { AdminController } from '../../../router/routes/admin/';
 import { AdminCheckoutController } from '../../../router/routes/admin/admin-checkout';
-import { AdminScannerController } from '../../../router/routes/admin/admin-scanner';
 import { InternalController } from '../../../router/routes/internal';
 import { EventsController } from '../../../router/routes/live/events';
 import { LiveController } from '../../../router/routes/live/live';
 import { UpdatesController } from '../../../router/routes/live/updates';
-import { RegistrationController } from '../../../router/routes/register';
+import { ScannerController } from '../../../router/routes/scanner/scanner';
+import { UsersController } from '../../../router/routes/users';
 import { FirebaseAuthService } from '../../auth';
 import { ApikeyAuthService } from '../../auth/apikey-auth';
 import { RBAC } from '../../auth/RBAC/rbac';
@@ -59,12 +60,12 @@ export class ExpressProvider {
         { provide: 'UpdatesController', useClass: UpdatesController },
         { provide: 'EventsController', useClass: EventsController },
         { provide: 'InternalController', useClass: InternalController },
-        { provide: 'RegistrationController', useClass: RegistrationController },
+        { provide: 'UsersController', useClass: UsersController },
         { provide: 'AdminController', useClass: AdminController },
+        { provide: 'ScannerController', useClass: ScannerController },
         { provide: 'AdminRegisterController', useClass: AdminRegisterController },
         { provide: 'AdminStatisticsController', useClass: AdminStatisticsController },
         { provide: 'AdminHackathonController', useClass: AdminHackathonController },
-        { provide: 'AdminScannerController', useClass: AdminScannerController },
           { provide: 'AdminLocationController', useClass: AdminLocationController },
           { provide: 'AdminCheckoutController', useClass: AdminCheckoutController },
 

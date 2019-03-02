@@ -2,12 +2,12 @@ import * as squel from 'squel';
 import { UidType } from '../../JSCommon/common-types';
 import { IDataMapper, IDataMapperHackathonSpecific, IDbResult } from '../../services/database';
 import { IUowOpts } from '../../services/database/svc/uow.service';
-import { PreRegisterDataMapperImpl } from './pre-register-data-mapper-impl';
+import { Hackathon } from '../hackathon';
 import { PreRegistration } from './pre-registration';
-import { RegisterDataMapperImpl } from './register-data-mapper-impl';
 import { IRegistrationStats, Registration } from './registration';
 
-interface IRegisterDataMapper extends IDataMapperHackathonSpecific<Registration | Registration[]> {
+export interface IRegisterDataMapper
+  extends IDataMapperHackathonSpecific<Registration | Registration[]> {
 
   tableName: string;
 
@@ -26,16 +26,18 @@ interface IRegisterDataMapper extends IDataMapperHackathonSpecific<Registration 
   getSelectQueryForOptionName(fieldname: string, opts?: IUowOpts): Promise<squel.Select>;
 
   getCountQuery(opts?: IUowOpts): Promise<squel.Select>;
+
+  getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>>;
 }
 
-interface IPreRegisterDataMapper extends IDataMapper<PreRegistration> {
+export interface IPreRegisterDataMapper extends IDataMapper<PreRegistration> {
   getCountQuery(): squel.Select;
 }
 
-export * from './registration';
-export {
-  IRegisterDataMapper,
-  IPreRegisterDataMapper,
-  PreRegisterDataMapperImpl,
-  RegisterDataMapperImpl,
-};
+// export * from './registration';
+// export {
+//   IRegisterDataMapper,
+//   IPreRegisterDataMapper,
+//   PreRegisterDataMapperImpl,
+//   RegisterDataMapperImpl,
+// };

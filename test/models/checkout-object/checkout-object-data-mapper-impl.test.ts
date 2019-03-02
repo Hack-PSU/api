@@ -105,7 +105,7 @@ describe('TEST: CheckoutObject Data Mapper', () => {
         await checkoutObjectDataMapper.getAll({ startAt: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` OFFSET 100;';
+        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` OFFSET ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -121,7 +121,7 @@ describe('TEST: CheckoutObject Data Mapper', () => {
         await checkoutObjectDataMapper.getAll({ count: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` LIMIT 100;';
+        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` LIMIT ?;';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -141,7 +141,7 @@ describe('TEST: CheckoutObject Data Mapper', () => {
         });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` WHERE (hackathon_id = \'test uid\');';
+        const expectedSQL = 'SELECT * FROM `CHECKOUT_DATA` `checkoutObject` WHERE (hackathon_id = ?);';
         const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
         expect(generatedSQL).to.equal(expectedSQL);

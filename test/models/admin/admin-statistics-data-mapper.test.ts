@@ -11,9 +11,9 @@ import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/
 import {
   IPreRegisterDataMapper,
   IRegisterDataMapper,
-  PreRegisterDataMapperImpl,
-  RegisterDataMapperImpl,
 } from '../../../src/models/register';
+import { PreRegisterDataMapperImpl } from '../../../src/models/register/pre-register-data-mapper-impl';
+import { RegisterDataMapperImpl } from '../../../src/models/register/register-data-mapper-impl';
 import { IRsvpDataMapper } from '../../../src/models/RSVP';
 import { RsvpDataMapperImpl } from '../../../src/models/RSVP/RSVP-data-mapper-impl';
 import { IScannerDataMapper } from '../../../src/models/scanner';

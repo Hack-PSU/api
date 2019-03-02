@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import { instance, mock, reset, verify } from 'ts-mockito';
-import { PreRegisterDataMapperImpl } from '../../src/models/register';
+import { PreRegisterDataMapperImpl } from '../../src/models/register/pre-register-data-mapper-impl';
 import { PreRegistration } from '../../src/models/register/pre-registration';
 import { PreRegistrationProcessor } from '../../src/processors/pre-registration-processor';
 

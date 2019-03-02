@@ -5,7 +5,7 @@ import squel from 'squel';
 import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
-import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { IAcl, IExtraCreditAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
@@ -18,15 +18,17 @@ import { IExtraCreditDataMapper } from './index';
 
 @Injectable()
 export class ExtraCreditDataMapperImpl extends GenericDataMapper
-  implements IAclPerm, IExtraCreditDataMapper {
-  public COUNT: string;
+  implements IExtraCreditAclPerm, IExtraCreditDataMapper {
+  public COUNT: string = 'extra-credit:count';
   public CREATE: string = 'extra-credit:create';
   public DELETE: string;
   public READ: string;
-  public READ_ALL: string;
+  public READ_ALL: string = 'extra-credit:readall';
   public UPDATE: string;
   public tableName: string = 'EXTRA_CREDIT_ASSIGNMENT';
   public classesTableName: string = 'EXTRA_CREDIT_CLASSES';
+
+  public READ_ALL_CLASSES: string = 'extra-credit:readall-classes';
   protected pkColumnName: string = 'uid';
 
   constructor(
@@ -37,10 +39,20 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   ) {
     super(acl);
     super.addRBAC(
-      [this.READ, this.READ_ALL, this.CREATE, this.UPDATE, this.DELETE],
-      [AuthLevel.DIRECTOR],
+      [this.READ, this.READ_ALL, this.CREATE, this.UPDATE],
+      [AuthLevel.TEAM_MEMBER],
       undefined,
       [AuthLevel[AuthLevel.VOLUNTEER]],
+    );
+    super.addRBAC(
+      [this.DELETE],
+      [AuthLevel.DIRECTOR],
+      undefined,
+      [AuthLevel[AuthLevel.TEAM_MEMBER]],
+    );
+    super.addRBAC(
+      [this.READ_ALL_CLASSES, this.CREATE],
+      [AuthLevel.PARTICIPANT],
     );
   }
 
@@ -65,9 +77,10 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       queryBuilder = queryBuilder.limit(opts.count);
     }
     const query = queryBuilder
-      .toString()
-      .concat(';');
-    return from(this.sql.query<ExtraCreditAssignment>(query, [], { cache: true }))
+      .toParam();
+
+    query.text = query.text.concat(';');
+    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: true }))
       .pipe(
         map((classes: ExtraCreditAssignment[]) => ({ result: 'Success', data: classes })),
       )
@@ -88,9 +101,10 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       queryBuilder = queryBuilder.limit(opts.count);
     }
     const query = queryBuilder
-      .toString()
-      .concat(';');
-    return from(this.sql.query<ExtraCreditClass>(query, [], { cache: true }))
+      .toParam();
+
+    query.text = query.text.concat(';');
+    return from(this.sql.query<ExtraCreditClass>(query.text, query.values, { cache: true }))
       .pipe(
         map((classes: ExtraCreditClass[]) => ({ result: 'Success', data: classes })),
       )

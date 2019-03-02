@@ -34,5 +34,5 @@ deploy:
   skip_cleanup: true
   keyfile: hackpsu18-ecc9dc4878c6.json
   project: hackpsu18
-  config: deploy/app.v2.yaml
+  config: app.v2.yaml
   on: master

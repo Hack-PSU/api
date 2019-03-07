@@ -54,6 +54,7 @@ const validRegistration = new Registration({
   veteran: VeteranOptions.NODISCLOSE,
   time: Date.now(),
   submitted: true,
+  hackathon: 'test hackathon uid',
 });
 
 describe('TEST: Register data mapper', () => {
@@ -404,6 +405,7 @@ describe('TEST: Register data mapper', () => {
         veteran: VeteranOptions.NODISCLOSE,
         time: Date.now(),
         submitted: true,
+        hackathon: 'test hackathon uid',
       });
       // WHEN: Adding an invalid registration
       try {
@@ -548,6 +550,7 @@ describe('TEST: Register data mapper', () => {
         veteran: VeteranOptions.NODISCLOSE,
         time: Date.now(),
         submitted: false,
+        hackathon: 'test hackathon uid'
       });
       // WHEN: Updating an invalid registration
       try {

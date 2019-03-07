@@ -49,6 +49,7 @@ const registration = new Registration({
   veteran: VeteranOptions.NODISCLOSE,
   time: Date.now(),
   submitted: true,
+  hackathon: 'test hackathon uid',
 });
 
 describe('TEST: Registration Processor', () => {

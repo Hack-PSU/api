@@ -14,7 +14,7 @@ import { Logger } from '../../services/logging/logging';
 import { Hackathon } from '../hackathon';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { IRegisterDataMapper } from './index';
-import { Registration, IRegistrationStats } from './registration';
+import { IRegistrationStats, Registration } from './registration';
 
 @Injectable()
 export class RegisterDataMapperImpl extends GenericDataMapper
@@ -223,7 +223,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
   }
 
   public async update(object: Registration): Promise<IDbResult<Registration>> {
-    const currentDbObject = await this.get({ uid: object.id!, hackathon: object.hackathon });
+    const currentDbObject = await this.get({ uid: object.uid!, hackathon: object.hackathon });
     const currentObject = object.merge(object, currentDbObject.data);
     const validation = currentObject.validate();
     if (!validation.result) {
@@ -231,10 +231,22 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       this.logger.warn(currentObject.dbRepresentation);
       throw new HttpError(validation.error, 400);
     }
+    /*
+      Hacky fix - await this.get() on line 227 returns a field of 'name' for the hackathon (F2018, S2019), we disallow that to go through
+      for currentObject.dbRepresentation. Same with other Hackathon model properties such as 'base_pin', 'start_time', 'end_time', 'active'
+    */
+    const dbRep = currentObject.dbRepresentation;
+    delete dbRep.base_pin;
+    delete dbRep.end_time;
+    delete dbRep.start_time;
+    delete dbRep.name;
+    delete dbRep.active;
+
     const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)
-      .setFields(currentObject.dbRepresentation)
-      .where(`${this.pkColumnName} = ?`, currentObject.id)
+      // .setFields(currentObject.dbRepresentation)
+      .setFields(dbRep)
+      .where(`${this.pkColumnName} = ?`, currentObject.uid)
       .where('hackathon = ?', currentObject.hackathon)
       .toParam();
     query.text = query.text.concat(';');

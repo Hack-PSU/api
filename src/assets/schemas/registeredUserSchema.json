@@ -144,6 +144,9 @@
     },
     "time": {
       "type": "number"
+    },
+    "hackathon": {
+      "type": "string"
     }
   },
   "required": [

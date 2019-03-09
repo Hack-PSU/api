@@ -121,9 +121,13 @@ describe('TEST: Location Data Mapper', () => {
     // @ts-ignore
     it('causes the location to get deleted', async () => {
       // GIVEN: A location with a valid ID to read from
-      const uid = 'test uid';
+      const uid = 1;
+      const testLocation = new Location({
+        locationName: 'Test Location Name',
+        uid: uid,
+      });
       // WHEN: Retrieving data for this location
-      await locationDataMapper.delete(uid);
+      await locationDataMapper.delete(testLocation);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'DELETE FROM `LOCATIONS` WHERE (uid = ?);';

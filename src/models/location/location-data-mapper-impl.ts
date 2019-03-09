@@ -11,11 +11,12 @@ import { GenericDataMapper } from '../../services/database/svc/generic-data-mapp
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
+import { ILocationDataMapper } from './index';
 import { Location } from './location';
 
 @Injectable()
 export class LocationDataMapperImpl extends GenericDataMapper
-  implements IDataMapper<Location>, IAclPerm {
+  implements ILocationDataMapper, IAclPerm {
   // ACL permissions
   public readonly CREATE: string = 'location:create';
   public readonly DELETE: string = 'location:delete';
@@ -42,11 +43,11 @@ export class LocationDataMapperImpl extends GenericDataMapper
     super.addRBAC([this.READ, this.READ_ALL], [AuthLevel.PARTICIPANT]);
   }
 
-  public delete(id: UidType): Promise<IDbResult<void>> {
+  public delete(object: Location): Promise<IDbResult<void>> {
     const query = squel
       .delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, id)
+      .where(`${this.pkColumnName} = ?`, object.id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -78,7 +79,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getAll(opts?: IUowOpts): Promise<IDbResult<Location[]>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Location[]>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -106,7 +107,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getCount(): Promise<IDbResult<number>> {
+  public async getCount(): Promise<IDbResult<number>> {
     const query = squel
       .select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
@@ -121,7 +122,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public insert(object: Location): Promise<IDbResult<Location>> {
+  public async insert(object: Location): Promise<IDbResult<Location>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -147,7 +148,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public update(object: Location): Promise<IDbResult<Location>> {
+  public async update(object: Location): Promise<IDbResult<Location>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -165,12 +166,8 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, {
-        cache: false,
-
-      }),
-    )
-      .pipe(map(() => ({ result: 'Success', data: object })))
-      .toPromise();
+      this.sql.query<void>(query.text, query.values, { cache: false }),
+    ).pipe(map(() => ({ result: 'Success', data: object })),
+    ).toPromise();
   }
 }

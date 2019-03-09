@@ -1,3 +1,6 @@
+import { IDataMapper } from '../../services/database';
 import { Location } from './location';
 
-export { Location };
+export interface ILocationDataMapper
+  extends IDataMapper<Location> {
+}

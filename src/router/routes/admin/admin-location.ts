@@ -2,18 +2,20 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { Inject } from 'injection-js';
 import { IExpressController } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
+import { Util } from '../../../JSCommon/util';
+import { ILocationDataMapper } from '../../../models/location';
+import { Location } from '../../../models/location/location';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { IDataMapper } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
-import { ParentRouter } from '../../router-types';
+import { ParentRouter, ResponseBody } from '../../router-types';
 
 export class AdminLocationController extends ParentRouter implements IExpressController {
   public router: Router;
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
-    @Inject('ILocationDataMapper') private readonly locationDataMapper: IDataMapper<Location>,
+    @Inject('ILocationDataMapper') private readonly locationDataMapper: ILocationDataMapper,
     @Inject('ILocationDataMapper') private readonly locationAcl: IAclPerm,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,
     @Inject('BunyanLogger') private readonly logger: Logger,
@@ -56,20 +58,24 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
    *
-   * // TODO: Update when implemented
-   * @apiDescription NOTE: This route is not implemented yet
+   * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
+   * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+   *
    * @apiUse AuthArgumentRequired
    * @apiSuccess {Location[]} Array of locations
    * @apiUse ResponseBodyDescription
    */
-  private getAllLocationsHandler(res: Response, next: NextFunction) {
-    // Location.getAll(req.uow, {
-    //   count: res.locals.limit,
-    //   startAt: res.locals.offset,
-    // })
-    //   .then(stream => streamHandler(stream, res, next))
-    //   .catch(err => errorHandler500(err, next));
-    next(new HttpError('This is not implemented yet', 501));
+  private async getAllLocationsHandler(res: Response, next: NextFunction) {
+    try {
+      const result = await this.locationDataMapper.getAll({
+        count: res.locals.limit,
+        startAt: res.locals.offset,
+      });
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 
   /**
@@ -88,27 +94,30 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiUse ResponseBodyDescription
    */
   private async createLocationHandler(req: Request, res: Response, next: NextFunction) {
-    // if (!req.body ||
-    //   !req.body.locationName ||
-    //   req.body.locationName.length === 0) {
-    //   const error = new Error();
-    //   error.status = 400;
-    //   error.body = 'Require a name for the location';
-    //   return next(error);
-    // }
-    // const location = new Location({ locationName: req.body.locationName }, req.uow);
-    // location.add()
-    //   .then(() => {
-    //     res.status(200)
-    //       .send({ status: 'Success' });
-    //   })
-    //   .catch(errorHandler500);
-    next(new HttpError('This is not implemented yet', 501));
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+    if (!req.body.locationName) {
+      return Util.standardErrorHandler(new HttpError('Cannot find Location Name', 400), next);
+    }
+    try {
+      const locationObject = new Location({
+        locationName: req.body.locationName,
+      });
+      const result = await this.locationDataMapper.insert(locationObject);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result,
+      );
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.standardErrorHandler(error, next);
+    }
   }
 
   /**
    * @api {post} /admin/location/update Update name of a location
-   * // TODO: Update when implemented
    * @apiDescription NOTE: This route is not implemented yet
    * @apiVersion 2.0.0
    * @apiName Update Location
@@ -127,24 +136,30 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
     res: Response,
     next: NextFunction,
   ) {
-    // if (!req.body ||
-    //   !req.body.uid ||
-    //   !req.body.locationName ||
-    //   req.body.locationName.length === 0 ||
-    //   req.body.uid.length === 0) {
-    //   const error = new Error();
-    //   error.status = 400;
-    //   error.body = 'Require the uid and/or name for the location';
-    //   return next(error);
-    // }
-    // const location = new Location(req.body, req.uow);
-    // location.update()
-    //   .then(() => {
-    //     res.status(200)
-    //       .send({ status: 'Success' });
-    //   })
-    //   .catch(err => errorHandler500(err, next));
-    next(new HttpError('This is not implemented yet', 501));
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+    if (!req.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find ID of location', 400), next);
+    }
+    if (!req.body.locationName) {
+      return Util.standardErrorHandler(new HttpError('Could not find updated name of location', 400), next);
+    }
+    if (req.body.uid) {
+      req.body.uid = parseInt(req.body.uid, 10);
+    }
+    try {
+      const location = new Location(req.body);
+      const result = await this.locationDataMapper.update(location);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result,
+      );
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.standardErrorHandler(error, next);
+    }
   }
 
   /**
@@ -153,8 +168,6 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiName Remove Location
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
-   * // TODO: Update when implemented
-   * @apiDescription NOTE: This route is not implemented yet
    *
    * @apiParam {String} uid - the uid of the location that is being selected for removal
    * @apiUse AuthArgumentRequired
@@ -166,22 +179,27 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
     res: Response,
     next: NextFunction,
   ) {
-    // if (!req.body ||
-    //   !req.body.uid ||
-    //   req.body.uid.length === 0) {
-    //   const error = new Error();
-    //   error.status = 400;
-    //   error.body = 'Require the uid for the location';
-    //   return next(error);
-    // }
-    // const location = new Location({ uid: req.body.uid }, req.uow);
-    // location.delete()
-    //   .then(() => {
-    //     res.status(200)
-    //       .send({ status: 'Success' });
-    //   })
-    //   .catch(err => errorHandler500(err, next));
-    next(new HttpError('This is not implemented yet', 501));
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+    if (!req.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find ID of location', 400), next);
+    }
+    if (req.body.uid) {
+      req.body.uid = parseInt(req.body.uid, 10);
+    }
+    try {
+      const location = new Location(req.body);
+      const result = await this.locationDataMapper.delete(location);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result,
+      );
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.standardErrorHandler(error, next);
+    }
   }
 
 }

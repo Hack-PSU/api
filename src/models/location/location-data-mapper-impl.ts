@@ -6,17 +6,16 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDbResult } from '../../services/database';
+import { IDataMapper, IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
-import { ILocationDataMapper } from './index';
 import { Location } from './location';
 
 @Injectable()
 export class LocationDataMapperImpl extends GenericDataMapper
-  implements ILocationDataMapper, IAclPerm {
+  implements IDataMapper<Location>, IAclPerm {
   // ACL permissions
   public readonly CREATE: string = 'location:create';
   public readonly DELETE: string = 'location:delete';

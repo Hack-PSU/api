@@ -6,7 +6,7 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDataMapper, IDbResult } from '../../services/database';
+import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
@@ -79,7 +79,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Location[]>> {
+  public getAll(opts?: IUowOpts): Promise<IDbResult<Location[]>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -107,7 +107,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getCount(): Promise<IDbResult<number>> {
+  public getCount(): Promise<IDbResult<number>> {
     const query = squel
       .select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
@@ -122,7 +122,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async insert(object: Location): Promise<IDbResult<Location>> {
+  public insert(object: Location): Promise<IDbResult<Location>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -148,7 +148,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async update(object: Location): Promise<IDbResult<Location>> {
+  public update(object: Location): Promise<IDbResult<Location>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');

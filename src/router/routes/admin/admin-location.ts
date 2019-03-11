@@ -84,8 +84,6 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiName Create Location
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
-   * // TODO: Update when implemented
-   * @apiDescription NOTE: This route is not implemented yet
    *
    * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
    * @apiUse AuthArgumentRequired
@@ -118,7 +116,6 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
 
   /**
    * @api {post} /admin/location/update Update name of a location
-   * @apiDescription NOTE: This route is not implemented yet
    * @apiVersion 2.0.0
    * @apiName Update Location
    * @apiGroup Admin Location

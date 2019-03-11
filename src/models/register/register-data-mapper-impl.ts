@@ -14,7 +14,7 @@ import { Logger } from '../../services/logging/logging';
 import { Hackathon } from '../hackathon';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { IRegisterDataMapper } from './index';
-import { Registration, IRegistrationStats } from './registration';
+import { IRegistrationStats, Registration } from './registration';
 
 @Injectable()
 export class RegisterDataMapperImpl extends GenericDataMapper

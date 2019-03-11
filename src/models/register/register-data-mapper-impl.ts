@@ -75,6 +75,10 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     queryBuilder = queryBuilder
       .where(`registration.${this.pkColumnName}= ?`, id.uid)
       .where('registration.hackathon = ?', id.hackathon)
@@ -85,7 +89,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<Registration>(
       query.text,
       query.values,
-      { cache: true },
+      { cache: checkCache },
     ))
       .pipe(
         map((event: Registration[]) => ({ result: 'Success', data: event[0] })),
@@ -117,6 +121,10 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
         .where(
@@ -134,7 +142,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<Registration>(
       query.text,
       query.values,
-      { cache: true },
+      { cache: checkCache },
     ))
       .pipe(
         map((registrations: Registration[]) => ({ result: 'Success', data: registrations })),

@@ -222,6 +222,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -249,6 +250,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
       const result = await this.checkoutItemsDataMapper.getAll({
         count: res.locals.limit,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);

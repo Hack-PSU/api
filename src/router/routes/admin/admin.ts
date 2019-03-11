@@ -36,6 +36,9 @@ export class AdminController extends ParentRouter implements IExpressController 
     if (request.query.hackathon) {
       response.locals.hackathon = request.query.hackathon;
     }
+    if (request.query.ignoreCache) {
+      response.locals.ignoreCache = request.query.ignoreCache;
+    }
     response.locals.allHackathons = !!request.query.allHackathons;
     return next();
   }

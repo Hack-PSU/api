@@ -63,13 +63,16 @@ export class LocationDataMapperImpl extends GenericDataMapper
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     queryBuilder = queryBuilder.where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<Location>(query.text, query.values, {
-        cache: true,
-
+        cache: checkCache,
       }),
     )
       .pipe(

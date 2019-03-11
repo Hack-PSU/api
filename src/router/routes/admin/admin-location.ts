@@ -70,6 +70,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
       const result = await this.locationDataMapper.getAll({
         count: res.locals.limit,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);

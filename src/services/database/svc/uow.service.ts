@@ -43,6 +43,7 @@ export interface IUowOpts {
   count?: number;
   byHackathon?: boolean;
   hackathon?: UidType;
+  ignoreCache?: boolean;
 }
 
 export interface IQueryOpts {

@@ -4,3 +4,9 @@ dispatch:
 
   - url: "staging.hackpsu18.appspot.com/v2/*"
     service: staging-v2
+
+  - url: "api.hackpsu.org/v1/*"
+    service: default
+
+  - url: "api.hackpsu.org/v2/*"
+    service: default-v2

@@ -18,7 +18,7 @@ let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
 
-describe('TEST: Event Data Mapper', () => {
+describe('TEST: Travel Reimbursement Data Mapper', () => {
 
   beforeEach(() => {
     // Configure Active Hackathon Data Mapper

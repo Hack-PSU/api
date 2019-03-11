@@ -12,7 +12,7 @@ import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../src/services/logging/logging';
 
-let travelReimbursemenetDataMapper: TravelReimbursementDataMapperImpl;
+let travelReimbursementDataMapper: TravelReimbursementDataMapperImpl;
 let activeHackathonDataMapper: IActiveHackathonDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
@@ -35,7 +35,7 @@ describe('TEST: Travel Reimbursement Data Mapper', () => {
       .thenResolve([]);
     mysqlUow = instance(mysqlUowMock);
     // Configure Event Data Mapper
-    travelReimbursemenetDataMapper = new TravelReimbursementDataMapperImpl(acl, mysqlUow, activeHackathonDataMapper, new Logger());
+    travelReimbursementDataMapper = new TravelReimbursementDataMapperImpl(acl, mysqlUow, activeHackathonDataMapper, new Logger());
   });
 
   afterEach(() => {
@@ -48,7 +48,7 @@ describe('TEST: Travel Reimbursement Data Mapper', () => {
       // GIVEN: An event with a valid ID to read from
       const uid = { uid: 'test uid', hackathon: 'test uid' };
       // WHEN: Retrieving data for this travel reimbursement
-      await travelReimbursemenetDataMapper.get(uid);
+      await travelReimbursementDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT * FROM `TRAVEL_REIMBURSEMENT` WHERE (uid= ?) AND (hackathon = ?);';
@@ -67,7 +67,7 @@ describe('TEST: Travel Reimbursement Data Mapper', () => {
       // GIVEN: A travel reimbursement with a valid ID to read from
       const uid = { uid: 'test uid', hackathon: 'test uid' };
       // WHEN: Retrieving data for this travel reimbursement
-      await travelReimbursemenetDataMapper.delete(uid);
+      await travelReimbursementDataMapper.delete(uid);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'DELETE FROM `TRAVEL_REIMBURSEMENT` WHERE (uid = ?) AND (hackathon = ?);';
@@ -85,7 +85,7 @@ describe('TEST: Travel Reimbursement Data Mapper', () => {
     it('generates the expected SQL to retrieve the number of travel reimbursements', async () => {
       // GIVEN: Instance of a travel reimbursement data mapper
       // WHEN: Retrieving number of travel reimbursements
-      await travelReimbursemenetDataMapper.getCount();
+      await travelReimbursementDataMapper.getCount();
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT COUNT(uid) AS "reimbursement_count" FROM `TRAVEL_REIMBURSEMENT`;';
@@ -108,7 +108,7 @@ describe('TEST: Travel Reimbursement Data Mapper', () => {
         fullName: 'HackPSU Attendee'
       });
       // WHEN: Retrieving number of events
-      await travelReimbursemenetDataMapper.insert(testReimbursement);
+      await travelReimbursementDataMapper.insert(testReimbursement);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'INSERT INTO `TRAVEL_REIMBURSEMENT` (`fullname`, `reimbursement_amount`, `mailing_address`, `group_members`, `user_id`, `receipt_uris`, `uid`, `hackathon`) VALUES (?, ?, ?, ?, ?, ?, ?, ?);';
@@ -143,7 +143,7 @@ describe('TEST: Travel Reimbursement Data Mapper', () => {
         fullName: 'HackPSU Attendee'
       });
       // WHEN: Retrieving number of events
-      await travelReimbursemenetDataMapper.update(testReimbursement);
+      await travelReimbursementDataMapper.update(testReimbursement);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'UPDATE `TRAVEL_REIMBURSEMENT` SET `fullname` = ?, `reimbursement_amount` = ?, `mailing_address` = ?, `group_members` = ?, `user_id` = ?, `receipt_uris` = ?, `uid` = ? WHERE (uid = ?);';

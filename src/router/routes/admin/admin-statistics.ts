@@ -74,6 +74,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -104,6 +105,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
       result = await this.registerDataMapper.getRegistrationStats({
         byHackathon: !res.locals.allHackathons,
         hackathon: res.locals.hackathon,
+        ignoreCache: res.locals.ignoreCache,
       });
     } catch (error) {
       return Util.errorHandler500(error, next);

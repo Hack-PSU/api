@@ -61,7 +61,8 @@
  */
 /**
  * @apiDefine RequestOpts
- * @apiParam [byHackathon] {boolean} Get data by hackathon
+ * @apiParam [allHackathons] {boolean} Get data for all hackathons. Defaults to false.
+ * @apiParam [ignoreCache] {boolean} Force a fresh query to retrieve data
  * @apiParam [count] {number} Number of responses to return
  * @apiParam [hackathon] {String} uid of hackathon to get results by. byHackathon must be true
  * @apiParam [startAt] {number} offset to paginate results

@@ -207,6 +207,7 @@ export class EventsController extends LiveController {
         count: request.query.limit,
         hackathon: request.query.hackathon,
         startAt: request.query.offset,
+        ignoreCache: request.query.ignoreCache,
       });
       const res = new ResponseBody('Success', 200, stream);
       return this.sendResponse(response, res);

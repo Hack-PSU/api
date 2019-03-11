@@ -124,7 +124,7 @@ describe('TEST: Location Data Mapper', () => {
       const uid = 1;
       const testLocation = new Location({
         locationName: 'Test Location Name',
-        uid: uid,
+        uid,
       });
       // WHEN: Retrieving data for this location
       await locationDataMapper.delete(testLocation);

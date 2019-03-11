@@ -3,10 +3,10 @@ import { Inject } from 'injection-js';
 import { IExpressController } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
-import { ILocationDataMapper } from '../../../models/location';
 import { Location } from '../../../models/location/location';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
+import { IDataMapper } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
 import { ParentRouter, ResponseBody } from '../../router-types';
 
@@ -15,7 +15,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
-    @Inject('ILocationDataMapper') private readonly locationDataMapper: ILocationDataMapper,
+    @Inject('ILocationDataMapper') private readonly locationDataMapper: IDataMapper<Location>,
     @Inject('ILocationDataMapper') private readonly locationAcl: IAclPerm,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,
     @Inject('BunyanLogger') private readonly logger: Logger,

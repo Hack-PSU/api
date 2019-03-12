@@ -14,7 +14,7 @@ import { Logger } from '../../services/logging/logging';
 import { Hackathon } from '../hackathon';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { IRegisterDataMapper } from './index';
-import { Registration, IRegistrationStats } from './registration';
+import { IRegistrationStats, Registration } from './registration';
 
 @Injectable()
 export class RegisterDataMapperImpl extends GenericDataMapper
@@ -75,6 +75,10 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     queryBuilder = queryBuilder
       .where(`registration.${this.pkColumnName}= ?`, id.uid)
       .where('registration.hackathon = ?', id.hackathon)
@@ -85,7 +89,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<Registration>(
       query.text,
       query.values,
-      { cache: true },
+      { cache: checkCache },
     ))
       .pipe(
         map((event: Registration[]) => ({ result: 'Success', data: event[0] })),
@@ -117,6 +121,10 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
         .where(
@@ -134,7 +142,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<Registration>(
       query.text,
       query.values,
-      { cache: true },
+      { cache: checkCache },
     ))
       .pipe(
         map((registrations: Registration[]) => ({ result: 'Success', data: registrations })),
@@ -231,9 +239,21 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       this.logger.warn(currentObject.dbRepresentation);
       throw new HttpError(validation.error, 400);
     }
+    /**
+     * On line 226, await this.get() executes a join on the Registration table with the Hackathon table.
+     * As a result, currentDbObject contains fields from the Hackathon table, i.e. 'name', 'base_pin', 'start_time', 'end_time', and active'.
+     * These fields are not valid for the Registration table and thus need to be removed from the currentDbObject.
+     */
+    const dbRep = currentObject.dbRepresentation;
+    delete dbRep.base_pin;
+    delete dbRep.end_time;
+    delete dbRep.start_time;
+    delete dbRep.name;
+    delete dbRep.active;
+
     const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)
-      .setFields(currentObject.dbRepresentation)
+      .setFields(dbRep)
       .where(`${this.pkColumnName} = ?`, currentObject.id)
       .where('hackathon = ?', currentObject.hackathon)
       .toParam();

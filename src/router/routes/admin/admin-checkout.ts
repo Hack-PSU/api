@@ -4,9 +4,9 @@ import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { ICheckoutItemsDataMapper } from '../../../models/checkout-items';
+import { CheckoutItems } from '../../../models/checkout-items/checkout-items';
 import { ICheckoutObjectDataMapper } from '../../../models/checkout-object';
 import { CheckoutObject } from '../../../models/checkout-object/checkout-object';
-import { CheckoutItems } from '../../../models/checkout-items/checkout-items';
 import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
@@ -222,6 +222,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -242,13 +243,14 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiUse ResponseBodyDescription
    */
   private async getAllCheckoutItemsHandler(
-    res: Response, 
-    next: NextFunction
+    res: Response,
+    next: NextFunction,
   ) {
     try {
       const result = await this.checkoutItemsDataMapper.getAll({
         count: res.locals.limit,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -257,7 +259,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
     }
   }
 
-/**
+ /**
   * @api {post} /admin/checkout/items Add new item for checkout
   * @apiVersion 2.0.0
   * @apiName Add new item for checkout
@@ -321,8 +323,8 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiUse ResponseBodyDescription
    */
   private async getAllAvailableCheckoutItemsHandler(
-    res: Response, 
-    next: NextFunction
+    res: Response,
+    next: NextFunction,
   ) {
     try {
       const result = await this.checkoutItemsDataMapper.getAllAvailable();

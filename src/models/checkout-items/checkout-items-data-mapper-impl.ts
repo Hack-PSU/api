@@ -9,7 +9,7 @@ import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
-import { IUowOpts } from '../../services/database/svc/uow.service';
+import { IUow, IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { ICheckoutObjectDataMapper } from '../checkout-object';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
@@ -66,11 +66,15 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     queryBuilder = queryBuilder
       .where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<CheckoutItems>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<CheckoutItems>(query.text, query.values, { cache: checkCache }))
       .pipe(
         map((checkoutItems: CheckoutItems[]) => ({ result: 'Success', data: checkoutItems[0] })),
       )
@@ -92,18 +96,26 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     const query = queryBuilder
         .toParam();
 
     query.text = query.text.concat(';');
-    return from(this.sql.query<CheckoutItems>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<CheckoutItems>(query.text, query.values, { cache: checkCache }))
         .pipe(
           map((checkoutItems: CheckoutItems[]) => ({ result: 'Success', data: checkoutItems })),
         )
         .toPromise();
   }
 
-  public getAvailable(id: number): Promise<IDbResult<CheckoutItems>> {
+  public getAvailable(id: number, opts?: IUowOpts): Promise<IDbResult<CheckoutItems>> {
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     const query = squel.select({
       autoQuoteFieldNames: false,
       autoQuoteTableNames: true,
@@ -116,7 +128,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<CheckoutItems>(query.text, query.values, { cache: true }))
+      this.sql.query<CheckoutItems>(query.text, query.values, { cache: checkCache }))
       .pipe(
         map((checkoutItems: CheckoutItems[]) => ({
           data: checkoutItems[0],
@@ -126,7 +138,11 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getAllAvailable(): Promise<IDbResult<CheckoutItems[]>> {
+  public async getAllAvailable(opts?: IUowOpts): Promise<IDbResult<CheckoutItems[]>> {
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     const subquery = squel.select({
       autoQuoteFieldNames: false,
       autoQuoteTableNames: false,
@@ -148,7 +164,7 @@ export class CheckoutItemsDataMapperImpl extends GenericDataMapper
     query.text = query.text.concat(';');
     query.values = subquery.values.concat(query.values);
     return from(
-      this.sql.query<CheckoutItems>(query.text, query.values, { cache: true }))
+      this.sql.query<CheckoutItems>(query.text, query.values, { cache: checkCache }))
       .pipe(
         map((checkoutItems: CheckoutItems[]) => ({
           data: checkoutItems,

@@ -160,6 +160,12 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
         next,
       );
     }
+    if (!req.body.registration.hackathon) {
+      return Util.standardErrorHandler(
+        new HttpError('hackathon id missing', 400),
+        next,
+      );
+    }
     try {
       await this.registrationProcessor.normaliseRegistrationData(req.body.registration);
     } catch (error) {
@@ -172,6 +178,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
     let registration: Registration;
     try {
       registration = new Registration(req.body.registration);
+      registration.hackathon = req.body.registration.hackathon;
     } catch (error) {
       return Util.standardErrorHandler(
         new HttpError('Some properties were not as expected', 400),

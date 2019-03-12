@@ -19,6 +19,7 @@ import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { Logger } from '../../services/logging/logging';
 import { IStorageService } from '../../services/storage';
 import { ParentRouter } from '../router-types';
+import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 
 @Injectable()
 export class UsersController extends ParentRouter implements IExpressController {
@@ -49,8 +50,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     // Use authentication
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
-    app
-      .post(
+    app.post(
         '/register',
         this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
         (req, res, next) => this.storageService.upload(req, res, next),
@@ -70,6 +70,11 @@ export class UsersController extends ParentRouter implements IExpressController 
       '/extra-credit',
       this.authService.verifyAcl(this.extraCreditPerm, AclOperations.CREATE),
       (req, res, next) => this.addExtraCreditAssignmentHandler(req, res, next),
+    );
+    app.get(
+      '/extra-credit/assignment',
+      this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
+      (req, res, next) => this.getExtraCreditAssignmentHandler(req, res, next),
     );
   }
 
@@ -298,6 +303,47 @@ export class UsersController extends ParentRouter implements IExpressController 
         200,
         result,
       );
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /users/extra-credit Get all extra credit assignments
+   * @apiVersion 2.0.0
+   * @apiName Get Extra Credit Assignments
+   * @apiGroup User
+   * @apiPermission UserPermission
+   *
+   * @apiParam {String} uid - the id associated with the hacker
+   * @apiParam {String} hackathonUid - the id associated with the current hackathon
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {ExtraCreditAssignment} The retrieved extra credit assignment 
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
+   */
+  private async getExtraCreditAssignmentHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.query) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+
+    if (!req.query.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid uid', 400), next);
+    }
+
+    if (!req.query.hackathonUid) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid hackathon uid', 400), next);
+    }
+
+    try {
+      const id: ICompoundHackathonUidType = { uid: req.query.uid, hackathon: req.query.hackathonUid }
+      const result = await this.extraCreditDataMapper.get(id);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

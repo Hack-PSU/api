@@ -22,7 +22,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   public COUNT: string = 'extra-credit:count';
   public CREATE: string = 'extra-credit:create';
   public DELETE: string;
-  public READ: string;
+  public READ: string = 'extra-credit:read';
   public READ_ALL: string = 'extra-credit:readall';
   public UPDATE: string;
   public tableName: string = 'EXTRA_CREDIT_ASSIGNMENT';
@@ -39,7 +39,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   ) {
     super(acl);
     super.addRBAC(
-      [this.READ, this.READ_ALL, this.CREATE, this.UPDATE],
+      [this.READ_ALL, this.UPDATE],
       [AuthLevel.TEAM_MEMBER],
       undefined,
       [AuthLevel[AuthLevel.VOLUNTEER]],
@@ -51,7 +51,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       [AuthLevel[AuthLevel.TEAM_MEMBER]],
     );
     super.addRBAC(
-      [this.READ_ALL_CLASSES, this.CREATE],
+      [this.READ_ALL_CLASSES, this.CREATE, this.READ],
       [AuthLevel.PARTICIPANT],
     );
   }
@@ -64,7 +64,26 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     object: ICompoundHackathonUidType,
     opts?: IUowOpts,
   ): Promise<IDbResult<ExtraCreditAssignment>> {
-    throw new MethodNotImplementedError('this action is not supported');
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName);
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    queryBuilder = queryBuilder
+      .where(`${this.pkColumnName}= ?`, object.uid)
+      .where('hackathon = ?', object.hackathon);
+    const query = queryBuilder
+      .toParam();
+    query.text = query.text
+      .concat(';');
+    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: true }))
+      .pipe(
+        map((extraCreditAssignment: ExtraCreditAssignment[]) => ({ result: 'Success', data: extraCreditAssignment[0] })),
+      )
+      .toPromise();
   }
 
   public getAll(opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment[]>> {

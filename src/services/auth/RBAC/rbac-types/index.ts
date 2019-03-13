@@ -70,4 +70,6 @@ export enum AclOperations {
   REDUCE_PERMISSION,
   MAKE_ACTIVE,
   READ_ALL_CLASSES,
+  READ_BY_UID,
+  READ_BY_CLASS,
 }

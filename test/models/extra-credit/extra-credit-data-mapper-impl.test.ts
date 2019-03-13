@@ -9,11 +9,11 @@ import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active
 import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
 import { RBAC } from '../../../src/services/auth/RBAC/rbac';
 import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
-import { IDataMapperHackathonSpecific } from '../../../src/services/database';
+import { IDataMapper } from '../../../src/services/database';
 import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../src/services/logging/logging';
 
-let extraCreditDataMapper: IDataMapperHackathonSpecific<ExtraCreditAssignment>;
+let extraCreditDataMapper: IDataMapper<ExtraCreditAssignment>;
 let activeHackathonDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
@@ -67,37 +67,21 @@ describe('TEST: Extra Credit Data Mapper', () => {
   //   });
   // });
 
-  // describe('TEST: Extra Credit delete', () => {
-  //   // @ts-ignore
-  //   it('causes the extra credit assignment to get deleted', async () => {
-  //     // GIVEN: An extra credit assignment with a valid ID to read from
-  //     const uid = 'test uid';
-  //     // WHEN: Retrieving data for this extra credit assignment
-  //     await extraCreditDataMapper.delete(uid);
-
-  //     // THEN: Generated SQL matches the expectation
-  //     const expectedSQL = 'DELETE FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (uid = ?);';
-  //     const expectedParams = [uid];
-  //     const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
-  //       .first();
-  //     verify(mysqlUowMock.query(anything(), anything(), anything())).once();
-  //     expect(generatedSQL).to.equal(expectedSQL);
-  //     expect(generatedParams).to.deep.equal(expectedParams);
-  //   });
-  // });
-
-  describe('TEST: Extra Credit get', () => {
+  describe('TEST: Extra Credit delete', () => {
     // @ts-ignore
-    it('generates the expected SQL to retrieve an extra credit assignment', async () => {
+    it('causes the extra credit assignment to get deleted', async () => {
       // GIVEN: An extra credit assignment with a valid ID to read from
-      const uid = { uid: 'test uid', hackathon: 'test hackathon uid' };
+      const testExtraCreditAssignment = new ExtraCreditAssignment({
+        uid: 'test',
+        cid: 0,
+      });
 
       // WHEN: Retrieving data for this extra credit assignment
-      await extraCreditDataMapper.get(uid);
+      await extraCreditDataMapper.delete(testExtraCreditAssignment);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (uid= ?) AND (hackathon = ?);';
-      const expectedParams = [uid.uid, uid.hackathon];
+      const expectedSQL = 'DELETE FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (uid = ?);';
+      const expectedParams = [testExtraCreditAssignment];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -105,6 +89,26 @@ describe('TEST: Extra Credit Data Mapper', () => {
       expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
+
+  // describe('TEST: Extra Credit get', () => {
+  //   // @ts-ignore
+  //   it('generates the expected SQL to retrieve an extra credit assignment', async () => {
+  //     // GIVEN: An extra credit assignment with a valid ID to read from
+  //     const uid = { uid: 'test uid', hackathon: 'test hackathon uid' };
+
+  //     // WHEN: Retrieving data for this extra credit assignment
+  //     await extraCreditDataMapper.get(uid);
+
+  //     // THEN: Generated SQL matches the expectation
+  //     const expectedSQL = 'SELECT * FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (uid= ?) AND (hackathon = ?);';
+  //     const expectedParams = [uid.uid, uid.hackathon];
+  //     const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+  //       .first();
+  //     verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+  //     expect(generatedSQL).to.equal(expectedSQL);
+  //     expect(generatedParams).to.deep.equal(expectedParams);
+  //   });
+  // });
 
   describe('TEST: Extra Credit get all', () => {
     // @ts-ignore

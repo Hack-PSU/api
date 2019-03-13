@@ -111,10 +111,9 @@ export class RegisterDataMapperImpl extends GenericDataMapper
         this.activeHackathonDataMapper.tableName,
         'hackathon',
         'registration.hackathon = hackathon.uid',
-      );
-    if (opts && opts.fields) {
-      queryBuilder = queryBuilder.fields(opts.fields);
-    }
+      )
+      .field('registration.*')
+      .fields(['hackathon.name', 'hackathon.start_time', 'hackathon.end_time', 'hackathon.base_pin', 'hackathon.active'])
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -149,7 +148,6 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       )
       .toPromise();
   }
-
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     const query = (await this.getCountQuery(opts)).toParam();
     query.text = query.text.concat(';');

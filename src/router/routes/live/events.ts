@@ -110,7 +110,7 @@ export class EventsController extends LiveController {
     response: express.Response,
     next: express.NextFunction,
   ) {
-    if (!request.body || !request.body) {
+    if (!request.body) {
       return next(new HttpError('No event provided to update', 400));
     }
     let event;

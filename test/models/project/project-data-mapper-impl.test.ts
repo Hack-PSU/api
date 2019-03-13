@@ -194,7 +194,7 @@ describe('TEST: Project Data Mapper', () => {
       await projectDataMapper.assignTable(testProject);
 
             // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'CALL assignTable (?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;';
+      const expectedSQL = 'CALL assignTable(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;';
       const expectedParams = [
         testProject.projectId,
         1,
@@ -220,7 +220,7 @@ describe('TEST: Project Data Mapper', () => {
       await projectDataMapper.assignTable(testProject);
 
             // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'CALL assignTable (?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;';
+      const expectedSQL = 'CALL assignTable(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;';
       const expectedParams = [
         testProject.projectId,
         1,

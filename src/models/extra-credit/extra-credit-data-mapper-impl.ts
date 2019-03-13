@@ -65,7 +65,6 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     })
      .from(this.tableName)
      .where(`${this.pkColumnName} = ?`, object.uid)
-     .where('hackathon = ?', object.hackathon)
      .toParam();
    query.text = query.text.concat(';');
    return from(
@@ -75,8 +74,26 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
    ).toPromise();
   }
 
-  public get(object: UidType, opts?:IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {
-    throw new MethodNotImplementedError('this action is not supported');
+  public get(uid: UidType ,opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName);
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    queryBuilder = queryBuilder
+      .where(`${this.pkColumnName}= ?`, uid);
+    const query = queryBuilder
+      .toParam();
+    query.text = query.text
+      .concat(';');
+    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: true }))
+      .pipe(
+        map((extraCreditAssignment: ExtraCreditAssignment[]) => ({ result: 'Success', data: extraCreditAssignment[0] })),
+      )
+      .toPromise();
   }
 
   public getAll(opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment[]>> {

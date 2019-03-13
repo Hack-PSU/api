@@ -81,7 +81,7 @@ describe('TEST: Extra Credit Data Mapper', () => {
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'DELETE FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (uid = ?);';
-      const expectedParams = [testExtraCreditAssignment];
+      const expectedParams = [undefined];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -90,25 +90,25 @@ describe('TEST: Extra Credit Data Mapper', () => {
     });
   });
 
-  // describe('TEST: Extra Credit get', () => {
-  //   // @ts-ignore
-  //   it('generates the expected SQL to retrieve an extra credit assignment', async () => {
-  //     // GIVEN: An extra credit assignment with a valid ID to read from
-  //     const uid = { uid: 'test uid', hackathon: 'test hackathon uid' };
+  describe('TEST: Extra Credit get', () => {
+    // @ts-ignore
+    it('generates the expected SQL to retrieve an extra credit assignment', async () => {
+      // GIVEN: An extra credit assignment with a valid ID to read from
+      const uid = 'test';
 
-  //     // WHEN: Retrieving data for this extra credit assignment
-  //     await extraCreditDataMapper.get(uid);
+      // WHEN: Retrieving data for this extra credit assignment
+      await extraCreditDataMapper.get(uid);
 
-  //     // THEN: Generated SQL matches the expectation
-  //     const expectedSQL = 'SELECT * FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (uid= ?) AND (hackathon = ?);';
-  //     const expectedParams = [uid.uid, uid.hackathon];
-  //     const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
-  //       .first();
-  //     verify(mysqlUowMock.query(anything(), anything(), anything())).once();
-  //     expect(generatedSQL).to.equal(expectedSQL);
-  //     expect(generatedParams).to.deep.equal(expectedParams);
-  //   });
-  // });
+      // THEN: Generated SQL matches the expectation
+      const expectedSQL = 'SELECT * FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (uid= ?);';
+      const expectedParams = [uid];
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+        .first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
+    });
+  });
 
   describe('TEST: Extra Credit get all', () => {
     // @ts-ignore

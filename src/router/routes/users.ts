@@ -344,12 +344,12 @@ export class UsersController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
     }
 
-    if (!req.query.uid) {
+    if (!req.query.uid || !parseInt(req.query.uid, 10)) {
       return Util.standardErrorHandler(new HttpError('Could not find valid assignment uid', 400), next);
     }
 
     try {
-      const id: number = req.query.uid;
+      const id: string = req.query.uid;
       const result = await this.extraCreditDataMapper.get(id);
       const response = new ResponseBody(
         'Success',
@@ -457,11 +457,8 @@ export class UsersController extends ParentRouter implements IExpressController 
     if (!req.body.uid) {
       return Util.standardErrorHandler(new HttpError('Could not find valid assignment uid', 400), next);
     }
-    if (!req.body.hackathonUid) {
-      return Util.standardErrorHandler(new HttpError('Could not find valid hackathon uid', 400), next);
-    }
     try {
-      const id: ICompoundHackathonUidType = { uid: req.body.uid, hackathon: req.body.hackathonUid }
+      const id: string = req.body.uid
       const result = await this.extraCreditDataMapper.delete(id);
       const response = new ResponseBody(
         'Success',

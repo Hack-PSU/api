@@ -269,7 +269,8 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiGroup User
    * @apiPermission UserPermission
    *
-   * @apiParam {String} cid - the id associated with the class
+   * @apiParam {String} cid   The uid associated with the class
+   * @apiParam {String} [uid] The uid associated with a user's Firebase account
    * @apiUse AuthArgumentRequired
    * @apiSuccess {ExtraCreditAssignment} The inserted extra credit assignment
    * @apiUse IllegalArgumentError
@@ -288,7 +289,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     if (!req.body.cid || !parseInt(req.body.cid, 10)) {
       return Util.standardErrorHandler(new HttpError('Could not find valid class id', 400), next);
     }
-    req.body.uid = res.locals.user.uid;
+    req.body.uid = req.body.uid || res.locals.user.uid;
 
     try {
       const ecAssignment = new ExtraCreditAssignment(req.body);

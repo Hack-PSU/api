@@ -202,7 +202,7 @@ export class ScannerDataMapperImpl extends GenericDataMapper
             resultString = 'Error';
             return ScannerDataMapperImpl.handleInsertionError<RfidAssignment>(
               error,
-              assignment[index],
+              assignment,
             );
           }
         },
@@ -226,7 +226,7 @@ export class ScannerDataMapperImpl extends GenericDataMapper
             resultString = 'Error';
             return ScannerDataMapperImpl.handleInsertionError<Scan>(
               error,
-              scan[index],
+              scan,
             );
           }
         },

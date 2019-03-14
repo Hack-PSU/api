@@ -50,7 +50,7 @@
   "dependencies": {
     "@fluffy-spoon/substitute": "1.70.0",
     "@google-cloud/debug-agent": "2.6.0",
-    "@google-cloud/logging-bunyan": "0.10.0",
+    "@google-cloud/logging-bunyan": "0.9.5",
     "@google-cloud/monitoring": "0.5.0",
     "@google-cloud/storage": "1.7.0",
     "@google-cloud/trace-agent": "2.10.1",
@@ -99,6 +99,7 @@
     "random-number-csprng": "1.0.2",
     "reflect-metadata": "0.1.12",
     "request": "2.86.0",
+    "request-context": "2.0.0",
     "rxjs": "6.3.3",
     "sinon": "7.2.2",
     "sinon-express-mock": "2.1.0",

@@ -249,13 +249,13 @@ export class UsersController extends ParentRouter implements IExpressController 
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ExtraCreditClasses[]} Array of extra credit classes
+   * @apiSuccess {Registration[]} Array of the user's registrations
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
   private async getAllRegistrations(res: Response, next: NextFunction) {
     try {
-      const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid);
+      const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid, res.locals.ignoreCache);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

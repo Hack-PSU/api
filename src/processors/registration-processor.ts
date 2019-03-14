@@ -23,7 +23,7 @@ const emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
 export interface IRegistrationProcessor {
   processRegistration(registration: Registration): Promise<ResponseBody>;
 
-  getAllRegistrationsByUser(id: UidType): Promise<ResponseBody>;
+  getAllRegistrationsByUser(id: UidType, ignoreCache: boolean): Promise<ResponseBody>;
 
   sendRegistrationEmail(registration: Registration): Promise<[request.Response, {}]>;
 
@@ -37,7 +37,7 @@ export class RegistrationProcessor implements IRegistrationProcessor {
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IHackathonDataMapper') private readonly hackathonDataMapper: IDataMapper<Hackathon>,
     @Inject('IEmailService') private readonly emailService: IEmailService,
-  ) {}
+  ) { }
 
   public async processRegistration(registration: Registration) {
     const result = await this.registerDataMapper.insert(registration);
@@ -74,13 +74,13 @@ export class RegistrationProcessor implements IRegistrationProcessor {
     registration.mlhdcp = registration.mlhdcp === true || registration.mlhdcp === 'true';
   }
 
-  public async getAllRegistrationsByUser(id: UidType): Promise<ResponseBody> {
+  public async getAllRegistrationsByUser(id: UidType, ignoreCache: boolean): Promise<ResponseBody> {
     const hackathons = await this.hackathonDataMapper.getAll();
     const registrations = (await Promise.all(
       hackathons.data
         .map(
           hackathon => this.registerDataMapper
-            .get({ uid: id, hackathon: hackathon.uid })
+            .get({ uid: id, hackathon: hackathon.uid }, { ignoreCache: ignoreCache })
             .catch(() => undefined),
         ),
     ))

@@ -37,7 +37,7 @@ export class RegistrationProcessor implements IRegistrationProcessor {
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IHackathonDataMapper') private readonly hackathonDataMapper: IDataMapper<Hackathon>,
     @Inject('IEmailService') private readonly emailService: IEmailService,
-  ) { }
+  ) {}
 
   public async processRegistration(registration: Registration) {
     const result = await this.registerDataMapper.insert(registration);

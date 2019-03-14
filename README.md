@@ -19,7 +19,7 @@ Installing all dependencies:
 - To test:
     - `npm test`
 
-[![Build Status](https://travis-ci.com/hackpsu-tech/hackPSUS2018-api.svg?token=rXBswytuwgwFX9F967pp&branch=master)](https://travis-ci.com/hackpsu-tech/hackPSUS2018-api)
+[![Build Status](https://travis-ci.org/Hack-PSU/api.svg?branch=dev)](https://travis-ci.org/Hack-PSU/api)
 [![Coverage Status](https://coveralls.io/repos/github/Hack-PSU/api/badge.svg?branch=sush%2Fts-migration)](https://coveralls.io/github/Hack-PSU/api?branch=sush%2Fts-migration)
 
 ## API

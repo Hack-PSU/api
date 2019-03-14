@@ -128,7 +128,6 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
       result = await this.registerDataMapper.getCount({
         byHackathon: !res.locals.allHackathons,
         hackathon: res.locals.hackathon,
-        ignoreCache: res.locals.ignoreCache,
       });
     } catch (error) {
       return Util.errorHandler500(error, next);

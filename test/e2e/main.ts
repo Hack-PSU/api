@@ -2,6 +2,8 @@ process.env.APP_ENV = 'test';
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const server = require('../../src/app');
+import { expect } from 'chai';
+import 'mocha';
 require('../test_helper')();
 
 const should = chai.should();

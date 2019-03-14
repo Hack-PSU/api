@@ -94,14 +94,14 @@ describe('TEST: Extra Credit Data Mapper', () => {
     // @ts-ignore
     it('generates the expected SQL to retrieve an extra credit assignment', async () => {
       // GIVEN: An extra credit assignment with a valid ID to read from
-      const uid = 'test';
+      const uid = '0';
 
       // WHEN: Retrieving data for this extra credit assignment
       await extraCreditDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT * FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (uid= ?);';
-      const expectedParams = [uid];
+      const expectedParams = [parseInt(uid, 10)];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

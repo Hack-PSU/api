@@ -2,7 +2,7 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import { ICompoundHackathonUidType, UidType } from '../../JSCommon/common-types';
+import { UidType } from '../../JSCommon/common-types';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IExtraCreditAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -234,7 +234,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values),
+      this.sql.query<void>(query.text, query.values, {cache: false}),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();

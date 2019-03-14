@@ -16,10 +16,10 @@ import { IPreregistrationProcessor } from '../../processors/pre-registration-pro
 import { IRegistrationProcessor } from '../../processors/registration-processor';
 import { IFirebaseAuthService } from '../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { AuthLevel } from '../../services/auth/auth-types';
 import { Logger } from '../../services/logging/logging';
 import { IStorageService } from '../../services/storage';
 import { ParentRouter } from '../router-types';
-import { ICompoundHackathonUidType } from '../../JSCommon/common-types';
 
 @Injectable()
 export class UsersController extends ParentRouter implements IExpressController {
@@ -73,22 +73,11 @@ export class UsersController extends ParentRouter implements IExpressController 
     );
     app.get(
       '/extra-credit/assignment',
-      this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
-      (req, res, next) => this.getExtraCreditAssignmentHandler(req, res, next),
+      (req, res, next) => this.getExtraCreditAssignmentMiddleware(req, res, next),
     );
-    app.get(
-      '/extra-credit/assignment?type=user',
-      this.authService.verifyAcl(this.aclPerm, AclOperations.READ_BY_UID),
-      (req,res, next) => this.getExtraCreditAssignmentsByUidHandler(req, res, next),
-    )
-    app.get(
-      '/extra-credit/assignment?type=class',
-      this.authService.verifyAcl(this.aclPerm, AclOperations.READ_BY_UID),
-      (req,res, next) => this.getExtraCreditAssignmentsByClassHandler(req, res, next),
-    )
     app.post(
       '/extra-credit/delete',
-      this.authService.verifyAcl(this.aclPerm, AclOperations.DELETE),
+      this.authService.verifyAcl(this.extraCreditPerm, AclOperations.DELETE),
       (req, res, next) => this.deleteExtraCreditAssignmentHandler(req, res, next),
     )
     
@@ -325,8 +314,37 @@ export class UsersController extends ParentRouter implements IExpressController 
     }
   }
 
+  private async getExtraCreditAssignmentMiddleware(req, res, next) {
+    /**
+     * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
+     */
+    if (!res.locals.user) {
+      res.locals.user = {};
+    }
+    if (!res.locals.user.privilege) {
+      res.locals.user.privilege = AuthLevel.PARTICIPANT;
+    }
+    switch (req.query.type) {
+      case 'user':
+        if (!this.authService.verifyAclRaw(this.extraCreditPerm, AclOperations.READ_BY_UID, res.locals.user)) {
+          return Util.standardErrorHandler(new HttpError('Insufficient permissions for this operation', 401), next);
+        }
+        return this.getExtraCreditAssignmentsByUidHandler(req, res, next);
+      case 'class':
+        if (!this.authService.verifyAclRaw(this.extraCreditPerm, AclOperations.READ_BY_CLASS, res.locals.user)) {
+          return Util.standardErrorHandler(new HttpError('Insufficient permissions for this operation', 401), next);
+        }
+        return this.getExtraCreditAssignmentsByClassHandler(req, res, next);
+      default:
+        if (!this.authService.verifyAclRaw(this.extraCreditPerm, AclOperations.READ, res.locals.user)) {
+          return Util.standardErrorHandler(new HttpError('Insufficient permissions for this operation', 401), next);
+        }
+        return this.getExtraCreditAssignmentHandler(req, res, next);
+  }
+}
+
   /**
-   * @api {get} /users/extra-credit Get an extra credit assignment
+   * @api {get} /users/extra-credit/assignment Get an extra credit assignment
    * @apiVersion 2.0.0
    * @apiName Get Extra Credit Assignments
    * @apiGroup User
@@ -362,7 +380,7 @@ export class UsersController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {get} /users/extra-credit?type=user Get all extra credit assignments for a hacker
+   * @api {get} /users/extra-credit/assignment?type=user Get all extra credit assignments for a hacker
    * @apiVersion 2.0.0
    * @apiName Get Extra Credit Assignments By User
    * @apiGroup User
@@ -398,7 +416,7 @@ export class UsersController extends ParentRouter implements IExpressController 
   }  
 
   /**
-   * @api {get} /users/extra-credit?type=class Get all extra credit assignments for a class
+   * @api {get} /users/extra-credit/assignment?type=class Get all extra credit assignments for a class
    * @apiVersion 2.0.0
    * @apiName Get Extra Credit Assignments By Class
    * @apiGroup User
@@ -454,12 +472,12 @@ export class UsersController extends ParentRouter implements IExpressController 
     if (!req.body) {
       return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
     }
-    if (!req.body.uid) {
+    if (!req.body.uid || !parseInt(req.body.uid, 10)) {
       return Util.standardErrorHandler(new HttpError('Could not find valid assignment uid', 400), next);
     }
     try {
-      const id: string = req.body.uid
-      const result = await this.extraCreditDataMapper.delete(id);
+      const ecAssignment = new ExtraCreditAssignment({ uid: req.body.uid, cid: 1 })
+      const result = await this.extraCreditDataMapper.delete(ecAssignment);
       const response = new ResponseBody(
         'Success',
         200,

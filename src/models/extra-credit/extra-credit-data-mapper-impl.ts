@@ -84,7 +84,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       queryBuilder = queryBuilder.fields(opts.fields);
     }
     queryBuilder = queryBuilder
-      .where(`${this.pkColumnName}= ?`, uid);
+      .where(`${this.pkColumnName}= ?`, parseInt(uid, 10));
     const query = queryBuilder
       .toParam();
     query.text = query.text
@@ -152,6 +152,22 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .join(
+          'HACKATHON',
+          'h',
+          'h.uid = event.hackathon',
+        )
+        .where(
+          'h.uid = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
     
     queryBuilder = queryBuilder
       .where('user_uid = ?', userId)
@@ -175,6 +191,22 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     }
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .join(
+          'HACKATHON',
+          'h',
+          'h.uid = event.hackathon',
+        )
+        .where(
+          'h.uid = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
     }
 
     queryBuilder = queryBuilder
@@ -202,7 +234,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { cache: false }),
+      this.sql.query<void>(query.text, query.values),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();

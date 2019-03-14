@@ -61,16 +61,16 @@ All PRs should include the appropriate passing tests, and should be reviewed by 
 - All development must happen on sub-branches of the _dev_ branch. The _master_ branch should **only** contain live and deployed production code.
 - Ensure that all branches of code successfully terminate. Additionally, ensure that each such branch of execution has a unit test associated with it.
 - Every API route should have appropriate passing unit tests before the code gets onto _master_
-- ESLint has been configured for all code. Javascript should strictly follow the Airbnb coding standard. Run the command `npm run lint` to run the linter.
-By default, ESLint will attempt to fix whatever errors possible; the rest should be handled by the developer.
+- TSLint has been configured for all code. Javascript should strictly follow the Airbnb coding standard. Run the command `npm run lint` to run the linter.
+By default, TSLint will attempt to fix whatever errors possible; the rest should be handled by the developer.
 
 ### Appendix
 
 #### Links
 Resource | URL
 ------------ | -------------
- API | https://api.hackpsu.org/v1
- API Documentation | https://api.hackpsu.org/v1/doc
+ API | https://api.hackpsu.org/v2
+ API Documentation | https://api.hackpsu.org/v2/doc
  API Documentation framework | https://apidocjs.com
  MochaJS | https://mochajs.org
  ChaiJS | https://chaijs.com

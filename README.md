@@ -12,9 +12,11 @@ Firstly, you'll need Nodejs. We recommend v8+
 
 Installing all dependencies:
 - `npm install`
-- `npm run decrypt`
+- `npm run prep`
     - All our sensitive data is encrypted in this repository for security. The npm decrypt script hooks into grunt and will decrypt all relevant files 
     for the server to run
+- On macOS systems: `npm run proxy`
+- On other systems: Download the proxy binary first from https://github.com/GoogleCloudPlatform/cloudsql-proxy
 - `npm start` 
 - To test:
     - `npm test`

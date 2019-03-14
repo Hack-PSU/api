@@ -199,6 +199,9 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
   }
 
   private async getRegistrationHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.query.ignoreCache) {
+      res.locals.ignoreCache = req.query.ignoreCache;
+    }
     if (!req.query.email && !req.query.uid) {
       return Util.standardErrorHandler(
         new HttpError('either email or uid must be provided', 400),

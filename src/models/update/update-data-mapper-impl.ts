@@ -23,7 +23,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   public readonly UPDATE: string = 'event:update';
   public readonly READ_ALL: string = 'event:readall';
   public readonly COUNT: string = 'event:count';
-  public tableName = '';
+  public tableName = 'updates';
 
   protected pkColumnName = '';
 
@@ -53,7 +53,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
     return from(
       this.rtdb.query<void>(
         RtdbQueryType.DELETE,
-        [`${id.hackathon}/${id.uid}`],
+        [`${this.tableName}/${id.hackathon}/${id.uid}`],
         { cache: false },
       ),
     ).pipe(
@@ -66,7 +66,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
     return from(
       this.rtdb.query<Update>(
         RtdbQueryType.GET,
-        [`${id.hackathon}/${id.uid}`],
+        [`${this.tableName}/${id.hackathon}/${id.uid}`],
         { cache: true },
       ))
       .pipe(
@@ -79,7 +79,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
       .pipe(
         map(hackathon => hackathon.uid),
         switchMap((result) => {
-          const reference = `/updates/${result}`;
+          const reference = `/${this.tableName}/${result}`;
           return from(this.rtdb.query<Update[]>(RtdbQueryType.GET, [reference], undefined));
         }),
         map(data => ({ result: 'Success', data: data as Update[] })),
@@ -91,7 +91,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
       .pipe(
         map(hackathon => hackathon.uid),
         switchMap((result) => {
-          const reference = `/updates/${result}`;
+          const reference = `/${this.tableName}/${result}`;
           return this.rtdb.query<number>(RtdbQueryType.COUNT, [reference], null);
         }),
         map(data => ({ result: 'Success', data: data as number })),
@@ -111,7 +111,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
         switchMap(reference =>
           this.rtdb.query<Update>(
             RtdbQueryType.SET,
-            [`${reference}/${uid}`],
+            [`${this.tableName}/${reference}/${uid}`],
             object.dbRepresentation,
         )),
         map(result => ({ result: 'Success', data: result as Update })),
@@ -130,7 +130,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
       switchMap(reference => from(
         this.rtdb.query<Update>(
           RtdbQueryType.UPDATE,
-          [`${reference}/${object.id}`],
+          [`${this.tableName}/${reference}/${object.id}`],
           object.dbRepresentation,
         ))),
       map(result => ({ result: 'Success', data: result as Update })),
@@ -141,7 +141,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
     return this.activeHackathonDataMapper.activeHackathon.pipe(
       map(hackathon => hackathon.uid),
       switchMap((result) => {
-        const reference = `/updates/${result}`;
+        const reference = `/${this.tableName}/${result}`;
         return from(this.rtdb.query<string>(RtdbQueryType.REF, [reference], null));
       }),
       map(result => ({ result: 'Success', data: result as string })),

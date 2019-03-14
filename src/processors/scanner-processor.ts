@@ -83,31 +83,34 @@ export class ScannerProcessor implements IScannerProcessor {
     if (Array.isArray(inputAssignments)) {
       const assignments: RfidAssignment[] = inputAssignments.map(
         assignment => new RfidAssignment(assignment));
-      const result = await this.scannerDataMapper
-        .addRfidAssignments(assignments);
-
+      const result = await this.scannerDataMapper.addRfidAssignments(assignments);
+      const responseResult = result.data.map((idbResult) => {
+        switch (idbResult.result) {
+          case 'Error':
+            return new ResponseBody(idbResult.result, 500, idbResult);
+          case 'Duplicate detected':
+            return new ResponseBody(idbResult.result, 409, idbResult);
+          case 'Bad input':
+            return new ResponseBody(idbResult.result, 400, idbResult);
+          default:
+            return new ResponseBody(idbResult.result, 200, { result: 'Success', data: undefined });
+        }
+      });
       // Find response status to send
-      const status = Math.max(
-        ...result.data.map(
-          (individualResult) => {
-            switch (individualResult.result) {
-              case 'Error':
-                return 500;
-              case 'Duplicate detected':
-                return 409;
-              case 'Bad input':
-                return 400;
-              default:
-                return 200;
-            }
-          },
-        ),
+      const status = responseResult.reduce(
+        (previousStatus: { status: number, response: string }, currentResponse: ResponseBody): { status: number, response: string } => {
+          if (previousStatus.status !== currentResponse.status) {
+            return { status: 207, response: 'Multi-status' };
+          }
+          return { status: currentResponse.status, response: currentResponse.api_response };
+        },
+        { status: responseResult[0].status, response: responseResult[0].api_response },
       );
 
       response = new ResponseBody(
         'Success',
-        status,
-        result,
+        status.status,
+        { result: status.response, data: responseResult },
       );
     } else {
       const assignment = new RfidAssignment(inputAssignments);
@@ -152,29 +155,33 @@ export class ScannerProcessor implements IScannerProcessor {
       const scans: Scan[] = inputScans.map(
         scan => new Scan(scan));
       const result = await this.scannerDataMapper.addScans(scans);
-
+      const responseResult = result.data.map((idbResult) => {
+        switch (idbResult.result) {
+          case 'Error':
+            return new ResponseBody(idbResult.result, 500, idbResult);
+          case 'Duplicate detected':
+            return new ResponseBody(idbResult.result, 409, idbResult);
+          case 'Bad input':
+            return new ResponseBody(idbResult.result, 400, idbResult);
+          default:
+            return new ResponseBody(idbResult.result, 200, { result: 'Success', data: undefined });
+        }
+      });
       // Find response status to send
-      const status = Math.max(
-        ...result.data.map(
-          (individualResult) => {
-            switch (individualResult.result) {
-              case 'Error':
-                return 500;
-              case 'Duplicate detected':
-                return 409;
-              case 'Bad input':
-                return 400;
-              default:
-                return 200;
-            }
-          },
-        ),
+      const status = responseResult.reduce(
+        (previousStatus: { status: number, response: string }, currentResponse: ResponseBody): { status: number, response: string } => {
+          if (previousStatus.status !== currentResponse.status) {
+            return { status: 207, response: 'Multi-status' };
+          }
+          return { status: currentResponse.status, response: currentResponse.api_response };
+        },
+        { status: responseResult[0].status, response: responseResult[0].api_response },
       );
 
       response = new ResponseBody(
         'Success',
-        status,
-        result,
+        status.status,
+        { result: status.response, data: responseResult },
       );
     } else {
       const scan = new Scan(inputScans);

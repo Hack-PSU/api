@@ -41,7 +41,9 @@ export class RfidAssignment extends BaseObject {
   public get cleanRepresentation() {
     const repr: any = super.cleanRepresentation;
     repr.wid = repr.rfid_uid;
+    repr.uid = repr.user_uid;
     delete repr.rfid_uid;
+    delete repr.user_uid;
     return repr as this;
   }
 }

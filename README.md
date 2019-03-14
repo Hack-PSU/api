@@ -24,7 +24,7 @@ Installing all dependencies:
 
 ## API
 
-The current RESTful API is live on Google Cloud App Engine. The API can be accessed at https://api.hackpsu.org/v1. The current supported routes are listed below, and documentation is available at https://api.hackpsu.org/v1/doc
+The current RESTful API is live on Google Cloud App Engine. The API can be accessed at https://api.hackpsu.org/v2. The current supported routes are listed below, and documentation is available at https://api.hackpsu.org/v2/doc
 
 ## Documentation
 

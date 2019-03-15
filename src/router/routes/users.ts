@@ -253,9 +253,9 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
-  private async getAllRegistrations(res: Response, next: NextFunction) {
+  private async getAllRegistrations(req: Request, res: Response, next: NextFunction) {
     try {
-      const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid, { ignoreCache: res.locals.ignoreCache });
+      const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid, { ignoreCache: req.query.ignoreCache });
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

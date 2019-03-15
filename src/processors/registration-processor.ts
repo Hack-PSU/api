@@ -9,6 +9,7 @@ import { Registration } from '../models/register/registration';
 import { ResponseBody } from '../router/router-types';
 import { IEmailService } from '../services/communication/email';
 import { IDataMapper, IDbResult } from '../services/database';
+import { IUowOpts } from 'services/database/svc/uow.service';
 
 // TODO: Refactor this to retrieve email template from cloud storage?
 const EMAIL_TEMPLATE_PATH = '../assets/emails/email_template.html';
@@ -23,7 +24,7 @@ const emailHtml = emailTemplate.replace('$$BODY$$', registrationEmailBody);
 export interface IRegistrationProcessor {
   processRegistration(registration: Registration): Promise<ResponseBody>;
 
-  getAllRegistrationsByUser(id: UidType, ignoreCache: boolean): Promise<ResponseBody>;
+  getAllRegistrationsByUser(id: UidType, opts?: IUowOpts): Promise<ResponseBody>;
 
   sendRegistrationEmail(registration: Registration): Promise<[request.Response, {}]>;
 
@@ -74,13 +75,13 @@ export class RegistrationProcessor implements IRegistrationProcessor {
     registration.mlhdcp = registration.mlhdcp === true || registration.mlhdcp === 'true';
   }
 
-  public async getAllRegistrationsByUser(id: UidType, ignoreCache: boolean): Promise<ResponseBody> {
+  public async getAllRegistrationsByUser(id: UidType, opts?: IUowOpts): Promise<ResponseBody> {
     const hackathons = await this.hackathonDataMapper.getAll();
     const registrations = (await Promise.all(
       hackathons.data
         .map(
           hackathon => this.registerDataMapper
-            .get({ uid: id, hackathon: hackathon.uid }, { ignoreCache: ignoreCache })
+            .get({ uid: id, hackathon: hackathon.uid }, opts)
             .catch(() => undefined),
         ),
     ))

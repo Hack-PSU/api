@@ -59,7 +59,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     app.get(
       '/register',
       this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
-      (req, res, next) => this.getAllRegistrations(res, next),
+      (req, res, next) => this.getAllRegistrations(req, res, next),
     );
     app.get(
       '/extra-credit',

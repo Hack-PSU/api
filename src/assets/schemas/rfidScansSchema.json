@@ -7,7 +7,7 @@
       "rfid_uid": {
         "type": "string"
       },
-      "scan_location": {
+      "scan_event": {
         "type": "string"
       },
       "scan_time": {
@@ -16,7 +16,7 @@
     },
     "required": [
       "rfid_uid",
-      "scan_location",
+      "scan_event",
       "scan_time"
     ]
   }

@@ -31,7 +31,7 @@
       ".ts"
     ],
     "lines": 70,
-    "branches": 50,
+    "branches": 45,
     "functions": 50,
     "check-coverage": true,
     "instrument": true,

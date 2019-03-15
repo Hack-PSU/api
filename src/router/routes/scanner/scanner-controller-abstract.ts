@@ -99,17 +99,11 @@ abstract class AbstractScannerController extends ParentRouter {
         req.body.wid || req.query.wid,
         { byHackathon: true },
       );
-      const [registration, userToken] = await Promise.all(
-        [
-          this.registerDataMapper.get({
-            uid: rfidAssignment.user_uid,
-            hackathon: (await this.activeHackathonDataMapper.activeHackathon.toPromise()).id,
-          }),
-          this.authService.getUserId(rfidAssignment.user_uid),
-        ],
-      );
+      const registration = await this.registerDataMapper.get({
+        uid: rfidAssignment.user_uid,
+        hackathon: (await this.activeHackathonDataMapper.activeHackathon.toPromise()).id,
+      });
       res.locals.registration = registration.data as Registration;
-      res.locals.userToken = userToken;
       return next();
     } catch (error) {
       return Util.standardErrorHandler(error, next);

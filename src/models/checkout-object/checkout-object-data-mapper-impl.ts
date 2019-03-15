@@ -116,8 +116,6 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    console.log('\nLatest Build v3\n');
-    console.log(query);
     return from(this.sql.query<CheckoutObjectWithUser>(query.text, query.values, { cache: true }))
         .pipe(
           map((checkoutObjects: CheckoutObjectWithUser[]) => ({ result: 'Success', data: checkoutObjects })),

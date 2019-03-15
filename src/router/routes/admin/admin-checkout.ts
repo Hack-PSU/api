@@ -45,13 +45,25 @@ export class AdminCheckoutController extends AbstractScannerController implement
     // Get all checked out items
     app.get(
       '/',
-      this.authService.verifyAcl(this.scannerAcl, AclOperations.READ_ALL),
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.READ_ALL,
+      ),
+      // this.authService.verifyAcl(this.scannerAcl, AclOperations.READ_ALL),
       (req, res, next) => this.getAllCheckoutObjectHandler(res, next),
     );
     // Get all items that can be checked out
     app.get(
       '/items',
-      this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.READ_ALL),
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.READ_ALL,
+      ),
+      // this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.READ_ALL),
       (req, res, next) => this.getAllCheckoutItemsHandler(res, next),
     );
     // Create a new checkout request
@@ -77,12 +89,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
       ),
       (req, res, next) => this.returnObjectHandler(req, res, next),
     );
-    // Create a checkout item
-    app.post(
-      '/items',
-      this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.CREATE),
-      (req, res, next) => this.addCheckoutItemsHandler(req, res, next),
-    );
+
     // Get all available checkout items
     app.get(
       '/items/availability',
@@ -93,6 +100,14 @@ export class AdminCheckoutController extends AbstractScannerController implement
         AclOperations.READ_ALL,
       ),
       (req, res, next) => this.getAllAvailableCheckoutItemsHandler(res, next),
+    );
+
+    // Create a checkout item
+    app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
+    app.post(
+      '/items',
+      this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.CREATE),
+      (req, res, next) => this.addCheckoutItemsHandler(req, res, next),
     );
   }
 
@@ -140,7 +155,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
       const checkoutObject = new CheckoutObject({
         checkout_time: req.body.checkoutTime || Date.now(),
         item_id: req.body.itemId,
-        user_id: req.body.userId || res.locals.registration.id || res.locals.userToken.uid,
+        user_id: req.body.userId || res.locals.registration.id,
       });
       const result = await this.checkoutObjectDataMapper.insert(checkoutObject);
       const response = new ResponseBody(

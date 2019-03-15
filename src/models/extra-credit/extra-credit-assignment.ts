@@ -8,7 +8,7 @@ interface IExtraCreditAssignmentApiModel {
 
 export class ExtraCreditAssignment extends BaseObject {
   public get id() {
-    return this.user_uid;
+    return this.uid;
   }
 
   protected get schema(): any {
@@ -17,6 +17,7 @@ export class ExtraCreditAssignment extends BaseObject {
 
   public readonly class_uid: number;
   public readonly user_uid: UidType;
+  public uid: number;
   public hackathon: UidType;
 
   constructor(data: IExtraCreditAssignmentApiModel) {

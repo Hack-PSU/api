@@ -16,6 +16,7 @@ import { IPreregistrationProcessor } from '../../processors/pre-registration-pro
 import { IRegistrationProcessor } from '../../processors/registration-processor';
 import { IFirebaseAuthService } from '../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { AuthLevel } from '../../services/auth/auth-types';
 import { Logger } from '../../services/logging/logging';
 import { IStorageService } from '../../services/storage';
 import { ParentRouter } from '../router-types';
@@ -49,8 +50,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     // Use authentication
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
-    app
-      .post(
+    app.post(
         '/register',
         this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
         (req, res, next) => this.storageService.upload(req, res, next),
@@ -59,7 +59,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     app.get(
       '/register',
       this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
-      (req, res, next) => this.getAllRegistrations(res, next),
+      (req, res, next) => this.getAllRegistrations(req, res, next),
     );
     app.get(
       '/extra-credit',
@@ -71,6 +71,16 @@ export class UsersController extends ParentRouter implements IExpressController 
       this.authService.verifyAcl(this.extraCreditPerm, AclOperations.CREATE),
       (req, res, next) => this.addExtraCreditAssignmentHandler(req, res, next),
     );
+    app.get(
+      '/extra-credit/assignment',
+      (req, res, next) => this.getExtraCreditAssignmentMiddleware(req, res, next),
+    );
+    app.post(
+      '/extra-credit/delete',
+      this.authService.verifyAcl(this.extraCreditPerm, AclOperations.DELETE),
+      (req, res, next) => this.deleteExtraCreditAssignmentHandler(req, res, next),
+    )
+    
   }
 
   private async generateFileName(uid: UidType, firstName: string, lastName: string) {
@@ -249,13 +259,13 @@ export class UsersController extends ParentRouter implements IExpressController 
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ExtraCreditClasses[]} Array of extra credit classes
+   * @apiSuccess {Registration[]} Array of the user's registrations
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
-  private async getAllRegistrations(res: Response, next: NextFunction) {
+  private async getAllRegistrations(req: Request, res: Response, next: NextFunction) {
     try {
-      const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid);
+      const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid, { ignoreCache: req.query.ignoreCache });
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -299,6 +309,180 @@ export class UsersController extends ParentRouter implements IExpressController 
         200,
         result,
       );
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  private async getExtraCreditAssignmentMiddleware(req, res, next) {
+    /**
+     * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
+     */
+    if (!res.locals.user) {
+      res.locals.user = {};
+    }
+    if (!res.locals.user.privilege) {
+      res.locals.user.privilege = AuthLevel.PARTICIPANT;
+    }
+    switch (req.query.type) {
+      case 'user':
+        if (!this.authService.verifyAclRaw(this.extraCreditPerm, AclOperations.READ_BY_UID, res.locals.user)) {
+          return Util.standardErrorHandler(new HttpError('Insufficient permissions for this operation', 401), next);
+        }
+        return this.getExtraCreditAssignmentsByUidHandler(req, res, next);
+      case 'class':
+        if (!this.authService.verifyAclRaw(this.extraCreditPerm, AclOperations.READ_BY_CLASS, res.locals.user)) {
+          return Util.standardErrorHandler(new HttpError('Insufficient permissions for this operation', 401), next);
+        }
+        return this.getExtraCreditAssignmentsByClassHandler(req, res, next);
+      default:
+        if (!this.authService.verifyAclRaw(this.extraCreditPerm, AclOperations.READ, res.locals.user)) {
+          return Util.standardErrorHandler(new HttpError('Insufficient permissions for this operation', 401), next);
+        }
+        return this.getExtraCreditAssignmentHandler(req, res, next);
+  }
+}
+
+  /**
+   * @api {get} /users/extra-credit/assignment Get an extra credit assignment
+   * @apiVersion 2.0.0
+   * @apiName Get Extra Credit Assignments
+   * @apiGroup User
+   * @apiPermission UserPermission
+   *
+   * @apiParam {String} uid - the id associated with the assignment
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {ExtraCreditAssignment} The retrieved extra credit assignment 
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
+   */
+  private async getExtraCreditAssignmentHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.query) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+
+    if (!req.query.uid || !parseInt(req.query.uid, 10)) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid assignment uid', 400), next);
+    }
+
+    try {
+      const id: string = req.query.uid;
+      const result = await this.extraCreditDataMapper.get(id);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /users/extra-credit/assignment?type=user Get all extra credit assignments for a hacker
+   * @apiVersion 2.0.0
+   * @apiName Get Extra Credit Assignments By User
+   * @apiGroup User
+   * @apiPermission UserPermission
+   *
+   * @apiParam {String} uid - the id associated with the hacker
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {ExtraCreditAssignment} The retrieved extra credit assignments
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
+   */
+  private async getExtraCreditAssignmentsByUidHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.query) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+
+    if (!req.query.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid uid', 400), next);
+    }
+
+    try {
+      const uid: string = req.query.uid;
+      const result = await this.extraCreditDataMapper.getByUser(uid);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }  
+
+  /**
+   * @api {get} /users/extra-credit/assignment?type=class Get all extra credit assignments for a class
+   * @apiVersion 2.0.0
+   * @apiName Get Extra Credit Assignments By Class
+   * @apiGroup User
+   * @apiPermission UserPermission
+   *
+   * @apiParam {Integer} cid - the id associated with the class
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiSuccess {ExtraCreditAssignment} The retrieved extra credit assignments
+   * @apiUse ResponseBodyDescription
+   * @apiUse RequestOpts
+   */
+  private async getExtraCreditAssignmentsByClassHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.query) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+
+    if (!req.query.cid) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid class id', 400), next);
+    }
+
+    try {
+      const cid: number = req.query.cid;
+      const result = await this.extraCreditDataMapper.getByClass(cid);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }  
+  
+ /**
+   * @api {post} /users/extra-credit/delete Remove an extra credit assignment
+   * @apiVersion 2.0.0
+   * @apiName Remove Extra Credit Assignment
+   * @apiGroup User
+   * @apiPermission DirectorPermission
+   *
+   * @apiParam {String} uid - the id associated with the hacker
+   * @apiParam {String} hackathonUid - the id associated with the current hackathon
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async deleteExtraCreditAssignmentHandler(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+    if (!req.body.uid || !parseInt(req.body.uid, 10)) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid assignment uid', 400), next);
+    }
+    try {
+      const ecAssignment = new ExtraCreditAssignment({ uid: req.body.uid, cid: 1 })
+      const result = await this.extraCreditDataMapper.delete(ecAssignment);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

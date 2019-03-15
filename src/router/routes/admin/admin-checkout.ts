@@ -51,7 +51,12 @@ export class AdminCheckoutController extends AbstractScannerController implement
     // Get all items that can be checked out
     app.get(
       '/items',
-      this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.READ_ALL),
+        (req, res, next) => this.verifyScannerPermissionsMiddleware(
+            req,
+            res,
+            next,
+            AclOperations.READ_ALL,
+        ),
       (req, res, next) => this.getAllCheckoutItemsHandler(res, next),
     );
     // Create a new checkout request

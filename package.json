@@ -30,8 +30,8 @@
     "extension": [
       ".ts"
     ],
-    "lines": 70,
-    "branches": 50,
+    "lines": 65,
+    "branches": 45,
     "functions": 50,
     "check-coverage": true,
     "instrument": true,

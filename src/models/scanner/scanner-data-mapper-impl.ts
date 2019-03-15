@@ -237,7 +237,7 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     };
   }
 
-  public addSingleScan(scan: Scan): Promise<IDbResult<Scan>> {
+  public async addSingleScan(scan: Scan): Promise<IDbResult<Scan>> {
     const validation = scan.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -247,6 +247,7 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.scansTableName)
       .setFields(scan.dbRepresentation)
+      .set('hackathon', await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise())
       .toParam();
     query.text = query.text.concat(';');
     return from(

@@ -61,7 +61,7 @@ export class MysqlUow implements IUow {
               try {
                 const result: T[] = await this.cacheService.get(`${query}${(params as string[]).join('')}`);
                 if (result !== null) {
-                  this.complete(connection);
+                  this.release(connection);
                   this.logger.info('served request from memory cache');
                   return resolve(result);
                 }
@@ -74,9 +74,11 @@ export class MysqlUow implements IUow {
               connection.query(query, params, (err: MysqlError, result: T[]) => {
                 if (err) {
                   connection.rollback();
+                  this.release(connection);
                   return reject(err);
                 }
                 if (result.length === 0) {
+                  this.complete(connection);
                   return reject({
                     sql: connection.format(query, params),
                     code: 'no data found',
@@ -113,10 +115,14 @@ export class MysqlUow implements IUow {
   public complete(connection: PoolConnection) {
     return new Promise<any>((resolve) => {
       connection.commit(() => {
-        connection.release();
+        this.release(connection);
         return resolve(null);
       });
     });
+  }
+
+  public release(connection: PoolConnection) {
+    connection.release();
   }
 
   /**

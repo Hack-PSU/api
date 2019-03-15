@@ -13,8 +13,8 @@ import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { CheckoutObject } from './checkout-object';
+import { CheckoutObjectWithUser } from './checkout-object-with-user';
 import { ICheckoutObjectDataMapper } from './index';
-import { ModifiedCheckoutObject } from './modified-checkout-object';
 
 @Injectable()
 export class CheckoutObjectDataMapperImpl extends GenericDataMapper
@@ -80,7 +80,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<ModifiedCheckoutObject[]>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<CheckoutObjectWithUser[]>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -90,6 +90,14 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .from('CHECKOUT_ITEMS', 'checkoutItem');
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
+    } else {
+      queryBuilder = queryBuilder.fields(['checkoutObject.*', 'registration.firstname', 'registration.lastname', 'checkoutItem.name']);
+      queryBuilder = queryBuilder.where(
+        'checkoutObject.user_id = registration.uid',
+      );
+      queryBuilder = queryBuilder.where(
+        'checkoutObject.item_id = checkoutItem.uid',
+      );
     }
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
@@ -106,18 +114,13 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
                 this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
             );
     }
-    queryBuilder = queryBuilder.fields(['checkoutObject.*', 'registration.firstname', 'registration.lastname', 'checkoutItem.name']);
-    queryBuilder = queryBuilder.where(
-      'checkoutObject.user_id = registration.uid',
-    );
-    queryBuilder = queryBuilder.where(
-      'checkoutObject.item_id = checkoutItem.uid',
-    );
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<ModifiedCheckoutObject>(query.text, query.values, { cache: true }))
+    console.log('\nLatest Build v3\n');
+    console.log(query);
+    return from(this.sql.query<CheckoutObjectWithUser>(query.text, query.values, { cache: true }))
         .pipe(
-          map((checkoutObjects: ModifiedCheckoutObject[]) => ({ result: 'Success', data: checkoutObjects })),
+          map((checkoutObjects: CheckoutObjectWithUser[]) => ({ result: 'Success', data: checkoutObjects })),
         )
         .toPromise();
   }

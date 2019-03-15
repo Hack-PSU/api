@@ -144,7 +144,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
       );
     }
 
-    if (!req.body.userId && !res.locals.registration.id && !res.locals.userToken.uid) {
+    if (!req.body.userId && !res.locals.registration.uid) {
       return Util.standardErrorHandler(
         new HttpError('Could not retrieve user ID from provided information', 400),
         next,

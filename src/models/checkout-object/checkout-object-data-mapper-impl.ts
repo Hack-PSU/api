@@ -2,7 +2,7 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { EpochNumber, ICompoundHackathonUidType } from '../../JSCommon/common-types';
+import { EpochNumber, ICompoundHackathonUidType, UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -14,6 +14,7 @@ import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { CheckoutObject } from './checkout-object';
 import { ICheckoutObjectDataMapper } from './index';
+import { ModifiedCheckoutObject } from './modified-checkout-object';
 
 @Injectable()
 export class CheckoutObjectDataMapperImpl extends GenericDataMapper
@@ -79,12 +80,14 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<CheckoutObject[]>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<ModifiedCheckoutObject[]>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
     })
-      .from(this.tableName, 'checkoutObject');
+      .from(this.tableName, 'checkoutObject')
+      .from('REGISTRATION', 'registration')
+      .from('CHECKOUT_ITEMS', 'checkoutItem');
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
@@ -97,17 +100,24 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder.
             where(
-              'hackathon_id = ?',
+              'checkoutObject.hackathon = ?',
               await (opts.hackathon ?
                 Promise.resolve(opts.hackathon) :
                 this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
             );
     }
+    queryBuilder = queryBuilder.fields(['checkoutObject.*', 'registration.firstname', 'registration.lastname', 'checkoutItem.name']);
+    queryBuilder = queryBuilder.where(
+      'checkoutObject.user_id = registration.uid',
+    );
+    queryBuilder = queryBuilder.where(
+      'checkoutObject.item_id = checkoutItem.uid',
+    );
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<CheckoutObject>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<ModifiedCheckoutObject>(query.text, query.values, { cache: true }))
         .pipe(
-          map((checkoutObjects: CheckoutObject[]) => ({ result: 'Success', data: checkoutObjects })),
+          map((checkoutObjects: ModifiedCheckoutObject[]) => ({ result: 'Success', data: checkoutObjects })),
         )
         .toPromise();
   }

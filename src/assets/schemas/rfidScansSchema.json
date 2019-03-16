@@ -1,23 +1,19 @@
 {
-  "type": "array",
-  "minItems": 1,
-  "items": {
-    "type": "object",
-    "properties": {
-      "rfid_uid": {
-        "type": "string"
-      },
-      "scan_location": {
-        "type": "string"
-      },
-      "scan_time": {
-        "type": "number"
-      }
+  "type": "object",
+  "properties": {
+    "rfid_uid": {
+      "type": "string"
     },
-    "required": [
-      "rfid_uid",
-      "scan_location",
-      "scan_time"
-    ]
-  }
+    "scan_event": {
+      "type": "string"
+    },
+    "scan_time": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "rfid_uid",
+    "scan_event",
+    "scan_time"
+  ]
 }

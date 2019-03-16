@@ -93,9 +93,11 @@ describe('TEST: Register data mapper', () => {
       await registerDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` ' +
-        'INNER JOIN `HACKATHON` `hackathon` ON (hackathon.uid = registration.hackathon) ' +
-        'WHERE (registration.uid= ?) AND (registration.hackathon = ?) ORDER BY time DESC;';
+      const expectedSQL = 'SELECT `registration`.*, `hackathon`.`name`, `hackathon`.`start_time`,' +
+        ' `hackathon`.`end_time`, `hackathon`.`base_pin`, `hackathon`.`active`' +
+        ' FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` `hackathon` ON' +
+        ' (hackathon.uid = registration.hackathon) WHERE (registration.uid= ?) AND' +
+        ' (registration.hackathon = ?) ORDER BY time DESC;';
       const expectedParams = [uid.uid, uid.hackathon];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
@@ -149,7 +151,9 @@ describe('TEST: Register data mapper', () => {
       await registerDataMapper.getAll();
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN ' +
+      const expectedSQL = 'SELECT `registration`.*, `hackathon`.`name`, ' +
+        '`hackathon`.`start_time`, `hackathon`.`end_time`, `hackathon`.`base_pin`, ' +
+        '`hackathon`.`active` FROM `REGISTRATION` `registration` INNER JOIN ' +
         '`HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid);';
       const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -183,7 +187,9 @@ describe('TEST: Register data mapper', () => {
         await registerDataMapper.getAll({ startAt: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` ' +
+        const expectedSQL = 'SELECT `registration`.*, `hackathon`.`name`, ' +
+          '`hackathon`.`start_time`, `hackathon`.`end_time`, `hackathon`.`base_pin`, ' +
+          '`hackathon`.`active` FROM `REGISTRATION` `registration` ' +
           'INNER JOIN `HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid) OFFSET ?;';
         const expectedParams = [100];
         const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
@@ -203,7 +209,9 @@ describe('TEST: Register data mapper', () => {
         await registerDataMapper.getAll({ count: 100 });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration`' +
+        const expectedSQL = 'SELECT `registration`.*, `hackathon`.`name`, ' +
+          '`hackathon`.`start_time`, `hackathon`.`end_time`, `hackathon`.`base_pin`,' +
+          ' `hackathon`.`active` FROM `REGISTRATION` `registration`' +
           ' INNER JOIN `HACKATHON` `hackathon` ON (registration.hackathon = hackathon.uid) LIMIT ?;';
         const expectedParams = [100];
         const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
@@ -228,7 +236,9 @@ describe('TEST: Register data mapper', () => {
         });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` ' +
+        const expectedSQL = 'SELECT `registration`.*, `hackathon`.`name`,' +
+          ' `hackathon`.`start_time`, `hackathon`.`end_time`, `hackathon`.`base_pin`,' +
+          ' `hackathon`.`active` FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` ' +
           '`hackathon` ON (registration.hackathon = hackathon.uid) WHERE (hackathon.uid = ?);';
         const expectedParams = [hackathonUid];
         const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
@@ -251,7 +261,9 @@ describe('TEST: Register data mapper', () => {
         });
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` ' +
+        const expectedSQL = 'SELECT `registration`.*, `hackathon`.`name`, ' +
+          '`hackathon`.`start_time`, `hackathon`.`end_time`, `hackathon`.`base_pin`,' +
+          ' `hackathon`.`active` FROM `REGISTRATION` `registration` INNER JOIN `HACKATHON` ' +
           '`hackathon` ON (registration.hackathon = hackathon.uid);';
         const [generatedSQL] = capture<string>(mysqlUowMock.query)
           .first();

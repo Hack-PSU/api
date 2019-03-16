@@ -39,6 +39,8 @@ export interface IAclPerm {
 
 export interface IExtraCreditAclPerm extends IAclPerm {
   READ_ALL_CLASSES: string;
+  READ_BY_UID: string;
+  READ_BY_CLASS:string;
 }
 
 /**
@@ -70,4 +72,6 @@ export enum AclOperations {
   REDUCE_PERMISSION,
   MAKE_ACTIVE,
   READ_ALL_CLASSES,
+  READ_BY_UID,
+  READ_BY_CLASS,
 }

@@ -144,7 +144,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
       );
     }
 
-    if (!req.body.userId && !res.locals.registration.id && !res.locals.userToken.uid) {
+    if (!req.body.userId && !res.locals.registration.uid) {
       return Util.standardErrorHandler(
         new HttpError('Could not retrieve user ID from provided information', 400),
         next,
@@ -155,7 +155,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
       const checkoutObject = new CheckoutObject({
         checkout_time: req.body.checkoutTime || Date.now(),
         item_id: req.body.itemId,
-        user_id: req.body.userId || res.locals.registration.id,
+        user_id: req.body.userId || res.locals.registration.uid,
       });
       const result = await this.checkoutObjectDataMapper.insert(checkoutObject);
       const response = new ResponseBody(

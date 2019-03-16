@@ -73,7 +73,12 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName, 'registration');
     if (opts && opts.fields) {
-      queryBuilder = queryBuilder.fields(opts.fields);
+      queryBuilder = queryBuilder
+        .fields(opts.fields);
+    } else {
+      queryBuilder = queryBuilder
+        .field('registration.*')
+        .fields(['hackathon.name', 'hackathon.start_time', 'hackathon.end_time', 'hackathon.base_pin', 'hackathon.active']);
     }
     let checkCache = true;
     if (opts && opts.ignoreCache) {

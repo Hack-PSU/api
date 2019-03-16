@@ -144,16 +144,17 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public insert(object: CheckoutObject): Promise<IDbResult<CheckoutObject>> {
+  public async insert(object: CheckoutObject): Promise<IDbResult<CheckoutObject>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
       this.logger.warn(object.dbRepresentation);
-      return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
+      return Promise.reject(new HttpError(validation.error, 400));
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation])
+      .set('hackathon', await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise())
       .toParam();
     query.text = query.text.concat(';');
     console.log(query);

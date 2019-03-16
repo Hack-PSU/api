@@ -125,7 +125,6 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    console.log(query);
     return from(
       this.sql.query<IUserStatistics>(query.text, query.values, { cache: checkCache }),
     ).pipe(

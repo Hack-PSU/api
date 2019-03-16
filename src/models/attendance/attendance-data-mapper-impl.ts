@@ -117,6 +117,10 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
       autoQuoteTableNames: true,
     })
       .from(this.tableName, 'attendance');
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
@@ -138,7 +142,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
 
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Attendance>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<Attendance>(query.text, query.values, { cache: checkCache }))
         .pipe(
           map((attendances: Attendance[]) => ({
             data: attendances,
@@ -190,6 +194,10 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
         'attendance.user_uid = registration.uid',
       )
       .distinct();
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
@@ -223,7 +231,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<any>(query.text, query.values, { cache: true }),
+      this.sql.query<any>(query.text, query.values, { cache: checkCache }),
     ).pipe(
       map((result: Attendance[]) => {
         // Reduce the result to a condensed object
@@ -259,6 +267,10 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
         'attendance.user_uid = registration.uid',
       )
       .distinct();
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
@@ -291,7 +303,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<any>(query.text, query.values, { cache: true }),
+      this.sql.query<any>(query.text, query.values, { cache: checkCache }),
     ).pipe(
       map((result: Attendance[]) => {
         // Reduce the result to a condensed object

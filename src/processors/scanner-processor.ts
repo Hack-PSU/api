@@ -134,7 +134,7 @@ export class ScannerProcessor implements IScannerProcessor {
   }
 
   public async getRelevantEvents(filterForRelevant: boolean): Promise<ResponseBody> {
-    const { data } = await this.eventDataMapper.getAll({ byHackathon: true });
+    const { data } = await this.eventDataMapper.getAll({ byHackathon: true, ignoreCache: true });
     let relevantEvents = data;
     if (filterForRelevant) {
       relevantEvents = this.searchForRelevantEvents(data)

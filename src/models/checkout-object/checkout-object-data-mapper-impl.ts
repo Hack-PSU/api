@@ -154,6 +154,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation])
+      .set('hackathon', this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise())
       .toParam();
     query.text = query.text.concat(';');
     return from(

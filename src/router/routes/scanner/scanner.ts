@@ -78,7 +78,7 @@ export class ScannerController extends AbstractScannerController implements IExp
     app.get(
       '/registrations',
       (req, res, next) => this.verifyScannerPermissionsMiddleware(req, res, next, AclOperations.READ_ALL),
-      (req, res, next) => this.getAllRegistrationsHandler(res, next),
+      (req, res, next) => this.getAllRegistrationsHandler(req, res, next),
     );
     app.get(
       '/user',
@@ -276,11 +276,12 @@ export class ScannerController extends AbstractScannerController implements IExp
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-  private async getAllRegistrationsHandler(res: Response, next: NextFunction) {
+  private async getAllRegistrationsHandler(req: Request, res: Response, next: NextFunction) {
     let result: IDbResult<IUserStatistics[]>;
     try {
       result = await this.adminStatisticsDataMapper.getAllUserData({
         byHackathon: true,
+        ignoreCache: true,
       });
     } catch (error) {
       return Util.errorHandler500(error, next);

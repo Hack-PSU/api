@@ -281,6 +281,7 @@ export class ScannerController extends AbstractScannerController implements IExp
     try {
       result = await this.adminStatisticsDataMapper.getAllUserData({
         byHackathon: true,
+        ignoreCache: true,
       });
     } catch (error) {
       return Util.errorHandler500(error, next);

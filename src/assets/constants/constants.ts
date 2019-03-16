@@ -5,9 +5,9 @@ import { Util } from '../../JSCommon/util';
 export class Constants {
   public static readonly HACKATHON_NAME = 'hackpsuS2019';
   public static readonly sqlConnection = {
-    acquireTimeout: 60 * 60 * 1000,
-    connectTimeout: 60 * 60 * 1000,
-    connectionLimit: 1000,
+    acquireTimeout: 10 * 1000,
+    connectTimeout: 10 * 1000,
+    connectionLimit: 56,
     database: Util.readEnv('SQL_DATABASE', 'my_db') || Util.readEnv('RDS_DATABASE', 'my_db'),
     // Required for AWS
     host: Util.readEnv('SQL_HOSTNAME', 'localhost') || Util.readEnv('RDS_HOSTNAME', 'localhost'),

@@ -69,12 +69,16 @@ export class EventDataMapperImpl extends GenericDataMapper
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     queryBuilder = queryBuilder
       .where(`${this.pkColumnName}= ?`, id.uid)
       .where('hackathon = ?', id.hackathon);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Event>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<Event>(query.text, query.values, { cache: checkCache }))
       .pipe(
         map((event: Event[]) => ({ result: 'Success', data: event[0] })),
       )
@@ -97,6 +101,10 @@ export class EventDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
         .join(
@@ -116,7 +124,7 @@ export class EventDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
       .toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Event>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<Event>(query.text, query.values, { cache: checkCache }))
       .pipe(
         map((events: Event[]) => events.map((event) => {
           event.event_start_time = parseInt(event.event_start_time as any as string, 10);

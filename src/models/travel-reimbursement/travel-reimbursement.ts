@@ -23,24 +23,10 @@ export class TravelReimbursement extends BaseObject {
     return rfidAssignmentSchema;
   }
 
-  private static parseGroupMembers(groupMembers: '1' | '2' | '3' | '4+'): 1 | 2 | 3 | 4 {
-    if (groupMembers === '4+') {
-      return 4;
-    }
-    let parsed = parseInt(groupMembers, 10);
-    if (parsed < 1) {
-      throw new Error('Illegal number of group members');
-    }
-    if (parsed > 4) {
-      parsed = 4;
-    }
-    return parsed as 1 | 2 | 3 | 4;
-  }
-
   public fullname: string;
   public reimbursement_amount: number;
   public mailing_address: string;
-  public group_members: 1 | 2 | 3 | 4;
+  public group_members: '1' | '2' | '3' | '4+';
   public user_id: UidType;
   public receipt_uris: string;
   public uid: UidType;
@@ -50,7 +36,7 @@ export class TravelReimbursement extends BaseObject {
     this.fullname = data.fullName;
     this.reimbursement_amount = data.reimbursementAmount || 0;
     this.mailing_address = data.mailingAddress;
-    this.group_members = TravelReimbursement.parseGroupMembers(data.groupMembers);
+    this.group_members = data.groupMembers;
     this.user_id = data.uid;
     this.receipt_uris = data.receiptURIs;
     this.uid = data.uid || v4().replace(/-/g, '');

@@ -11,6 +11,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import { default as expressQueryBoolean } from 'express-query-boolean';
 import helmet from 'helmet';
 import * as path from 'path';
+import * as requestContext from 'request-context';
 import 'source-map-support/register';
 import { HttpError } from './JSCommon/errors';
 import { Environment, Util } from './JSCommon/util';
@@ -168,9 +169,10 @@ export class App extends ParentRouter {
   private async loggerConfig() {
     if (Util.getCurrentEnv() !== Environment.TEST && Util.getCurrentEnv() !== Environment.DEBUG) {
       const loggingMw = await this.logger.mw();
+      this.app.use(requestContext.middleware('request'));
       this.app.use(loggingMw);
       this.app.use((request: Request, response, next) => {
-        this.logger.setContext(request);
+        requestContext.set('request:logger', request);
         next();
       });
     }

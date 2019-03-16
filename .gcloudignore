@@ -27,6 +27,7 @@ hackpsu18-ecc9dc4878c6.json.enc
 .temp.env
 *.json.aes
 gcs_config_staging.json
+encrypted/
 
 # SQL_PROXY
 cloud_sql_proxy
@@ -38,3 +39,4 @@ cloud_sql_proxy
 
 # Other files
 lib/assets/travel_reimbursement_files
+test/

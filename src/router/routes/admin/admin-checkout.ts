@@ -4,9 +4,9 @@ import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { ICheckoutItemsDataMapper } from '../../../models/checkout-items';
+import { CheckoutItems } from '../../../models/checkout-items/checkout-items';
 import { ICheckoutObjectDataMapper } from '../../../models/checkout-object';
 import { CheckoutObject } from '../../../models/checkout-object/checkout-object';
-import { CheckoutItems } from '../../../models/checkout-items/checkout-items';
 import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IRegisterDataMapper } from '../../../models/register';
 import { IScannerDataMapper } from '../../../models/scanner';
@@ -45,13 +45,25 @@ export class AdminCheckoutController extends AbstractScannerController implement
     // Get all checked out items
     app.get(
       '/',
-      this.authService.verifyAcl(this.scannerAcl, AclOperations.READ_ALL),
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.READ_ALL,
+      ),
+      // this.authService.verifyAcl(this.scannerAcl, AclOperations.READ_ALL),
       (req, res, next) => this.getAllCheckoutObjectHandler(res, next),
     );
     // Get all items that can be checked out
     app.get(
       '/items',
-      this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.READ_ALL),
+      (req, res, next) => this.verifyScannerPermissionsMiddleware(
+        req,
+        res,
+        next,
+        AclOperations.READ_ALL,
+      ),
+      // this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.READ_ALL),
       (req, res, next) => this.getAllCheckoutItemsHandler(res, next),
     );
     // Create a new checkout request
@@ -77,12 +89,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
       ),
       (req, res, next) => this.returnObjectHandler(req, res, next),
     );
-    // Create a checkout item
-    app.post(
-      '/items',
-      this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.CREATE),
-      (req, res, next) => this.addCheckoutItemsHandler(req, res, next),
-    );
+
     // Get all available checkout items
     app.get(
       '/items/availability',
@@ -93,6 +100,14 @@ export class AdminCheckoutController extends AbstractScannerController implement
         AclOperations.READ_ALL,
       ),
       (req, res, next) => this.getAllAvailableCheckoutItemsHandler(res, next),
+    );
+
+    // Create a checkout item
+    app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
+    app.post(
+      '/items',
+      this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.CREATE),
+      (req, res, next) => this.addCheckoutItemsHandler(req, res, next),
     );
   }
 
@@ -129,7 +144,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
       );
     }
 
-    if (!req.body.userId && !res.locals.registration.id && !res.locals.userToken.uid) {
+    if (!req.body.userId && !res.locals.registration.uid) {
       return Util.standardErrorHandler(
         new HttpError('Could not retrieve user ID from provided information', 400),
         next,
@@ -140,7 +155,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
       const checkoutObject = new CheckoutObject({
         checkout_time: req.body.checkoutTime || Date.now(),
         item_id: req.body.itemId,
-        user_id: req.body.userId || res.locals.registration.id || res.locals.userToken.uid,
+        user_id: req.body.userId || res.locals.registration.uid,
       });
       const result = await this.checkoutObjectDataMapper.insert(checkoutObject);
       const response = new ResponseBody(
@@ -222,6 +237,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -242,13 +258,14 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiUse ResponseBodyDescription
    */
   private async getAllCheckoutItemsHandler(
-    res: Response, 
-    next: NextFunction
+    res: Response,
+    next: NextFunction,
   ) {
     try {
       const result = await this.checkoutItemsDataMapper.getAll({
         count: res.locals.limit,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -257,7 +274,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
     }
   }
 
-/**
+ /**
   * @api {post} /admin/checkout/items Add new item for checkout
   * @apiVersion 2.0.0
   * @apiName Add new item for checkout
@@ -321,8 +338,8 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiUse ResponseBodyDescription
    */
   private async getAllAvailableCheckoutItemsHandler(
-    res: Response, 
-    next: NextFunction
+    res: Response,
+    next: NextFunction,
   ) {
     try {
       const result = await this.checkoutItemsDataMapper.getAllAvailable();

@@ -12,19 +12,21 @@ Firstly, you'll need Nodejs. We recommend v8+
 
 Installing all dependencies:
 - `npm install`
-- `npm run decrypt`
+- `npm run prep`
     - All our sensitive data is encrypted in this repository for security. The npm decrypt script hooks into grunt and will decrypt all relevant files 
     for the server to run
+- On macOS systems: `npm run proxy`
+- On other systems: Download the proxy binary first from https://github.com/GoogleCloudPlatform/cloudsql-proxy
 - `npm start` 
 - To test:
     - `npm test`
 
-[![Build Status](https://travis-ci.com/hackpsu-tech/hackPSUS2018-api.svg?token=rXBswytuwgwFX9F967pp&branch=master)](https://travis-ci.com/hackpsu-tech/hackPSUS2018-api)
+[![Build Status](https://travis-ci.org/Hack-PSU/api.svg?branch=dev)](https://travis-ci.org/Hack-PSU/api)
 [![Coverage Status](https://coveralls.io/repos/github/Hack-PSU/api/badge.svg?branch=sush%2Fts-migration)](https://coveralls.io/github/Hack-PSU/api?branch=sush%2Fts-migration)
 
 ## API
 
-The current RESTful API is live on Google Cloud App Engine. The API can be accessed at https://api.hackpsu.org/v1. The current supported routes are listed below, and documentation is available at https://api.hackpsu.org/v1/doc
+The current RESTful API is live on Google Cloud App Engine. The API can be accessed at https://api.hackpsu.org/v2. The current supported routes are listed below, and documentation is available at https://api.hackpsu.org/v2/doc
 
 ## Documentation
 
@@ -61,16 +63,16 @@ All PRs should include the appropriate passing tests, and should be reviewed by 
 - All development must happen on sub-branches of the _dev_ branch. The _master_ branch should **only** contain live and deployed production code.
 - Ensure that all branches of code successfully terminate. Additionally, ensure that each such branch of execution has a unit test associated with it.
 - Every API route should have appropriate passing unit tests before the code gets onto _master_
-- ESLint has been configured for all code. Javascript should strictly follow the Airbnb coding standard. Run the command `npm run lint` to run the linter.
-By default, ESLint will attempt to fix whatever errors possible; the rest should be handled by the developer.
+- TSLint has been configured for all code. Javascript should strictly follow the Airbnb coding standard. Run the command `npm run lint` to run the linter.
+By default, TSLint will attempt to fix whatever errors possible; the rest should be handled by the developer.
 
 ### Appendix
 
 #### Links
 Resource | URL
 ------------ | -------------
- API | https://api.hackpsu.org/v1
- API Documentation | https://api.hackpsu.org/v1/doc
+ API | https://api.hackpsu.org/v2
+ API Documentation | https://api.hackpsu.org/v2/doc
  API Documentation framework | https://apidocjs.com
  MochaJS | https://mochajs.org
  ChaiJS | https://chaijs.com

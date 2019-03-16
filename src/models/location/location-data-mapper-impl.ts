@@ -42,11 +42,11 @@ export class LocationDataMapperImpl extends GenericDataMapper
     super.addRBAC([this.READ, this.READ_ALL], [AuthLevel.PARTICIPANT]);
   }
 
-  public delete(id: UidType): Promise<IDbResult<void>> {
+  public delete(object: Location): Promise<IDbResult<void>> {
     const query = squel
       .delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, id)
+      .where(`${this.pkColumnName} = ?`, object.id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -63,13 +63,16 @@ export class LocationDataMapperImpl extends GenericDataMapper
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     queryBuilder = queryBuilder.where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<Location>(query.text, query.values, {
-        cache: true,
-
+        cache: checkCache,
       }),
     )
       .pipe(
@@ -165,12 +168,8 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, {
-        cache: false,
-
-      }),
-    )
-      .pipe(map(() => ({ result: 'Success', data: object })))
-      .toPromise();
+      this.sql.query<void>(query.text, query.values, { cache: false }),
+    ).pipe(map(() => ({ result: 'Success', data: object })),
+    ).toPromise();
   }
 }

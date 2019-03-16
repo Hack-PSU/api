@@ -226,7 +226,7 @@ describe('TEST: CheckoutObject Data Mapper', () => {
         testCheckoutObject.user_id,
         testCheckoutObject.checkout_time,
         testCheckoutObject.return_time,
-        testCheckoutObject.hackathon,
+        'test uid',
       ];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();

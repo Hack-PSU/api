@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { map } from 'rxjs/operators';
 import { UidType } from '../../../JSCommon/common-types';
 import { HttpError } from '../../../JSCommon/errors';
 import { Environment, Util } from '../../../JSCommon/util';
@@ -96,12 +97,15 @@ abstract class AbstractScannerController extends ParentRouter {
     }
     try {
       const { data: rfidAssignment } = await this.scannerDataMapper.get(
-        req.body.wid || req.query.wid,
+        {
+          uid: req.body.wid || req.query.wid,
+          hackathon: await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise(),
+        },
         { byHackathon: true },
       );
       const registration = await this.registerDataMapper.get({
         uid: rfidAssignment.user_uid,
-        hackathon: (await this.activeHackathonDataMapper.activeHackathon.toPromise()).id,
+        hackathon: await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise(),
       });
       res.locals.registration = registration.data as Registration;
       return next();

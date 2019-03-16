@@ -156,6 +156,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .setFieldsRows([object.dbRepresentation])
       .toParam();
     query.text = query.text.concat(';');
+    console.log(query);
     return from(
       this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(

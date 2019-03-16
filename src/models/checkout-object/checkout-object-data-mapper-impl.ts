@@ -157,7 +157,6 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .set('hackathon', await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise())
       .toParam();
     query.text = query.text.concat(';');
-    console.log(query);
     return from(
       this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(

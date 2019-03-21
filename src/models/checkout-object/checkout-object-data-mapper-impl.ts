@@ -105,6 +105,10 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder.
             where(
@@ -116,7 +120,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<CheckoutObjectWithUser>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<CheckoutObjectWithUser>(query.text, query.values, { cache: checkCache }))
         .pipe(
           map((checkoutObjects: CheckoutObjectWithUser[]) => ({ result: 'Success', data: checkoutObjects })),
         )

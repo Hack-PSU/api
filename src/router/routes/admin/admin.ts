@@ -254,7 +254,7 @@ export class AdminController extends ParentRouter implements IExpressController 
       const result = await this.adminDataMapper.modifyPermissions(
         req.body.uid,
         parseInt(req.body.privilege, 10),
-        res.locals.privilege,
+        res.locals.user.privilege,
       );
       return this.sendResponse(
         res,

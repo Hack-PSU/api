@@ -105,8 +105,7 @@ export class App extends ParentRouter {
     this.app.use(bodyParser.json({
       limit: '10mb',
     }));
-    this.app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
-
+    // this.app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
     // Setup Cookie Parser
     this.app.use(cookieParser());
 

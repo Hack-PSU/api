@@ -3,7 +3,6 @@ import * as path from 'path';
 import { Util } from '../../JSCommon/util';
 
 export class Constants {
-  public static readonly HACKATHON_NAME = 'hackpsuS2019';
   public static readonly sqlConnection = {
     acquireTimeout: 10 * 1000,
     connectTimeout: 10 * 1000,
@@ -49,13 +48,6 @@ export class Constants {
     app_id: Util.readEnv('ONESIGNAL_APP_ID', ''),
     key: Util.readEnv('ONESIGNAL_API_KEY', ''),
   };
-  public static readonly s3Connection = {
-    accessKeyId: Util.readEnv('ACCESS_KEY_ID', ''),
-    region: 'us-east-2',
-    s3BucketName: 'hackpsu-resumes-test',
-    s3TravelReimbursementBucket: 'hackpsu2018-travel-reimbursement-receipts-test',
-    secretAccessKey: Util.readEnv('SECRET_ACCESS_KEY', ''),
-  };
 
   public static readonly RSVPEmailHtml = {
     fromEmail: 'team@hackpsu.org',
@@ -64,8 +56,10 @@ export class Constants {
   };
 
   public static readonly GCS = {
-    resumeBucket: 'hackpsu-resumes-test',
-    travelReimbursementBucket: 'hackpsu2018-travel-reimbursement-receipts-test',
+    resumeBucket: Util.readEnv('RESUME_BUCKET', 'resumes'),
+    travelReimbursementBucket: Util.readEnv('TRAVEL_REIMBURSEMENT_BUCKET', 'travel-reimbursement-receipts'),
+    projectId: Util.readEnv('GOOGLE_CLOUD_PROJECT', ''),
+    keyFile: 'gcs_config.json',
   };
   public static readonly SendGridApiKey = Util.readEnv('SENDGRID_ACCESS_KEY', '');
   public static readonly MailchimpApiKey = Util.readEnv('MAILCHIMP_API_KEY', '');

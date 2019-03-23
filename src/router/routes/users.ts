@@ -1,8 +1,10 @@
 import { validate } from 'email-validator';
 import express, { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
+import * as path from 'path';
 import { map } from 'rxjs/operators';
 import { IExpressController, ResponseBody } from '..';
+import { Constants } from '../../assets/constants/constants';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { Util } from '../../JSCommon/util';
@@ -14,11 +16,11 @@ import { PreRegistration } from '../../models/register/pre-registration';
 import { Registration } from '../../models/register/registration';
 import { IPreregistrationProcessor } from '../../processors/pre-registration-processor';
 import { IRegistrationProcessor } from '../../processors/registration-processor';
-import { IFirebaseAuthService } from '../../services/auth/auth-types';
+import { AuthLevel, IFirebaseAuthService } from '../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { AuthLevel } from '../../services/auth/auth-types';
 import { Logger } from '../../services/logging/logging';
 import { IStorageService } from '../../services/storage';
+import { IStorageMapper } from '../../services/storage/svc/storage.service';
 import { ParentRouter } from '../router-types';
 
 @Injectable()
@@ -27,6 +29,9 @@ export class UsersController extends ParentRouter implements IExpressController 
   protected static baseRoute = '/users';
 
   public router: Router;
+
+  private resumeUploader: IStorageMapper;
+
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IRegisterDataMapper') private readonly aclPerm: IAclPerm,
@@ -40,6 +45,29 @@ export class UsersController extends ParentRouter implements IExpressController 
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
     super();
+    this.resumeUploader = this.storageService.mapper({
+      opts: {
+        filename: (req) => {
+          if (!req.body.uid || !req.body.firstName || !req.body.lastName) {
+            throw new HttpError('Could not parse fields for resume upload', 400);
+          }
+          return this.generateFileName(req.body.uid, req.body.firstName, req.body.lastName);
+        },
+        bucket: Constants.GCS.resumeBucket,
+        projectId: Constants.GCS.projectId,
+        keyFilename: Constants.GCS.keyFile,
+        metadata: {
+          contentType: 'application/pdf',
+          public: true,
+          resumable: false,
+          gzip: true,
+        },
+      },
+      fieldName: 'resume',
+      fileFilter: file => path.extname(file.originalname) === '.pdf',
+      fileLimits: { maxNumFiles: 1 },
+      multipleFiles: false,
+    });
     this.router = express.Router();
     this.routes(this.router);
   }
@@ -51,11 +79,12 @@ export class UsersController extends ParentRouter implements IExpressController 
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
     app.post(
-        '/register',
-        this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
-        (req, res, next) => this.storageService.upload(req, res, next),
-        (req, res, next) => this.registrationHandler(req, res, next),
-      );
+      '/register',
+      this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
+      this.resumeUploader.upload(),
+      (req, res, next) => this.validateRegistrationFieldsMiddleware(req, res, next),
+      (req, res, next) => this.registrationHandler(req, res, next),
+    );
     app.get(
       '/register',
       this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
@@ -79,8 +108,7 @@ export class UsersController extends ParentRouter implements IExpressController 
       '/extra-credit/delete',
       this.authService.verifyAcl(this.extraCreditPerm, AclOperations.DELETE),
       (req, res, next) => this.deleteExtraCreditAssignmentHandler(req, res, next),
-    )
-    
+    );
   }
 
   private async generateFileName(uid: UidType, firstName: string, lastName: string) {
@@ -144,6 +172,26 @@ export class UsersController extends ParentRouter implements IExpressController 
     }
   }
 
+  private validateRegistrationFieldsMiddleware(
+    request: Request,
+    response: Response,
+    next: NextFunction,
+  ) {
+    // Validate incoming registration
+    try {
+      this.registrationProcessor.normaliseRegistrationData(request.body);
+      request.body.uid = response.locals.user.uid;
+      request.body.email = response.locals.user.email;
+      this.validateRegistrationFields(request.body);
+      return next();
+    } catch (error) {
+      return Util.standardErrorHandler(
+        new HttpError(error.toString(), 400),
+        next,
+      );
+    }
+  }
+
   /**
    * @api {post} /users/register/ Register for HackPSU
    * @apiVersion 2.0.0
@@ -151,6 +199,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiGroup User
    * @apiPermission UserPermission
    * @apiUse AuthArgumentRequired
+   * @apiHeader {String} content-type Must be x-www-form-urlencoded or multipart/form-data
    * @apiParam {String} firstName First name of the user
    * @apiParam {String} lastName Last name of the user
    * @apiParam {String} gender Gender of the user
@@ -181,22 +230,9 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiUse ResponseBodyDescription
    */
   private async registrationHandler(request: Request, response: Response, next: NextFunction) {
-    // Validate incoming registration
-    try {
-      this.registrationProcessor.normaliseRegistrationData(request.body);
-      request.body.uid = response.locals.user.uid;
-      request.body.email = response.locals.user.email;
-      this.validateRegistrationFields(request.body);
-    } catch (error) {
-      return Util.standardErrorHandler(
-        new HttpError(error.toString(), 400),
-        next,
-      );
-    }
-
     // Save registration
     if (request.file) {
-      request.body.resume = this.storageService.uploadedFileUrl(
+      request.body.resume = this.resumeUploader.uploadedFileUrl(
         await this.generateFileName(
           request.body.uid,
           request.body.firstName,
@@ -341,8 +377,8 @@ export class UsersController extends ParentRouter implements IExpressController 
           return Util.standardErrorHandler(new HttpError('Insufficient permissions for this operation', 401), next);
         }
         return this.getExtraCreditAssignmentHandler(req, res, next);
+    }
   }
-}
 
   /**
    * @api {get} /users/extra-credit/assignment Get an extra credit assignment
@@ -354,7 +390,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} uid - the id associated with the assignment
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ExtraCreditAssignment} The retrieved extra credit assignment 
+   * @apiSuccess {ExtraCreditAssignment} The retrieved extra credit assignment
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -414,7 +450,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
-  }  
+  }
 
   /**
    * @api {get} /users/extra-credit/assignment?type=class Get all extra credit assignments for a class
@@ -450,9 +486,9 @@ export class UsersController extends ParentRouter implements IExpressController 
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
-  }  
-  
- /**
+  }
+
+  /**
    * @api {post} /users/extra-credit/delete Remove an extra credit assignment
    * @apiVersion 2.0.0
    * @apiName Remove Extra Credit Assignment
@@ -477,7 +513,7 @@ export class UsersController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Could not find valid assignment uid', 400), next);
     }
     try {
-      const ecAssignment = new ExtraCreditAssignment({ uid: req.body.uid, cid: 1 })
+      const ecAssignment = new ExtraCreditAssignment({ uid: req.body.uid, cid: 1 });
       const result = await this.extraCreditDataMapper.delete(ecAssignment);
       const response = new ResponseBody(
         'Success',

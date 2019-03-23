@@ -8,8 +8,8 @@ const encryptedFiles = {
   '.prod.env.aes': '.env',
   '.staging.env.aes': '.env',
   '.test.env.aes': '.env',
-  'privatekey.aes': 'config.json',
-  'privatekey.staging.aes': 'config.json',
+  'privatekey.aes': 'firebase_config.json',
+  'privatekey.staging.aes': 'firebase_config.json',
   'hackpsu-18-serviceaccount.json.aes': 'hackpsu-18-serviceaccount.json',
 };
 
@@ -62,12 +62,6 @@ module.exports = (grunt) => {
       },
     },
     exec: {
-      // prep     : {
-      //   cmd: `cd ..; ./prepare_deploy.sh ${grunt.option('production') ? 'prod' : ''}`,
-      // },
-      // sql_proxy: {
-      //   cmd: 'nohup ./cloud_sql_proxy -instances=hackpsu18:us-central1:hackpsu18=tcp:3306 -credential_file=./src/hackpsu-18-serviceaccount.json',
-      // },
       deploy: {
         cmd: `gcloud app deploy ${grunt.option('production') ? 'app.v2.yaml ' : 'staging.v2.app.yaml'} --quiet --no-user-output-enabled`,
       },
@@ -79,7 +73,7 @@ module.exports = (grunt) => {
             src: 'hackpsu-18-serviceaccount.json', cwd: './', dest: './src/', expand: true,
           },
           {
-            src: 'config.json', cwd: './', dest: './lib/', expand: true,
+            src: 'firebase_config.json', cwd: './', dest: './lib/', expand: true,
           },
           {
             src: 'gcs_config.json', cwd: './', dest: './lib/', expand: true,

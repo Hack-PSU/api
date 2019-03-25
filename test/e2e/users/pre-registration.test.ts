@@ -1,0 +1,82 @@
+import { slow, suite, test } from 'mocha-typescript';
+import * as squel from 'squel';
+import { PreRegistration } from '../../../src/models/register/pre-registration';
+import { UsersIntegrationTest } from './users.test';
+
+@suite
+class PreRegistrationIntegrationTest extends UsersIntegrationTest {
+
+  public static async before() {
+    await UsersIntegrationTest.before();
+  }
+
+  public static async after() {
+    const query = squel.delete()
+      .from('PRE_REGISTRATION')
+      .toParam();
+    await PreRegistrationIntegrationTest.mysqlUow.query(query.text, query.values);
+    await UsersIntegrationTest.after();
+  }
+
+  protected readonly apiEndpoint = '/v2/users/pre-register';
+
+  @test
+  @slow(1500)
+  public async addPreRegistrationSuccessfully() {
+    // GIVEN: API
+    // WHEN: Adding a new pre-registration
+    const res = await this.chai.request(this.app)
+      .post(this.apiEndpoint)
+      .send({ email: 'test@email.com' });
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res);
+    // THEN: Pre-registration was added
+    // @ts-ignore
+    const preRegistration = PreRegistration.fromDb(res.body.body.data);
+    preRegistration.hackathon = PreRegistrationIntegrationTest.activeHackathon.uid;
+    this.expect(preRegistration.email).to.equal('test@email.com');
+    await this.verifyPreRegistration(preRegistration);
+  }
+
+  @test
+  public async addPreRegistrationFailureDueToInvalidEmail() {
+    // GIVEN: API
+    // WHEN: Adding a new pre-registration
+    const res = await this.chai.request(this.app)
+      .post(this.apiEndpoint)
+      .send({ email: 'test' });
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res, 'Error', 400, 'Error');
+    // THEN: Failed to validate input
+    this.expect(res.body.body.data).to.deep.equal({ message: 'Valid email must be provided' });
+  }
+
+  private async verifyPreRegistration(preRegistration: PreRegistration) {
+    const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .from('PRE_REGISTRATION')
+      .toParam();
+    const [result] = await PreRegistrationIntegrationTest.mysqlUow.query<PreRegistration>(
+      query.text,
+      query.values,
+    ) as PreRegistration[];
+    this.expect(result).to.deep.equal(preRegistration.dbRepresentation);
+  }
+}
+
+// describe('INTEGRATION TEST: /register', () => {
+//   describe('INTEGRATION TEST: GET', () => {
+//
+//   });
+//   describe('INTEGRATION TEST: POST', () => {
+//
+//   });
+// });
+// describe('INTEGRATION TEST: /extra-credit', () => {
+//   describe('INTEGRATION TEST: GET', () => {
+//
+//   });
+//   describe('INTEGRATION TEST: POST', () => {
+//
+//   });
+// });
+// });

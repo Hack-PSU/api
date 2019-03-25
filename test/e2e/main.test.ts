@@ -1,24 +1,23 @@
-import { app, chai, testHelper } from '../test_helper';
-testHelper();
+import { suite, test } from 'mocha-typescript';
+import { IntegrationTest } from './integration-test';
 
-const { expect } = chai;
+@suite
+class IndexIntegrationTest extends IntegrationTest {
 
-// First index test
-describe('INTEGRATION TEST: /', () => {
-  it('it should respond with a simple success message', async () => {
+  // tslint:disable:no-empty
+  public static async before() {}
+
+  public static async after() {}
+
+  protected readonly apiEndpoint = '/';
+
+  @test
+  public async getIndexRoute() {
     // GIVEN: API
-    // WHEN: GET: /
-    const res = await chai.request(app).get('/');
-    // THEN: Responds with success message
-    expect(res).status(200);
-    expect(res).header('content-type', 'application/json; charset=utf-8');
-    expect(res.body).to.deep.equal({
-      api_response: 'Welcome to the HackPSU API!',
-      body: {
-        data: {},
-        result: 'Success',
-      },
-      status: 200,
-    });
-  });
-});
+    // WHEN: GET: index route
+    const res = await this.chai.request(this.app)
+      .get(this.apiEndpoint);
+    // THEN: Standard response is sent
+    super.assertRequestFormat(res, 'Welcome to the HackPSU API!');
+  }
+}

@@ -1,7 +1,7 @@
-import { Arg, Substitute } from '@fluffy-spoon/substitute';
+import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
-import { MysqlError, Pool, PoolConnection } from 'mysql';
+import { MysqlError, PoolConnection } from 'mysql';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { ICacheService } from '../../../../src/services/database/cache/cache.service';
 import { MemCacheServiceImpl } from '../../../../src/services/database/cache/memcache-impl.service';

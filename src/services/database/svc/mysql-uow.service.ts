@@ -130,6 +130,10 @@ export class MysqlUow implements IUow {
    * @param {MysqlError} error
    */
   private sqlErrorHandler(error: MysqlError) {
+    if (error instanceof HttpError) {
+      // Error was already handled
+      throw error;
+    }
     this.logger.error(error);
     switch (error.errno) {
       case SQL_ERRORS.PARSE_ERROR:

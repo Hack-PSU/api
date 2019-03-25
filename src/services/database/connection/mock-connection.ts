@@ -4,24 +4,18 @@ import {
   ConnectionConfig,
   ConnectionOptions,
   MysqlError,
-  PoolConnection, Query, queryCallback,
+  PoolConnection,
+  Query,
+  queryCallback,
   QueryFunction,
   QueryOptions,
 } from 'mysql';
 import path from 'path';
+import { Readable } from 'stream';
 import { Util } from '../../../JSCommon/util';
 import { Logger } from '../../logging/logging';
 
 export class MockConnection implements PoolConnection {
-
-  /**
-   *
-   * @param query
-   * @param params
-   * @param callback
-   * @return {Promise<MockStream>}
-   */
-  public query: QueryFunction;
   public config: ConnectionConfig;
   public createQuery: QueryFunction;
   public state: 'connected' | 'authenticated' | 'disconnected' | 'protocol_error' | string;
@@ -44,6 +38,26 @@ export class MockConnection implements PoolConnection {
     this.query = qfn as QueryFunction;
   }
 
+  public query(query: any, value?: any, cb?: any): Query {
+    const q = {
+      sql: '',
+      EofPacket: this.noop,
+      ErrorPacket: this.noop,
+      FieldPacket: this.noop,
+      nestedTables: false,
+      OkPacket: this.noop,
+      ResultSetHeaderPacket: this.noop,
+      typeCast: undefined,
+      values: undefined,
+      start: this.noop,
+      determinePacket: (byte: number, parser: any): any => undefined,
+      RowDataPacket: () => undefined,
+      stream: () => new Readable(),
+      on: ev => q,
+    };
+    return q;
+  }
+
   /**
    *
    * @return {Promise<any>}
@@ -51,7 +65,7 @@ export class MockConnection implements PoolConnection {
   public beginTransaction(callback: any) {
     this.logger.info('Starting transaction');
     this.noop();
-    callback();
+    callback('Starting transaction');
   }
 
   /**
@@ -61,7 +75,7 @@ export class MockConnection implements PoolConnection {
   public rollback(callback: any) {
     this.logger.error('Rolling back');
     this.noop();
-    callback();
+    callback('Rolling back');
   }
 
   public release() {
@@ -70,10 +84,10 @@ export class MockConnection implements PoolConnection {
   }
 
   public commit(callback: any) {
-    this.logger.info('Query committed.');
+    this.logger.info('Query committed');
     this.noop();
     if (callback) {
-      callback();
+      callback('Query committed');
     }
   }
 

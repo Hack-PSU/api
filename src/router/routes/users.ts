@@ -117,7 +117,7 @@ export class UsersController extends ParentRouter implements IExpressController 
       !validate(request.body.email)) {
       return next(new HttpError('Valid email must be provided', 400));
     }
-    let preRegistration;
+    let preRegistration: PreRegistration;
     try {
       preRegistration = new PreRegistration(request.body.email);
     } catch (error) {

@@ -42,8 +42,9 @@ describe('TEST: Mysql Uow test', () => {
   describe('TEST: Mysql Query', () => {
     it('regular query made', async () => {
       // GIVEN: Legal query being made
-      when(mockConnection.query).thenCall(queryFunc);
+      when(mockConnection.query(anything(), anything(), anything())).thenCall(queryFunc);
       when(mockConnection.beginTransaction(anything())).thenCall(transactFunc);
+      when(mockConnection.commit(anything())).thenCall(transactFunc);
       result = ['test result'];
       // GIVEN: Query being run
       const query = 'test query';
@@ -56,6 +57,8 @@ describe('TEST: Mysql Uow test', () => {
       // THEN: Result is added to the cache
       expect(await cacheService.get(`${query}${(params as string[]).join('')}`)).to.deep.equal(result);
       verify(mockConnection.commit(anything())).once();
+      // THEN: Connection is released
+      verify(mockConnection.release()).once();
       // THEN: Expected result is returned
       expect(queryResult).to.deep.equal(result);
     });
@@ -64,6 +67,7 @@ describe('TEST: Mysql Uow test', () => {
       // GIVEN: Legal query being made
       when(mockConnection.query(anything(), anything(), anything())).thenCall(queryFunc);
       when(mockConnection.beginTransaction(anything())).thenCall(transactFunc);
+      when(mockConnection.commit(anything())).thenCall(transactFunc);
       when(mockConnection.format(anything(), anything())).thenReturn('formatted query');
       result = [];
       // GIVEN: Query being run
@@ -71,7 +75,7 @@ describe('TEST: Mysql Uow test', () => {
       const params = ['test params'];
       // WHEN: sql.query() is called
       try {
-        const queryResult = await mysqlUow.query(query, params);
+        await mysqlUow.query(query, params);
       } catch (error) {
         // Error is thrown
         expect(error.status).to.equal(404);
@@ -81,6 +85,8 @@ describe('TEST: Mysql Uow test', () => {
         verify(mockConnection.beginTransaction(anything())).once();
         verify(mockConnection.query(query, params, anything())).once();
         verify(mockConnection.commit(anything())).once();
+        // THEN: Connection is released
+        verify(mockConnection.release()).once();
         // THEN: Result is not added to the cache
         expect(await cacheService.get(`${query}${(params as string[]).join('')}`)).to.equal(null);
         return true;
@@ -90,7 +96,7 @@ describe('TEST: Mysql Uow test', () => {
 
     it('query throws sql error', async () => {
       // GIVEN: Legal query being made
-      when(mockConnection.query).thenCall(errQueryFunc);
+      when(mockConnection.query(anything(), anything(), anything())).thenCall(errQueryFunc);
       when(mockConnection.beginTransaction(anything())).thenCall(transactFunc);
       result = [];
       // GIVEN: Query being run
@@ -98,7 +104,7 @@ describe('TEST: Mysql Uow test', () => {
       const params = ['test params'];
       // WHEN: sql.query() is called
       try {
-        const queryResult = await mysqlUow.query(query, params);
+        await mysqlUow.query(query, params);
       } catch (error) {
         // Error is thrown
         expect(error).to.equal(mysqlError);
@@ -106,7 +112,9 @@ describe('TEST: Mysql Uow test', () => {
         verify(mockConnection.beginTransaction(anything())).once();
         verify(mockConnection.query(query, params, anything())).once();
         verify(mockConnection.commit(anything())).never();
-        verify(mockConnection.rollback(anything())).once();
+        verify(mockConnection.rollback()).once();
+        // THEN: Connection is released
+        verify(mockConnection.release()).once();
         // THEN: Result is not added to the cache
         expect(await cacheService.get(`${query}${(params as string[]).join('')}`)).to.equal(null);
         return true;
@@ -125,15 +133,10 @@ describe('TEST: Mysql Uow test', () => {
       // THEN: query is not made on the connection
       verify(mockConnection.beginTransaction(anything())).never();
       verify(mockConnection.query(query, params, anything())).never();
+      // THEN: Connection is released
+      verify(mockConnection.release()).once();
       // THEN: Expected result is returned
       expect(queryResult).to.deep.equal('test result');
     });
   });
-
-  // describe('TEST: Mysql commit', () => {});
-  //
-  // describe('TEST: Mysql complete', () => {});
-  //
-  // describe('TEST: Mysql error handling', () => {});
 });
-

@@ -1,12 +1,7 @@
-process.env.APP_ENV = 'test';
-process.env.TS_NODE_FILES = 'true';
-import chai from 'chai';
-import chaiHttp from 'chai-http';
-import firebase from 'firebase';
-import 'mocha';
-import app from '../src/app';
+const firebase = require('firebase');
+const admin = require('firebase-admin');
+const serviceAccount = require('../src/config.json');
 
-chai.use(chaiHttp);
 let initialized = false;
 // Initialize Firebase
 const config = {
@@ -18,12 +13,10 @@ const config = {
   messagingSenderId: '614592542726',
 };
 
-export function testHelper() {
+module.exports = () => {
   if (initialized) {
     return;
   }
   firebase.initializeApp(config);
   initialized = true;
-}
-
-export { chai, app };
+};

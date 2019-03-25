@@ -65,7 +65,7 @@ export class MockConnection implements PoolConnection {
   public beginTransaction(callback: any) {
     this.logger.info('Starting transaction');
     this.noop();
-    callback('Starting transaction');
+    callback();
   }
 
   /**
@@ -75,7 +75,7 @@ export class MockConnection implements PoolConnection {
   public rollback(callback: any) {
     this.logger.error('Rolling back');
     this.noop();
-    callback('Rolling back');
+    callback();
   }
 
   public release() {
@@ -87,7 +87,7 @@ export class MockConnection implements PoolConnection {
     this.logger.info('Query committed');
     this.noop();
     if (callback) {
-      callback('Query committed');
+      callback();
     }
   }
 

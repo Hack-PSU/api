@@ -74,7 +74,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .concat(';');
     return from(this.sql.query<Category>(query.text, query.values, this.factory, { cache: true }))
       .pipe(
-        map((category: Category[]) => ({ result: 'Success', data: category[0].cleanRepresentation })),
+        map((category: Category[]) => ({ result: 'Success', data: this.factory.generateApiRepresentation(category[0]) })),
       )
       .toPromise();
   }
@@ -98,7 +98,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     query.text = query.text.concat(';');
     return from(this.sql.query<Category>(query.text, query.values, this.factory, { cache: true }))
         .pipe(
-          map((categories: Category[]) => categories.map(category => category.cleanRepresentation)),
+          map((categories: Category[]) => categories.map(category => this.factory.generateApiRepresentation(category))),
           map((categories: Array<IApiModel<Category>>) => ({
             result: 'Success',
             data: categories,
@@ -135,13 +135,13 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
-      .setFieldsRows([object.dbRepresentation])
+      .setFieldsRows([this.factory.generateDbRepresentation(object)])
       .toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<void>(query.text, query.values, this.factory, { cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
+      map(() => ({ result: 'Success', data: this.factory.generateApiRepresentation(object) })),
     ).toPromise();
   }
 
@@ -154,14 +154,14 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     }
     const query = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)
-      .setFields(object.dbRepresentation)
+      .setFields(this.factory.generateDbRepresentation(object))
       .where(`${this.pkColumnName} = ?`, object.id)
       .toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<void>(query.text, query.values, this.factory, { cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
+      map(() => ({ result: 'Success', data: this.factory.generateApiRepresentation(object) })),
     ).toPromise();
   }
 

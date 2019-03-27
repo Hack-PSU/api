@@ -6,12 +6,13 @@ import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
-import { IDataMapper, IDbResult } from '../../services/database';
+import { IApiModel, IDataMapper, IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { Category } from './category';
+import { CategoryFactory } from './category-factory';
 
 @Injectable()
 export class CategoryDataMapperImpl extends GenericDataMapper
@@ -24,6 +25,8 @@ export class CategoryDataMapperImpl extends GenericDataMapper
   public readonly UPDATE: string = 'category:update';
 
   public tableName = 'CATEGORY_LIST';
+
+  public factory: CategoryFactory;
 
   protected pkColumnName: string = 'uid';
 
@@ -39,6 +42,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
         AuthLevel.TEAM_MEMBER,
       ],
     );
+    this.factory = new CategoryFactory();
   }
   public delete(id: UidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
@@ -47,13 +51,13 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { cache: false }),
+      this.sql.query(query.text, query.values, this.factory, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
   }
 
-  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Category>> {
+  public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<IApiModel<Category>>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -68,19 +72,14 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text
       .concat(';');
-    return from(this.sql.query<Category>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<Category>(query.text, query.values, this.factory, { cache: true }))
       .pipe(
-        map((category: Category[]) => ({ result: 'Success', data: category[0] })),
+        map((category: Category[]) => ({ result: 'Success', data: category[0].cleanRepresentation })),
       )
       .toPromise();
   }
 
-  /**
-   *
-   * @param opts?
-   * @return {Promise<Stream>}
-   */
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Category[]>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Array<IApiModel<Category>>>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -97,9 +96,13 @@ export class CategoryDataMapperImpl extends GenericDataMapper
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Category>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<Category>(query.text, query.values, this.factory, { cache: true }))
         .pipe(
-          map((categories: Category[]) => ({ result: 'Success', data: categories })),
+          map((categories: Category[]) => categories.map(category => category.cleanRepresentation)),
+          map((categories: Array<IApiModel<Category>>) => ({
+            result: 'Success',
+            data: categories,
+          })),
         )
         .toPromise();
   }
@@ -117,13 +120,13 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, query.values, { cache: true }),
+      this.sql.query<number>(query.text, query.values, undefined, { cache: true }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
-  public insert(object: Category): Promise<IDbResult<Category>> {
+  public insert(object: Category): Promise<IDbResult<IApiModel<Category>>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -136,13 +139,13 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { cache: false }),
+      this.sql.query<void>(query.text, query.values, this.factory, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 
-  public update(object: Category): Promise<IDbResult<Category>> {
+  public update(object: Category): Promise<IDbResult<IApiModel<Category>>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
@@ -156,7 +159,7 @@ export class CategoryDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, { cache: false }),
+      this.sql.query<void>(query.text, query.values, this.factory, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();

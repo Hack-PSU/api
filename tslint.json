@@ -12,6 +12,7 @@
     "object-literal-sort-keys": false,
     "object-literal-shorthand": false,
     "object-shorthand-properties-first": false,
+    "import-name": false,
     "prefer-array-literal": false,
     "function-name": false,
     "no-implicit-dependencies": [true, "dev"]

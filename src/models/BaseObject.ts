@@ -1,13 +1,15 @@
 /* eslint-disable no-underscore-dangle,no-param-reassign,class-methods-use-this */
 import ajv from 'ajv';
+import * as crypto from 'crypto';
 import { default as _ } from 'lodash';
+import { IApiModel } from '../services/database';
 
 const ajvValidator = new ajv();
 /**
  * @class BaseObject
  * The base object definition for any table in the database
  */
-export default abstract class  BaseObject {
+export default abstract class BaseObject {
 
   /**
    * Returns a representation of the object that can be added directly to the database
@@ -29,7 +31,7 @@ export default abstract class  BaseObject {
    * are any other fields in subclasses that should not be present in an instance
    * of the object sent for APIs, override this method and delete those there
    */
-  public get cleanRepresentation() {
+  public get cleanRepresentation(): IApiModel<this> {
     const clone = { ...this };
     // @ts-ignore
     delete clone.disallowedPropertiesInternal;
@@ -72,13 +74,16 @@ export default abstract class  BaseObject {
    */
   protected abstract get schema(): any;
 
+  public magicNumber: number;
+
   /*********** PROPERTIES *************/
   // In a sub-class, make sure this array also includes all super properties
   protected readonly disallowedPropertiesInternal: Set<string>;
 
   protected constructor() {
+    this.magicNumber = crypto.randomBytes(4).readUInt32BE(0);
     this.disallowedPropertiesInternal = new Set();
-    this.disallowedProperties = ['disallowedPropertiesInternal'];
+    this.disallowedProperties = ['disallowedPropertiesInternal', 'magicNumber'];
   }
 
   public merge(newObject: this, oldObject: this): this {

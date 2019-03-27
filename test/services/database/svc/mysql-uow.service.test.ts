@@ -138,5 +138,30 @@ describe('TEST: Mysql Uow test', () => {
       // THEN: Expected result is returned
       expect(queryResult).to.deep.equal('test result');
     });
+
+    it('cache service throws an error', async () => {
+      // GIVEN: Cache will throw an error on get()
+      const cacheServiceMock = mock(MemCacheServiceImpl);
+      when(cacheServiceMock.get(anything())).thenThrow(new Error('Cache service had a stroke'));
+      when(cacheServiceMock.set(anything(), anything())).thenThrow(new Error('Cache service had a stroke'));
+      cacheService = instance(cacheServiceMock);
+      mysqlUow = new MysqlUow(instance(connectionFactoryMock), cacheService, new Logger());
+      // GIVEN: Legal query being made
+      when(mockConnection.query(anything(), anything(), anything())).thenCall(queryFunc);
+      when(mockConnection.beginTransaction(anything())).thenCall(transactFunc);
+      when(mockConnection.commit(anything())).thenCall(transactFunc);
+      when(mockConnection.format(anything(), anything())).thenReturn('formatted query');
+      result = ['test result'];
+      const query = 'test query';
+      const params = ['test params'];
+      // WHEN: sql.query() is called
+      await mysqlUow.query(query, params, { cache: true });
+      // THEN: Query is made on the connection
+      verify(mockConnection.beginTransaction(anything())).once();
+      verify(mockConnection.query(query, params, anything())).once();
+      verify(mockConnection.commit(anything())).once();
+      // THEN: Connection is released
+      verify(mockConnection.release()).once();
+    });
   });
 });

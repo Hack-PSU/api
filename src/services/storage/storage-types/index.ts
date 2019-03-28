@@ -29,10 +29,7 @@ export interface IStorageEngineOpts {
   /*
    Name of file to upload
    */
-  filename?: (req: express.Request, file: any) => string;
-}
-
-export interface IGcsStorageEngineOpts extends IStorageEngineOpts {
+  filename: (req: express.Request, file: any) => Promise<string>;
   /*
    GCS Bucket to use
    */
@@ -71,4 +68,12 @@ export interface IFile {
   /** A Buffer of the entire file (MemoryStorage) */
   buffer: Buffer;
   stream: ReadStream;
+}
+
+export interface IStorageMapperParams {
+  opts: IStorageEngineOpts;
+  fieldName: string;
+  fileFilter: (file: IFile) => boolean;
+  fileLimits: IFileUploadLimits;
+  multipleFiles: boolean;
 }

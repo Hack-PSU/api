@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import * as firebase from 'firebase';
-import uuid from 'uuid/v4';
 import axios from 'axios';
+import * as firebase from 'firebase';
+import v4 from 'uuid/v4';
 
 firebase.initializeApp({
   apiKey: 'AIzaSyAWejnwBUrfUoULnMRumGFpOchYjjHlfTI',
@@ -16,21 +16,23 @@ const baseUrl = 'http://staging.hackpsu18.appspot.com/v2/';
 export async function main() {
   // Login
   const idToken = await signInAndGetIdToken('admin@email.com', 'password');
+  // tslint:disable
   console.log(idToken);
   // Download all the registrations
   const registrations = await getRegistrations(idToken);
   // For each registration, add a band
   const result = await assignBands(registrations, idToken);
+  // tslint:disable
   console.log(result);
 }
 
-function sleep(ms){
-  return new Promise(resolve=>{
-      setTimeout(resolve,ms)
-  })
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
-async function assignBands(registrations: { uid: string }[], idToken: string) {
+async function assignBands(registrations: Array<{ uid: string }>, idToken: string) {
   const promises: Array<Promise<any>> = [];
   for (let i = 0; i < registrations.length; i += 1) {
     await sleep(10);
@@ -45,22 +47,22 @@ async function assignBand(registration: { uid: string }, idToken: string) {
   try {
     const { data } = await axios.post(
     `${baseUrl}${url}`,
-    {
-      assignments: [
-        {
-          wid: uuid(),
-          uid: registration.uid,
-          time: Date.now(),
-        }
-      ]
-    },
-    {
-      headers: {
-        idtoken: idToken,
-      }
-    }
+      {
+        assignments: [
+          {
+            wid: v4(),
+            uid: registration.uid,
+            time: Date.now(),
+          },
+        ],
+      },
+      {
+        headers: {
+          idtoken: idToken,
+        },
+      },
   );
-  return data.body.data;
+    return data.body.data;
   } catch (error) {
     return Promise.resolve(error);
   }
@@ -69,13 +71,13 @@ async function assignBand(registration: { uid: string }, idToken: string) {
 async function getRegistrations(idToken: string) {
   const url = 'scanner/registrations';
   const { data } = await axios.get(`${baseUrl}${url}`, {
-     headers: {
-       idtoken: idToken,
-     },
-     params: {
-       allHackathons: false,
-     }
-    });
+    headers: {
+      idtoken: idToken,
+    },
+    params: {
+      allHackathons: false,
+    },
+  });
   return data.body.data;
 }
 

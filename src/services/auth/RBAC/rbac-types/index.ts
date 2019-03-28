@@ -40,7 +40,7 @@ export interface IAclPerm {
 export interface IExtraCreditAclPerm extends IAclPerm {
   READ_ALL_CLASSES: string;
   READ_BY_UID: string;
-  READ_BY_CLASS:string;
+  READ_BY_CLASS: string;
 }
 
 /**

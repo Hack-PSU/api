@@ -9,14 +9,13 @@
   },
   "private": true,
   "scripts": {
-    "build": "tsc",
+    "build": "npm run prep",
     "dev": "nodemon -r dotenv/config ./lib/bin/www",
     "start": "node -r dotenv/config ./lib/bin/www",
     "prep": "grunt prep",
     "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls",
-    "watch": "grunt && npm run debug-watch",
     "test": "nyc mocha",
-    "prod": "APP_ENV=prod npnm run build && npm start",
+    "prod": "APP_ENV=prod npm run build && npm start",
     "apidoc": "apidoc -i ./src/router -o lib/doc/",
     "debug": "node --inspect -r dotenv/config ./lib/bin/www",
     "debug-watch": "nodemon -r dotenv/config --inspect ./lib/bin/www",
@@ -30,8 +29,8 @@
     "extension": [
       ".ts"
     ],
-    "lines": 65,
-    "branches": 45,
+    "lines": 75,
+    "branches": 50,
     "functions": 50,
     "check-coverage": true,
     "instrument": true,
@@ -46,6 +45,21 @@
       "lcov"
     ],
     "all": true
+  },
+  "apidoc": {
+    "name": "HackPSU RESTful Web API",
+    "version": "2.0.0",
+    "description": "RESTFul API for all HackPSU connections",
+    "url": "https://api.hackpsu.org/v2",
+    "header": {
+      "title": "HackPSU RESTful Web API",
+      "file": "header.md"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run test && npm run lint"
+    }
   },
   "dependencies": {
     "@fluffy-spoon/substitute": "1.70.0",
@@ -64,6 +78,7 @@
     "@types/mysql": "2.15.5",
     "@types/uuid": "3.4.4",
     "ajv": "^5.5.2",
+    "axios": "0.18.0",
     "body-parser": "1.18.3",
     "bunyan": "1.8.12",
     "chai": "4.2.0",
@@ -76,6 +91,7 @@
     "email-validator": "1.2.3",
     "express": "4.16.3",
     "express-query-boolean": "latest",
+    "fast-crc32c": "1.0.4",
     "firebase": "5.5.5",
     "firebase-admin": "5.12.0",
     "grunt": "1.0.3",
@@ -118,6 +134,7 @@
     "eslint-config-airbnb-base": "12.1.0",
     "eslint-plugin-import": "2.9.0",
     "eslint-plugin-json": "1.2.0",
+    "husky": "1.3.1",
     "mocha": "5.2.0",
     "nodemon": "1.18.4",
     "nyc": "13.3.0",
@@ -125,15 +142,5 @@
     "ts-node": "7.0.1",
     "tslint": "5.11.0",
     "tslint-config-airbnb": "5.11.0"
-  },
-  "apidoc": {
-    "name": "HackPSU RESTful Web API",
-    "version": "2.0.0",
-    "description": "RESTFul API for all HackPSU connections",
-    "url": "https://api.hackpsu.org/v2",
-    "header": {
-      "title": "HackPSU RESTful Web API",
-      "file": "header.md"
-    }
   }
 }

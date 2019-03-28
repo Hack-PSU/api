@@ -64,11 +64,11 @@ export class FirebaseAuthService implements IFirebaseAuthService {
       case AclOperations.READ_BY_UID:
         // Only supported for IExtraCreditAclPerm
         requestPermission = (permission as IExtraCreditAclPerm).READ_BY_UID;
-        break; 
+        break;
       case AclOperations.READ_BY_CLASS:
         // Only supported for IExtraCreditAclPerm
         requestPermission = (permission as IExtraCreditAclPerm).READ_BY_CLASS;
-        break; 
+        break;
       default:
         requestPermission = '';
         break;

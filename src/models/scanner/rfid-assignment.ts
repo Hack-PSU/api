@@ -28,7 +28,7 @@ export class RfidAssignment extends BaseObject {
   public readonly rfid_uid: UidType;
   public readonly user_uid: UidType;
   public readonly time: EpochNumber;
-  public readonly hackathon?: UidType;
+  public hackathon?: UidType;
 
   constructor(data: IRfidAssignmentApiModel) {
     super();

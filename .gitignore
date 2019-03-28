@@ -18,3 +18,4 @@ doc/
 .nyc_output/
 lib/
 coverage/
+firebase_config.json

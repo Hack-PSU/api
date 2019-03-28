@@ -1,7 +1,8 @@
 import * as firebase from 'firebase-admin';
 import { Constants } from '../../../assets/constants/constants';
-// @ts-ignore
-import configJson from '../../../config.json';
+// tslint:disable:import-name
+// @ts-ignore: module name error
+import configJson from '../../../firebase_config.json';
 import { Environment, Util } from '../../../JSCommon/util';
 import { IFirebaseService } from './firebase-types/firebase-service';
 

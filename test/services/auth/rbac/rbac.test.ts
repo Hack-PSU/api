@@ -16,7 +16,7 @@ describe('TEST: RBAC Tests', () => {
       ];
       // WHEN: verifying access
       const rbac = new RBAC();
-      roles.forEach((role) => rbac.registerRBAC(role));
+      roles.forEach(role => rbac.registerRBAC(role));
       // THEN: access is granted
       expect(rbac.can(rolestring, 'read'));
     });

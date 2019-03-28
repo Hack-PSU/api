@@ -8,7 +8,7 @@ export const TABLE_NAME = 'CATEGORY_LIST';
 
 export class Category extends BaseObject {
 
-  private uid: number;
+  public uid: number;
   private categoryName: string;
   private isSponsor: boolean;
 

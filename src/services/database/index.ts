@@ -8,15 +8,15 @@ export interface IDataMapper<T extends BaseObject> {
 
   factory: ObjectFactory<T>;
 
-  get(object: UidType, opts?: IUowOpts): Promise<IDbResult<IApiModel<T>>>;
+  get(object: UidType | number, opts?: IUowOpts): Promise<IDbResult<T>>;
 
-  insert(object: T): Promise<IDbResult<IApiModel<T>>>;
+  insert(object: T): Promise<IDbResult<T>>;
 
-  update(object: T): Promise<IDbResult<IApiModel<T>>>;
+  update(object: T): Promise<IDbResult<T>>;
 
   delete(object: T | UidType): Promise<IDbResult<void>>;
 
-  getAll(opts?: IUowOpts): Promise<IDbResult<Array<IApiModel<T>>>>;
+  getAll(opts?: IUowOpts): Promise<IDbResult<T[]>>;
 
   getCount(opts?: IUowOpts): Promise<IDbResult<number>>;
 }
@@ -50,5 +50,5 @@ export interface IApiWritable<T> {
 }
 
 export interface IApiModel<T> {
-  magicNumber: number;
+  uid?: UidType | number;
 }

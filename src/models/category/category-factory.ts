@@ -4,9 +4,9 @@ import { ObjectFactory } from '../object-factory';
 import { Category } from './category';
 
 export interface ICategoryApiModel extends IApiModel<Category> {
-  uid: number;
-  categoryName: string;
-  isSponsor: boolean;
+  uid?: number;
+  categoryName?: string;
+  isSponsor?: boolean;
 }
 
 export class CategoryFactory extends ObjectFactory<Category> {
@@ -19,10 +19,13 @@ export class CategoryFactory extends ObjectFactory<Category> {
   }
 
   public generateFromApi(data: ICategoryApiModel): Category {
+    if (!data.uid) {
+      throw new Error('Category UID must be provided');
+    }
     return new Category()
       .setUid(data.uid)
-      .setCategoryName(data.categoryName)
-      .setIsSponsor(data.isSponsor);
+      .setCategoryName(data.categoryName || '')
+      .setIsSponsor(data.isSponsor || false);
   }
 
   public generateFromDbRepresentation(data: any): Category {

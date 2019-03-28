@@ -59,7 +59,7 @@ export default abstract class BaseObject {
    * @returns {*} The primary key value for this object type
    * @abstract
    */
-  public abstract get id();
+  public abstract uid;
 
   /**
    * Merge two instances for update
@@ -74,16 +74,13 @@ export default abstract class BaseObject {
    */
   protected abstract get schema(): any;
 
-  public magicNumber: number;
-
   /*********** PROPERTIES *************/
   // In a sub-class, make sure this array also includes all super properties
   protected readonly disallowedPropertiesInternal: Set<string>;
 
   protected constructor() {
-    this.magicNumber = crypto.randomBytes(4).readUInt32BE(0);
     this.disallowedPropertiesInternal = new Set();
-    this.disallowedProperties = ['disallowedPropertiesInternal', 'magicNumber'];
+    this.disallowedProperties = ['disallowedPropertiesInternal'];
   }
 
   public merge(newObject: this, oldObject: this): this {

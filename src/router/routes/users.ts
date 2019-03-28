@@ -488,19 +488,19 @@ export class UsersController extends ParentRouter implements IExpressController 
     }
   }
 
-  /**
-   * @api {post} /users/extra-credit/delete Remove an extra credit assignment
-   * @apiVersion 2.0.0
-   * @apiName Remove Extra Credit Assignment
-   * @apiGroup User
-   * @apiPermission DirectorPermission
-   *
-   * @apiParam {String} uid - the id associated with the hacker
-   * @apiParam {String} hackathonUid - the id associated with the current hackathon
-   * @apiUse AuthArgumentRequired
-   * @apiUse IllegalArgumentError
-   * @apiUse ResponseBodyDescription
-   */
+ /**
+  * @api {post} /users/extra-credit/delete Remove an extra credit assignment
+  * @apiVersion 2.0.0
+  * @apiName Remove Extra Credit Assignment
+  * @apiGroup User
+  * @apiPermission DirectorPermission
+  *
+  * @apiParam {String} uid - the id associated with the hacker
+  * @apiParam {String} hackathonUid - the id associated with the current hackathon
+  * @apiUse AuthArgumentRequired
+  * @apiUse IllegalArgumentError
+  * @apiUse ResponseBodyDescription
+  */
   private async deleteExtraCreditAssignmentHandler(
     req: Request,
     res: Response,

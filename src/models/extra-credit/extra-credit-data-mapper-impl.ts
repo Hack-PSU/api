@@ -29,8 +29,8 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   public classesTableName: string = 'EXTRA_CREDIT_CLASSES';
 
   public READ_ALL_CLASSES: string = 'extra-credit:readall-classes';
-  public READ_BY_CLASS: string = 'extra-credit:read-by-class'
-  public READ_BY_UID: string = 'extra-credit:read-by-uid'
+  public READ_BY_CLASS: string = 'extra-credit:read-by-class';
+  public READ_BY_UID: string = 'extra-credit:read-by-uid';
   protected pkColumnName: string = 'uid';
 
   constructor(
@@ -59,22 +59,22 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   }
 
   public delete(object: ExtraCreditAssignment): Promise<IDbResult<void>> {
-     const query = squel.delete({ 
+    const query = squel.delete({
       autoQuoteTableNames: true,
-      autoQuoteFieldNames: true 
+      autoQuoteFieldNames: true,
     })
      .from(this.tableName)
      .where(`${this.pkColumnName} = ?`, object.uid)
      .toParam();
-   query.text = query.text.concat(';');
-   return from(
+    query.text = query.text.concat(';');
+    return from(
      this.sql.query(query.text, query.values, { cache: false }),
    ).pipe(
      map(() => ({ result: 'Success', data: undefined })),
    ).toPromise();
   }
 
-  public get(uid: UidType ,opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {
+  public get(uid: UidType , opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -142,8 +142,8 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
 
   public async getByUser(
     userId: UidType,
-    opts?: IUowOpts
-  ): Promise<IDbResult<ExtraCreditAssignment[]>>{
+    opts?: IUowOpts,
+  ): Promise<IDbResult<ExtraCreditAssignment[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName);
     if (opts && opts.startAt) {
@@ -168,9 +168,9 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
               .toPromise()),
         );
     }
-    
+
     queryBuilder = queryBuilder
-      .where('user_uid = ?', userId)
+      .where('user_uid = ?', userId);
 
     const query = queryBuilder
       .toParam();
@@ -183,7 +183,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getByClass(cid: number, opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment[]>>{
+  public async getByClass(cid: number, opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName);
     if (opts && opts.startAt) {
@@ -210,7 +210,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     }
 
     queryBuilder = queryBuilder
-      .where('class_uid = ?', cid)
+      .where('class_uid = ?', cid);
     const query = queryBuilder
       .toParam();
 
@@ -234,7 +234,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, {cache: false}),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();

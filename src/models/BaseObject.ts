@@ -1,6 +1,5 @@
 /* eslint-disable no-underscore-dangle,no-param-reassign,class-methods-use-this */
 import ajv from 'ajv';
-import * as crypto from 'crypto';
 import { default as _ } from 'lodash';
 import { IApiModel } from '../services/database';
 

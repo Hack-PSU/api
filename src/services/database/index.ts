@@ -1,12 +1,13 @@
 import { ICompoundHackathonUidType, Omit, UidType } from '../../JSCommon/common-types';
 import BaseObject from '../../models/BaseObject';
-import { ObjectFactory } from '../../models/object-factory';
 import { IUowOpts } from './svc/uow.service';
 
 export interface IDataMapper<T extends BaseObject> {
   tableName: string;
 
-  factory: ObjectFactory<T>;
+  dbReader: IDbReadable<T>;
+
+  dbWriter: IDbWritable<T>;
 
   get(object: UidType | number, opts?: IUowOpts): Promise<IDbResult<T>>;
 

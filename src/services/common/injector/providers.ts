@@ -28,7 +28,7 @@ import {
 } from '../../../router/routes/admin';
 import { AdminController } from '../../../router/routes/admin/';
 import { AdminCheckoutController } from '../../../router/routes/admin/admin-checkout';
-import { InternalController } from '../../../router/routes/internal';
+import { InternalController } from '../../../router/routes/internal/internal';
 import { EventsController } from '../../../router/routes/live/events';
 import { LiveController } from '../../../router/routes/live/live';
 import { UpdatesController } from '../../../router/routes/live/updates';
@@ -37,6 +37,7 @@ import { UsersController } from '../../../router/routes/users';
 import { FirebaseAuthService } from '../../auth';
 import { ApikeyAuthService } from '../../auth/apikey-auth';
 import { RBAC } from '../../auth/RBAC/rbac';
+import { MailchimpService } from '../../communication/email-list/mailchimp.service';
 import { SendgridService } from '../../communication/email/sendgrid.service';
 import { OnesignalService } from '../../communication/push-notification/onesignal.service';
 import { MemCacheServiceImpl } from '../../database/cache/memcache-impl.service';
@@ -104,6 +105,7 @@ export class ExpressProvider {
         { provide: 'IPushNotifService', useClass: OnesignalService },
         { provide: 'ICacheService', useClass: MemCacheServiceImpl },
         { provide: 'IEmailService', useClass: SendgridService },
+        { provide: 'IMailListService', useClass: MailchimpService },
         { provide: 'IStorageService', useClass: GoogleStorageService },
 
         // Classes

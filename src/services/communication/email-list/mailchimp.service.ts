@@ -1,22 +1,30 @@
 import * as crypto from 'crypto';
-import mailchimpApiV3 = require('mailchimp-api-v3');
+import { Inject, Injectable } from 'injection-js';
+// tslint:disable:import-name
+// @tst-ignore:import-name
+import Mailchimp from 'mailchimp-api-v3';
 import { Constants } from '../../../assets/constants/constants';
-import { IMailListService } from './email-list.service';
+import { Logger } from '../../logging/logging';
+import { IEmailList, IMailListService } from './email-list.service';
 
+@Injectable()
 export class MailchimpService implements IMailListService {
 
-  private readonly mailchimp;
+  private readonly mailchimp: Mailchimp;
 
-  constructor(mailchimpApiKey?: string) {
-    this.mailchimp = new mailchimpApiV3(mailchimpApiKey || Constants.MailchimpApiKey);
+  constructor(
+    @Inject('BunyanLogger') private readonly logger: Logger,
+  ) {
+    this.mailchimp = new Mailchimp(Constants.Mailchimp.apiKey);
   }
 
-  public addSubscriber(emailAddress: string, listId: string) {
+  public addSubscriber(emailAddress: string, listId: string, other_fields?: any) {
     return this.mailchimp.post(
       `/lists/${listId}/members`,
       {
         email_address: emailAddress,
         status: 'subscribed',
+        merge_fields: other_fields,
       },
     );
   }
@@ -40,7 +48,42 @@ export class MailchimpService implements IMailListService {
 
   public findList(listName: string) {
     return this.mailchimp.get('lists')
-      .then(({ lists }) => Promise.resolve(lists.filter(({ name }) => name === listName)));
+      .then(({ lists }: { lists: any[] }) => Promise.resolve(lists.filter(({ name }) => name === listName)));
+  }
+
+  public async createList(list: IEmailList, mergeFields?: string[]): Promise<IEmailList> {
+    const returnedList: IEmailList = await this.mailchimp.post('lists', list);
+    // Add custom fields
+    if (mergeFields) {
+      for (let i = 0; i < mergeFields.length; i += 1) {
+        const name = mergeFields[i];
+        try {
+          await this.mailchimp.post(
+            `lists/${returnedList.id}/merge-fields`,
+            {
+              name,
+              tag: name.toUpperCase(),
+              type: 'text',
+              required: true,
+              default_value: '',
+              public: true,
+              display_order: i,
+              options: {
+                default_country: 0,
+                phone_format: 'US',
+                date_format: 'MM/DD/YYYY',
+                choices: [],
+                size: 15,
+              },
+              help_text: name,
+            },
+          );
+        } catch (error) {
+          this.logger.error(error);
+        }
+      }
+    }
+    return returnedList;
   }
 
 }

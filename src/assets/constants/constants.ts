@@ -68,7 +68,24 @@ export class Constants {
     travelReimbursementBucket: 'hackpsu2018-travel-reimbursement-receipts-test',
   };
   public static readonly SendGridApiKey = Util.readEnv('SENDGRID_ACCESS_KEY', '');
-  public static readonly MailchimpApiKey = Util.readEnv('MAILCHIMP_API_KEY', '');
   public static readonly MailchimpPreregEmailList = 'HackPSU Email List';
   public static readonly redisKey = Util.readEnv('REDIS_KEY', '');
+  public static readonly Mailchimp = {
+    apiKey: Util.readEnv('MAILCHIMP_API_KEY', ''),
+    contact: {
+      company: 'HackPSU',
+      address1: 'Old Main',
+      city: 'State College',
+      state: 'Pennsylvania',
+      zip: '16801',
+      country: 'USA',
+    },
+    permissionReminder: 'You registered for HackPSU',
+    campaignDefaultInformation: {
+      from_name: 'HackPSU Team',
+      from_email: 'team@hackpsu.org',
+      subject: '',
+      language: 'English',
+    },
+  };
 }

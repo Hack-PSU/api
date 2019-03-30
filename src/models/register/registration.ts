@@ -105,6 +105,7 @@ export class Registration extends BaseObject {
   public time: number;
   public hackathon: string;
   public submitted: boolean;
+  public pin?: number;
 
   constructor(data: IRegistrationApiModel) {
     super();
@@ -134,6 +135,7 @@ export class Registration extends BaseObject {
     this.veteran = data.veteran;
     this.time = data.time;
     this.submitted = data.submitted;
+    this.pin = undefined;
     // this.hackathon = data.hackathon;
   }
 

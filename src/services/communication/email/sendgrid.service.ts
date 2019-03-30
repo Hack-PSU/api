@@ -1,12 +1,18 @@
-import * as sendgrid from '@sendgrid/mail';
+// tslint:disable:import-name
+import { default as sendgrid } from '@sendgrid/mail';
 import * as validator from 'email-validator';
 import { Injectable } from 'injection-js';
+import { Constants } from '../../../assets/constants/constants';
 import { EmailReplacementError } from '../../../JSCommon/errors';
 import { IEmailData } from './email-types';
 import { IEmailService } from './email.service';
 
 @Injectable()
 export class SendgridService implements IEmailService {
+
+  constructor() {
+    sendgrid.setApiKey(Constants.SendGridApiKey);
+  }
 
   public createEmailRequest(
     email: string,

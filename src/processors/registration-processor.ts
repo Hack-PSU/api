@@ -2,14 +2,18 @@ import * as fs from 'fs';
 import { Inject, Injectable } from 'injection-js';
 import * as path from 'path';
 import request from 'request';
+import { Constants } from '../assets/constants/constants';
 import { UidType } from '../JSCommon/common-types';
-import { Hackathon } from '../models/hackathon';
+import { IActiveHackathonDataMapper } from '../models/hackathon/active-hackathon';
 import { IRegisterDataMapper } from '../models/register';
 import { Registration } from '../models/register/registration';
 import { ResponseBody } from '../router/router-types';
 import { IEmailService } from '../services/communication/email';
-import { IDataMapper, IDbResult } from '../services/database';
-import { IUowOpts } from 'services/database/svc/uow.service';
+import { IMailListService } from '../services/communication/email-list';
+import { IEmailList } from '../services/communication/email-list/email-list.service';
+import { IDbResult } from '../services/database';
+import { IUowOpts } from '../services/database/svc/uow.service';
+import { Logger } from '../services/logging/logging';
 
 // TODO: Refactor this to retrieve email template from cloud storage?
 const EMAIL_TEMPLATE_PATH = '../assets/emails/email_template.html';
@@ -26,8 +30,6 @@ export interface IRegistrationProcessor {
 
   getAllRegistrationsByUser(id: UidType, opts?: IUowOpts): Promise<ResponseBody>;
 
-  sendRegistrationEmail(registration: Registration): Promise<[request.Response, {}]>;
-
   normaliseRegistrationData(registration: any): void;
 }
 
@@ -36,22 +38,36 @@ export class RegistrationProcessor implements IRegistrationProcessor {
 
   constructor(
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
-    @Inject('IHackathonDataMapper') private readonly hackathonDataMapper: IDataMapper<Hackathon>,
+    @Inject('IActiveHackathonDataMapper') private readonly hackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IEmailService') private readonly emailService: IEmailService,
+    @Inject('IMailListService') private readonly mailListService: IMailListService,
+    @Inject('BunyanLogger') private readonly logger: Logger,
   ) {}
 
   public async processRegistration(registration: Registration) {
     const result = await this.registerDataMapper.insert(registration);
     const submission = await this.registerDataMapper.submit(registration);
-    await this.sendRegistrationEmail(registration);
+    try {
+      const { data } = await this.registerDataMapper.getCurrent(registration.uid!);
+      const hackathon = await this.hackathonDataMapper.activeHackathon.toPromise();
+      await this.sendRegistrationEmail(data);
+      await this.subscribeUserToMailingList(hackathon.name, data);
+    } catch (error) {
+      this.logger.error(error);
+    }
     return new ResponseBody(
       'Success',
       200,
-      { result: 'Success', data: { registration, result, submission } },
+      { result: 'Success', data: registration },
     );
   }
 
+  /**
+   * @VisibleForTesting
+   */
   public async sendRegistrationEmail(registration: Registration): Promise<[request.Response, {}]> {
+    const substitutions = new Map<string, string>();
+    substitutions.set('pin', registration.pin!.toString());
     const preparedHtml = await this.emailService.emailSubstitute(emailHtml, registration.firstname);
     const emailData = this.emailService.createEmailRequest(
       registration.email,
@@ -60,6 +76,40 @@ export class RegistrationProcessor implements IRegistrationProcessor {
       '',
     );
     return this.emailService.sendEmail(emailData);
+  }
+
+  /**
+   * @VisibleForTesting
+   */
+  public async subscribeUserToMailingList(name: string, registration: Registration) {
+    const lists = await this.mailListService.findList(name);
+    let list: IEmailList;
+    if (lists.length > 0) {
+      [list] = lists;
+    } else {
+      // Create the list first
+      list = await this.mailListService.createList(
+        {
+          name,
+          contact: Constants.Mailchimp.contact,
+          permission_reminder: Constants.Mailchimp.permissionReminder,
+          campaign_defaults: Constants.Mailchimp.campaignDefaultInformation,
+          email_type_option: true,
+        },
+        ['pin', 'university', 'major'],
+      );
+    }
+    return this.mailListService.addSubscriber(
+      registration.email,
+      list.id!,
+      {
+        PIN: registration.pin!.toString(),
+        FNAME: registration.firstname,
+        LNAME: registration.lastname,
+        UNIVERSITY: registration.university,
+        MAJOR: registration.major,
+      },
+    );
   }
 
   public normaliseRegistrationData(registration: any) {

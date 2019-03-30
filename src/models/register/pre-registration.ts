@@ -16,6 +16,7 @@ export class PreRegistration extends BaseObject {
 
   public readonly uid: UidType;
   public email: string;
+  public hackathon: string;
 
   constructor(email: string, uid?: string) {
     super();

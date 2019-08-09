@@ -87,7 +87,7 @@ export class MysqlUow implements IUow {
                 }
                 // Add result to cache
                 try {
-                  await this.cacheService.set(`${query}${(params as string[]).join('')}`, result)
+                  await this.cacheService.set(`${query}${(params as string[]).join('')}`, result);
                 } catch (error) {
                   this.logger.error(error);
                 }

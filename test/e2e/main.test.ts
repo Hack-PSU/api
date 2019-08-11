@@ -1,7 +1,7 @@
 import { suite, test } from 'mocha-typescript';
 import { IntegrationTest } from './integration-test';
 
-@suite
+@suite('INTEGRATION TEST: Index')
 class IndexIntegrationTest extends IntegrationTest {
 
   // tslint:disable:no-empty
@@ -11,7 +11,7 @@ class IndexIntegrationTest extends IntegrationTest {
 
   protected readonly apiEndpoint = '/';
 
-  @test
+  @test('gets index route')
   public async getIndexRoute() {
     // GIVEN: API
     // WHEN: GET: index route

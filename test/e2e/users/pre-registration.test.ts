@@ -3,7 +3,7 @@ import * as squel from 'squel';
 import { PreRegistration } from '../../../src/models/register/pre-registration';
 import { UsersIntegrationTest } from './users.test';
 
-@suite
+@suite('INTEGRATION TEST: Preregistration')
 class PreRegistrationIntegrationTest extends UsersIntegrationTest {
 
   public static async before() {
@@ -20,7 +20,7 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
 
   protected readonly apiEndpoint = '/v2/users/pre-register';
 
-  @test
+  @test('successfully adds preregistration')
   @slow(1500)
   public async addPreRegistrationSuccessfully() {
     // GIVEN: API
@@ -38,7 +38,7 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
     await this.verifyPreRegistration(preRegistration);
   }
 
-  @test
+  @test('throws an error when an invalid email is provided')
   public async addPreRegistrationFailureDueToInvalidEmail() {
     // GIVEN: API
     // WHEN: Adding a new pre-registration

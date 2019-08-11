@@ -142,7 +142,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @apiName Update Registration
    * @apiGroup Admin Registration
    * @apiPermission UserPermission
-   * @apiParam {Registration} The updated registration object.
+   * @apiParam {Registration} registration The updated registration object.
    * @apiUse AuthArgumentRequired
    * @apiUse ResponseBodyDescription
    */

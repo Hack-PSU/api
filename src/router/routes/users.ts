@@ -49,8 +49,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     // Use authentication
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
-    app
-      .post(
+    app.post(
         '/register',
         this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
         (req, res, next) => this.storageService.upload(req, res, next),

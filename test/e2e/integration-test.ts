@@ -49,10 +49,12 @@ export abstract class IntegrationTest {
       endTime: null,
       uid: v4(),
     });
-    IntegrationTest.activeHackathon = hackathon;
+    if (!IntegrationTest.activeHackathon) {
+      IntegrationTest.activeHackathon = hackathon;
+    }
     const query = squel.insert()
       .into('HACKATHON')
-      .setFieldsRows([hackathon.dbRepresentation])
+      .setFieldsRows([IntegrationTest.activeHackathon.dbRepresentation])
       .toParam();
     await this.mysqlUow.query(query.text, query.values);
   }

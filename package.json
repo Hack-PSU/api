@@ -48,7 +48,7 @@
     "all": true
   },
   "dependencies": {
-    "@fluffy-spoon/substitute": "1.81.0",
+    "@fluffy-spoon/substitute": "^1.89.0",
     "@google-cloud/debug-agent": "2.6.0",
     "@google-cloud/logging-bunyan": "0.9.5",
     "@google-cloud/monitoring": "0.5.0",

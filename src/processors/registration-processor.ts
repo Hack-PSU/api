@@ -9,7 +9,7 @@ import { Registration } from '../models/register/registration';
 import { ResponseBody } from '../router/router-types';
 import { IEmailService } from '../services/communication/email';
 import { IDataMapper, IDbResult } from '../services/database';
-import { IUowOpts } from 'services/database/svc/uow.service';
+import { IUowOpts } from '../services/database/svc/uow.service';
 
 // TODO: Refactor this to retrieve email template from cloud storage?
 const EMAIL_TEMPLATE_PATH = '../assets/emails/email_template.html';

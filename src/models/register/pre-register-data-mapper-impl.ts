@@ -123,8 +123,8 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getCount(): Promise<IDbResult<number>> {
-    const query = this.getCountQuery().toParam();
+  public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
+    const query = (await this.getCountQuery(opts)).toParam();
     query.text = query.text.concat(';');
     return from(
       this.sql.query<number>(query.text, query.values, { cache: true }),
@@ -133,10 +133,22 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public getCountQuery() {
-    return squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+  public async getCountQuery(opts?: IUowOpts) {
+    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'preregistration_count');
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    return queryBuilder;
   }
 
   public async insert(object: PreRegistration): Promise<IDbResult<PreRegistration>> {

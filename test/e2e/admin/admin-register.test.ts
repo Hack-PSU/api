@@ -59,10 +59,6 @@ function login(email: string, password: string): Promise<firebase.User> {
   });
 }
 
-function loginRegular() {
-  return login('test@email.com', 'password');
-}
-
 function loginAdmin() {
   return login('admin@email.com', 'password');
 }
@@ -165,6 +161,64 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
     await this.verifyUsers(res.body.body.data);
   }
 
+  @test('fails to update registration when no registration is provided')
+  @slow(1500)
+  public async updateRegistrationFailsDueToNoRegistration() {
+    // GIVEN: API
+    // WHEN: Getting the registration
+    const user = await loginAdmin();
+    const idToken = await user.getIdToken();
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/update`)
+      .set('idToken', idToken);
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res, 'Error', 400, 'Error');
+    // THEN: Failed to validate input
+    this.expect(res.body.body.data).to.deep.equal({ message: 'registration field missing' });
+  }
+
+  @test('fails to update registration when no uid is provided')
+  @slow(1500)
+  public async updateRegistrationFailsDueToNoUid() {
+    // GIVEN: API
+    // WHEN: Getting the registration
+    const user = await loginAdmin();
+    const idToken = await user.getIdToken();
+    const parameters = validRegistration();
+    parameters.uid = undefined;
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/update`)
+      .set('idToken', idToken)
+      .set('content-type', 'application/json; charset=utf-8')
+      .send({ registration: parameters });
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res, 'Error', 400, 'Error');
+    // THEN: Failed to validate input
+    this.expect(res.body.body.data).to.deep.equal({ message: 'registration id missing' });
+  }
+
+  @test('fails to update registration when no hackathon id is provided')
+  @slow(1500)
+  public async updateRegistrationFailsDueToNoHackathonId() {
+    // GIVEN: API
+    // WHEN: Getting the registration
+    const user = await loginAdmin();
+    const idToken = await user.getIdToken();
+    const parameters = validRegistration();
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/update`)
+      .set('idToken', idToken)
+      .set('content-type', 'application/json; charset=utf-8')
+      .send({ registration: parameters });
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res, 'Error', 400, 'Error');
+    // THEN: Failed to validate input
+    this.expect(res.body.body.data).to.deep.equal({ message: 'hackathon id missing' });
+  }
+
   @test('successfully updates an existing registration')
   @slow(1500)
   public async updateExistingRegistrationSuccessfully() {
@@ -172,7 +226,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
     // WHEN: Updating a registration
     const user = await loginAdmin();
     const idToken = await user.getIdToken();
-    const parameters = validRegistration();
+    const parameters = { ...validRegistration(), hackathon: IntegrationTest.activeHackathon.uid };
     parameters.firstName = 'testFirstName2';
     parameters.lastName = 'testLastName2';
     const res = await this.chai
@@ -180,14 +234,14 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
       .post(`${this.apiEndpoint}/update`)
       .set('idToken', idToken)
       .set('content-type', 'application/json; charset=utf-8')
-      .send(parameters);
+      .send({ registration: parameters });
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Updated registration is returned
-    await this.verifyUsers(res.body.body.data);
+    await this.verifyUsers([res.body.body.data]);
   }
 
-  private async verifyCount(count) {
+  private async verifyCount(count: Number[]) {
     const query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'registration_count')
@@ -195,11 +249,11 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
     const [result] = await AdminRegisterIntegrationTest.mysqlUow.query<number>(
       query.text,
       query.values,
-    ) as number[];
+    ) as Number[];
     this.expect(result).to.deep.equal(count);
   }
 
-  private async verifyUsers(users) {
+  private async verifyUsers(users: Registration[]) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName, 'registration')
       .join('HACKATHON',

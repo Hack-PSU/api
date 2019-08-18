@@ -51,7 +51,7 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
   public async getUserCountByCategory(opts?: IUowOpts): Promise<IDbResult<IUserCount[]>> {
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(
-        this.preRegDataMapper.getCountQuery(),
+        await this.preRegDataMapper.getCountQuery(opts),
         'a',
       )
       .join(

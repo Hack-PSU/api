@@ -199,12 +199,6 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
   }
 
   private async getRegistrationHandler(req: Request, res: Response, next: NextFunction) {
-    if (!req.query.email && !req.query.uid) {
-      return Util.standardErrorHandler(
-        new HttpError('either email or uid must be provided', 400),
-        next,
-      );
-    }
     if (!req.query.hackathon) {
       const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
       req.query.hackathon = hackathon.id;

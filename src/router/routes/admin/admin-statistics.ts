@@ -151,11 +151,13 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
    *
+   * @apiParam {boolean} allHackathons - Get data for all hackathons. Defaults to false.
+   * @apiParam {String} hackathon - Uid of hackathon to get results by; allHackathons must be false
+   * 
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {number} number of preregistered users
+   * @apiSuccess {number} preregistration_count - Number of preregistered users
    * @apiUse ResponseBodyDescription
-   * @apiUse RequestOpts
    */
   private async getPreRegistrationCountHandler(res: Response, next: NextFunction) {
     let result: IDbResult<number>;

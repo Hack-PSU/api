@@ -33,7 +33,7 @@ function validRegistration() {
     mlhcoc: true,
     mlhdcp: true,
     referral: 'test referral',
-    project: 'test project',
+    projectDesc: 'test project',
     expectations: 'test expectations',
     veteran: VeteranOptions.NO,
   };
@@ -97,10 +97,7 @@ class RegistrationIntegrationTest extends UsersIntegrationTest {
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Registration was added
-    // @ts-ignore
-    const registration = Registration.fromDb(res.body.body.data);
-    registration.hackathon = RegistrationIntegrationTest.activeHackathon.uid;
-    await this.verifyRegistration(registration);
+    await this.verifyRegistration(res.body.body.data.result.data);
   }
 
   private async verifyRegistration(registration: Registration) {
@@ -111,6 +108,10 @@ class RegistrationIntegrationTest extends UsersIntegrationTest {
       query.text,
       query.values,
     ) as Registration[];
-    this.expect(result).to.deep.equal(registration.dbRepresentation);
+    delete result.hackathon;
+    delete result.submitted;
+    delete result.pin;
+    delete result.time;
+    this.expect(result).to.deep.equal(registration);
   }
 }

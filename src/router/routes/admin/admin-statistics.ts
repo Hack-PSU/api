@@ -154,7 +154,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiParam {boolean} allHackathons - Get data for all hackathons. Defaults to false.
    * @apiParam {String} hackathon - Uid of hackathon to get results by; allHackathons must be false
-   * 
+   *
    * @apiUse AuthArgumentRequired
    *
    * @apiSuccess {number} preregistration_count - Number of preregistered users

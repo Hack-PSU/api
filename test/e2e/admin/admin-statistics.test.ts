@@ -74,22 +74,22 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
     await this.verifyCount(res.body.body.data);
   }
 
-  @test('successfully gets all RSVP\'d users')
-  @slow(1500)
-  public async getRSVPUsersSuccessfully() {
-    // GIVEN: API
-    // WHEN: Getting RSVP'd user
-    const user = await loginAdmin();
-    const idToken = await user.getIdToken();
-    const res = await this.chai
-      .request(this.app)
-      .get(`${this.apiEndpoint}=rsvp`)
-      .set('idToken', idToken);
-    // THEN: Returns a well formed response
-    super.assertRequestFormat(res);
-    // THEN: RSVP'd users are returned
-    // await this.verifyUsers(res.body.body.data);
-  }
+  // @test('successfully gets all RSVP\'d users')
+  // @slow(1500)
+  // public async getRSVPUsersSuccessfully() {
+  //   // GIVEN: API
+  //   // WHEN: Getting RSVP'd user
+  //   const user = await loginAdmin();
+  //   const idToken = await user.getIdToken();
+  //   const res = await this.chai
+  //     .request(this.app)
+  //     .get(`${this.apiEndpoint}=rsvp`)
+  //     .set('idToken', idToken);
+  //   // THEN: Returns a well formed response
+  //   super.assertRequestFormat(res);
+  //   // THEN: RSVP'd users are returned
+  //   // await this.verifyUsers(res.body.body.data);
+  // }
 
   private async verifyCount(count: number) {
     const query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })

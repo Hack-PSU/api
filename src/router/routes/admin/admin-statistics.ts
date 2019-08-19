@@ -136,6 +136,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
       result = await this.adminStatisticsDataMapper.getUserCountByCategory({
         byHackathon: !res.locals.allHackathons,
         hackathon: res.locals.hackathon,
+        ignoreCache: res.locals.ignoreCache,
       });
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -361,6 +362,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -391,6 +393,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
         uid: req.query.uid,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -420,6 +423,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
         uid: req.query.uid,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);

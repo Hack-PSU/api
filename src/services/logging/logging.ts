@@ -1,9 +1,11 @@
+// tslint:disable:no-var-requires
 import * as bunyan from 'bunyan';
 import devNull from 'dev-null';
 import { Request } from 'express';
 import { Injectable } from 'injection-js';
 import 'reflect-metadata';
-// tslint:disable:no-var-requires
+import * as requestContext from 'request-context';
+import { Util } from '../../JSCommon/util';
 const { express } = require('@google-cloud/logging-bunyan');
 
 const LOGGER_NAME = 'hackpsu-api';
@@ -42,6 +44,10 @@ export class Logger {
     const { mw } = await express.middleware({
       level: 'trace',
       logName: LOGGER_NAME,
+      serviceContext: {
+        service: Util.readEnv('GAE_SERVICE', 'no-service'),
+        version: Util.readEnv('GAE_VERSION', 'no-version'),
+      },
     });
     return mw;
   }
@@ -51,29 +57,33 @@ export class Logger {
   }
 
   public debug(...message: any) {
-    if (this.request) {
-      this.request.log.debug(...message);
+    const request = requestContext.get('request:logger');
+    if (request) {
+      request.log.debug(...message);
     }
     this.bunyan.debug(message);
   }
 
   public info(...message: any) {
-    if (this.request) {
-      this.request.log.info(...message);
+    const request = requestContext.get('request:logger');
+    if (request) {
+      request.log.info(...message);
     }
     this.bunyan.info(message);
   }
 
   public error(...message: any) {
-    if (this.request) {
-      this.request.log.error(...message);
+    const request = requestContext.get('request:logger');
+    if (request) {
+      request.log.error(...message);
     }
     this.bunyan.error(message);
   }
 
   public warn(...message: any) {
-    if (this.request) {
-      this.request.log.warn(...message);
+    const request = requestContext.get('request:logger');
+    if (request) {
+      request.log.warn(...message);
     }
     this.bunyan.warn(message);
   }

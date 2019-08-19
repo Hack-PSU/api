@@ -2,8 +2,6 @@
 import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import * as admin from 'firebase-admin';
-// tslint:disable
-// @ts-ignore
 import _ from 'lodash';
 import 'mocha';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';

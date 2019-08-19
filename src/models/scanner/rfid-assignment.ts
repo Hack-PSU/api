@@ -28,7 +28,7 @@ export class RfidAssignment extends BaseObject {
   public readonly rfid_uid: UidType;
   public readonly user_uid: UidType;
   public readonly time: EpochNumber;
-  public readonly hackathon?: UidType;
+  public hackathon?: UidType;
 
   constructor(data: IRfidAssignmentApiModel) {
     super();
@@ -38,4 +38,12 @@ export class RfidAssignment extends BaseObject {
     this.hackathon = data.hackathon;
   }
 
+  public get cleanRepresentation() {
+    const repr: any = super.cleanRepresentation;
+    repr.wid = repr.rfid_uid;
+    repr.uid = repr.user_uid;
+    delete repr.rfid_uid;
+    delete repr.user_uid;
+    return repr as this;
+  }
 }

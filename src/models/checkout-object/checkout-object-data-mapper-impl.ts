@@ -2,7 +2,7 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { EpochNumber, ICompoundHackathonUidType } from '../../JSCommon/common-types';
+import { EpochNumber, ICompoundHackathonUidType, UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
@@ -13,6 +13,7 @@ import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { CheckoutObject } from './checkout-object';
+import { CheckoutObjectWithUser } from './checkout-object-with-user';
 import { ICheckoutObjectDataMapper } from './index';
 
 @Injectable()
@@ -79,14 +80,24 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<CheckoutObject[]>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<CheckoutObjectWithUser[]>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
     })
-      .from(this.tableName, 'checkoutObject');
+      .from(this.tableName, 'checkoutObject')
+      .from('REGISTRATION', 'registration')
+      .from('CHECKOUT_ITEMS', 'checkoutItem');
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
+    } else {
+      queryBuilder = queryBuilder.fields(['checkoutObject.*', 'registration.firstname', 'registration.lastname', 'checkoutItem.name']);
+      queryBuilder = queryBuilder.where(
+        'checkoutObject.user_id = registration.uid',
+      );
+      queryBuilder = queryBuilder.where(
+        'checkoutObject.item_id = checkoutItem.uid',
+      );
     }
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
@@ -94,10 +105,14 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder.
             where(
-              'hackathon_id = ?',
+              'checkoutObject.hackathon = ?',
               await (opts.hackathon ?
                 Promise.resolve(opts.hackathon) :
                 this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
@@ -105,9 +120,9 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<CheckoutObject>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<CheckoutObjectWithUser>(query.text, query.values, { cache: checkCache }))
         .pipe(
-          map((checkoutObjects: CheckoutObject[]) => ({ result: 'Success', data: checkoutObjects })),
+          map((checkoutObjects: CheckoutObjectWithUser[]) => ({ result: 'Success', data: checkoutObjects })),
         )
         .toPromise();
   }
@@ -133,16 +148,17 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 
-  public insert(object: CheckoutObject): Promise<IDbResult<CheckoutObject>> {
+  public async insert(object: CheckoutObject): Promise<IDbResult<CheckoutObject>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
       this.logger.warn(object.dbRepresentation);
-      return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
+      return Promise.reject(new HttpError(validation.error, 400));
     }
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation])
+      .set('hackathon', await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise())
       .toParam();
     query.text = query.text.concat(';');
     return from(

@@ -57,7 +57,7 @@ export class EventsController extends LiveController {
 
   /**
    * Delete an event
-   * @api {post} /live/event/delete Delete an existing event
+   * @api {post} /live/events/delete Delete an existing event
    * @apiVersion 2.0.0
    * @apiName Update Event
    * @apiGroup Events
@@ -87,7 +87,7 @@ export class EventsController extends LiveController {
 
   /**
    * Updates an existing event
-   * @api {post} /live/event/update Update an existing event
+   * @api {post} /live/events/update Update an existing event
    * @apiVersion 2.0.0
    * @apiName Update Event
    * @apiGroup Events
@@ -110,7 +110,7 @@ export class EventsController extends LiveController {
     response: express.Response,
     next: express.NextFunction,
   ) {
-    if (!request.body || !request.body.event) {
+    if (!request.body) {
       return next(new HttpError('No event provided to update', 400));
     }
     let event;
@@ -130,7 +130,7 @@ export class EventsController extends LiveController {
 
   /**
    * Create a new event
-   * @api {post} /live/event/ Add a new event
+   * @api {post} /live/events/ Add a new event
    * @apiVersion 2.0.0
    * @apiName New Event
    * @apiGroup Events

@@ -39,7 +39,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
     return _.pick(
       attendanceValue,
       [
-        'uid',
+        'user_uid',
         'firstname',
         'lastname',
         'gender',
@@ -76,6 +76,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
         'event_title',
         'event_description',
         'event_type',
+        'event_name',
       ],
     );
   }
@@ -112,33 +113,17 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
    * @return {Promise<Stream>}
    */
   public async getAll(opts?: IUowOpts): Promise<IDbResult<Attendance[]>> {
-    let queryBuilder = squel.select({
-      autoQuoteFieldNames: true,
-      autoQuoteTableNames: true,
-    })
-      .from(this.tableName, 'attendance');
+    let queryBuilder = await this.getAttendanceStatQuery(opts);
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
-    if (opts && opts.startAt) {
-      queryBuilder = queryBuilder.offset(opts.startAt);
-    }
-    if (opts && opts.count) {
-      queryBuilder = queryBuilder.limit(opts.count);
-    }
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder.
-          where(
-            'hackathon_id = ?',
-            await (opts.hackathon ?
-              Promise.resolve(opts.hackathon) :
-              this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
-          );
-    }
-
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Attendance>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<Attendance>(query.text, query.values, { cache: checkCache }))
         .pipe(
           map((attendances: Attendance[]) => ({
             data: attendances,
@@ -179,41 +164,10 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
   }
 
   public async getAttendanceByUser(opts?: IStatUowOpts) {
-    let queryBuilder = squel.select({
-      autoQuoteFieldNames: true,
-      autoQuoteTableNames: true,
-    })
-      .from(this.tableName, 'attendance')
-      .join(
-        this.registerDataMapper.tableName,
-        'registration',
-        'attendance.user_uid = registration.uid',
-      )
-      .distinct();
-    if (opts && opts.fields) {
-      queryBuilder = queryBuilder.fields(opts.fields);
-    }
-    if (opts && opts.startAt) {
-      queryBuilder = queryBuilder.offset(opts.startAt);
-    }
-    if (opts && opts.count) {
-      queryBuilder = queryBuilder.limit(opts.count);
-    }
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder.where(
-        'hackathon_id = ?',
-        await (opts.hackathon ?
-          Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
-            .toPromise()),
-      );
-      queryBuilder = queryBuilder.where(
-        'registration.hackathon = ?',
-        await (opts.hackathon ?
-          Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
-            .toPromise()),
-      );
+    let queryBuilder = await this.getAttendanceStatQuery(opts);
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
     }
     if (opts && opts.uid) {
       queryBuilder = queryBuilder.where('attendance.user_uid = ?', opts.uid);
@@ -223,7 +177,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<any>(query.text, query.values, { cache: true }),
+      this.sql.query<any>(query.text, query.values, { cache: checkCache }),
     ).pipe(
       map((result: Attendance[]) => {
         // Reduce the result to a condensed object
@@ -248,41 +202,10 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
   }
 
   public async getAttendanceByEvent(opts?: IStatUowOpts) {
-    let queryBuilder = squel.select({
-      autoQuoteFieldNames: true,
-      autoQuoteTableNames: true,
-    })
-      .from(this.tableName, 'attendance')
-      .join(
-        this.registerDataMapper.tableName,
-        'registration',
-        'attendance.user_uid = registration.uid',
-      )
-      .distinct();
-    if (opts && opts.fields) {
-      queryBuilder = queryBuilder.fields(opts.fields);
-    }
-    if (opts && opts.startAt) {
-      queryBuilder = queryBuilder.offset(opts.startAt);
-    }
-    if (opts && opts.count) {
-      queryBuilder = queryBuilder.limit(opts.count);
-    }
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder.where(
-        'hackathon_id = ?',
-        await (opts.hackathon ?
-          Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
-            .toPromise()),
-      );
-      queryBuilder = queryBuilder.where(
-        'registration.hackathon = ?',
-        await (opts.hackathon ?
-          Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
-            .toPromise()),
-      );
+    let queryBuilder = await this.getAttendanceStatQuery(opts);
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
     }
     if (opts && opts.uid) {
       queryBuilder = queryBuilder.where('attendance.event_uid = ?', opts.uid);
@@ -291,7 +214,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<any>(query.text, query.values, { cache: true }),
+      this.sql.query<any>(query.text, query.values, { cache: checkCache }),
     ).pipe(
       map((result: Attendance[]) => {
         // Reduce the result to a condensed object
@@ -326,5 +249,42 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
   }
   public delete(uid: string, opts?: IUowOpts): Promise<IDbResult<void>> {
     throw new MethodNotImplementedError('This method is not supported by this class');
+  }
+
+  private async getAttendanceStatQuery(opts?: IUowOpts) {
+    let queryBuilder = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName, 'attendance')
+      .join(
+        this.registerDataMapper.tableName,
+        'registration',
+        'attendance.user_uid = registration.uid',
+      )
+      .distinct();
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder.where(
+        'hackathon_id = ?',
+        await (opts.hackathon ?
+          Promise.resolve(opts.hackathon) :
+          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+            .toPromise()),
+      );
+      queryBuilder = queryBuilder.where(
+        'registration.hackathon = ?',
+        await (opts.hackathon ?
+          Promise.resolve(opts.hackathon) :
+          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+            .toPromise()),
+      );
+    }
+    return queryBuilder;
   }
 }

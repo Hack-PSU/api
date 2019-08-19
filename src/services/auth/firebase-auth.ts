@@ -61,6 +61,14 @@ export class FirebaseAuthService implements IFirebaseAuthService {
         // Only supported for IExtraCreditAclPerm
         requestPermission = (permission as IExtraCreditAclPerm).READ_ALL_CLASSES;
         break;
+      case AclOperations.READ_BY_UID:
+        // Only supported for IExtraCreditAclPerm
+        requestPermission = (permission as IExtraCreditAclPerm).READ_BY_UID;
+        break;
+      case AclOperations.READ_BY_CLASS:
+        // Only supported for IExtraCreditAclPerm
+        requestPermission = (permission as IExtraCreditAclPerm).READ_BY_CLASS;
+        break;
       default:
         requestPermission = '';
         break;

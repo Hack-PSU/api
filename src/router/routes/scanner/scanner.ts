@@ -281,6 +281,7 @@ export class ScannerController extends AbstractScannerController implements IExp
     try {
       result = await this.adminStatisticsDataMapper.getAllUserData({
         byHackathon: true,
+        ignoreCache: true,
       });
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -302,12 +303,13 @@ export class ScannerController extends AbstractScannerController implements IExp
    * @apiUse IllegalArgumentError
    */
   private async getUserByRfidBandHandler(req: Request, res: Response, next: NextFunction) {
-    if (!res.locals.userToken) {
+    if (!res.locals.registration) {
       return Util.standardErrorHandler(new HttpError('Invalid rfid band', 400), next);
     }
     try {
       const response = new ResponseBody('Success', 200, { result: 'Success',
-        data: { userToken: res.locals.userToken, registration: res.locals.registration }});
+        data: res.locals.registration,
+      });
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

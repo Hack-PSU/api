@@ -6,7 +6,6 @@ if (Util.getCurrentEnv() !== Environment.TEST) {
   traceAgent.start();
   debugAgent.start();
 }
-
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -14,6 +13,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import { default as expressQueryBoolean } from 'express-query-boolean';
 import helmet from 'helmet';
 import * as path from 'path';
+import * as requestContext from 'request-context';
 import 'source-map-support/register';
 import { HttpError } from './JSCommon/errors';
 import { ParentRouter, ResponseBody } from './router/router-types';
@@ -106,8 +106,7 @@ export class App extends ParentRouter {
     this.app.use(bodyParser.json({
       limit: '10mb',
     }));
-    this.app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
-
+    // this.app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
     // Setup Cookie Parser
     this.app.use(cookieParser());
 
@@ -170,9 +169,10 @@ export class App extends ParentRouter {
   private async loggerConfig() {
     if (Util.getCurrentEnv() !== Environment.TEST && Util.getCurrentEnv() !== Environment.DEBUG) {
       const loggingMw = await this.logger.mw();
+      this.app.use(requestContext.middleware('request'));
       this.app.use(loggingMw);
       this.app.use((request: Request, response, next) => {
-        this.logger.setContext(request);
+        requestContext.set('request:logger', request);
         next();
       });
     }

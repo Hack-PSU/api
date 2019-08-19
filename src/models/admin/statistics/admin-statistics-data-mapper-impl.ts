@@ -68,8 +68,12 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
       )
       .toParam();
     query.text = query.text.concat(';');
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     return from(
-      this.sql.query<IUserCount>(query.text, query.values, { cache: true }),
+      this.sql.query<IUserCount>(query.text, query.values, { cache: checkCache }),
     ).pipe(
       map((result: IUserCount[]) => ({ result: 'Success', data: result })),
     ).toPromise();
@@ -115,10 +119,14 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<IUserStatistics>(query.text, query.values, { cache: true }),
+      this.sql.query<IUserStatistics>(query.text, query.values, { cache: checkCache }),
     ).pipe(
       map((result: IUserStatistics[]) => ({ result: 'Success', data: result })),
     ).toPromise();

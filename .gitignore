@@ -17,3 +17,5 @@ hackpsu-18-serviceaccount.json
 doc/
 .nyc_output/
 lib/
+coverage/
+firebase_config.json

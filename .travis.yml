@@ -6,7 +6,7 @@ branches:
   - master
   - dev
 node_js:
-- '8'
+- '10'
 before_install:
 - npm i -g node-cipher
 - npm i -g grunt-cli

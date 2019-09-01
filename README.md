@@ -4,9 +4,9 @@ This is the backend monolith for HackPSU.
 
 ### Development Setup
 
-We are developing on Node v8.x.x
+We are developing on Node v10.x.x
 
-Firstly, you'll need Nodejs. We recommend v8+
+Firstly, you'll need Nodejs. We recommend v10+
 
 [Install node](https://nodejs.org/en/)
 

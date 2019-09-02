@@ -2,7 +2,7 @@
   "name": "hackpsu-api",
   "version": "2.0.0",
   "engines": {
-    "node": "~8"
+    "node": "~10"
   },
   "eslintConfig": {
     "extends": "airbnb-base"

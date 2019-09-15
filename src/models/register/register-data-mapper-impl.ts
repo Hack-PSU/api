@@ -162,8 +162,12 @@ export class RegisterDataMapperImpl extends GenericDataMapper
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     const query = (await this.getCountQuery(opts)).toParam();
     query.text = query.text.concat(';');
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     return from(
-      this.sql.query<number>(query.text, query.values, { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: checkCache }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
@@ -314,11 +318,10 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       'veteran',
     ];
     let queryBuilder;
-    // tslint:disable-next-line:prefer-for-of
-    for (let i = 0; i < columnNames.length; i += 1) {
+    for (const name of columnNames) {
       queryBuilder = !queryBuilder ?
-        await this.getSelectQueryForOptionName(columnNames[i], opts) :
-        queryBuilder.union(await this.getSelectQueryForOptionName(columnNames[i], opts));
+        await this.getSelectQueryForOptionName(name, opts) :
+        queryBuilder.union(await this.getSelectQueryForOptionName(name, opts));
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
@@ -329,27 +332,6 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     ))
       .pipe(
         map((event: IRegistrationStats[]) => ({ result: 'Success', data: event })),
-      )
-      .toPromise();
-  }
-
-  public getEmailByUid(uid: UidType): Promise<IDbResult<string>> {
-    const query = squel.select({
-      autoQuoteFieldNames: true,
-      autoQuoteTableNames: true,
-    })
-      .from(this.tableName)
-      .field('email')
-      .where('uid = ?', uid)
-      .toParam();
-    query.text = query.text.concat(';');
-    return from(this.sql.query<string>(
-      query.text,
-      query.values,
-      { cache: true },
-    ))
-      .pipe(
-        map((email: string) => ({ result: 'Success', data: email })),
       )
       .toPromise();
   }
@@ -384,6 +366,27 @@ export class RegisterDataMapperImpl extends GenericDataMapper
         );
     }
     return queryBuilder.group(fieldname);
+  }
+
+  public getEmailByUid(uid: UidType): Promise<IDbResult<string>> {
+    const query = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName)
+      .field('email')
+      .where('uid = ?', uid)
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<string>(
+      query.text,
+      query.values,
+      { cache: true },
+    ))
+      .pipe(
+        map((email: string) => ({ result: 'Success', data: email })),
+      )
+      .toPromise();
   }
 
   public getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>> {

@@ -74,13 +74,16 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
       .setFieldsRows([testUser.dbRepresentation])
       .set('hackathon', IntegrationTest.activeHackathon.uid)
       .toParam();
+    query.text = query.text.concat(';');
     await AdminRegisterIntegrationTest.mysqlUow.query(query.text, query.values);
   }
 
   public static async after() {
     const query = squel.delete()
       .from('REGISTRATION')
+      .where('uid = ?', validRegistration().uid)
       .toParam();
+    query.text = query.text.concat(';');
     await AdminRegisterIntegrationTest.mysqlUow.query(query.text, query.values);
     await IntegrationTest.after();
     await firebase.auth().signOut();
@@ -241,16 +244,18 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
   //   await this.verifyUsers([res.body.body.data]);
   // }
 
-  private async verifyCount(count: Number[]) {
+  private async verifyCount(count: number[]) {
     const query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'registration_count')
+      .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
+    query.text = query.text.concat(';');
     const [result] = await AdminRegisterIntegrationTest.mysqlUow.query<number>(
       query.text,
       query.values,
-    ) as Number[];
-    this.expect(result).to.deep.equal(count);
+    ) as number[];
+    this.expect(count).to.deep.equal(result);
   }
 
   private async verifyUsers(users: Registration[]) {
@@ -263,6 +268,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
       .fields(['hackathon.name', 'hackathon.start_time', 'hackathon.end_time', 'hackathon.base_pin', 'hackathon.active'])
       .where('hackathon.uid = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
+    query.text = query.text.concat(';');
     const result = await AdminRegisterIntegrationTest.mysqlUow.query<Registration>(
       query.text,
       query.values,

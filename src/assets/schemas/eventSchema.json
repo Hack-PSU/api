@@ -6,7 +6,7 @@
       "minLength": 1
     },
     "event_location": {
-      "type": "string",
+      "type": "number",
       "minLength": 1
     },
     "event_start_time": {

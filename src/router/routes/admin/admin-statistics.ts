@@ -94,7 +94,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiSuccess {number[]} number of users that selected particular categories for registrations
    * @apiUse ResponseBodyDescription
-   * @apiUse RequestOpts
+   * @apiUse RequestOptsCount
    */
   private async getRegistrationStatisticsCountHandler(
     res: Response,
@@ -125,7 +125,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiSuccess {number[]} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
    * @apiUse ResponseBodyDescription
-   * @apiUse RequestOpts
+   * @apiUse RequestOptsCount
    */
   private async getUserCountByCategoryHandler(
     res: Response,
@@ -152,13 +152,11 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
    *
-   * @apiParam {boolean} allHackathons - Get data for all hackathons. Defaults to false.
-   * @apiParam {String} hackathon - Uid of hackathon to get results by; allHackathons must be false
-   *
    * @apiUse AuthArgumentRequired
    *
    * @apiSuccess {number} preregistration_count - Number of preregistered users
    * @apiUse ResponseBodyDescription
+   * @apiUse RequestOptsCount
    */
   private async getPreRegistrationCountHandler(res: Response, next: NextFunction) {
     let result: IDbResult<number>;
@@ -166,6 +164,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
       result = await this.preRegDataMapper.getCount({
         byHackathon: !res.locals.allHackathons,
         hackathon: res.locals.hackathon,
+        ignoreCache: res.locals.ignoreCache,
       });
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -194,6 +193,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -222,6 +222,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -250,6 +251,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -278,6 +280,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -306,6 +309,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -325,15 +329,14 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiSuccess {number} number of rsvp
    * @apiUse ResponseBodyDescription
-   * @apiUse RequestOpts
+   * @apiUse RequestOptsCount
    */
   private async getRsvpCountHandler(res: Response, next: NextFunction) {
     try {
       const result = await this.rsvpDataMapper.getCount({
         byHackathon: !res.locals.allHackathons,
-        count: res.locals.limit,
         hackathon: res.locals.hackathon,
-        startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -382,7 +385,6 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiSuccess {EventUid-Registration[]} All Attendance data aggregated by event
    * @apiUse ResponseBodyDescription
-   * @apiUse RequestOpts
    * @apiUse RequestOpts
    */
   private async getAttendanceByEventHandler(req: Request, res: Response, next: NextFunction) {

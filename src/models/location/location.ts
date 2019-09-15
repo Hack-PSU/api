@@ -3,7 +3,7 @@ import BaseObject from '../BaseObject';
 
 const locationSchema = jsonAssetLoader('locationSchema');
 
-interface ILocationApiModel {
+export interface ILocationApiModel {
   uid?: number;
   locationName: string;
 }

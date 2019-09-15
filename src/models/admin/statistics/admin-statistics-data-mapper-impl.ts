@@ -2,8 +2,6 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import squel from 'squel';
-import { UidType } from '../../../JSCommon/common-types';
-import { MethodNotImplementedError } from '../../../JSCommon/errors';
 import { AuthLevel, IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDbResult } from '../../../services/database';
@@ -97,10 +95,8 @@ export class AdminStatisticsDataMapperImpl extends GenericDataMapper
       .from(this.preRegDataMapper.tableName, 'pre_reg')
       .right_join(this.registerDataMapper.tableName, 'reg', 'pre_reg.email = reg.email')
       .join(this.hackathonDataMapper.tableName, 'hackathon', 'reg.hackathon = hackathon.uid')
-      // TODO: Change to the table name field once rsvp data mapper is created
-      .left_join('RSVP', 'rsvp', 'reg.uid = rsvp.user_id')
-      // TODO: Change to the table name field once rfid data mapper is created
-      .left_join('RFID_ASSIGNMENTS', 'rfid', 'reg.uid = rfid.user_uid');
+      .left_join(this.rsvpDataMapper.tableName, 'rsvp', 'reg.uid = rsvp.user_id')
+      .left_join(this.scannerDataMapper.tableName, 'rfid', 'reg.uid = rfid.user_uid');
 
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder

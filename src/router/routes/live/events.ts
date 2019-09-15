@@ -94,7 +94,7 @@ export class EventsController extends LiveController {
    * @apiPermission TeamMemberPermission
    *
    * @apiParam {String} uid - The uid of the event.
-   * @apiParam {String} eventLocation - The uid of the location for the event.
+   * @apiParam {number} eventLocation - The uid of the location for the event.
    * @apiParam {String} eventStartTime - The unix time for the start of the event.
    * @apiParam {String} eventEndTime - The unix time for the start of the event.
    * @apiParam {String} eventTitle - The title of the event.
@@ -136,7 +136,7 @@ export class EventsController extends LiveController {
    * @apiGroup Events
    * @apiPermission TeamMemberPermission
    *
-   * @apiParam {String} eventLocation - The uid of the location for the event.
+   * @apiParam {number} eventLocation - The uid of the location for the event.
    * @apiParam {String} eventStartTime - The unix time for the start of the event.
    * @apiParam {String} eventEndTime - The unix time for the start of the event.
    * @apiParam {String} eventTitle - The title of the event.

@@ -115,12 +115,11 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @apiName get count of registration
    * @apiGroup Admin Registration
    * @apiPermission TeamMemberPermission
-   * @apiParam {string} hackathon The hackathon uid to get registration details for
-   * @apiParam {boolean} allHackathons Whether to retrieve data for all hackathons
    * @apiUse AuthArgumentRequired
    *
    * @apiSuccess {number} number of registered users
    * @apiUse ResponseBodyDescription
+   * @apiUse RequestOptsCount
    */
   private async countRegistrationHandler(res: Response, next: NextFunction) {
     let result;
@@ -128,6 +127,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
       result = await this.registerDataMapper.getCount({
         byHackathon: !res.locals.allHackathons,
         hackathon: res.locals.hackathon,
+        ignoreCache: res.locals.ignoreCache,
       });
     } catch (error) {
       return Util.errorHandler500(error, next);

@@ -56,6 +56,7 @@ export abstract class IntegrationTest {
       .into('HACKATHON')
       .setFieldsRows([IntegrationTest.activeHackathon.dbRepresentation])
       .toParam();
+    query.text = query.text.concat(';');
     await this.mysqlUow.query(query.text, query.values);
   }
 
@@ -63,6 +64,7 @@ export abstract class IntegrationTest {
     const query = squel.delete()
       .from('HACKATHON')
       .toParam();
+    query.text = query.text.concat(';');
     await this.mysqlUow.query(query.text, query.values);
   }
 

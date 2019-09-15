@@ -157,7 +157,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     }
     let preRegistration: PreRegistration;
     try {
-      preRegistration = new PreRegistration(request.body.email);
+      preRegistration = new PreRegistration({ email: request.body.email });
     } catch (error) {
       return Util.standardErrorHandler(
         new HttpError('Some properties were not as expected', 400),

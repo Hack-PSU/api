@@ -70,7 +70,9 @@ class RegistrationIntegrationTest extends UsersIntegrationTest {
   public static async after() {
     const query = squel.delete()
       .from('REGISTRATION')
+      .where('phone = ?', validRegistration().phone)
       .toParam();
+    query.text = query.text.concat(';');
     await RegistrationIntegrationTest.mysqlUow.query(query.text, query.values);
     await UsersIntegrationTest.after();
     await firebase.auth().signOut();
@@ -104,6 +106,7 @@ class RegistrationIntegrationTest extends UsersIntegrationTest {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from('REGISTRATION')
       .toParam();
+    query.text = query.text.concat(';');
     const [result] = await RegistrationIntegrationTest.mysqlUow.query<Registration>(
       query.text,
       query.values,
@@ -112,6 +115,6 @@ class RegistrationIntegrationTest extends UsersIntegrationTest {
     delete result.submitted;
     delete result.pin;
     delete result.time;
-    this.expect(result).to.deep.equal(registration);
+    this.expect(registration).to.deep.equal(result);
   }
 }

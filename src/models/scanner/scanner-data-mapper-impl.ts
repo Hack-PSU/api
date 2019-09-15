@@ -116,6 +116,10 @@ export class ScannerDataMapperImpl extends GenericDataMapper
         'hackathon',
         'wid_assignments.hackathon = hackathon.uid',
       );
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
@@ -139,11 +143,9 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
       .toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<RfidAssignment>(
-      query.text,
-      query.values,
-      { cache: true },
-    ))
+    return from(
+      this.sql.query<RfidAssignment>(query.text, query.values, { cache: checkCache }),
+    )
       .pipe(
         map((registrations: RfidAssignment[]) => ({ result: 'Success', data: registrations })),
       )
@@ -280,12 +282,16 @@ export class ScannerDataMapperImpl extends GenericDataMapper
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
     })
-      .from(this.tableName, 'scans')
+      .from(this.scansTableName, 'scans')
       .join(
         this.activeHackathonDataMapper.tableName,
         'hackathon',
         'scans.hackathon = hackathon.uid',
       );
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
@@ -309,11 +315,9 @@ export class ScannerDataMapperImpl extends GenericDataMapper
     const query = queryBuilder
       .toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Scan>(
-      query.text,
-      query.values,
-      { cache: true },
-    ))
+    return from(
+      this.sql.query<Scan>(query.text, query.values, { cache: checkCache }),
+    )
       .pipe(
         map((registrations: Scan[]) => ({ result: 'Success', data: registrations })),
       )

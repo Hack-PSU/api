@@ -101,7 +101,7 @@ describe('TEST: Event Data Mapper', () => {
       // GIVEN: An event to insert
       const testEvent = new Event({
         eventEndTime: Date.now(),
-        eventLocation: 'test location',
+        eventLocation: 1,
         eventStartTime: Date.now(),
         eventTitle: 'test title',
         eventType: EventType.WORKSHOP,
@@ -135,7 +135,7 @@ describe('TEST: Event Data Mapper', () => {
       // GIVEN: An event to insert
       const testEvent = new Event({
         eventEndTime: Date.now(),
-        eventLocation: 'test location',
+        eventLocation: 1,
         eventStartTime: Date.now(),
         eventTitle: 'test title',
         eventType: EventType.WORKSHOP,

@@ -14,6 +14,7 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
     const query = squel.delete()
       .from('PRE_REGISTRATION')
       .toParam();
+    query.text = query.text.concat(';');
     await PreRegistrationIntegrationTest.mysqlUow.query(query.text, query.values);
     await UsersIntegrationTest.after();
   }
@@ -31,8 +32,14 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Pre-registration was added
+
+
     // @ts-ignore
-    const preRegistration = PreRegistration.fromDb(res.body.body.data);
+    // const preRegistration = PreRegistration.fromDb(res.body.body.data);
+    // preRegistration.hackathon = PreRegistrationIntegrationTest.activeHackathon.uid;
+    // this.expect(preRegistration.email).to.equal('test@email.com');
+
+    const preRegistration = new PreRegistration(res.body.body.data);
     preRegistration.hackathon = PreRegistrationIntegrationTest.activeHackathon.uid;
     this.expect(preRegistration.email).to.equal('test@email.com');
     await this.verifyPreRegistration(preRegistration);
@@ -55,6 +62,7 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from('PRE_REGISTRATION')
       .toParam();
+    query.text = query.text.concat(';');
     const [result] = await PreRegistrationIntegrationTest.mysqlUow.query<PreRegistration>(
       query.text,
       query.values,

@@ -1,42 +1,17 @@
 import * as firebase from 'firebase';
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
-import {
-  AcademicYear,
-  CodingExperience,
-  Gender,
-  Registration,
-  ShirtSize,
-  VeteranOptions } from '../../../src/models/register/registration';
+import { Registration } from '../../../src/models/register/registration';
+import { TestData } from '../test-data';
 import { UsersIntegrationTest } from './users.test';
 
 function validRegistration() {
-  return {
-    firstName: 'testFirstName',
-    lastName: 'testLastName',
-    gender: Gender.MALE,
-    shirtSize: ShirtSize.MEDIUM,
-    dietaryRestriction: 'test restriction',
-    allergies: 'test allergy',
-    travelReimbursement: false,
-    firstHackathon: false,
-    university: 'Test University',
-    email: 'test@email.com',
-    academicYear: AcademicYear.JUNIOR,
-    major: 'test major',
-    phone: '1234567890',
-    resume: null,
-    ethnicity: 'test ethnicity',
-    codingExperience: CodingExperience.INTERMEDIATE,
-    uid: 'test uid',
-    eighteenBeforeEvent: true,
-    mlhcoc: true,
-    mlhdcp: true,
-    referral: 'test referral',
-    projectDesc: 'test project',
-    expectations: 'test expectations',
-    veteran: VeteranOptions.NO,
-  };
+  const registration = TestData.validRegistration();
+  delete registration.uid;
+  delete registration.time;
+  delete registration.submitted;
+  registration.phone = '2234567890';
+  return registration;
 }
 
 let listener: firebase.Unsubscribe;
@@ -59,12 +34,12 @@ function loginRegular() {
   return login('test@email.com', 'password');
 }
 
-// tslint:disable:member-ordering
 @suite('INTEGRATION TEST: Registration')
 class RegistrationIntegrationTest extends UsersIntegrationTest {
 
   public static async before() {
     await UsersIntegrationTest.before();
+    await TestData.tearDown();
   }
 
   public static async after() {
@@ -94,7 +69,8 @@ class RegistrationIntegrationTest extends UsersIntegrationTest {
       .request(this.app)
       .post(this.apiEndpoint)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
+      .set('hackathon', UsersIntegrationTest.activeHackathon.uid)
+      .set('content-type', 'application/json')
       .send(validRegistration());
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
@@ -104,6 +80,7 @@ class RegistrationIntegrationTest extends UsersIntegrationTest {
 
   private async verifyRegistration(registration: Registration) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .where('phone = ?', validRegistration().phone)
       .from('REGISTRATION')
       .toParam();
     query.text = query.text.concat(';');

@@ -17,6 +17,7 @@ import { MemCacheServiceImpl } from '../../src/services/database/cache/memcache-
 import { SqlConnectionFactory } from '../../src/services/database/connection/sql-connection-factory';
 import { MysqlUow } from '../../src/services/database/svc/mysql-uow.service';
 import { Logger } from '../../src/services/logging/logging';
+import { TestData } from './test-data';
 
 // Just to make sure
 Constants.sqlConnection.database = 'travis';
@@ -49,18 +50,23 @@ export abstract class IntegrationTest {
       endTime: null,
       uid: v4(),
     });
-    if (!IntegrationTest.activeHackathon) {
-      IntegrationTest.activeHackathon = hackathon;
+
+    if (!this.activeHackathon) {
+      this.activeHackathon = hackathon;
     }
+
     const query = squel.insert()
       .into('HACKATHON')
-      .setFieldsRows([IntegrationTest.activeHackathon.dbRepresentation])
+      .setFieldsRows([this.activeHackathon.dbRepresentation])
       .toParam();
     query.text = query.text.concat(';');
+
     await this.mysqlUow.query(query.text, query.values);
+    await TestData.setup();
   }
 
   public static async after() {
+    await TestData.tearDown();
     const query = squel.delete()
       .from('HACKATHON')
       .toParam();
@@ -68,12 +74,12 @@ export abstract class IntegrationTest {
     await this.mysqlUow.query(query.text, query.values);
   }
 
-  protected static activeHackathon: ActiveHackathon;
-
+  // tslint:disable-next-line:member-ordering
+  public static activeHackathon: ActiveHackathon;
   private static memcache = new MemCacheServiceImpl();
   protected abstract apiEndpoint: string;
   // tslint:disable:member-ordering
-  protected static mysqlUow = new MysqlUow(
+  public static mysqlUow = new MysqlUow(
     new SqlConnectionFactory(),
     IntegrationTest.memcache,
     new Logger(),

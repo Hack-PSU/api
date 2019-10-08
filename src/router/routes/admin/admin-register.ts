@@ -201,7 +201,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
   private async getRegistrationHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.query.hackathon) {
       const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
-      req.query.hackathon = hackathon.id;
+      req.query.hackathon = hackathon.uid;
     }
     let uid: UidType;
     if (req.query.email) {

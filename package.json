@@ -116,7 +116,7 @@
     "random-number-csprng": "1.0.2",
     "reflect-metadata": "0.1.12",
     "request": "2.86.0",
-    "request-context": "2.0.0",
+    "request-context": "^2.0.0",
     "rxjs": "6.3.3",
     "sinon": "7.2.2",
     "sinon-express-mock": "2.1.0",

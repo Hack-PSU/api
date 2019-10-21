@@ -10,23 +10,7 @@ import {
   ICheckoutObjectApiModel,
 } from '../../../src/models/checkout-object/checkout-object';
 import { IntegrationTest } from '../integration-test';
-
-function validCheckoutObject(): ICheckoutObjectApiModel {
-  return {
-    uid: 0,
-    item_id: 0,
-    user_id: 'test uid',
-    checkout_time: 0,
-    return_time: 0,
-  };
-}
-
-function validCheckoutItemObject(): ICheckoutItemsApiModel {
-  return {
-    name: 'test object',
-    quantity: 0,
-  };
-}
+import { TestData } from '../test-data';
 
 let listener: firebase.Unsubscribe;
 
@@ -52,41 +36,9 @@ function loginAdmin() {
 class AdminCheckoutIntegrationTest extends IntegrationTest {
   public static async before() {
     await IntegrationTest.before();
-
-    const testCheckout = new CheckoutObject(validCheckoutObject());
-    const checkoutQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into('CHECKOUT_DATA')
-      .setFieldsRows([testCheckout.dbRepresentation])
-      .set('hackathon', IntegrationTest.activeHackathon.uid)
-      .toParam();
-    checkoutQuery.text = checkoutQuery.text.concat(';');
-    await AdminCheckoutIntegrationTest.mysqlUow.query(checkoutQuery.text, checkoutQuery.values);
-
-    const testCheckoutItem = new CheckoutItems(validCheckoutItemObject());
-    const checkoutItemQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into('CHECKOUT_ITEMS')
-      .setFieldsRows([testCheckoutItem.dbRepresentation])
-      .set('uid', 'test uid')
-      .toParam();
-    checkoutItemQuery.text = checkoutItemQuery.text.concat(';');
-    await AdminCheckoutIntegrationTest.mysqlUow.query(checkoutItemQuery.text, checkoutItemQuery.values);
   }
 
   public static async after() {
-    const deleteCheckoutQuery = squel.delete()
-      .from('CHECKOUT_DATA')
-      .where('user_id = ?', validCheckoutObject().user_id)
-      .toParam();
-    deleteCheckoutQuery.text = deleteCheckoutQuery.text.concat(';');
-    await AdminCheckoutIntegrationTest.mysqlUow.query(deleteCheckoutQuery.text, deleteCheckoutQuery.values);
-
-    const deleteCheckoutItemQuery = squel.delete()
-      .from('CHECKOUT_ITEMS')
-      .where('uid = ?', 'test uid')
-      .toParam();
-    deleteCheckoutItemQuery.text = deleteCheckoutItemQuery.text.concat(';');
-    await AdminCheckoutIntegrationTest.mysqlUow.query(deleteCheckoutItemQuery.text, deleteCheckoutItemQuery.values);
-
     await IntegrationTest.after();
     await firebase.auth().signOut();
     if (listener) {
@@ -108,8 +60,8 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
     const user = await loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
-      itemId: validCheckoutObject().item_id,
-      userId: validCheckoutObject().user_id,
+      itemId: TestData.validCheckoutObject().item_id,
+      userId: TestData.validCheckoutObject().user_id,
     };
     const res = await this.chai
       .request(this.app)
@@ -155,8 +107,8 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
     const user = await loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
-      name: validCheckoutItemObject().name,
-      quantity: validCheckoutItemObject().quantity,
+      name: TestData.validCheckoutItemObject().name,
+      quantity: TestData.validCheckoutItemObject().quantity,
     };
     const res = await this.chai
       .request(this.app)
@@ -178,7 +130,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
     const user = await loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
-      itemId: validCheckoutObject().item_id,
+      itemId: TestData.validCheckoutObject().item_id,
     };
     const res = await this.chai
       .request(this.app)

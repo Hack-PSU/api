@@ -2,7 +2,7 @@ import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
 import { UidType } from '../../JSCommon/common-types';
 import BaseObject from '../BaseObject';
 
-const extraCreditAssignmentSchema = jsonAssetLoader('extraCreditAssignmentSchema');
+// const extraCreditAssignmentSchema = jsonAssetLoader('extraCreditAssignmentSchema');
 export interface IExtraCreditAssignmentApiModel {
   uid: UidType;
   cid: number;
@@ -14,13 +14,14 @@ export class ExtraCreditAssignment extends BaseObject {
   }
 
   protected get schema(): any {
-    return extraCreditAssignmentSchema;
+    return null;
+    //  return extraCreditAssignmentSchema;
   }
 
   public readonly class_uid: number;
   public readonly user_uid: UidType;
   public uid: number;
-  public hackathon: UidType;
+  public hackathon?: UidType;
 
   constructor(data: IExtraCreditAssignmentApiModel) {
     super();

@@ -14,7 +14,8 @@ export const TABLE_NAME = 'CHECKOUT_DATA';
  * return_time: The time the item was returned.
  * hackathon: The hackathon that this checkout belongs to.
  */
-interface ICheckoutObjectApiModel {
+export interface ICheckoutObjectApiModel {
+  uid?: number;
   item_id: number;
   user_id: string;
   checkout_time: EpochNumber;
@@ -23,14 +24,13 @@ interface ICheckoutObjectApiModel {
 }
 
 export class CheckoutObject extends BaseObject {
-
   public get schema() {
     return checkoutObjectSchema;
   }
   public get id() {
     return this.uid;
   }
-  public uid: number;
+  public uid?: number;
   public item_id: number;
   public user_id: string;
   public checkout_time: EpochNumber;
@@ -39,6 +39,7 @@ export class CheckoutObject extends BaseObject {
 
   constructor(data: ICheckoutObjectApiModel) {
     super();
+    this.uid = data.uid;
     this.item_id = data.item_id;
     this.user_id = data.user_id;
     this.checkout_time = data.checkout_time;

@@ -262,8 +262,8 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName, 'registration')
       .join('HACKATHON',
-            'hackathon',
-            'registration.hackathon = hackathon.uid')
+        'hackathon',
+        'registration.hackathon = hackathon.uid')
       .field('registration.*')
       .fields(['hackathon.name', 'hackathon.start_time', 'hackathon.end_time', 'hackathon.base_pin', 'hackathon.active'])
       .where('hackathon.uid = ?', IntegrationTest.activeHackathon.uid)

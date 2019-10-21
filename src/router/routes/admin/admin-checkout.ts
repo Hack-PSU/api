@@ -117,7 +117,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiName Create new Item Checkout
    * @apiGroup Item Checkout
    * @apiParam {String} itemId The id of the item being checked out
-   * @apiParam {String} [userId] The uid of the user checking out the item
+   * @apiParam {String} userId The uid of the user checking out the item
    * @apiUse WristbandIdParam
    * @apiDescription This route allows an admin or a scanner to create a new checkout
    * request.
@@ -274,19 +274,19 @@ export class AdminCheckoutController extends AbstractScannerController implement
     }
   }
 
- /**
-  * @api {post} /admin/checkout/items Add new item for checkout
-  * @apiVersion 2.0.0
-  * @apiName Add new item for checkout
-  * @apiGroup Item Checkout
-  * @apiParam {String} name Name of the item
-  * @apiParam {Number} quantity Quantity of items available
-  * @apiUse AuthArgumentRequired
-  * @apiPermission DirectorPermission
-  * @apiSuccess {CheckoutItem} The added item
-  * @apiUse IllegalArgumentError
-  * @apiUse ResponseBodyDescription
-  */
+  /**
+   * @api {post} /admin/checkout/items Add new item for checkout
+   * @apiVersion 2.0.0
+   * @apiName Add new item for checkout
+   * @apiGroup Item Checkout
+   * @apiParam {String} name Name of the item
+   * @apiParam {Number} quantity Quantity of items available
+   * @apiUse AuthArgumentRequired
+   * @apiPermission DirectorPermission
+   * @apiSuccess {CheckoutItem} The added item
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
   private async addCheckoutItemsHandler(
     req: Request,
     res: Response,

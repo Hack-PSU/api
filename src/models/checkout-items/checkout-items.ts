@@ -9,7 +9,7 @@ export const TABLE_NAME = 'CHECKOUT_ITEMS';
 /**
  * TODO: Add documentation
  */
-interface ICheckoutItemsApiModel {
+export interface ICheckoutItemsApiModel {
   name: string;
   quantity: number;
 }

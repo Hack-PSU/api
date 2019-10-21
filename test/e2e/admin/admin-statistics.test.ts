@@ -3,24 +3,15 @@ import _ from 'lodash';
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
 import { IUserStatistics } from '../../../src/models/admin/statistics/index'
-import { Event, EventType, IEventApiModel } from '../../../src/models/event/event';
-import { ExtraCreditAssignment, IExtraCreditAssignmentApiModel } from '../../../src/models/extra-credit/extra-credit-assignment';
-import { ExtraCreditClass, IExtraCreditClassApiModel } from '../../../src/models/extra-credit/extra-credit-class';
-import { ILocationApiModel, Location } from '../../../src/models/location/location';
-import { IPreRegistrationApiModel, PreRegistration } from '../../../src/models/register/pre-registration';
-import {
-  AcademicYear,
-  CodingExperience,
-  Gender,
-  IRegistrationApiModel,
-  Registration,
-  ShirtSize,
-  VeteranOptions,
-} from '../../../src/models/register/registration';
-import { IRsvpApiModel, Rsvp } from '../../../src/models/RSVP/rsvp';
-import { IRfidAssignmentApiModel, RfidAssignment } from '../../../src/models/scanner/rfid-assignment';
-import { IRfidScanApiModel, Scan } from '../../../src/models/scanner/scan';
+import { Event } from '../../../src/models/event/event';
+import { ExtraCreditAssignment } from '../../../src/models/extra-credit/extra-credit-assignment';
+import { PreRegistration } from '../../../src/models/register/pre-registration';
+import { Registration } from '../../../src/models/register/registration';
+import { Rsvp } from '../../../src/models/RSVP/rsvp';
+import { RfidAssignment } from '../../../src/models/scanner/rfid-assignment';
+import { Scan } from '../../../src/models/scanner/scan';
 import { IntegrationTest } from '../integration-test';
+import { TestData } from '../test-data';
 
 let listener: firebase.Unsubscribe;
 
@@ -46,246 +37,14 @@ function loginAdmin() {
   return login('admin@email.com', 'password');
 }
 
-function validRegistration(): IRegistrationApiModel {
-  return {
-    firstName: 'testFirstName',
-    lastName: 'testLastName',
-    gender: Gender.MALE,
-    shirtSize: ShirtSize.MEDIUM,
-    dietaryRestriction: 'test restriction',
-    allergies: 'test allergy',
-    travelReimbursement: false,
-    firstHackathon: false,
-    university: 'Test University',
-    email: 'test@email.com',
-    academicYear: AcademicYear.JUNIOR,
-    major: 'test major',
-    phone: '2234567890',
-    resume: null,
-    ethnicity: 'test ethnicity',
-    codingExperience: CodingExperience.INTERMEDIATE,
-    uid: 'test uid',
-    eighteenBeforeEvent: true,
-    mlhcoc: true,
-    mlhdcp: true,
-    referral: 'test referral',
-    projectDesc: 'test project',
-    expectations: 'test expectations',
-    veteran: VeteranOptions.NO,
-    time: 0,
-    submitted: false,
-  };
-}
-
-function validRsvp(): IRsvpApiModel {
-  return {
-    uid: 'test uid',
-    rsvp_time: 1,
-    rsvp_status: true,
-  };
-}
-
-function validLocation(): ILocationApiModel {
-  return {
-    uid: 999,
-    locationName: 'Test location',
-  };
-}
-
-function validEvent(): IEventApiModel {
-  return {
-    uid: 'test event uid',
-    eventLocation: 999,
-    eventStartTime: 1,
-    eventEndTime: 4,
-    eventTitle: 'Test Event',
-    eventDescription: 'Test description',
-    eventType: EventType.WORKSHOP,
-  };
-}
-
-function validRfidAssignment(): IRfidAssignmentApiModel {
-  return {
-    wid: 'test wid',
-    uid: 'test uid',
-    time: 2,
-  };
-}
-
-function validScan(): IRfidScanApiModel {
-  return {
-    wid: validRfidAssignment().wid,
-    scan_event: 'test event uid',
-    scan_time: 3,
-    scan_location: 999,
-  };
-}
-
-function validExtraCreditClass(): IExtraCreditClassApiModel {
-  return {
-    uid: 5,
-    class_name: 'test class',
-  };
-}
-
-function validExtraCreditAssignment(): IExtraCreditAssignmentApiModel {
-  return {
-    uid: 'test uid',
-    cid: 5,
-  };
-}
-
-function validPreRegistration(): IPreRegistrationApiModel {
-  return {
-    uid: 'test uid',
-    email: 'test@email.com',
-  };
-}
-
 @suite('INTEGRATION TEST: Admin Statistics')
 class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   public static async before() {
     await IntegrationTest.before();
-
-    const testRegistration = new Registration(validRegistration());
-    const registrationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.registerTableName)
-      .setFieldsRows([testRegistration.dbRepresentation])
-      .set('hackathon', IntegrationTest.activeHackathon.uid)
-      .toParam();
-    registrationQuery.text = registrationQuery.text.concat(';');
-
-    const testRsvp = new Rsvp(validRsvp());
-    const rsvpQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.rsvpTableName)
-      .setFieldsRows([testRsvp.dbRepresentation])
-      .set('hackathon', IntegrationTest.activeHackathon.uid)
-      .toParam();
-    rsvpQuery.text = rsvpQuery.text.concat(';');
-
-    const testEvent = new Event(validEvent());
-    const eventQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.eventsTableName)
-      .setFieldsRows([testEvent.dbRepresentation])
-      .set('hackathon', IntegrationTest.activeHackathon.uid)
-      .toParam();
-    eventQuery.text = eventQuery.text.concat(';');
-
-    const testLocation = new Location(validLocation());
-    const locationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.locationsTableName)
-      .setFieldsRows([testLocation.dbRepresentation])
-      .toParam();
-    locationQuery.text = locationQuery.text.concat(';');
-
-    const testScan = new Scan(validScan());
-    const scanQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.scansTableName)
-      .setFieldsRows([testScan.dbRepresentation])
-      .set('hackathon', IntegrationTest.activeHackathon.uid)
-      .toParam();
-    scanQuery.text = scanQuery.text.concat(';');
-
-    const testRfidAssignment = new RfidAssignment(validRfidAssignment());
-    const rfidAssignmentQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.rfidTableName)
-      .setFieldsRows([testRfidAssignment.dbRepresentation])
-      .set('hackathon', IntegrationTest.activeHackathon.uid)
-      .toParam();
-    rfidAssignmentQuery.text = rfidAssignmentQuery.text.concat(';');
-
-    const testExtraCreditClass = new ExtraCreditClass(validExtraCreditClass());
-    const extraCreditClassQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.ecClassesTableName)
-      .setFieldsRows([testExtraCreditClass.dbRepresentation])
-      .toParam();
-    extraCreditClassQuery.text = extraCreditClassQuery.text.concat(';');
-
-    const testExtraCreditAssignment = new ExtraCreditAssignment(validExtraCreditAssignment());
-    const extraCreditAssignmentQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.ecAssignmentsTableName)
-      .setFieldsRows([testExtraCreditAssignment.dbRepresentation])
-      .set('hackathon', IntegrationTest.activeHackathon.uid)
-      .toParam();
-    extraCreditAssignmentQuery.text = extraCreditAssignmentQuery.text.concat(';');
-
-    const testPreRegistration = new PreRegistration(validPreRegistration());
-    const preRegistrationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.preregisterTableName)
-      .setFieldsRows([testPreRegistration.dbRepresentation])
-      .set('hackathon', IntegrationTest.activeHackathon.uid)
-      .toParam();
-    preRegistrationQuery.text = preRegistrationQuery.text.concat(';');
-
-    await AdminStatisticsIntegrationTest.mysqlUow.query(registrationQuery.text, registrationQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(rsvpQuery.text, rsvpQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(locationQuery.text, locationQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(eventQuery.text, eventQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(rfidAssignmentQuery.text, rfidAssignmentQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(scanQuery.text, scanQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(extraCreditClassQuery.text, extraCreditClassQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(extraCreditAssignmentQuery.text, extraCreditAssignmentQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(preRegistrationQuery.text, preRegistrationQuery.values);
   }
 
   public static async after() {
-    const registrationQuery = squel.delete()
-      .from(this.registerTableName)
-      .where('phone = ?', validRegistration().phone)
-      .toParam();
-    registrationQuery.text = registrationQuery.text.concat(';');
-    const rsvpQuery = squel.delete()
-      .from(this.rsvpTableName)
-      .where('rsvp_time = ?', validRsvp().rsvp_time)
-      .toParam();
-    rsvpQuery.text = rsvpQuery.text.concat(';');
-    const eventQuery = squel.delete()
-      .from(this.eventsTableName)
-      .where('event_title = ?', validEvent().eventTitle)
-      .toParam();
-    eventQuery.text = eventQuery.text.concat(';');
-    const locationQuery = squel.delete()
-      .from(this.locationsTableName)
-      .where('uid = ?', validLocation().uid)
-      .toParam();
-    locationQuery.text = locationQuery.text.concat(';');
-    const scanQuery = squel.delete()
-      .from(this.scansTableName)
-      .where('scan_event = ?', validScan().scan_event)
-      .toParam();
-    scanQuery.text = scanQuery.text.concat(';');
-    const rfidAssignmentQuery = squel.delete()
-      .from(this.rfidTableName)
-      .where('time = ?', validRfidAssignment().time)
-      .toParam();
-    rfidAssignmentQuery.text = rfidAssignmentQuery.text.concat(';');
-    const extraCreditClassQuery = squel.delete()
-      .from(this.ecClassesTableName)
-      .where('class_name = ?', validExtraCreditClass().class_name)
-      .toParam();
-    extraCreditClassQuery.text = extraCreditClassQuery.text.concat(';');
-    const extraCreditAssignmentQuery = squel.delete()
-      .from(this.ecAssignmentsTableName)
-      .where('class_uid = ?', validExtraCreditAssignment().cid)
-      .toParam();
-    extraCreditAssignmentQuery.text = extraCreditAssignmentQuery.text.concat(';');
-    const preRegistrationQuery = squel.delete()
-      .from(this.preregisterTableName)
-      .where('email = ?', validPreRegistration().email)
-      .toParam();
-    preRegistrationQuery.text = preRegistrationQuery.text.concat(';');
-
-    await AdminStatisticsIntegrationTest.mysqlUow.query(preRegistrationQuery.text, preRegistrationQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(extraCreditAssignmentQuery.text, extraCreditAssignmentQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(extraCreditClassQuery.text, extraCreditClassQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(scanQuery.text, scanQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(rfidAssignmentQuery.text, rfidAssignmentQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(eventQuery.text, eventQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(locationQuery.text, locationQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(rsvpQuery.text, rsvpQuery.values);
-    await AdminStatisticsIntegrationTest.mysqlUow.query(registrationQuery.text, registrationQuery.values);
-
     await IntegrationTest.after();
     await firebase.auth().signOut();
     if (listener) {
@@ -348,14 +107,14 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     const user = await loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
-      uid: validEvent().uid,
+      uid: TestData.validEvent().uid,
       allHackathons: false,
     };
     const res = await this.chai
       .request(this.app)
       .get(`${this.apiEndpoint}=attendance&aggregator=event`)
       .set('idToken', idToken)
-      .send(parameters);
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Attendance data by event is returned
@@ -370,14 +129,14 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     const user = await loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
-      uid: validRegistration().uid,
+      uid: TestData.validRegistration().uid,
       allHackathons: false,
     };
     const res = await this.chai
       .request(this.app)
       .get(`${this.apiEndpoint}=attendance&aggregator=user`)
       .set('idToken', idToken)
-      .send(parameters);
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Attendance data by user is returned
@@ -396,7 +155,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .request(this.app)
       .get(`${this.apiEndpoint}=attendance`)
       .set('idToken', idToken)
-      .send(parameters);
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Attendance data is returned
@@ -415,7 +174,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .request(this.app)
       .get(`${this.apiEndpoint}=scans`)
       .set('idToken', idToken)
-      .send(parameters);
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: All event scans are returned
@@ -434,7 +193,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .request(this.app)
       .get(`${this.apiEndpoint}=extra_credit_assignments`)
       .set('idToken', idToken)
-      .send(parameters);
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: All extra credit assignments are returned
@@ -453,7 +212,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .request(this.app)
       .get(`${this.apiEndpoint}=preregistration`)
       .set('idToken', idToken)
-      .send(parameters);
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: All preregistered users are returned
@@ -472,7 +231,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .request(this.app)
       .get(`${this.apiEndpoint}=registration_stats`)
       .set('idToken', idToken)
-      .send(parameters);
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: All user data is returned
@@ -491,7 +250,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .request(this.app)
       .get(`${this.apiEndpoint}=wid_assignments`)
       .set('idToken', idToken)
-      .send(parameters);
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: All user data is returned
@@ -510,7 +269,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .request(this.app)
       .get(`${this.apiEndpoint}=rsvp_count`)
       .set('idToken', idToken)
-      .send(parameters);
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Number of RSVP'd users is returned
@@ -583,11 +342,11 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   }
 
   private verifyAttendanceDataByEvent(data: any) {
-    const uid = validEvent().uid as string;
+    const uid = TestData.validEvent().uid as string;
     const result = {
       'test event uid': {
-        ...new Event(validEvent()).cleanRepresentation,
-        attendees: [{ ...new Registration(validRegistration()).cleanRepresentation }],
+        ...new Event(TestData.validEvent()).cleanRepresentation,
+        attendees: [{ ...new Registration(TestData.validRegistration()).cleanRepresentation }],
       },
     };
 
@@ -611,19 +370,23 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   }
 
   private verifyAttendanceDataByUser(data: any) {
-    const uid = validRegistration().uid as string;
+    const uid = TestData.validRegistration().uid as string;
     const result = {
-      'test uid': {
-        ...new Registration(validRegistration()).cleanRepresentation,
-        events: [{ ...new Event(validEvent()).cleanRepresentation }],
+      [uid]: {
+        ...new Registration(TestData.validRegistration()).cleanRepresentation,
+        events: [{ ...new Event(TestData.validEvent()).cleanRepresentation }],
       },
     };
 
+    // @ts-ignore
     result[uid].user_uid = result[uid].uid;
     result[uid].pin = data[uid].pin;
     result[uid].hackathon = IntegrationTest.activeHackathon.uid;
+    // @ts-ignore
     result[uid].events[0].event_uid = result[uid].events[0].uid;
+    // @ts-ignore
     result[uid].events[0].event_start_time = result[uid].events[0].event_start_time.toString();
+    // @ts-ignore
     result[uid].events[0].event_end_time = result[uid].events[0].event_end_time.toString();
 
     delete result[uid].uid;

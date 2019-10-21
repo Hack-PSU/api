@@ -91,6 +91,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .order('time', false);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
+    // Cannot find user by email even though user exists and the query params matches previous select statement results
     return from(this.sql.query<Registration>(
       query.text,
       query.values,
@@ -98,10 +99,6 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     ))
       .pipe(
         map((event: Registration[]) => ({ result: 'Success', data: event[0] })),
-        map((value) => {
-          value.data.time = parseInt(value.data.time as any as string, 10);
-          return value;
-        }),
       )
       .toPromise();
   }

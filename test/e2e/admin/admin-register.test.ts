@@ -1,47 +1,9 @@
 import * as firebase from 'firebase';
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
-import {
-  AcademicYear,
-  CodingExperience,
-  Gender,
-  IRegistrationApiModel,
-  Registration,
-  ShirtSize,
-  VeteranOptions,
-} from '../../../src/models/register/registration';
+import { Registration } from '../../../src/models/register/registration';
 import { IntegrationTest } from '../integration-test';
-
-function validRegistration(): IRegistrationApiModel {
-  return {
-    firstName: 'testFirstName',
-    lastName: 'testLastName',
-    gender: Gender.MALE,
-    shirtSize: ShirtSize.MEDIUM,
-    dietaryRestriction: 'test restriction',
-    allergies: 'test allergy',
-    travelReimbursement: false,
-    firstHackathon: false,
-    university: 'Test University',
-    email: 'test@email.com',
-    academicYear: AcademicYear.JUNIOR,
-    major: 'test major',
-    phone: '1234567890',
-    resume: null,
-    ethnicity: 'test ethnicity',
-    codingExperience: CodingExperience.INTERMEDIATE,
-    uid: 'test uid',
-    eighteenBeforeEvent: true,
-    mlhcoc: true,
-    mlhdcp: true,
-    referral: 'test referral',
-    projectDesc: 'test project',
-    expectations: 'test expectations',
-    veteran: VeteranOptions.NO,
-    time: 0,
-    submitted: false,
-  };
-}
+import { TestData } from '../test-data';
 
 let listener: firebase.Unsubscribe;
 
@@ -68,23 +30,9 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
 
   public static async before() {
     await IntegrationTest.before();
-    const testUser = new Registration(validRegistration());
-    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into('REGISTRATION')
-      .setFieldsRows([testUser.dbRepresentation])
-      .set('hackathon', IntegrationTest.activeHackathon.uid)
-      .toParam();
-    query.text = query.text.concat(';');
-    await AdminRegisterIntegrationTest.mysqlUow.query(query.text, query.values);
   }
 
   public static async after() {
-    const query = squel.delete()
-      .from('REGISTRATION')
-      .where('uid = ?', validRegistration().uid)
-      .toParam();
-    query.text = query.text.concat(';');
-    await AdminRegisterIntegrationTest.mysqlUow.query(query.text, query.values);
     await IntegrationTest.after();
     await firebase.auth().signOut();
     if (listener) {
@@ -111,8 +59,8 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
       .request(this.app)
       .get(`${this.apiEndpoint}/count`)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
-      .send(parameters);
+      .set('content-type', 'application/json')
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Registration count is returned
@@ -134,12 +82,34 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
       .request(this.app)
       .get(this.apiEndpoint)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
-      .send(parameters);
+      .set('content-type', 'application/json')
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Registrations are returned
     await this.verifyUsers(res.body.body.data);
+  }
+
+  @test('successfully gets specific user by uid')
+  @slow(1500)
+  public async getRegisteredUserByUidSuccessfully() {
+    // GIVEN: API
+    // WHEN: Getting the registration
+    const user = await loginAdmin();
+    const idToken = await user.getIdToken();
+    const parameters = {
+      uid: TestData.validRegistration().uid,
+    };
+    const res = await this.chai
+      .request(this.app)
+      .get(this.apiEndpoint)
+      .set('idToken', idToken)
+      .set('content-type', 'application/json')
+      .query(parameters);
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res);
+    // THEN: Registration is returned
+    await this.verifyUsers([res.body.body.data]);
   }
 
   @test('successfully gets specific user by email')
@@ -150,18 +120,18 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
     const user = await loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
-      email: 'test@email.com',
+      email: TestData.validRegistration().email,
     };
     const res = await this.chai
       .request(this.app)
       .get(this.apiEndpoint)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
-      .send(parameters);
+      .set('content-type', 'application/json')
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Registration is returned
-    await this.verifyUsers(res.body.body.data);
+    await this.verifyUsers([res.body.body.data]);
   }
 
   @test('fails to update registration when no registration is provided')
@@ -188,13 +158,13 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
     // WHEN: Getting the registration
     const user = await loginAdmin();
     const idToken = await user.getIdToken();
-    const parameters = validRegistration();
+    const parameters = TestData.validRegistration();
     parameters.uid = undefined;
     const res = await this.chai
       .request(this.app)
       .post(`${this.apiEndpoint}/update`)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
+      .set('content-type', 'application/json')
       .send({ registration: parameters });
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
@@ -209,12 +179,12 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
     // WHEN: Getting the registration
     const user = await loginAdmin();
     const idToken = await user.getIdToken();
-    const parameters = validRegistration();
+    const parameters = TestData.validRegistration();
     const res = await this.chai
       .request(this.app)
       .post(`${this.apiEndpoint}/update`)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
+      .set('content-type', 'application/json')
       .send({ registration: parameters });
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
@@ -236,7 +206,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
   //     .request(this.app)
   //     .post(`${this.apiEndpoint}/update`)
   //     .set('idToken', idToken)
-  //     .set('content-type', 'application/json; charset=utf-8')
+  //     .set('content-type', 'application/json')
   //     .send({ registration: parameters });
   //   // THEN: Returns a well formed response
   //   super.assertRequestFormat(res);
@@ -267,6 +237,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
       .field('registration.*')
       .fields(['hackathon.name', 'hackathon.start_time', 'hackathon.end_time', 'hackathon.base_pin', 'hackathon.active'])
       .where('hackathon.uid = ?', IntegrationTest.activeHackathon.uid)
+      .where('registration.uid = ?', TestData.validRegistration().uid)
       .toParam();
     query.text = query.text.concat(';');
     const result = await AdminRegisterIntegrationTest.mysqlUow.query<Registration>(

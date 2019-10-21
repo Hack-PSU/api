@@ -13,6 +13,7 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
   public static async after() {
     const query = squel.delete()
       .from('PRE_REGISTRATION')
+      .where('email = ?', 'test2@email.com')
       .toParam();
     query.text = query.text.concat(';');
     await PreRegistrationIntegrationTest.mysqlUow.query(query.text, query.values);
@@ -28,20 +29,14 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
     // WHEN: Adding a new pre-registration
     const res = await this.chai.request(this.app)
       .post(this.apiEndpoint)
-      .send({ email: 'test@email.com' });
+      .set('content-type', 'application/json')
+      .send({ email: 'test2@email.com' });
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Pre-registration was added
-
-
-    // @ts-ignore
-    // const preRegistration = PreRegistration.fromDb(res.body.body.data);
-    // preRegistration.hackathon = PreRegistrationIntegrationTest.activeHackathon.uid;
-    // this.expect(preRegistration.email).to.equal('test@email.com');
-
     const preRegistration = new PreRegistration(res.body.body.data);
     preRegistration.hackathon = PreRegistrationIntegrationTest.activeHackathon.uid;
-    this.expect(preRegistration.email).to.equal('test@email.com');
+    this.expect(preRegistration.email).to.equal('test2@email.com');
     await this.verifyPreRegistration(preRegistration);
   }
 
@@ -61,6 +56,7 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
   private async verifyPreRegistration(preRegistration: PreRegistration) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from('PRE_REGISTRATION')
+      .where('email = ?', 'test2@email.com')
       .toParam();
     query.text = query.text.concat(';');
     const [result] = await PreRegistrationIntegrationTest.mysqlUow.query<PreRegistration>(

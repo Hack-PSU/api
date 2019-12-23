@@ -192,27 +192,27 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
     this.expect(res.body.body.data).to.deep.equal({ message: 'hackathon id missing' });
   }
 
-  // @test('successfully updates an existing registration')
-  // @slow(1500)
-  // public async updateExistingRegistrationSuccessfully() {
-  //   // GIVEN: API
-  //   // WHEN: Updating a registration
-  //   const user = await loginAdmin();
-  //   const idToken = await user.getIdToken();
-  //   const parameters = { ...validRegistration(), hackathon: IntegrationTest.activeHackathon.uid };
-  //   parameters.firstName = 'testFirstName2';
-  //   parameters.lastName = 'testLastName2';
-  //   const res = await this.chai
-  //     .request(this.app)
-  //     .post(`${this.apiEndpoint}/update`)
-  //     .set('idToken', idToken)
-  //     .set('content-type', 'application/json')
-  //     .send({ registration: parameters });
-  //   // THEN: Returns a well formed response
-  //   super.assertRequestFormat(res);
-  //   // THEN: Updated registration is returned
-  //   await this.verifyUsers([res.body.body.data]);
-  // }
+  @test('successfully updates an existing registration')
+  @slow(1500)
+  public async updateExistingRegistrationSuccessfully() {
+    // GIVEN: API
+    // WHEN: Updating a registration
+    const user = await loginAdmin();
+    const idToken = await user.getIdToken();
+    const parameters = { ...TestData.validRegistration(), hackathon: IntegrationTest.activeHackathon.uid };
+    parameters.firstName = 'testFirstName2';
+    parameters.lastName = 'testLastName2';
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/update`)
+      .set('idToken', idToken)
+      .set('content-type', 'application/json')
+      .send({ registration: parameters });
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res);
+    // THEN: Updated registration is returned
+    await this.verifyUsers([res.body.body.data]);
+  }
 
   private async verifyCount(count: number[]) {
     const query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })

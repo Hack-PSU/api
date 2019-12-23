@@ -91,14 +91,13 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .order('time', false);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    // Cannot find user by email even though user exists and the query params matches previous select statement results
     return from(this.sql.query<Registration>(
       query.text,
       query.values,
       { cache: checkCache },
     ))
       .pipe(
-        map((event: Registration[]) => ({ result: 'Success', data: event[0] })),
+        map((registration: Registration[]) => ({ result: 'Success', data: registration[0] })),
       )
       .toPromise();
   }
@@ -268,10 +267,16 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .where('hackathon = ?', currentObject.hackathon)
       .toParam();
     query.text = query.text.concat(';');
+
+    const output = currentObject.dbRepresentation;
+    output.time = String(output.time);
+    output.resume = object.resume || currentDbObject.data.resume;
+    output.end_time = (currentDbObject.data as any).end_time;
+
     return from(
       this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: currentObject.cleanRepresentation })),
+      map(() => ({ result: 'Success', data: output })),
     ).toPromise();
   }
 

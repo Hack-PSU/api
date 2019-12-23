@@ -2,7 +2,7 @@ import * as firebase from 'firebase';
 import _ from 'lodash';
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
-import { IUserStatistics } from '../../../src/models/admin/statistics/index'
+import { IUserStatistics } from '../../../src/models/admin/statistics/index';
 import { Event } from '../../../src/models/event/event';
 import { ExtraCreditAssignment } from '../../../src/models/extra-credit/extra-credit-assignment';
 import { PreRegistration } from '../../../src/models/register/pre-registration';

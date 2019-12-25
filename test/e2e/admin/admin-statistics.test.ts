@@ -14,8 +14,12 @@ import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
 
 let listener: firebase.Unsubscribe;
+let firebaseUser: firebase.User;
 
 function login(email: string, password: string): Promise<firebase.User> {
+  if (firebaseUser) {
+    return new Promise(resolve => resolve(firebaseUser));
+  }
   return new Promise((resolve, reject) => {
     firebase.auth()
       .signInWithEmailAndPassword(email, password)
@@ -23,6 +27,7 @@ function login(email: string, password: string): Promise<firebase.User> {
     listener = firebase.auth()
       .onAuthStateChanged((user) => {
         if (user) {
+          firebaseUser = user;
           resolve(user);
         }
       });

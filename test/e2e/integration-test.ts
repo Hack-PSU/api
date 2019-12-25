@@ -43,16 +43,14 @@ function firebaseInitializer() {
 export abstract class IntegrationTest {
 
   public static async before() {
-    const hackathon = new ActiveHackathon({
-      basePin: 0,
-      name: 'test',
-      startTime: Date.now(),
-      endTime: null,
-      uid: v4(),
-    });
-
     if (!this.activeHackathon) {
-      this.activeHackathon = hackathon;
+      this.activeHackathon = new ActiveHackathon({
+        basePin: 0,
+        name: 'test',
+        startTime: Date.now(),
+        endTime: null,
+        uid: v4(),
+      });
     }
 
     const query = squel.insert()

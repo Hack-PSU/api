@@ -60,6 +60,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    *
    * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
    * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+   * @apiParam {Boolean} ignoreCache=false Force a fresh query to retrieve data
    *
    * @apiUse AuthArgumentRequired
    * @apiSuccess {Location[]} Array of locations
@@ -88,7 +89,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    *
    * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Location} The inserted location
+   * @apiSuccess {Location} data - The inserted location
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -102,6 +103,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
     try {
       const locationObject = new Location({
         locationName: req.body.locationName,
+        uid: req.body.uid,
       });
       const result = await this.locationDataMapper.insert(locationObject);
       const response = new ResponseBody(

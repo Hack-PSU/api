@@ -61,7 +61,7 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
       [AuthLevel[AuthLevel.DIRECTOR]],
     );
     super.addRBAC(
-      [this.READ, this.READ_ALL],
+      [this.READ, this.READ_ALL, this.COUNT],
       [
         AuthLevel.PARTICIPANT,
       ],

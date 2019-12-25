@@ -90,6 +90,12 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
         next,
       );
     }
+    if (req.body.endTime && req.body.endTime <= req.body.startTime) {
+      return Util.standardErrorHandler(
+        new HttpError('End time must be after start time', 400),
+        next,
+      );
+    }
     req.body.startTime = parseInt(req.body.startTime, 10);
 
     if (req.body.basePin) {
@@ -164,11 +170,9 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    * @api {post} /admin/hackathon/update Update non-active hackathon
    * @apiVersion 2.0.0
    * @apiName Update hackathon
-   * @apiGroup Hackathon
+   * @apiGroup Admin Hackathon
    * @apiPermission DirectorPermission
-   * @apiParam {string} name The name of the new hackathon
-   * @apiParam {number} startTime Epoch time for when the hackathon starts
-   * @apiParam {number} endTime Epoch time for when the hackathon ends
+   * @apiParam {string} uid The uid of the hackathon to update
    *
    * @apiUse AuthArgumentRequired
    *

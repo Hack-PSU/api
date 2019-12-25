@@ -77,18 +77,15 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   @test('successfully gets the count of hackathons')
   @slow(1500)
   public async getHackathonCountSuccessfully() {
-    console.log('Beginning test');
     // GIVEN: API
     // WHEN: Getting the count of hackathons
     const user = await loginAdmin();
     const idToken = await user.getIdToken();
-    console.log('idToken: ', idToken);
     const res = await this.chai
       .request(this.app)
       .get(`${this.apiEndpoint}/count`)
       .set('idToken', idToken)
       .set('content-type', 'application/json');
-    console.log('res', res.text);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Hackathon count is checked

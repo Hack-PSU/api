@@ -49,29 +49,6 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
     );
   }
 
-  private validateRegistrationFields(registration: any) {
-    if (!registration) {
-      this.logger.error('No registration provided');
-      throw new HttpError('No registration provided', 400);
-    }
-    if (!validate(registration.email)) {
-      this.logger.error('Email used for registration is invalid');
-      throw new HttpError('Email used for registration is invalid', 400);
-    }
-    if (!registration.eighteenBeforeEvent) {
-      this.logger.error('User must be over eighteen years of age to register');
-      throw new HttpError('User must be over eighteen years of age to register', 400);
-    }
-    if (!registration.mlhcoc) {
-      this.logger.error('User must agree to MLH Code of Conduct');
-      throw new HttpError('User must agree to MLH Code of Conduct', 400);
-    }
-    if (!registration.mlhdcp) {
-      this.logger.error('User must agree to MLH data collection policy');
-      throw new HttpError('User must agree to MLH data collection policy', 400);
-    }
-  }
-
   /**
    * @api {get} /admin/register Get registered hackers
    * @apiVersion 2.0.0
@@ -81,13 +58,13 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    *
    * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
    * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
-   * @apiParam {string} hackathon The hackathon uid to get registration details for
-   * @apiParam {boolean} allHackathons Whether to retrieve data for all hackathons
-   * @apiParam {string} [uid] uid of the hacker
-   * @apiParam {string} [email] email of the hacker
+   * @apiParam {String} hackathon The hackathon uid to get registration details for
+   * @apiParam {Boolean} allHackathons Whether to retrieve data for all hackathons
+   * @apiParam {String} [uid] Uid of the hacker
+   * @apiParam {String} [email] Email of the hacker
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Registration[]} Array of registered hackers
+   * @apiSuccess {Registration[]} data Array of registered hackers
    * @apiUse ResponseBodyDescription
    */
   private async getAllRegistrationHandler(req: Request, res: Response, next: NextFunction) {
@@ -117,7 +94,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
    * @apiPermission TeamMemberPermission
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {number} number of registered users
+   * @apiSuccess {Number} count Number of registered users
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOptsCount
    */

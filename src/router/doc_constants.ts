@@ -61,15 +61,15 @@
  */
 /**
  * @apiDefine RequestOpts
- * @apiParam {boolean} [allHackathons] Get data for all hackathons. Defaults to false.
- * @apiParam {boolean} [ignoreCache]  Force a fresh query to retrieve data
- * @apiParam {number} [count] Number of responses to return
+ * @apiParam {Boolean} [allHackathons] Get data for all hackathons. Defaults to false.
+ * @apiParam {Boolean} [ignoreCache] Force a fresh query to retrieve data
+ * @apiParam {Number} [count] Number of responses to return
  * @apiParam {String} [hackathon] Uid of hackathon to get results by. byHackathon must be true
- * @apiParam {number} [startAt] Offset to paginate results
+ * @apiParam {Number} [startAt] Offset to paginate results
  */
 /**
  * @apiDefine RequestOptsCount
- * @apiParam {boolean} [allHackathons] Get data for all hackathons. Defaults to false.
- * @apiParam {boolean} [ignoreCache]  Force a fresh query to retrieve data
+ * @apiParam {Boolean} [allHackathons] Get data for all hackathons. Defaults to false.
+ * @apiParam {Boolean} [ignoreCache]  Force a fresh query to retrieve data
  * @apiParam {String} [hackathon] Uid of hackathon to get results by. byHackathon must be true
  */

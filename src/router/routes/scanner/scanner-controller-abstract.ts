@@ -55,7 +55,7 @@ abstract class AbstractScannerController extends ParentRouter {
       }
       if (!request.headers.macaddr) {
         return Util.standardErrorHandler(
-          new HttpError('could not find mac address of device', 400),
+          new HttpError('Could not find mac address of device', 400),
           next,
         );
       }

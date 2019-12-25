@@ -97,7 +97,7 @@ export class AdminController extends ParentRouter implements IExpressController 
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {UserRecord} User details including privilege level
+   * @apiSuccess {UserRecord} data User details including privilege level
    * @apiUse ResponseBodyDescription
    */
   private mainHandler(res: Response) {
@@ -117,7 +117,7 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiPermission DirectorPermission
    *
    * @apiUse AuthArgumentRequired
-   * @apiParam {string} email The email to query user id by
+   * @apiParam {String} email The email to query user id by
    * @apiSuccess {UserRecord} Object {uid, displayName, privilege, admin}
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription

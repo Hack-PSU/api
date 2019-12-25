@@ -7,7 +7,6 @@ import { Hackathon } from '../../../models/hackathon';
 import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { Logger } from '../../../services/logging/logging';
 import { ParentRouter } from '../../router-types';
 
 @Injectable()
@@ -19,7 +18,6 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
     @Inject('IActiveHackathonDataMapper') private readonly adminHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IActiveHackathonDataMapper') private readonly acl: IAclPerm,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,
-    @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
     super();
     this.router = Router();
@@ -60,14 +58,14 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    * @apiName Add new hackathon
    * @apiGroup Admin Hackathon
    * @apiPermission DirectorPermission
-   * @apiParam {string} name The name of the new hackathon
-   * @apiParam {number} startTime Epoch time for when the hackathon starts
-   * @apiParam {number} endTime Epoch time for when the hackathon ends
+   * @apiParam {String} name The name of the new hackathon
+   * @apiParam {Number} startTime Epoch time for when the hackathon starts
+   * @apiParam {Number} endTime Epoch time for when the hackathon ends
    *
    * @apiUse AuthArgumentRequired
    * @apiUse ResponseBodyDescription
    *
-   * @apiSuccess (200) {Hackathon} The inserted hackathon
+   * @apiSuccess (200) {Hackathon} data The inserted hackathon
    */
   private async createHackathonHandler(
     req: Request,
@@ -131,10 +129,10 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    * @apiName Add Active hackathon
    * @apiGroup Admin Hackathon
    * @apiPermission DirectorPermission
-   * @apiParam {string} uid ID of the hackathon entry to mark active
+   * @apiParam {String} uid ID of the hackathon entry to mark active
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess (200) {Hackathon} Newly "activated" hackathon
+   * @apiSuccess (200) {Hackathon} data Newly "activated" hackathon
    * @apiUse ResponseBodyDescription
    */
   private async makeHackathonActiveHandler(
@@ -172,11 +170,11 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    * @apiName Update hackathon
    * @apiGroup Admin Hackathon
    * @apiPermission DirectorPermission
-   * @apiParam {string} uid The uid of the hackathon to update
+   * @apiParam {String} uid The uid of the hackathon to update
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess (200) {Hackathon} The updated hackathon
+   * @apiSuccess (200) {Hackathon} data The updated hackathon
    * @apiUse ResponseBodyDescription
    */
   private async updateHackathonHandler(
@@ -227,7 +225,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Hackathon[]} Array of hackathons
+   * @apiSuccess {Hackathon[]} data Array of all hackathons
    * @apiUse ResponseBodyDescription
    */
   private async getAllHackathonHandler(
@@ -254,7 +252,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    * @apiPermission TeamMemberPermission
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {number} the number of hackathons
+   * @apiSuccess {Number} count The number of hackathons
    * @apiUse ResponseBodyDescription
    */
   private async countHackathonHandler(res: Response, next: NextFunction) {

@@ -3,10 +3,10 @@ import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { TravelReimbursement } from '../../../src/models/travel-reimbursement/travel-reimbursement';
-import { TravelReimbursementDataMapperImpl } from '../../../src/models/travel-reimbursement/travel-reimbursement-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
+import { TravelReimbursement } from '../../../src/models/travel-reimbursement/travel-reimbursement';
+import { TravelReimbursementDataMapperImpl } from '../../../src/models/travel-reimbursement/travel-reimbursement-data-mapper-impl';
 import { RBAC } from '../../../src/services/auth/RBAC/rbac';
 import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
@@ -105,7 +105,7 @@ describe('TEST: Travel Reimbursement Data Mapper', () => {
         groupMembers: '4+',
         mailingAddress: 'Old Main, State College, PA 16802',
         reimbursementAmount: 100,
-        fullName: 'HackPSU Attendee'
+        fullName: 'HackPSU Attendee',
       });
       // WHEN: Retrieving number of events
       await travelReimbursementDataMapper.insert(testReimbursement);
@@ -140,7 +140,7 @@ describe('TEST: Travel Reimbursement Data Mapper', () => {
         groupMembers: '1',
         mailingAddress: 'Old Main, State College, PA 16802',
         reimbursementAmount: 100,
-        fullName: 'HackPSU Attendee'
+        fullName: 'HackPSU Attendee',
       });
       // WHEN: Retrieving number of events
       await travelReimbursementDataMapper.update(testReimbursement);

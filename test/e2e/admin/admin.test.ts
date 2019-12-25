@@ -94,7 +94,7 @@ class AdminIntegrationTest extends IntegrationTest {
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
     // THEN: Error message is returned
-    this.expect(res.body.body.data).to.deep.equal({ message: 'could not find mac address of device' });
+    this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find mac address of device' });
   }
 
   @test('successfully recognizes admin privileges')

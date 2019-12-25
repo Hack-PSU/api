@@ -64,7 +64,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {UserStatistics[]} Array of all users
+   * @apiSuccess {UserStatistics[]} data Array of all users
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -94,7 +94,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {number[]} number of users that selected particular categories for registrations
+   * @apiSuccess {Number[]} data Number of users that selected particular categories for registrations
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOptsCount
    */
@@ -125,7 +125,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {number[]} number of all users in each category (PreRegistration, Registration, RSVP, Scans)
+   * @apiSuccess {Number[]} data Number of all users in each category (PreRegistration, Registration, RSVP, Scans)
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOptsCount
    */
@@ -156,7 +156,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {number} preregistration_count - Number of preregistered users
+   * @apiSuccess {Number} preregistration_count Number of preregistered users
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOptsCount
    */
@@ -184,7 +184,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {PreRegistration[]} all preregistered users
+   * @apiSuccess {PreRegistration[]} data All preregistered users
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -213,7 +213,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Scan[]} Array of Scans
+   * @apiSuccess {Scan[]} data Array of all scans
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -242,7 +242,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {RfidAssignment[]} Array of Wristband assignments
+   * @apiSuccess {RfidAssignment[]} data Array of Wristband assignments
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -271,7 +271,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ExtraCreditAssignment[]} Array of Wristband assignments
+   * @apiSuccess {ExtraCreditAssignment[]} data Array of Wristband assignments
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -300,7 +300,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Rsvp[]} Array of Rsvp
+   * @apiSuccess {Rsvp[]} data Array of RSVP'd users
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -329,7 +329,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {number} number of rsvp
+   * @apiSuccess {Number} data Number of rsvp
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOptsCount
    */
@@ -356,7 +356,7 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Attendance[]} All Attendance data
+   * @apiSuccess {Attendance[]} data All Attendance data
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -382,10 +382,10 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiName Get Attendance by event
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
-   * @apiParam [uid] {String} The uid of an event to filter by
+   * @apiParam {String} [uid] The uid of an event to filter by
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {EventUid-Registration[]} All Attendance data aggregated by event
+   * @apiSuccess {EventUid-Registration[]} data All Attendance data aggregated by event
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -412,10 +412,10 @@ export class AdminStatisticsController extends ParentRouter implements IExpressC
    * @apiName Get Attendance by user
    * @apiGroup Admin Statistics
    * @apiPermission TeamMemberPermission
-   * @apiParam [uid] {String} The uid of a user to filter by
+   * @apiParam {String} [uid] The uid of a user to filter by
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {UserUid-Event[]} All Attendance data aggregated by event
+   * @apiSuccess {UserUid-Event[]} data All Attendance data aggregated by event
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */

@@ -6,7 +6,6 @@ import { Event } from '../../../models/event/event';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDataMapperHackathonSpecific } from '../../../services/database';
-import { Logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
 
@@ -19,7 +18,6 @@ export class EventsController extends LiveController {
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IEventDataMapper') private readonly dataMapper: IDataMapperHackathonSpecific<Event>,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
-    @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
     super();
     this.routes(this.router);
@@ -59,12 +57,15 @@ export class EventsController extends LiveController {
    * Delete an event
    * @api {post} /live/events/delete Delete an existing event
    * @apiVersion 2.0.0
-   * @apiName Update Event
+   * @apiName Delete Event
    * @apiGroup Events
    * @apiPermission TeamMemberPermission
    *
-   * @apiParam {String} uid - The uid of the event.
+   * @apiParam {String} uid The uid of the event.
    * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   * @apiSuccess {Number} uid The uid of the deleted event
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -93,15 +94,15 @@ export class EventsController extends LiveController {
    * @apiGroup Events
    * @apiPermission TeamMemberPermission
    *
-   * @apiParam {String} uid - The uid of the event.
-   * @apiParam {number} eventLocation - The uid of the location for the event.
-   * @apiParam {String} eventStartTime - The unix time for the start of the event.
-   * @apiParam {String} eventEndTime - The unix time for the start of the event.
-   * @apiParam {String} eventTitle - The title of the event.
-   * @apiParam {String} eventDescription - The description of the event.
-   * @apiParam {Enum} eventType - The type of the event. Accepted values: ["food","workshop","activity"]
+   * @apiParam {String} uid The uid of the event.
+   * @apiParam {Number} eventLocation The uid of the location for the event.
+   * @apiParam {String} eventStartTime The unix time for the start of the event.
+   * @apiParam {String} eventEndTime The unix time for the start of the event.
+   * @apiParam {String} eventTitle The title of the event.
+   * @apiParam {String} eventDescription The description of the event.
+   * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Event} The updated event
+   * @apiSuccess {Event} data The updated event
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -136,15 +137,15 @@ export class EventsController extends LiveController {
    * @apiGroup Events
    * @apiPermission TeamMemberPermission
    *
-   * @apiParam {number} eventLocation - The uid of the location for the event.
-   * @apiParam {String} eventStartTime - The unix time for the start of the event.
-   * @apiParam {String} eventEndTime - The unix time for the start of the event.
-   * @apiParam {String} eventTitle - The title of the event.
-   * @apiParam {String} eventDescription - The description of the event.
-   * @apiParam {Enum} eventType - The type of the event. Accepted values: ["food","workshop","activity"]
-   * @apiParam {String} [hackathon] - optional uid of hackathon
+   * @apiParam {Number} eventLocation The uid of the location for the event.
+   * @apiParam {String} eventStartTime The unix time for the start of the event.
+   * @apiParam {String} eventEndTime The unix time for the start of the event.
+   * @apiParam {String} eventTitle The title of the event.
+   * @apiParam {String} eventDescription The description of the event.
+   * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
+   * @apiParam {String} [hackathon] Optional uid of hackathon
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Event} The inserted event
+   * @apiSuccess {Event} data The inserted event
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -193,7 +194,7 @@ export class EventsController extends LiveController {
    * @apiName Get events
    * @apiGroup Events
    * @apiUse RequestOpts
-   * @apiSuccess {Event[]} Array of current events
+   * @apiSuccess {Event[]} data Array of current events
    * @apiUse ResponseBodyDescription
    */
   private async getEventHandler(

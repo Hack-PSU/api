@@ -117,14 +117,14 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiName Create new Item Checkout
    * @apiGroup Item Checkout
    * @apiParam {String} itemId The id of the item being checked out
-   * @apiParam {String} [userId] The uid of the user checking out the item
+   * @apiParam {String} [userId] The uid of the user checking out the item.
    * @apiUse WristbandIdParam
    * @apiDescription This route allows an admin or a scanner to create a new checkout
    * request.
    * NOTE: One of userId or wid must be provided for this route to work
    * @apiUse AuthArgumentRequired
    * @apiPermission TeamMemberPermission
-   * @apiSuccess {CheckoutObject} The inserted checkout object
+   * @apiSuccess {CheckoutObject} data The inserted checkout object
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -175,7 +175,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiName Return checkout item
    * @apiGroup Item Checkout
    * @apiParam {String} checkoutId The id of the checkout instance
-   * @apiParam {number} returnTime=now Epoch time for when the object was returned
+   * @apiParam {Number} returnTime=now Epoch time for when the object was returned
    * @apiUse AuthArgumentRequired
    * @apiPermission TeamMemberPermission
    * @apiUse IllegalArgumentError
@@ -223,7 +223,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiGroup Item Checkout
    * @apiUse AuthArgumentRequired
    * @apiPermission TeamMemberPermission
-   * @apiSuccess {CheckoutObject[]} All Checkout instances
+   * @apiSuccess {CheckoutObject[]} data All Checkout instances
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -253,7 +253,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiGroup Item Checkout
    * @apiUse AuthArgumentRequired
    * @apiPermission TeamMemberPermission
-   * @apiSuccess {CheckoutItem[]} All items in inventory for checkout
+   * @apiSuccess {CheckoutItem[]} data All items in inventory for checkout
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -283,7 +283,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
   * @apiParam {Number} quantity Quantity of items available
   * @apiUse AuthArgumentRequired
   * @apiPermission DirectorPermission
-  * @apiSuccess {CheckoutItem} The added item
+  * @apiSuccess {CheckoutItem} data The added item
   * @apiUse IllegalArgumentError
   * @apiUse ResponseBodyDescription
   */
@@ -333,7 +333,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiGroup Item Checkout
    * @apiUse AuthArgumentRequired
    * @apiPermission TeamMemberPermission
-   * @apiSuccess {CheckoutItem[]} All available items in inventory for checkout
+   * @apiSuccess {CheckoutItem[]} data All available items in inventory for checkout
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */

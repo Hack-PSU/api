@@ -7,7 +7,6 @@ import { Update } from '../../../models/update/update';
 import { IUpdateProcessor } from '../../../processors/update-processor';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { Logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
 
@@ -20,7 +19,6 @@ export class UpdatesController extends LiveController {
     @Inject('IUpdateProcessor') private readonly updateProcessor: IUpdateProcessor,
     @Inject('IUpdateDataMapper') private readonly updateDataMapper: IUpdateDataMapper,
     @Inject('IUpdateDataMapper') private readonly acl: IAclPerm,
-    @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
     super();
     this.routes(this.router);
@@ -81,12 +79,12 @@ export class UpdatesController extends LiveController {
    * @apiGroup Updates
    * @apiPermission TeamMemberPermission
    *
-   * @apiParam {String} updateTitle - The title of the update
-   * @apiParam {String} updateText - The text of the update
-   * @apiParam {String} [updateImage] - The url of the image part of the update.
-   * @apiParam {Boolean} [pushNotification] - Whether to send out a push notification with this update.
+   * @apiParam {String} updateTitle The title of the update
+   * @apiParam {String} updateText The text of the update
+   * @apiParam {String} [updateImage] The url of the image part of the update.
+   * @apiParam {Boolean} [pushNotification] Whether to send out a push notification with this update.
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Update} The added update
+   * @apiSuccess {Update} data The added update
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -120,7 +118,7 @@ export class UpdatesController extends LiveController {
    * @apiName Get Update reference
    * @apiGroup Updates
    *
-   * @apiSuccess {String} The database reference to the current updates.
+   * @apiSuccess {String} data The database reference to the current updates.
    * @apiUse ResponseBodyDescription
    */
   private async getUpdateReferenceHandler(
@@ -145,7 +143,7 @@ export class UpdatesController extends LiveController {
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Update[]} Array of current updates.
+   * @apiSuccess {Update[]} data Array of current updates.
    * @apiUse ResponseBodyDescription
    */
   private async getUpdateHandler(

@@ -7,13 +7,13 @@ import { anyString, anything, capture, instance, mock, reset, verify, when } fro
 import { ICheckoutItemsDataMapper } from '../../../src/models/checkout-items';
 import { CheckoutItems } from '../../../src/models/checkout-items/checkout-items';
 import { CheckoutItemsDataMapperImpl } from '../../../src/models/checkout-items/checkout-items-data-mapper-impl';
+import { CheckoutObjectDataMapperImpl } from '../../../src/models/checkout-object/checkout-object-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
 import { RBAC } from '../../../src/services/auth/RBAC/rbac';
 import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../src/services/logging/logging';
-import { CheckoutObjectDataMapperImpl } from '../../../src/models/checkout-object/checkout-object-data-mapper-impl';
 
 let checkoutItemsDataMapper: ICheckoutItemsDataMapper;
 let checkoutObjectDataMapperImpl: CheckoutObjectDataMapperImpl;

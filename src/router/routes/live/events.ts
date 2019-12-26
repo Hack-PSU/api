@@ -62,10 +62,8 @@ export class EventsController extends LiveController {
    * @apiPermission TeamMemberPermission
    *
    * @apiParam {String} uid The uid of the event.
+   * @apiParam {String} [hackathon=current] The hackathon to delete the event from
    * @apiUse AuthArgumentRequired
-   * @apiUse IllegalArgumentError
-   * @apiUse ResponseBodyDescription
-   * @apiSuccess {Number} uid The uid of the deleted event
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -78,8 +76,8 @@ export class EventsController extends LiveController {
       return next(new HttpError('Event uid must be provided', 400));
     }
     try {
-      await this.dataMapper.delete(request.body.uid);
-      const res = new ResponseBody('Success', 200, request.body.uid);
+      const result = await this.dataMapper.delete(request.body);
+      const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
     } catch (error) {
       Util.standardErrorHandler(error, next);
@@ -96,10 +94,10 @@ export class EventsController extends LiveController {
    *
    * @apiParam {String} uid The uid of the event.
    * @apiParam {Number} eventLocation The uid of the location for the event.
-   * @apiParam {String} eventStartTime The unix time for the start of the event.
-   * @apiParam {String} eventEndTime The unix time for the start of the event.
+   * @apiParam {Number} eventStartTime The unix time for the start of the event.
+   * @apiParam {Number} eventEndTime The unix time for the start of the event.
    * @apiParam {String} eventTitle The title of the event.
-   * @apiParam {String} eventDescription The description of the event.
+   * @apiParam {String} [eventDescription] The description of the event.
    * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
    * @apiUse AuthArgumentRequired
    * @apiSuccess {Event} data The updated event
@@ -111,8 +109,8 @@ export class EventsController extends LiveController {
     response: express.Response,
     next: express.NextFunction,
   ) {
-    if (!request.body) {
-      return next(new HttpError('No event provided to update', 400));
+    if (!request.body.uid) {
+      return next(new HttpError('Event uid must be provided', 400));
     }
     let event;
     try {
@@ -121,8 +119,8 @@ export class EventsController extends LiveController {
       return Util.standardErrorHandler(new HttpError('Some properties were not as expected', 401), next);
     }
     try {
-      await this.dataMapper.update(event);
-      const res = new ResponseBody('Success', 200, { result: 'Success', data: event });
+      const result = await this.dataMapper.update(event);
+      const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -138,8 +136,8 @@ export class EventsController extends LiveController {
    * @apiPermission TeamMemberPermission
    *
    * @apiParam {Number} eventLocation The uid of the location for the event.
-   * @apiParam {String} eventStartTime The unix time for the start of the event.
-   * @apiParam {String} eventEndTime The unix time for the start of the event.
+   * @apiParam {Number} eventStartTime The unix time for the start of the event.
+   * @apiParam {Number} eventEndTime The unix time for the start of the event.
    * @apiParam {String} eventTitle The title of the event.
    * @apiParam {String} eventDescription The description of the event.
    * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
@@ -155,22 +153,22 @@ export class EventsController extends LiveController {
     next: express.NextFunction,
   ) {
     if (!request.body.eventLocation) {
-      return next(new HttpError('Event location must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event location must be provided', 400), next);
     }
     if (!request.body.eventStartTime) {
-      return next(new HttpError('Event start time must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event start time must be provided', 400), next);
     }
     if (!request.body.eventEndTime) {
-      return next(new HttpError('Event end time must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event end time must be provided', 400), next);
     }
     if (!request.body.eventTitle) {
-      return next(new HttpError('Event title must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event title must be provided', 400), next);
     }
     if (!request.body.eventDescription) {
-      return next(new HttpError('Event description must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event description must be provided', 400), next);
     }
     if (!request.body.eventType) {
-      return next(new HttpError('Event type must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event type must be provided', 400), next);
     }
     let event;
     try {
@@ -180,7 +178,7 @@ export class EventsController extends LiveController {
     }
     try {
       const result = await this.dataMapper.insert(event);
-      const res = new ResponseBody('Success', 200, { result: 'Success', data: result });
+      const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -193,8 +191,10 @@ export class EventsController extends LiveController {
    * @apiVersion 2.0.0
    * @apiName Get events
    * @apiGroup Events
-   * @apiUse RequestOpts
+   * @apiPermission UserPermission
+   *
    * @apiSuccess {Event[]} data Array of current events
+   * @apiUse RequestOpts
    * @apiUse ResponseBodyDescription
    */
   private async getEventHandler(

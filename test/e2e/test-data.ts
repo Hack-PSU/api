@@ -133,71 +133,71 @@ export class TestData {
   public static async setup() {
     const testRegistration = new Registration(this.validRegistration());
     const registrationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-            .into(this.registerTableName)
-            .setFieldsRows([testRegistration.dbRepresentation])
-            .set('hackathon', IntegrationTest.activeHackathon.uid)
-            .toParam();
+      .into(this.registerTableName)
+      .setFieldsRows([testRegistration.dbRepresentation])
+      .set('hackathon', IntegrationTest.activeHackathon.uid)
+      .toParam();
     registrationQuery.text = registrationQuery.text.concat(';');
 
     const testRsvp = new Rsvp(this.validRsvp());
     const rsvpQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-            .into(this.rsvpTableName)
-            .setFieldsRows([testRsvp.dbRepresentation])
-            .set('hackathon', IntegrationTest.activeHackathon.uid)
-            .toParam();
+      .into(this.rsvpTableName)
+      .setFieldsRows([testRsvp.dbRepresentation])
+      .set('hackathon', IntegrationTest.activeHackathon.uid)
+      .toParam();
     rsvpQuery.text = rsvpQuery.text.concat(';');
     const testEvent = new Event(this.validEvent());
     const eventQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-            .into(this.eventsTableName)
-            .setFieldsRows([testEvent.dbRepresentation])
-            .set('hackathon', IntegrationTest.activeHackathon.uid)
-            .toParam();
+      .into(this.eventsTableName)
+      .setFieldsRows([testEvent.dbRepresentation])
+      .set('hackathon', IntegrationTest.activeHackathon.uid)
+      .toParam();
     eventQuery.text = eventQuery.text.concat(';');
 
     const testLocation = new Location(this.validLocation());
     const locationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-            .into(this.locationsTableName)
-            .setFieldsRows([testLocation.dbRepresentation])
-            .toParam();
+      .into(this.locationsTableName)
+      .setFieldsRows([testLocation.dbRepresentation])
+      .toParam();
     locationQuery.text = locationQuery.text.concat(';');
 
     const testScan = new Scan(this.validScan());
     const scanQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-            .into(this.scansTableName)
-            .setFieldsRows([testScan.dbRepresentation])
-            .set('hackathon', IntegrationTest.activeHackathon.uid)
-            .toParam();
+      .into(this.scansTableName)
+      .setFieldsRows([testScan.dbRepresentation])
+      .set('hackathon', IntegrationTest.activeHackathon.uid)
+      .toParam();
     scanQuery.text = scanQuery.text.concat(';');
 
     const testRfidAssignment = new RfidAssignment(this.validRfidAssignment());
     const rfidAssignmentQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-            .into(this.rfidTableName)
-            .setFieldsRows([testRfidAssignment.dbRepresentation])
-            .set('hackathon', IntegrationTest.activeHackathon.uid)
-            .toParam();
+      .into(this.rfidTableName)
+      .setFieldsRows([testRfidAssignment.dbRepresentation])
+      .set('hackathon', IntegrationTest.activeHackathon.uid)
+      .toParam();
     rfidAssignmentQuery.text = rfidAssignmentQuery.text.concat(';');
 
     const testExtraCreditClass = new ExtraCreditClass(this.validExtraCreditClass());
     const extraCreditClassQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-            .into(this.ecClassesTableName)
-            .setFieldsRows([testExtraCreditClass.dbRepresentation])
-            .toParam();
+      .into(this.ecClassesTableName)
+      .setFieldsRows([testExtraCreditClass.dbRepresentation])
+      .toParam();
     extraCreditClassQuery.text = extraCreditClassQuery.text.concat(';');
 
     const testExtraCreditAssignment = new ExtraCreditAssignment(this.validExtraCreditAssignment());
     const extraCreditAssignmentQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-            .into(this.ecAssignmentsTableName)
-            .setFieldsRows([testExtraCreditAssignment.dbRepresentation])
-            .set('hackathon', IntegrationTest.activeHackathon.uid)
-            .toParam();
+      .into(this.ecAssignmentsTableName)
+      .setFieldsRows([testExtraCreditAssignment.dbRepresentation])
+      .set('hackathon', IntegrationTest.activeHackathon.uid)
+      .toParam();
     extraCreditAssignmentQuery.text = extraCreditAssignmentQuery.text.concat(';');
 
     const testPreRegistration = new PreRegistration(this.validPreRegistration());
     const preRegistrationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-            .into(this.preregisterTableName)
-            .setFieldsRows([testPreRegistration.dbRepresentation])
-            .set('hackathon', IntegrationTest.activeHackathon.uid)
-            .toParam();
+      .into(this.preregisterTableName)
+      .setFieldsRows([testPreRegistration.dbRepresentation])
+      .set('hackathon', IntegrationTest.activeHackathon.uid)
+      .toParam();
     preRegistrationQuery.text = preRegistrationQuery.text.concat(';');
 
     await IntegrationTest.mysqlUow.query(registrationQuery.text, registrationQuery.values);
@@ -213,49 +213,49 @@ export class TestData {
 
   public static async tearDown() {
     const registrationQuery = squel.delete()
-            .from(this.registerTableName)
-            .where('email = ?', this.validRegistration().email)
-            .toParam();
+      .from(this.registerTableName)
+      .where('email = ?', this.validRegistration().email)
+      .toParam();
     registrationQuery.text = registrationQuery.text.concat(';');
     const rsvpQuery = squel.delete()
-            .from(this.rsvpTableName)
-            .where('rsvp_time = ?', this.validRsvp().rsvp_time)
-            .toParam();
+      .from(this.rsvpTableName)
+      .where('rsvp_time = ?', this.validRsvp().rsvp_time)
+      .toParam();
     rsvpQuery.text = rsvpQuery.text.concat(';');
     const eventQuery = squel.delete()
-            .from(this.eventsTableName)
-            .where('event_title = ?', this.validEvent().eventTitle)
-            .toParam();
+      .from(this.eventsTableName)
+      .where('event_title = ?', this.validEvent().eventTitle)
+      .toParam();
     eventQuery.text = eventQuery.text.concat(';');
     const locationQuery = squel.delete()
-            .from(this.locationsTableName)
-            .where('uid = ?', this.validLocation().uid)
-            .toParam();
+      .from(this.locationsTableName)
+      .where('uid = ?', this.validLocation().uid)
+      .toParam();
     locationQuery.text = locationQuery.text.concat(';');
     const scanQuery = squel.delete()
-            .from(this.scansTableName)
-            .where('scan_event = ?', this.validScan().scan_event)
-            .toParam();
+      .from(this.scansTableName)
+      .where('scan_event = ?', this.validScan().scan_event)
+      .toParam();
     scanQuery.text = scanQuery.text.concat(';');
     const rfidAssignmentQuery = squel.delete()
-            .from(this.rfidTableName)
-            .where('time = ?', this.validRfidAssignment().time)
-            .toParam();
+      .from(this.rfidTableName)
+      .where('time = ?', this.validRfidAssignment().time)
+      .toParam();
     rfidAssignmentQuery.text = rfidAssignmentQuery.text.concat(';');
     const extraCreditClassQuery = squel.delete()
-            .from(this.ecClassesTableName)
-            .where('class_name = ?', this.validExtraCreditClass().class_name)
-            .toParam();
+      .from(this.ecClassesTableName)
+      .where('class_name = ?', this.validExtraCreditClass().class_name)
+      .toParam();
     extraCreditClassQuery.text = extraCreditClassQuery.text.concat(';');
     const extraCreditAssignmentQuery = squel.delete()
-            .from(this.ecAssignmentsTableName)
-            .where('class_uid = ?', this.validExtraCreditAssignment().cid)
-            .toParam();
+      .from(this.ecAssignmentsTableName)
+      .where('class_uid = ?', this.validExtraCreditAssignment().cid)
+      .toParam();
     extraCreditAssignmentQuery.text = extraCreditAssignmentQuery.text.concat(';');
     const preRegistrationQuery = squel.delete()
-            .from(this.preregisterTableName)
-            .where('email = ?', this.validPreRegistration().email)
-            .toParam();
+      .from(this.preregisterTableName)
+      .where('email = ?', this.validPreRegistration().email)
+      .toParam();
     preRegistrationQuery.text = preRegistrationQuery.text.concat(';');
 
     await IntegrationTest.mysqlUow.query(preRegistrationQuery.text, preRegistrationQuery.values);

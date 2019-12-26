@@ -222,6 +222,10 @@ export class FirebaseAuthService implements IFirebaseAuthService {
     customVerifierParams: any,
   ) {
     const requestPermission = FirebaseAuthService.extractedPermission(requestedOp, permission);
+    // console.log(requestPermission);
+    // console.log(requestedOp);
+    // console.log(permission);
+    // console.log(userToken.privilege);
     if (!this.aclVerifier(
       userToken.privilege,
       requestPermission,

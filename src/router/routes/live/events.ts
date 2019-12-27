@@ -73,7 +73,7 @@ export class EventsController extends LiveController {
     next: express.NextFunction,
   ) {
     if (!request.body || !request.body.uid) {
-      return next(new HttpError('Event uid must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
     }
     try {
       const result = await this.dataMapper.delete(request.body);
@@ -110,13 +110,13 @@ export class EventsController extends LiveController {
     next: express.NextFunction,
   ) {
     if (!request.body.uid) {
-      return next(new HttpError('Event uid must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
     }
     let event;
     try {
       event = new Event(request.body);
     } catch (error) {
-      return Util.standardErrorHandler(new HttpError('Some properties were not as expected', 401), next);
+      return Util.standardErrorHandler(new HttpError('Some properties were not as expected', 400), next);
     }
     try {
       const result = await this.dataMapper.update(event);

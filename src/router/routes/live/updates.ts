@@ -47,24 +47,48 @@ export class UpdatesController extends LiveController {
       .post(
         '/update',
         this.authService.verifyAcl(this.acl, AclOperations.UPDATE),
-        (req, res, next) => this.updateEventHandler(req, res, next),
+        (req, res, next) => this.updateUpdateHandler(req, res, next),
       )
       .post(
         '/delete',
         this.authService.verifyAcl(this.acl, AclOperations.DELETE),
-        (req, res, next) => this.deleteEventHandler(req, res, next),
+        (req, res, next) => this.deleteUpdateHandler(req, res, next),
       );
   }
 
-  private deleteEventHandler(
+  /**
+   * @api {post} /live/updates/delete Delete an update
+   * @apiVersion 2.0.0
+   * @apiName Delete update
+   * @apiGroup Updates
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiUse AuthArgumentRequired
+   *
+   * @apiParam {String} uid The id of the update to be deleted
+   * @apiParam {String} [hackathon=current] The hackathon the update was made for
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyRescription
+   */
+  private async deleteUpdateHandler(
     request: express.Request,
     response: express.Response,
     next: express.NextFunction,
   ) {
-    next(new RouteNotImplementedError('Update deletion is not supported at this time'));
+    if (!request.body || !request.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Update id must be provided', 400), next);
+    }
+
+    try {
+      const result = await this.updateDataMapper.delete(request.body);
+      const res = new ResponseBody('Success', 200, result);
+      return this.sendResponse(response, res);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 
-  private updateEventHandler(
+  private updateUpdateHandler(
     request: express.Request,
     response: express.Response,
     next: express.NextFunction,
@@ -81,8 +105,9 @@ export class UpdatesController extends LiveController {
    *
    * @apiParam {String} updateTitle The title of the update
    * @apiParam {String} updateText The text of the update
-   * @apiParam {String} [updateImage] The url of the image part of the update.
-   * @apiParam {Boolean} [pushNotification] Whether to send out a push notification with this update.
+   * @apiParam {String} [updateImage] The url of the image part of the update
+   * @apiParam {Number} [updateTime = now] The time the update is created in milliseconds
+   * @apiParam {Boolean} [pushNotification = false] Whether to send out a push notification with this update
    * @apiUse AuthArgumentRequired
    * @apiSuccess {Update} data The added update
    * @apiUse IllegalArgumentError
@@ -94,10 +119,10 @@ export class UpdatesController extends LiveController {
     next: express.NextFunction,
   ) {
     if (!request.body || !request.body.updateTitle) {
-      return next(new HttpError('Update title must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Update title must be provided', 400), next);
     }
     if (!request.body.updateText) {
-      return next(new HttpError('Update message must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Update message must be provided', 400), next);
     }
     if (!request.body.updateImage) {
       request.body.updateImage = 'https://app.hackpsu.org/assets/images/logo.svg';
@@ -118,7 +143,7 @@ export class UpdatesController extends LiveController {
    * @apiName Get Update reference
    * @apiGroup Updates
    *
-   * @apiSuccess {String} data The database reference to the current updates.
+   * @apiSuccess {String} data The database reference to updates for the current hackathon
    * @apiUse ResponseBodyDescription
    */
   private async getUpdateReferenceHandler(
@@ -143,7 +168,7 @@ export class UpdatesController extends LiveController {
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Update[]} data Array of current updates.
+   * @apiSuccess {Update[]} data Array of current updates
    * @apiUse ResponseBodyDescription
    */
   private async getUpdateHandler(

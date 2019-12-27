@@ -6,8 +6,12 @@ import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
 
 let listener: firebase.Unsubscribe;
+let firebaseUser: firebase.User;
 
 function login(email: string, password: string): Promise<firebase.User> {
+  if (firebaseUser) {
+    return new Promise(resolve => resolve(firebaseUser));
+  }
   return new Promise((resolve, reject) => {
     firebase.auth()
       .signInWithEmailAndPassword(email, password)
@@ -15,6 +19,7 @@ function login(email: string, password: string): Promise<firebase.User> {
     listener = firebase.auth()
       .onAuthStateChanged((user) => {
         if (user) {
+          firebaseUser = user;
           resolve(user);
         }
       });
@@ -25,8 +30,8 @@ function loginAdmin() {
   return login('admin@email.com', 'password');
 }
 
-@suite('INTEGRATION TEST: Live Event')
-class LiveEventIntegrationTest extends IntegrationTest {
+@suite('INTEGRATION TEST: Live Events')
+class LiveEventsIntegrationTest extends IntegrationTest {
 
   public static async before() {
     await IntegrationTest.before();
@@ -314,7 +319,7 @@ class LiveEventIntegrationTest extends IntegrationTest {
       .toParam();
     query.text = query.text.concat(';');
 
-    const result = await LiveEventIntegrationTest.mysqlUow.query<Event>(
+    const result = await LiveEventsIntegrationTest.mysqlUow.query<Event>(
       query.text,
       query.values,
     ) as Event[];
@@ -332,11 +337,11 @@ class LiveEventIntegrationTest extends IntegrationTest {
       .order('event_start_time', true)
       .join('LOCATIONS', 'location', 'event_location=location.uid')
       .join('HACKATHON', 'h', 'h.uid = event.hackathon')
-      .where('h.uid = ?', LiveEventIntegrationTest.activeHackathon.uid)
+      .where('h.uid = ?', LiveEventsIntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
 
-    const result = await LiveEventIntegrationTest.mysqlUow.query<Event>(
+    const result = await LiveEventsIntegrationTest.mysqlUow.query<Event>(
       query.text,
       query.values,
     ) as Event[];

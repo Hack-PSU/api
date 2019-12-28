@@ -73,3 +73,7 @@
  * @apiParam {Boolean} [ignoreCache]  Force a fresh query to retrieve data
  * @apiParam {String} [hackathon] Uid of hackathon to get results by. byHackathon must be true
  */
+/**
+ * @apiDefine WristbandIdParam
+ * @apiParam {String} wid The wristband ID to look up user by
+ */

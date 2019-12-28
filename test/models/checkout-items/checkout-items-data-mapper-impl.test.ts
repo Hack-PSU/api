@@ -249,8 +249,8 @@ describe('TEST: CheckoutItems Data Mapper', () => {
       await checkoutItemsDataMapper.update(testCheckoutItems);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'UPDATE `CHECKOUT_ITEMS` SET `name` = ?, `quantity` = ?, `uid` = ? WHERE (uid = ?);';
-      const expectedParams = [testCheckoutItems.name, testCheckoutItems.quantity, 0, 0];
+      const expectedSQL = 'UPDATE `CHECKOUT_ITEMS` SET `uid` = ?, `name` = ?, `quantity` = ? WHERE (uid = ?);';
+      const expectedParams = [0, testCheckoutItems.name, testCheckoutItems.quantity, 0];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

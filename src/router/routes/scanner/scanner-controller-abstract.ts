@@ -72,10 +72,6 @@ abstract class AbstractScannerController extends ParentRouter {
   }
 
   /**
-   * @apiDefine WristbandIdParam
-   * @apiParam {String} wid The wristband ID to look up user by
-   */
-  /**
    * This middleware capable function looks up a user's login and registration details
    * based on an assigned wid from a valid wristband. The user's registration and authentication
    * information will be forwarded under res.locals.registration and res.locals.userToken

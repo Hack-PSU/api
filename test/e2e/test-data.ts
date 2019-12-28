@@ -1,6 +1,8 @@
 import * as firebase from 'firebase';
 import _ from 'lodash';
 import squel from 'squel';
+import { CheckoutItems, ICheckoutItemsApiModel } from '../../src/models/checkout-items/checkout-items';
+import { CheckoutObject, ICheckoutObjectApiModel } from '../../src/models/checkout-object/checkout-object';
 import { Event, EventType, IEventApiModel } from '../../src/models/event/event';
 import { ExtraCreditAssignment, IExtraCreditAssignmentApiModel } from '../../src/models/extra-credit/extra-credit-assignment';
 import { ExtraCreditClass, IExtraCreditClassApiModel } from '../../src/models/extra-credit/extra-credit-class';
@@ -32,6 +34,8 @@ export class TestData {
   public static readonly preregisterTableName = 'PRE_REGISTRATION';
   public static readonly hackathonTableName = 'HACKATHON';
   public static readonly attendancetableName = 'ATTENDANCE';
+  public static readonly checkoutItemTableName = 'CHECKOUT_ITEMS';
+  public static readonly checkoutTableName = 'CHECKOUT_DATA';
 
   public static validRegistration(): IRegistrationApiModel {
     return {
@@ -130,6 +134,24 @@ export class TestData {
     };
   }
 
+  public static validCheckoutItemObject(): ICheckoutItemsApiModel {
+    return {
+      uid: 5,
+      name: 'test object',
+      quantity: 5,
+    };
+  }
+
+  public static validCheckoutObject(): ICheckoutObjectApiModel {
+    return {
+      uid: 5,
+      userId: this.validRegistration().uid!,
+      itemId: this.validCheckoutItemObject().uid!,
+      checkoutTime: 1,
+      returnTime: 2,
+    };
+  }
+
   public static async setup() {
     const testRegistration = new Registration(this.validRegistration());
     const registrationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
@@ -200,6 +222,21 @@ export class TestData {
       .toParam();
     preRegistrationQuery.text = preRegistrationQuery.text.concat(';');
 
+    const testCheckoutItem = new CheckoutItems(this.validCheckoutItemObject());
+    const checkoutItemQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .into('CHECKOUT_ITEMS')
+      .setFieldsRows([testCheckoutItem.dbRepresentation])
+      .toParam();
+    checkoutItemQuery.text = checkoutItemQuery.text.concat(';');
+
+    const testCheckout = new CheckoutObject(this.validCheckoutObject());
+    const checkoutQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .into('CHECKOUT_DATA')
+      .setFieldsRows([testCheckout.dbRepresentation])
+      .set('hackathon', IntegrationTest.activeHackathon.uid)
+      .toParam();
+    checkoutQuery.text = checkoutQuery.text.concat(';');
+
     await IntegrationTest.mysqlUow.query(registrationQuery.text, registrationQuery.values);
     await IntegrationTest.mysqlUow.query(rsvpQuery.text, rsvpQuery.values);
     await IntegrationTest.mysqlUow.query(locationQuery.text, locationQuery.values);
@@ -209,6 +246,8 @@ export class TestData {
     await IntegrationTest.mysqlUow.query(extraCreditClassQuery.text, extraCreditClassQuery.values);
     await IntegrationTest.mysqlUow.query(extraCreditAssignmentQuery.text, extraCreditAssignmentQuery.values);
     await IntegrationTest.mysqlUow.query(preRegistrationQuery.text, preRegistrationQuery.values);
+    await IntegrationTest.mysqlUow.query(checkoutItemQuery.text, checkoutItemQuery.values);
+    await IntegrationTest.mysqlUow.query(checkoutQuery.text, checkoutQuery.values);
   }
 
   public static async tearDown() {
@@ -258,6 +297,20 @@ export class TestData {
       .toParam();
     preRegistrationQuery.text = preRegistrationQuery.text.concat(';');
 
+    const deleteCheckoutQuery = squel.delete()
+      .from(this.checkoutTableName)
+      .where('user_id = ?', this.validCheckoutObject().userId)
+      .toParam();
+    deleteCheckoutQuery.text = deleteCheckoutQuery.text.concat(';');
+
+    const deleteCheckoutItemQuery = squel.delete()
+      .from(this.checkoutItemTableName)
+      .where('name = ?', this.validCheckoutItemObject().name)
+      .toParam();
+    deleteCheckoutItemQuery.text = deleteCheckoutItemQuery.text.concat(';');
+
+    await IntegrationTest.mysqlUow.query(deleteCheckoutQuery.text, deleteCheckoutQuery.values);
+    await IntegrationTest.mysqlUow.query(deleteCheckoutItemQuery.text, deleteCheckoutItemQuery.values);
     await IntegrationTest.mysqlUow.query(preRegistrationQuery.text, preRegistrationQuery.values);
     await IntegrationTest.mysqlUow.query(extraCreditAssignmentQuery.text, extraCreditAssignmentQuery.values);
     await IntegrationTest.mysqlUow.query(extraCreditClassQuery.text, extraCreditClassQuery.values);
@@ -267,5 +320,6 @@ export class TestData {
     await IntegrationTest.mysqlUow.query(locationQuery.text, locationQuery.values);
     await IntegrationTest.mysqlUow.query(rsvpQuery.text, rsvpQuery.values);
     await IntegrationTest.mysqlUow.query(registrationQuery.text, registrationQuery.values);
+
   }
 }

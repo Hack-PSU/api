@@ -189,7 +189,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
     }
     if (!req.body.checkoutId) {
       return Util.standardErrorHandler(
-        new HttpError('Cannot find item ID to checkout', 400),
+        new HttpError('Cannot find checkout ID to return', 400),
         next,
       );
     }

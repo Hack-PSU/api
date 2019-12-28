@@ -169,7 +169,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
 
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
-    // THEN: Failed to validate user id
+    // THEN: Failed to validate input
     this.expect(res.body.body.data).to.deep.equal({ message: 'Cannot find item ID to checkout' });
   }
 
@@ -192,8 +192,67 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
 
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
-    // THEN: Failed to validate user id
+    // THEN: Failed to validate input
     this.expect(res.body.body.data).to.deep.equal({ message: 'Could not retrieve user ID from provided information' });
+  }
+
+  @test('fails to return checkout object due to no item')
+  @slow(1500)
+  public async returnCheckoutFailsDueToNoItemId() {
+    // GIVEN: API
+    // WHEN: Returning a checkout object
+    const user = await loginAdmin();
+    const idToken = await user.getIdToken();
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/return`)
+      .set('idToken', idToken)
+      .set('content-type', 'application/json; charset=utf-8');
+
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res, 'Error', 400, 'Error');
+    // THEN: Failed to validate input
+    this.expect(res.body.body.data).to.deep.equal({ message: 'Cannot find checkout ID to return' });
+  }
+
+  @test('fails to add new checkout item due to no item name')
+  @slow(1500)
+  public async addNewCheckoutItemFailsDueToNoName() {
+    // GIVEN: API
+    // WHEN: Adding a new checkout item
+    const user = await loginAdmin();
+    const idToken = await user.getIdToken();
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/items`)
+      .set('idToken', idToken)
+      .set('content-type', 'application/json; charset=utf-8');
+
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res, 'Error', 400, 'Error');
+    // THEN: Failed to validate input
+    this.expect(res.body.body.data).to.deep.equal({ message: 'No name provided' });
+  }
+
+  @test('fails to add new checkout item due to no item quantity')
+  @slow(1500)
+  public async addNewCheckoutItemFailsDueToNoQuantity() {
+    // GIVEN: API
+    // WHEN: Adding a new checkout item
+    const user = await loginAdmin();
+    const idToken = await user.getIdToken();
+    const parameters = { name: 'Test name' };
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/items`)
+      .set('idToken', idToken)
+      .set('content-type', 'application/json; charset=utf-8')
+      .send(parameters);
+
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res, 'Error', 400, 'Error');
+    // THEN: Failed to validate input
+    this.expect(res.body.body.data).to.deep.equal({ message: 'No quantity provided' });
   }
 
   private async verifyCheckout(checkout: CheckoutObject) {

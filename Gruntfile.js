@@ -110,7 +110,7 @@ module.exports = (grunt) => {
           add: {
             NODE_ENV: `${grunt.option('debug') ? 'DEBUG' : 'STAGING'}`,
             APP_ENV: `${grunt.option('debug') ? 'DEBUG' : 'STAGING'}`,
-            SQL_DATABASE: grunt.option('travis') ? 'travis' : 'test',
+            SQL_DATABASE: 'test',
             SQL_HOSTNAME: 'localhost',
           },
         },

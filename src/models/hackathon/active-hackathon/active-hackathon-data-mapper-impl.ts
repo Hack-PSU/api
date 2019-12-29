@@ -17,21 +17,22 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
   implements IActiveHackathonDataMapper, IAclPerm {
 
   public get activeHackathon(): Observable<ActiveHackathon> {
-    const query = this.getActiveHackathonQuery().toParam();
-    if (!this.hackathonObservable) {
-      this.hackathonObservable = from(this.sql.query(
-        query.text,
-        query.values,
-      ))
-        .pipe(
-          map((hackathons: ActiveHackathon[]) => hackathons[0]),
-          map((hackathon: ActiveHackathon) => {
-            hackathon.base_pin = parseInt(hackathon.base_pin! as any as string, 10);
-            return hackathon;
-          }),
-          shareReplay(),
-        );
+    if (this.hackathonObservable) {
+      return this.hackathonObservable;
     }
+    const query = this.getActiveHackathonQuery().toParam();
+    this.hackathonObservable = from(this.sql.query(
+      query.text,
+      query.values,
+    ))
+      .pipe(
+        map((hackathons: ActiveHackathon[]) => hackathons[0]),
+        map((hackathon: ActiveHackathon) => {
+          hackathon.base_pin = parseInt(hackathon.base_pin! as any as string, 10);
+          return hackathon;
+        }),
+        shareReplay(),
+      );
     return this.hackathonObservable;
   }
 

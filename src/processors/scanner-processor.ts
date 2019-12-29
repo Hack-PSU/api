@@ -113,13 +113,21 @@ export class ScannerProcessor implements IScannerProcessor {
         { result: status.response, data: responseResult },
       );
     } else {
-      const assignment = new RfidAssignment(inputAssignments);
-      const result = await this.scannerDataMapper.insert(assignment);
-      response = new ResponseBody(
-        'Success',
-        200,
-        result as IDbResult<RfidAssignment>,
-      );
+      try {
+        const assignment = new RfidAssignment(inputAssignments);
+        const result = await this.scannerDataMapper.insert(assignment);
+        response = new ResponseBody(
+          'Success',
+          200,
+          result as IDbResult<RfidAssignment>,
+        );
+      } catch (error) {
+        return new ResponseBody(
+          'Bad input',
+          400,
+          error,
+        );
+      }
     }
     return response;
   }
@@ -127,7 +135,7 @@ export class ScannerProcessor implements IScannerProcessor {
   public async processorScannerConfirmation(pin: number, macAddress: string) {
     const result = await this.scannerAuthService.checkPinAuthentication(pin);
     if (!result) {
-      throw new HttpError('invalid authentication pin provided', 401);
+      throw new HttpError('Invalid authentication pin provided', 400);
     }
     const apiToken = await this.scannerAuthService.generateApiKey(macAddress);
     return new ResponseBody('Success', 200, { result: 'Success', data: apiToken });
@@ -184,13 +192,21 @@ export class ScannerProcessor implements IScannerProcessor {
         { result: status.response, data: responseResult },
       );
     } else {
-      const scan = new Scan(inputScans);
-      const result = await this.scannerDataMapper.addSingleScan(scan);
-      response = new ResponseBody(
-        'Success',
-        200,
-        result as IDbResult<Scan>,
-      );
+      try {
+        const scan = new Scan(inputScans);
+        const result = await this.scannerDataMapper.addSingleScan(scan);
+        response = new ResponseBody(
+          'Success',
+          200,
+          result as IDbResult<Scan>,
+        );
+      } catch (error) {
+        return new ResponseBody(
+          'Bad input',
+          400,
+          error,
+        );
+      }
     }
     return response;
   }

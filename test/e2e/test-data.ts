@@ -157,6 +157,7 @@ export class TestData {
     const registrationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.registerTableName)
       .setFieldsRows([testRegistration.dbRepresentation])
+      .set('pin', 5)
       .set('hackathon', IntegrationTest.activeHackathon.uid)
       .toParam();
     registrationQuery.text = registrationQuery.text.concat(';');
@@ -253,59 +254,48 @@ export class TestData {
   public static async tearDown() {
     const registrationQuery = squel.delete()
       .from(this.registerTableName)
-      .where('email = ?', this.validRegistration().email)
       .toParam();
     registrationQuery.text = registrationQuery.text.concat(';');
     const rsvpQuery = squel.delete()
       .from(this.rsvpTableName)
-      .where('rsvp_time = ?', this.validRsvp().rsvp_time)
       .toParam();
     rsvpQuery.text = rsvpQuery.text.concat(';');
     const eventQuery = squel.delete()
       .from(this.eventsTableName)
-      .where('event_title = ?', this.validEvent().eventTitle)
       .toParam();
     eventQuery.text = eventQuery.text.concat(';');
     const locationQuery = squel.delete()
       .from(this.locationsTableName)
-      .where('uid = ?', this.validLocation().uid)
       .toParam();
     locationQuery.text = locationQuery.text.concat(';');
     const scanQuery = squel.delete()
       .from(this.scansTableName)
-      .where('scan_event = ?', this.validScan().scan_event)
       .toParam();
     scanQuery.text = scanQuery.text.concat(';');
     const rfidAssignmentQuery = squel.delete()
       .from(this.rfidTableName)
-      .where('time = ?', this.validRfidAssignment().time)
       .toParam();
     rfidAssignmentQuery.text = rfidAssignmentQuery.text.concat(';');
     const extraCreditClassQuery = squel.delete()
       .from(this.ecClassesTableName)
-      .where('class_name = ?', this.validExtraCreditClass().class_name)
       .toParam();
     extraCreditClassQuery.text = extraCreditClassQuery.text.concat(';');
     const extraCreditAssignmentQuery = squel.delete()
       .from(this.ecAssignmentsTableName)
-      .where('class_uid = ?', this.validExtraCreditAssignment().cid)
       .toParam();
     extraCreditAssignmentQuery.text = extraCreditAssignmentQuery.text.concat(';');
     const preRegistrationQuery = squel.delete()
       .from(this.preregisterTableName)
-      .where('email = ?', this.validPreRegistration().email)
       .toParam();
     preRegistrationQuery.text = preRegistrationQuery.text.concat(';');
 
     const deleteCheckoutQuery = squel.delete()
       .from(this.checkoutTableName)
-      .where('user_id = ?', this.validCheckoutObject().userId)
       .toParam();
     deleteCheckoutQuery.text = deleteCheckoutQuery.text.concat(';');
 
     const deleteCheckoutItemQuery = squel.delete()
       .from(this.checkoutItemTableName)
-      .where('name = ?', this.validCheckoutItemObject().name)
       .toParam();
     deleteCheckoutItemQuery.text = deleteCheckoutItemQuery.text.concat(';');
 

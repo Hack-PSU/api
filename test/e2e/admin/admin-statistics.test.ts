@@ -34,10 +34,6 @@ function login(email: string, password: string): Promise<firebase.User> {
   });
 }
 
-function loginRegular() {
-  return login('test@email.com', 'password');
-}
-
 function loginAdmin() {
   return login('admin@email.com', 'password');
 }
@@ -56,17 +52,6 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       listener();
     }
   }
-  protected static readonly registerTableName = 'REGISTRATION';
-  protected static readonly rsvpTableName = 'RSVP';
-  protected static readonly eventsTableName = 'EVENTS';
-  protected static readonly locationsTableName = 'LOCATIONS';
-  protected static readonly scansTableName = 'SCANS';
-  protected static readonly rfidTableName = 'RFID_ASSIGNMENTS';
-  protected static readonly ecClassesTableName = 'EXTRA_CREDIT_CLASSES';
-  protected static readonly ecAssignmentsTableName = 'EXTRA_CREDIT_ASSIGNMENT';
-  protected static readonly preregisterTableName = 'PRE_REGISTRATION';
-  protected static readonly hackathonTableName = 'HACKATHON';
-  protected static readonly attendancetableName = 'ATTENDANCE';
 
   protected readonly apiEndpoint = '/v2/admin/data?type';
 
@@ -317,7 +302,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   private async verifyPreregistrationCount(count: number) {
     const query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
-      .from(AdminStatisticsIntegrationTest.preregisterTableName)
+      .from(TestData.preregisterTableName)
       .field('COUNT(uid)', 'count')
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
@@ -331,10 +316,10 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   private async verifyRSVPUsers(users: Rsvp) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(AdminStatisticsIntegrationTest.rsvpTableName, 'rsvp')
+      .from(TestData.rsvpTableName, 'rsvp')
       .field('rsvp.*')
       .field('hackathon.uid', 'hackathon')
-      .join(AdminStatisticsIntegrationTest.hackathonTableName,
+      .join(TestData.hackathonTableName,
             'hackathon',
             'rsvp.hackathon = hackathon.uid')
       .toParam();
@@ -408,9 +393,9 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   private async verifyAttendanceData(data: any) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(AdminStatisticsIntegrationTest.attendancetableName, 'attendance')
+      .from(TestData.attendancetableName, 'attendance')
       .join(
-        AdminStatisticsIntegrationTest.registerTableName,
+        TestData.registerTableName,
         'registration',
         'attendance.user_uid = registration.uid',
       )
@@ -428,9 +413,9 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   private async verifyEventScans(data: Scan[]) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(AdminStatisticsIntegrationTest.scansTableName, 'scans')
+      .from(TestData.scansTableName, 'scans')
       .join(
-        AdminStatisticsIntegrationTest.hackathonTableName,
+        TestData.hackathonTableName,
         'hackathon',
         'scans.hackathon = hackathon.uid',
       )
@@ -446,7 +431,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   private async verifyExtraCreditAssignments(data: ExtraCreditAssignment[]) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(AdminStatisticsIntegrationTest.ecAssignmentsTableName)
+      .from(TestData.ecAssignmentsTableName)
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
@@ -459,7 +444,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   private async verifyPreRegisteredUsers(data: PreRegistration[]) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(AdminStatisticsIntegrationTest.preregisterTableName)
+      .from(TestData.preregisterTableName)
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
@@ -485,11 +470,11 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .field('rsvp.rsvp_time')
       .field('rsvp.rsvp_status')
       .field('rfid.user_uid')
-      .from(AdminStatisticsIntegrationTest.preregisterTableName, 'pre_reg')
-      .right_join(AdminStatisticsIntegrationTest.registerTableName, 'reg', 'pre_reg.email = reg.email')
-      .join(AdminStatisticsIntegrationTest.hackathonTableName, 'hackathon', 'reg.hackathon = hackathon.uid')
-      .left_join(AdminStatisticsIntegrationTest.rsvpTableName, 'rsvp', 'reg.uid = rsvp.user_id')
-      .left_join(AdminStatisticsIntegrationTest.rfidTableName, 'rfid', 'reg.uid = rfid.user_uid')
+      .from(TestData.preregisterTableName, 'pre_reg')
+      .right_join(TestData.registerTableName, 'reg', 'pre_reg.email = reg.email')
+      .join(TestData.hackathonTableName, 'hackathon', 'reg.hackathon = hackathon.uid')
+      .left_join(TestData.rsvpTableName, 'rsvp', 'reg.uid = rsvp.user_id')
+      .left_join(TestData.rfidTableName, 'rfid', 'reg.uid = rfid.user_uid')
       .where('reg.hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
@@ -502,9 +487,9 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   private async verifyWristbandAssignments(data: RfidAssignment[]) {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .from(AdminStatisticsIntegrationTest.rfidTableName, 'wid_assignments')
+      .from(TestData.rfidTableName, 'wid_assignments')
       .join(
-        AdminStatisticsIntegrationTest.hackathonTableName,
+        TestData.hackathonTableName,
         'hackathon',
         'wid_assignments.hackathon = hackathon.uid',
       )
@@ -520,7 +505,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   private async verifyRSVPCount(count: number) {
     const query = squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
-      .from(AdminStatisticsIntegrationTest.rsvpTableName)
+      .from(TestData.rsvpTableName)
       .field('COUNT(user_id)', 'count')
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
@@ -534,19 +519,19 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   private async verifyUserCountByInteractionType(count: number[]) {
     const preregisterCountQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from(AdminStatisticsIntegrationTest.preregisterTableName)
+      .from(TestData.preregisterTableName)
       .field('COUNT(uid)', 'preregistration_count')
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid);
     const registerCountQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from(AdminStatisticsIntegrationTest.registerTableName)
+      .from(TestData.registerTableName)
       .field('COUNT(uid)', 'registration_count')
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid);
     const rsvpCountQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from(AdminStatisticsIntegrationTest.rsvpTableName)
+      .from(TestData.rsvpTableName)
       .field('COUNT(user_id)', 'rsvp_count')
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid);
     const scannerCountQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
-      .from(AdminStatisticsIntegrationTest.rfidTableName)
+      .from(TestData.rfidTableName)
       .field('COUNT(rfid_uid)', 'checkin_count')
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid);
     const query = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
@@ -592,14 +577,14 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   private getSelectQueryForOptionName(fieldname: string): squel.Select {
     return squel.select({ autoQuoteFieldNames: false, autoQuoteTableNames: true })
-      .from(AdminStatisticsIntegrationTest.registerTableName)
+      .from(TestData.registerTableName)
       .field(`"${fieldname}"`, 'CATEGORY')
       .field(fieldname, 'OPTION')
       .field('COUNT(*)', 'COUNT')
       .join(
-        AdminStatisticsIntegrationTest.hackathonTableName,
+        TestData.hackathonTableName,
         'hackathon',
-        `hackathon.uid = ${AdminStatisticsIntegrationTest.registerTableName}.hackathon`,
+        `hackathon.uid = ${TestData.registerTableName}.hackathon`,
       )
       .where('hackathon.uid = ?', IntegrationTest.activeHackathon.uid)
       .group(fieldname);

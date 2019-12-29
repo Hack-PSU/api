@@ -11,7 +11,7 @@
       "type": "number"
     },
     "scan_location": {
-      "type": "string"
+      "type": "number"
     }
   },
   "required": [

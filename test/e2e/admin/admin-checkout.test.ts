@@ -66,7 +66,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .request(this.app)
       .post(this.apiEndpoint)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
+      .set('content-type', 'application/json')
       .send(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
@@ -89,7 +89,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .request(this.app)
       .post(`${this.apiEndpoint}/return`)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
+      .set('content-type', 'application/json')
       .send(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
@@ -110,8 +110,8 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .request(this.app)
       .get(`${this.apiEndpoint}/items`)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
-      .send(parameters);
+      .set('content-type', 'application/json')
+      .query(parameters);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: The Checkout Item is checked
@@ -165,7 +165,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .request(this.app)
       .post(this.apiEndpoint)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8');
+      .set('content-type', 'application/json');
 
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
@@ -187,7 +187,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .request(this.app)
       .post(this.apiEndpoint)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
+      .set('content-type', 'application/json')
       .send(parameters);
 
     // THEN: Returns a well formed response
@@ -207,7 +207,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .request(this.app)
       .post(`${this.apiEndpoint}/return`)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8');
+      .set('content-type', 'application/json');
 
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
@@ -226,7 +226,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .request(this.app)
       .post(`${this.apiEndpoint}/items`)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8');
+      .set('content-type', 'application/json');
 
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
@@ -246,7 +246,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .request(this.app)
       .post(`${this.apiEndpoint}/items`)
       .set('idToken', idToken)
-      .set('content-type', 'application/json; charset=utf-8')
+      .set('content-type', 'application/json')
       .send(parameters);
 
     // THEN: Returns a well formed response

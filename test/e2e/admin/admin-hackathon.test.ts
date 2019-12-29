@@ -61,6 +61,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
       name: 'Test hackathon',
       startTime: 1,
       endTime: 2,
+      basePin: 5,
     };
     const res = await this.chai
       .request(this.app)
@@ -114,7 +115,6 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: Hackathon is checked
-    delete res.body.body.data.base_pin;
     await this.verifyHackathon(res.body.body.data);
   }
 
@@ -271,7 +271,6 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
       query.text,
       query.values,
     ) as Hackathon[];
-    delete result[0].base_pin;
     result[0].start_time = parseInt(result[0].start_time as any as string, 10);
     result[0].end_time = parseInt(result[0].end_time as any as string, 10);
     this.expect(hackathon).to.deep.equal(result[0]);

@@ -17,7 +17,6 @@ import * as requestContext from 'request-context';
 import 'source-map-support/register';
 import { HttpError } from './JSCommon/errors';
 import { ParentRouter, ResponseBody } from './router/router-types';
-import { ScannerController } from './router/routes/scanner/scanner'; // Ask => Is this needed?
 import { ExpressProvider } from './services/common/injector/providers';
 import { Logger } from './services/logging/logging';
 
@@ -151,7 +150,7 @@ export class App extends ParentRouter {
     App.registeredRoutes.forEach((router, key) => {
       this.app.use(key, Util.getInstance(router).router);
     });
-    this.app.use('', Util.getInstance('IndexController').router); // Ask => Is this needed?
+    this.app.use('', Util.getInstance('IndexController').router);
     this.app.use('/v2/doc', express.static(path.join(__dirname, 'doc')));
 
     // ERROR HANDLERS

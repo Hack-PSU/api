@@ -1,7 +1,6 @@
 // Gruntfile.js
 const nodecipher = require('node-cipher');
 const { spawn } = require('cross-spawn');
-const { Util } = require('./src/JSCommon/util');
 
 const encryptedFiles = {
   'gcs_config.json.aes': 'gcs_config.json',
@@ -111,7 +110,7 @@ module.exports = (grunt) => {
           add: {
             NODE_ENV: `${grunt.option('debug') ? 'DEBUG' : 'STAGING'}`,
             APP_ENV: `${grunt.option('debug') ? 'DEBUG' : 'STAGING'}`,
-            SQL_DATABASE: Util.readEnv('SQL_DATABASE', 'test'),
+            SQL_DATABASE: grunt.option('travis') ? 'travis' : 'test',
             SQL_HOSTNAME: 'localhost',
           },
         },

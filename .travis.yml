@@ -14,6 +14,7 @@ install:
 - npm install
 - grunt travis --test
 script:
+- npm run proxy
 - npm test
 notifications:
   slack:
@@ -24,14 +25,13 @@ env:
   - APP_ENV=test
   - secure: BnuMnfm1PcOe+SXlwSIGC0zNKE+BT8A47DVmAvgLkizOA9I36LGYEfh5Vnk3fTArfhU6npKYuA5al1S8zEy8eGm2b5wNAOeWzpbOf4LEp8/q5khvhg0VOuFMH1LxNo01X2FbMOURuYIBLA886WUY5tDQqs/YGNrQQrbgWU8OW4WoWGr+G/SrKvi4/vpBLiwG9/jKvaayy1F5oWhEV/bFvgM/73KcQe32jkpp9M0vI7jqbiaO08wI1q8Z6AsrlcCd9fgS/7FZ3n68fTNmtjBEI9xP/qmjHQYtbI6U4Gw3kbzJ9PCBzjxiSRaZrJRBv6ypJ1cJsf51KBVIdi3nkHOKJNJeKSm0AgTJvO0W3iIQpH6glTcOjFMSyEZ0m9DXv74Pe6Q0+NE+eEkvunA/Gr7cTJoRtpN2XanK1jT5rS+88Dw0gMWNDRdnv1LQmwERJ9ENhruQe3MSslF2I/hNRdm+7Uu0UNlSMD5wrlkCctyVR6pAR2ixuE+1rGQQwpwDNhxGoduQmktpfaC0DYXLvYkQaGS6TbOQf4Ju3zyYnvzB8PQC7zUOpXP/Vyf561koQzmGUNrIhiADmdPfEo5mGuRqxTdJUyqu9Cwt5LMYjG0SpdW//aHqyRvGyoapRK1mKsZCM6ek2340WhwyZy7WDy/5XhoeI+gd5JvbGsAkfW2ECy0=
   - secure: mBSRMBK3w1pJ6Ap/Ty4QiH8n6zhcYsk8SSevQWWP83Uiy8nnMcyjAL8nINAH80NMYaPUZ7Tc5pzxhTpRDw1nGXhgUsoc3cS9T01aHPzKFAArx6fFzOSxZFmoFhYa5jl4nvjRF0rP7vaPFlcAz9qFa8kAchgRgOgYzcrgJWKZyv0jiNCJYJzFyukgn7i3oLXyQQMZ1WXbw6wuZXIFuO4zH8uiUc9BU0oZSAmnGiuWVtpckn1N9TTxpiKyMD1gNryC6RwT7zlLwXdupRhG01yXlu3yMM0ufXLRj7N5XkVvAh+xDoop0/q7uzIkHOaVV1fvRVAeVpDvRvcMighIUmiwBTuJJ4Vi6UF/tTunxU2GlZHjuUj/w2r2mNfqsVzj/l2+69LJwAWNt6uI5c1Yr3FaAAcpeXWziN8yz6mtw3KBLnBd+JAH400Wm3fnxcePuxPQauid4V9X9iRz91HY+eqE6jM7da5ak9+9syO69x+aqBPYtMTIy4R81qfb2XurR16hl18NnN12NKMrNJ6illAVcbjR6VCyI7JayJMRgG2xHKc9juiglTG7XLgLnJ4m4X6GRhN161yPyZXF/7cGszcFY3BhvOHydObKX5CvP5CK5fGh2NgusW7+GobegBO6cTSVaKACL1qkHIWyWroWZ8+F1lb8d1lc2YT0JHcPzyP3nng=
-# services:
-#   - mysql
+services:
+  - mysql
 before_deploy:
 - npm i -g node-cipher
 - cd $TRAVIS_BUILD_DIR
 - npm install && grunt prep --production
 - nodecipher decrypt ./encrypted/hackpsu18-ecc9dc4878c6.json.enc "./hackpsu18-ecc9dc4878c6.json" -p ${PKEY_PASS} -a aes-256-cbc-hmac-sha256
-- npm run proxy
 # - mysql -u root -e "GRANT ALL PRIVILEGES ON travis.* TO 'travis'@'%';";
 deploy:
   provider: gae

@@ -133,7 +133,6 @@ export class MysqlUow implements IUow {
    * @param {MysqlError} error
    */
   private sqlErrorHandler(error: MysqlError) {
-    console.log(error);
     if (error instanceof HttpError) {
       // Error was already handled
       throw error;

@@ -31,6 +31,7 @@ before_deploy:
 - cd $TRAVIS_BUILD_DIR
 - npm install && grunt prep --production
 - nodecipher decrypt ./encrypted/hackpsu18-ecc9dc4878c6.json.enc "./hackpsu18-ecc9dc4878c6.json" -p ${PKEY_PASS} -a aes-256-cbc-hmac-sha256
+- mysql -u root -e "GRANT ALL PRIVILEGES ON travis.* TO 'travis'@'%';";
 deploy:
   provider: gae
   skip_cleanup: true

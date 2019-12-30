@@ -20,7 +20,7 @@ import { Logger } from '../../src/services/logging/logging';
 import { TestData } from './test-data';
 
 // Just to make sure
-Constants.sqlConnection.database = 'test';
+Constants.sqlConnection.database = 'travis';
 
 let initialized = false;
 const config = {

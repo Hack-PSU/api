@@ -51,6 +51,22 @@ class AdminIntegrationTest extends IntegrationTest {
 
   protected readonly apiEndpoint = '/v2/admin';
 
+  @test('successfully recognizes admin privileges')
+  @slow(1500)
+  public async successfullyRecognizesAdminPrivileges() {
+    // GIVEN: API
+    // WHEN: Attempting to checkout item
+    const user = await loginRegular();
+    const idToken = await user.getIdToken();
+    const res = await this.chai
+      .request(this.app)
+      .get(this.apiEndpoint)
+      .set('idToken', idToken);
+    // THEN: Returns a well formed response
+    super.assertRequestFormat(res, 'Authorized admin');
+    // THEN: Error message is returned
+  }
+
   @test('fails to grant entry without authorization token')
   @slow(1500)
   public async authorizationFailsDueToNoIdToken() {
@@ -95,22 +111,6 @@ class AdminIntegrationTest extends IntegrationTest {
     super.assertRequestFormat(res, 'Error', 400, 'Error');
     // THEN: Error message is returned
     this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find mac address of device' });
-  }
-
-  @test('successfully recognizes admin privileges')
-  @slow(1500)
-  public async successfullyRecognizesAdminPrivileges() {
-    // GIVEN: API
-    // WHEN: Attempting to checkout item
-    const user = await loginRegular();
-    const idToken = await user.getIdToken();
-    const res = await this.chai
-      .request(this.app)
-      .get(this.apiEndpoint)
-      .set('idToken', idToken);
-    // THEN: Returns a well formed response
-    super.assertRequestFormat(res, 'Authorized admin');
-    // THEN: Error message is returned
   }
 
   @test('fails to accept invalid limit parameter')

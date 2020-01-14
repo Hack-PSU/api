@@ -1,35 +1,9 @@
-import * as firebase from 'firebase';
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
 import { CheckoutItems } from '../../../src/models/checkout-items/checkout-items';
 import { CheckoutObject } from '../../../src/models/checkout-object/checkout-object';
 import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
-
-let listener: firebase.Unsubscribe;
-let firebaseUser: firebase.User;
-
-function login(email: string, password: string): Promise<firebase.User> {
-  if (firebaseUser) {
-    return new Promise(resolve => resolve(firebaseUser));
-  }
-  return new Promise((resolve, reject) => {
-    firebase.auth()
-      .signInWithEmailAndPassword(email, password)
-      .catch(err => reject(err));
-    listener = firebase.auth()
-      .onAuthStateChanged((user) => {
-        if (user) {
-          firebaseUser = user;
-          resolve(user);
-        }
-      });
-  });
-}
-
-function loginAdmin() {
-  return login('admin@email.com', 'password');
-}
 
 @suite('INTEGRATION TEST: Admin Checkout')
 class AdminCheckoutIntegrationTest extends IntegrationTest {
@@ -39,10 +13,6 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
 
   public static async after() {
     await IntegrationTest.after();
-    await firebase.auth().signOut();
-    if (listener) {
-      listener();
-    }
   }
 
   protected readonly apiEndpoint = '/v2/admin/checkout';
@@ -54,7 +24,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
   public async createNewCheckoutSuccessfully() {
     // GIVEN: API
     // WHEN: Creating a new checkout object
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       uid: 999,
@@ -79,7 +49,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
   public async returnCheckedOutItemSuccessfully() {
     // GIVEN: API
     // WHEN: Returning a checked out item
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       checkoutId: TestData.validCheckoutObject().uid,
@@ -100,7 +70,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
   public async addNewItemSuccessfully() {
     // GIVEN: API
     // WHEN: Adding a new item for checkout
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       name: TestData.validCheckoutItemObject().name,
@@ -123,7 +93,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
   public async getCheckedOutItemsSuccessfully() {
     // GIVEN: API
     // WHEN: Getting the list of checked out items
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -141,7 +111,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
   public async getCheckoutItemsSuccessfully() {
     // GIVEN: API
     // WHEN: Getting the list of available items
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -159,7 +129,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
   public async createNewCheckoutFailsDueToNoItemId() {
     // GIVEN: API
     // WHEN: Creating a new checkout object
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -178,7 +148,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
   public async createNewCheckoutFailsDueToNoUserId() {
     // GIVEN: API
     // WHEN: Creating a new checkout object
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       itemId: TestData.validCheckoutObject().itemId,
@@ -201,7 +171,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
   public async returnCheckoutFailsDueToNoItemId() {
     // GIVEN: API
     // WHEN: Returning a checkout object
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -220,7 +190,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
   public async addNewCheckoutItemFailsDueToNoName() {
     // GIVEN: API
     // WHEN: Adding a new checkout item
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -239,7 +209,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
   public async addNewCheckoutItemFailsDueToNoQuantity() {
     // GIVEN: API
     // WHEN: Adding a new checkout item
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { name: 'Test name' };
     const res = await this.chai
@@ -259,10 +229,10 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
     const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(TestData.checkoutTableName, 'checkoutObject')
       .where(`${this.pkColumnName} = ?`, checkout.uid)
-      .where('hackathon = ?', AdminCheckoutIntegrationTest.activeHackathon.uid)
+      .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
-    const [result] = await AdminCheckoutIntegrationTest.mysqlUow.query<CheckoutObject>(
+    const [result] = await IntegrationTest.mysqlUow.query<CheckoutObject>(
       query.text,
       query.values,
     ) as CheckoutObject[];
@@ -278,7 +248,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .where(`${this.pkColumnName} = ?`, checkoutItem[0].uid)
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminCheckoutIntegrationTest.mysqlUow.query<CheckoutItems>(
+    const result = await IntegrationTest.mysqlUow.query<CheckoutItems>(
       query.text,
       query.values,
     ) as CheckoutItems[];
@@ -293,10 +263,10 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .fields(['checkoutObject.*', 'registration.firstname', 'registration.lastname', 'checkoutItem.name'])
       .where('checkoutObject.user_id = registration.uid')
       .where('checkoutObject.item_id = checkoutItem.uid')
-      .where('checkoutObject.hackathon = ?', AdminCheckoutIntegrationTest.activeHackathon.uid)
+      .where('checkoutObject.hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminCheckoutIntegrationTest.mysqlUow.query<CheckoutObject>(
+    const result = await IntegrationTest.mysqlUow.query<CheckoutObject>(
       query.text,
       query.values,
     ) as CheckoutObject[];
@@ -308,7 +278,7 @@ class AdminCheckoutIntegrationTest extends IntegrationTest {
       .from(TestData.checkoutItemTableName, 'checkoutItems')
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminCheckoutIntegrationTest.mysqlUow.query<CheckoutItems>(
+    const result = await IntegrationTest.mysqlUow.query<CheckoutItems>(
       query.text,
       query.values,
     ) as CheckoutItems[];

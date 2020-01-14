@@ -1,40 +1,5 @@
-import * as firebase from 'firebase';
 import { slow, suite, test } from 'mocha-typescript';
-import squel from 'squel';
-
 import { IntegrationTest } from '../integration-test';
-
-let listener: firebase.Unsubscribe;
-
-async function login(email: string, password: string): Promise<firebase.User> {
-  await firebaseSignOut();
-  return new Promise((resolve, reject) => {
-    firebase.auth()
-      .signInWithEmailAndPassword(email, password)
-      .catch(err => reject(err));
-    listener = firebase.auth()
-      .onAuthStateChanged((user) => {
-        if (user) {
-          resolve(user);
-        }
-      });
-  });
-}
-
-function loginRegular() {
-  return login('prevhacker@email.com', 'password');
-}
-
-function loginAdmin() {
-  return login('admin@email.com', 'password');
-}
-
-async function firebaseSignOut() {
-  await firebase.auth().signOut();
-  if (listener) {
-    listener();
-  }
-}
 
 @suite('INTEGRATION TEST: Admin')
 class AdminIntegrationTest extends IntegrationTest {
@@ -46,7 +11,6 @@ class AdminIntegrationTest extends IntegrationTest {
 
   public static async after() {
     await IntegrationTest.after();
-    await firebaseSignOut();
   }
 
   protected readonly apiEndpoint = '/v2/admin';
@@ -56,7 +20,7 @@ class AdminIntegrationTest extends IntegrationTest {
   public async successfullyRecognizesAdminPrivileges() {
     // GIVEN: API
     // WHEN: Attempting to checkout item
-    const user = await loginRegular();
+    const user = await IntegrationTest.loginRegular();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -86,7 +50,7 @@ class AdminIntegrationTest extends IntegrationTest {
   // public async authorizationFailsDueToNoPermissions() {
   //   // GIVEN: API
   //   // WHEN: Attempting to access admin routes
-  //   const user = await loginRegular();
+  //   const user = await IntegrationTest.loginRegular();
   //   const idToken = await user.getIdToken();
   //   const res = await this.chai
   //     .request(this.app)
@@ -118,7 +82,7 @@ class AdminIntegrationTest extends IntegrationTest {
   public async failsToAcceptInvalidLimit() {
     // GIVEN: API
     // WHEN: Attempting to checkout item
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { limit: 'test' };
     const res = await this.chai
@@ -137,7 +101,7 @@ class AdminIntegrationTest extends IntegrationTest {
   public async failsToAcceptInvalidOffset() {
     // GIVEN: API
     // WHEN: Attempting to checkout item
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { offset: 'test' };
     const res = await this.chai
@@ -150,27 +114,4 @@ class AdminIntegrationTest extends IntegrationTest {
     // THEN: Error message is returned
     this.expect(res.body.body.data).to.deep.equal({ message: 'Offset must be an integer' });
   }
-
-  // @test('successfully gets count of registered users from all hackathons')
-  // @slow(1500)
-  // public async getRegistrationCountSuccessfully() {
-  //   // GIVEN: API
-  //   // WHEN: Getting the registration count
-  //   const user = await loginAdmin();
-  //   const idToken = await user.getIdToken();
-  //   const parameters = {
-  //     hackathon: IntegrationTest.activeHackathon.uid,
-  //     allHackathons: true,
-  //   };
-  //   const res = await this.chai
-  //     .request(this.app)
-  //     .get(`${this.apiEndpoint}/count`)
-  //     .set('idToken', idToken)
-  //     .set('content-type', 'application/json')
-  //     .send(parameters);
-  //   // THEN: Returns a well formed response
-  //   super.assertRequestFormat(res);
-  //   // THEN: Registration count is returned
-  //   await this.verifyCount(res.body.body.data);
-  // }
 }

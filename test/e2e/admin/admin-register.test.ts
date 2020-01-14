@@ -1,34 +1,8 @@
-import * as firebase from 'firebase';
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
 import { Registration } from '../../../src/models/register/registration';
 import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
-
-let listener: firebase.Unsubscribe;
-let firebaseUser: firebase.User;
-
-function login(email: string, password: string): Promise<firebase.User> {
-  if (firebaseUser) {
-    return new Promise(resolve => resolve(firebaseUser));
-  }
-  return new Promise((resolve, reject) => {
-    firebase.auth()
-      .signInWithEmailAndPassword(email, password)
-      .catch(err => reject(err));
-    listener = firebase.auth()
-      .onAuthStateChanged((user) => {
-        if (user) {
-          firebaseUser = user;
-          resolve(user);
-        }
-      });
-  });
-}
-
-function loginAdmin() {
-  return login('admin@email.com', 'password');
-}
 
 @suite('INTEGRATION TEST: Admin Register')
 class AdminRegisterIntegrationTest extends IntegrationTest {
@@ -39,10 +13,6 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
 
   public static async after() {
     await IntegrationTest.after();
-    await firebase.auth().signOut();
-    if (listener) {
-      listener();
-    }
   }
 
   protected readonly apiEndpoint = '/v2/admin/register';
@@ -54,7 +24,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
   public async getRegistrationCountSuccessfully() {
     // GIVEN: API
     // WHEN: Getting the registration count
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       hackathon: IntegrationTest.activeHackathon.uid,
@@ -77,7 +47,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
   public async getRegisteredUsersSuccessfully() {
     // GIVEN: API
     // WHEN: Getting the registrations
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       hackathon: IntegrationTest.activeHackathon.uid,
@@ -100,7 +70,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
   public async getRegisteredUserByUidSuccessfully() {
     // GIVEN: API
     // WHEN: Getting the registration
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       uid: TestData.validRegistration().uid,
@@ -122,7 +92,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
   public async getRegisteredUserByEmailSuccessfully() {
     // GIVEN: API
     // WHEN: Getting the registration
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       email: TestData.validRegistration().email,
@@ -144,7 +114,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
   public async updateExistingRegistrationSuccessfully() {
     // GIVEN: API
     // WHEN: Updating a registration
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { ...TestData.validRegistration(), hackathon: IntegrationTest.activeHackathon.uid };
     parameters.firstName = 'testFirstName2';
@@ -166,7 +136,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
   public async updateRegistrationFailsDueToNoRegistration() {
     // GIVEN: API
     // WHEN: Getting the registration
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -183,7 +153,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
   public async updateRegistrationFailsDueToNoUid() {
     // GIVEN: API
     // WHEN: Getting the registration
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = TestData.validRegistration();
     parameters.uid = undefined;
@@ -204,7 +174,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
   public async updateRegistrationFailsDueToNoHackathonId() {
     // GIVEN: API
     // WHEN: Getting the registration
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = TestData.validRegistration();
     const res = await this.chai
@@ -226,7 +196,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
-    const [result] = await AdminRegisterIntegrationTest.mysqlUow.query<number>(
+    const [result] = await IntegrationTest.mysqlUow.query<number>(
       query.text,
       query.values,
     ) as number[];
@@ -245,7 +215,7 @@ class AdminRegisterIntegrationTest extends IntegrationTest {
       .where('registration.uid = ?', TestData.validRegistration().uid)
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminRegisterIntegrationTest.mysqlUow.query<Registration>(
+    const result = await IntegrationTest.mysqlUow.query<Registration>(
       query.text,
       query.values,
     ) as Registration[];

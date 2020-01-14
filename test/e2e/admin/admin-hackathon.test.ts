@@ -1,34 +1,8 @@
-import * as firebase from 'firebase';
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
 import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
 import { Hackathon } from '../../../src/models/hackathon/hackathon';
 import { IntegrationTest } from '../integration-test';
-
-let listener: firebase.Unsubscribe;
-let firebaseUser: firebase.User;
-
-function login(email: string, password: string): Promise<firebase.User> {
-  if (firebaseUser) {
-    return new Promise(resolve => resolve(firebaseUser));
-  }
-  return new Promise((resolve, reject) => {
-    firebase.auth()
-      .signInWithEmailAndPassword(email, password)
-      .catch(err => reject(err));
-    listener = firebase.auth()
-      .onAuthStateChanged((user) => {
-        if (user) {
-          firebaseUser = user;
-          resolve(user);
-        }
-      });
-  });
-}
-
-function loginAdmin() {
-  return login('admin@email.com', 'password');
-}
 
 @suite('INTEGRATION TEST: Admin Hackathon')
 class AdminHackathonIntegrationTest extends IntegrationTest {
@@ -39,10 +13,6 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
 
   public static async after() {
     await IntegrationTest.after();
-    await firebase.auth().signOut();
-    if (listener) {
-      listener();
-    }
   }
 
   protected readonly apiEndpoint = '/v2/admin/hackathon';
@@ -54,7 +24,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   public async createHackathonSuccessfully() {
     // GIVEN: API
     // WHEN: Creating a new hackathon
-    const user = await loginAdmin();
+    const user = await AdminHackathonIntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       uid: 'Test uid',
@@ -80,7 +50,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   public async getHackathonCountSuccessfully() {
     // GIVEN: API
     // WHEN: Getting the count of hackathons
-    const user = await loginAdmin();
+    const user = await AdminHackathonIntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -98,7 +68,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   public async updateHackathonSuccessfully() {
     // GIVEN: API
     // WHEN: Updating hackathon
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       uid: 'Test uid',
@@ -123,7 +93,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   public async getAllHackathonsSuccessfully() {
     // GIVEN: API
     // WHEN: Getting all hackathons
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -141,7 +111,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   public async markHackathonAsActiveSuccessfully() {
     // GIVEN: API
     // WHEN: Marking the hackathon as active
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { uid: 'Test uid' };
     const res = await this.chai
@@ -160,7 +130,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
       .post(`${this.apiEndpoint}/active`)
       .set('idToken', idToken)
       .set('content-type', 'application/json')
-      .send({ uid: AdminHackathonIntegrationTest.activeHackathon.uid });
+      .send({ uid: IntegrationTest.activeHackathon.uid });
   }
 
   @test('fails to create a hackathon when no hackathon name is provided')
@@ -168,7 +138,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   public async createHackathonFailsDueToNoName() {
     // GIVEN: API
     // WHEN: Creating a hackathon
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -185,7 +155,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   public async createHackathonFailsDueToNoStartTime() {
     // GIVEN: API
     // WHEN: Creating a hackathon
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { name: 'Test hackathon' };
     const res = await this.chai
@@ -205,7 +175,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   public async createHackathonFailsDueToStartAfterEnd() {
     // GIVEN: API
     // WHEN: Creating a hackathon
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       name: 'Test hackathon',
@@ -229,7 +199,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   public async updateHackathonFailsDueToNoId() {
     // GIVEN: API
     // WHEN: Updating a hackathon
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -247,7 +217,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
   public async markHackathonAsActiveFailsDueToNoId() {
     // GIVEN: API
     // WHEN: Marking a hackathon as active
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -267,7 +237,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
       .toParam();
     query.text = query.text.concat(';');
 
-    const result = await AdminHackathonIntegrationTest.mysqlUow.query<Hackathon>(
+    const result = await IntegrationTest.mysqlUow.query<Hackathon>(
       query.text,
       query.values,
     ) as Hackathon[];
@@ -282,7 +252,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
       .field(`COUNT(${this.pkColumnName})`, 'count')
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminHackathonIntegrationTest.mysqlUow.query<number>(
+    const result = await IntegrationTest.mysqlUow.query<number>(
       query.text,
       query.values,
     ) as number[];
@@ -295,7 +265,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
       .toParam();
     query.text = query.text.concat(';');
 
-    const result = await AdminHackathonIntegrationTest.mysqlUow.query<Hackathon>(
+    const result = await IntegrationTest.mysqlUow.query<Hackathon>(
       query.text,
       query.values,
     ) as Hackathon[];
@@ -309,7 +279,7 @@ class AdminHackathonIntegrationTest extends IntegrationTest {
       .toParam();
     query.text = query.text.concat(';');
 
-    const result = await AdminHackathonIntegrationTest.mysqlUow.query<ActiveHackathon>(
+    const result = await IntegrationTest.mysqlUow.query<ActiveHackathon>(
       query.text,
       query.values,
     ) as ActiveHackathon[];

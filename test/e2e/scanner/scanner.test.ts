@@ -1,79 +1,9 @@
-import * as firebase from 'firebase';
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
 import { Event } from '../../../src/models/event/event';
 import { Registration } from '../../../src/models/register/registration';
-import { RfidAssignment } from '../../../src/models/scanner/rfid-assignment';
 import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
-
-let listener: firebase.Unsubscribe;
-let firebaseUser: firebase.User;
-let pin: string;
-let apiKey: string;
-
-function login(email: string, password: string): Promise<firebase.User> {
-  if (firebaseUser) {
-    return new Promise(resolve => resolve(firebaseUser));
-  }
-  return new Promise((resolve, reject) => {
-    firebase.auth()
-      .signInWithEmailAndPassword(email, password)
-      .catch(err => reject(err));
-    listener = firebase.auth()
-      .onAuthStateChanged((user) => {
-        if (user) {
-          firebaseUser = user;
-          resolve(user);
-        }
-      });
-  });
-}
-
-async function getApiKey(): Promise<string> {
-  if (apiKey) {
-    return new Promise(resolve => resolve(apiKey));
-  }
-  const pinData = { pin: await getPin() };
-  return new Promise((resolve, reject) => {
-    const options = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(pinData),
-    };
-    fetch('http://staging.hackpsu18.appspot.com/v2/scanner/register', options)
-      .then(res => res.json())
-      .then((data) => {
-        apiKey = String(data.body.data.key);
-        resolve(apiKey);
-      })
-      .catch(error => reject(error));
-  });
-}
-
-async function getPin(): Promise<string> {
-  if (pin) {
-    return new Promise(resolve => resolve(pin));
-  }
-  const headers = { idToken: await (await loginAdmin()).getIdToken() };
-  return new Promise((resolve, reject) => {
-    const options = {
-      method: 'GET',
-      headers,
-    };
-    fetch('http://staging.hackpsu18.appspot.com/v2/scanner/register', options)
-      .then(res => res.json())
-      .then((data) => {
-        pin = String(data.body.data.pin);
-        resolve(pin);
-      })
-      .catch(error => reject(error));
-  });
-}
-
-function loginAdmin() {
-  return login('admin@email.com', 'password');
-}
 
 @suite('INTEGRATION TEST: Scanner')
 class ScannerIntegrationTest extends IntegrationTest {
@@ -97,23 +27,21 @@ class ScannerIntegrationTest extends IntegrationTest {
 
   public static async after() {
     await IntegrationTest.after();
-    await firebase.auth().signOut();
-    if (listener) {
-      listener();
-    }
   }
 
   protected readonly apiEndpoint = '/v2/scanner';
   protected readonly tableName = 'SCANS';
   protected readonly pkColumnName = 'idSCANS';
   protected readonly macaddr = 'Test mac address';
+  private pin: string;
+  private apiKey: string;
 
   @test('successfully creates a new authentication pin')
   @slow(1500)
   public async createAuthenticationPinSuccessfully() {
     // GIVEN: API
     // WHEN: Creating a new authentication pin
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -135,7 +63,7 @@ class ScannerIntegrationTest extends IntegrationTest {
     // GIVEN: API
     // WHEN: Creating a new api key
     const parameters = {
-      pin: await getPin(),
+      pin: await this.getPin(),
     };
     const res = await this.chai
       .request(this.app)
@@ -158,7 +86,7 @@ class ScannerIntegrationTest extends IntegrationTest {
   public async getRelevantEventsSuccessfully() {
     // GIVEN: API
     // WHEN: Getting relevant events
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { filter: true };
     const res = await this.chai
@@ -166,7 +94,7 @@ class ScannerIntegrationTest extends IntegrationTest {
       .get(`${this.apiEndpoint}/events`)
       .set('idToken', idToken)
       .set('macaddr', this.macaddr)
-      .set('apiKey', await getApiKey())
+      .set('apiKey', await this.getApiKey())
       .set('content-type', 'application/json')
       .query(parameters);
     // THEN: Returns a well formed response
@@ -180,7 +108,7 @@ class ScannerIntegrationTest extends IntegrationTest {
   public async getRelevantRegistrationsSuccessfully() {
     // GIVEN: API
     // WHEN: Getting all registrations
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { filter: true };
     const res = await this.chai
@@ -188,7 +116,7 @@ class ScannerIntegrationTest extends IntegrationTest {
       .get(`${this.apiEndpoint}/registrations`)
       .set('idToken', idToken)
       .set('macaddr', this.macaddr)
-      .set('apiKey', await getApiKey())
+      .set('apiKey', await this.getApiKey())
       .set('content-type', 'application/json')
       .query(parameters);
     // THEN: Returns a well formed response
@@ -202,7 +130,7 @@ class ScannerIntegrationTest extends IntegrationTest {
   public async getRegistrationFromPinSuccessfully() {
     // GIVEN: API
     // WHEN: Getting a registration from a pin number
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     // The base_pin automatically gets added to the pin
     // and the base_pin is automatically set to the max pin.
@@ -215,7 +143,7 @@ class ScannerIntegrationTest extends IntegrationTest {
       .get(`${this.apiEndpoint}/getpin`)
       .set('idToken', idToken)
       .set('macaddr', this.macaddr)
-      .set('apiKey', await getApiKey())
+      .set('apiKey', await this.getApiKey())
       .set('content-type', 'application/json')
       .query(parameters);
     // THEN: Returns a well formed response
@@ -229,7 +157,7 @@ class ScannerIntegrationTest extends IntegrationTest {
   public async assignRfidTagToUserSuccessfully() {
     // GIVEN: API
     // WHEN: Assigning an rfid tag to a user
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       assignments: [
@@ -245,7 +173,7 @@ class ScannerIntegrationTest extends IntegrationTest {
       .post(`${this.apiEndpoint}/assign`)
       .set('idToken', idToken)
       .set('macaddr', this.macaddr)
-      .set('apiKey', await getApiKey())
+      .set('apiKey', await this.getApiKey())
       .set('content-type', 'application/json')
       .send(parameters);
     // THEN: Returns a well formed response
@@ -261,7 +189,7 @@ class ScannerIntegrationTest extends IntegrationTest {
   public async uploadEventScansSuccessfully() {
     // GIVEN: API
     // WHEN: Uploading event scans
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       scans: [
@@ -278,7 +206,7 @@ class ScannerIntegrationTest extends IntegrationTest {
       .post(`${this.apiEndpoint}/scan`)
       .set('idToken', idToken)
       .set('macaddr', this.macaddr)
-      .set('apiKey', await getApiKey())
+      .set('apiKey', await this.getApiKey())
       .set('content-type', 'application/json')
       .send(parameters);
     // THEN: Returns a well formed response
@@ -309,7 +237,7 @@ class ScannerIntegrationTest extends IntegrationTest {
   public async createApiKeyFailsDueToNoMacAddress() {
     // GIVEN: API
     // WHEN: Creating a new api key
-    const parameters = { pin: await getPin() };
+    const parameters = { pin: await this.getPin() };
     const res = await this.chai
       .request(this.app)
       .post(`${this.apiEndpoint}/register`)
@@ -346,14 +274,14 @@ class ScannerIntegrationTest extends IntegrationTest {
   public async getRegistrationFailsDueToNoPin() {
     // GIVEN: API
     // WHEN: Getting a registration from a pin number
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
       .get(`${this.apiEndpoint}/getpin`)
       .set('idToken', idToken)
       .set('macaddr', this.macaddr)
-      .set('apiKey', await getApiKey())
+      .set('apiKey', await this.getApiKey())
       .set('content-type', 'application/json');
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
@@ -366,14 +294,14 @@ class ScannerIntegrationTest extends IntegrationTest {
   public async addRfidAssignmentsFailsDueToNoAssignments() {
     // GIVEN: API
     // WHEN: Assigning rfid tags
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
       .post(`${this.apiEndpoint}/assign`)
       .set('idToken', idToken)
       .set('macaddr', this.macaddr)
-      .set('apiKey', await getApiKey())
+      .set('apiKey', await this.getApiKey())
       .set('content-type', 'application/json');
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
@@ -386,7 +314,7 @@ class ScannerIntegrationTest extends IntegrationTest {
   public async addRfidAssignmentsFailsDueToDuplicateAssignments() {
     // GIVEN: API
     // WHEN: Assigning rfid tags
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       assignments: [
@@ -402,7 +330,7 @@ class ScannerIntegrationTest extends IntegrationTest {
       .post(`${this.apiEndpoint}/assign`)
       .set('idToken', idToken)
       .set('macaddr', this.macaddr)
-      .set('apiKey', await getApiKey())
+      .set('apiKey', await this.getApiKey())
       .set('content-type', 'application/json')
       .send(parameters);
     // THEN: Returns a well formed response
@@ -416,14 +344,14 @@ class ScannerIntegrationTest extends IntegrationTest {
   public async addScansFailsDueToNoScans() {
     // GIVEN: API
     // WHEN: Adding scans
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
       .post(`${this.apiEndpoint}/scan`)
       .set('idToken', idToken)
       .set('macaddr', this.macaddr)
-      .set('apiKey', await getApiKey())
+      .set('apiKey', await this.getApiKey())
       .set('content-type', 'application/json');
     // THEN: Returns a well formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
@@ -492,4 +420,44 @@ class ScannerIntegrationTest extends IntegrationTest {
     this.expect(registration).to.deep.equal(result);
   }
 
+  private async getApiKey(): Promise<string> {
+    if (this.apiKey) {
+      return new Promise(resolve => resolve(this.apiKey));
+    }
+    const pinData = { pin: await this.getPin() };
+    return new Promise((resolve, reject) => {
+      const options = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pinData),
+      };
+      fetch('http://staging.hackpsu18.appspot.com/v2/scanner/register', options)
+        .then(res => res.json())
+        .then((data) => {
+          this.apiKey = String(data.body.data.key);
+          resolve(this.apiKey);
+        })
+        .catch(error => reject(error));
+    });
+  }
+
+  private async getPin(): Promise<string> {
+    if (this.pin) {
+      return new Promise(resolve => resolve(this.pin));
+    }
+    const headers = { idToken: await (await IntegrationTest.loginAdmin()).getIdToken() };
+    return new Promise((resolve, reject) => {
+      const options = {
+        method: 'GET',
+        headers,
+      };
+      fetch('http://staging.hackpsu18.appspot.com/v2/scanner/register', options)
+        .then(res => res.json())
+        .then((data) => {
+          this.pin = String(data.body.data.pin);
+          resolve(this.pin);
+        })
+        .catch(error => reject(error));
+    });
+  }
 }

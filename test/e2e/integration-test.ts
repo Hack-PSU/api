@@ -70,13 +70,16 @@ export abstract class IntegrationTest {
       .toParam();
     query.text = query.text.concat(';');
     await this.mysqlUow.query(query.text, query.values);
+    await this.firebaseLogout();
   }
 
-  // tslint:disable-next-line:member-ordering
-  public static activeHackathon: ActiveHackathon;
   private static memcache = new MemCacheServiceImpl();
+  private static adminUser: boolean;
   protected abstract apiEndpoint: string;
   // tslint:disable:member-ordering
+  public static activeHackathon: ActiveHackathon;
+  public static listener: firebase.Unsubscribe;
+  public static firebaseUser: firebase.User;
   public static mysqlUow = new MysqlUow(
     new SqlConnectionFactory(),
     IntegrationTest.memcache,
@@ -111,5 +114,44 @@ export abstract class IntegrationTest {
     this.expect(res.body.body).to.deep.include({
       result: bodyResult,
     });
+  }
+
+  protected static async login(email: string, password: string): Promise<firebase.User> {
+    await this.firebaseLogout();
+    return new Promise((resolve, reject) => {
+      firebase.auth()
+        .signInWithEmailAndPassword(email, password)
+        .catch(err => reject(err));
+      this.listener = firebase.auth()
+        .onAuthStateChanged((user) => {
+          if (user) {
+            this.firebaseUser = user;
+            resolve(user);
+          }
+        });
+    });
+  }
+
+  protected static loginAdmin(): Promise<firebase.User> {
+    if (this.firebaseUser && this.adminUser) {
+      return new Promise(resolve => resolve(this.firebaseUser));
+    }
+    this.adminUser = true;
+    return this.login('admin@email.com', 'password');
+  }
+
+  protected static loginRegular(): Promise<firebase.User> {
+    if (this.firebaseUser && !this.adminUser) {
+      return new Promise(resolve => resolve(this.firebaseUser));
+    }
+    this.adminUser = false;
+    return this.login('prevhacker@email.com', 'password');
+  }
+
+  protected static async firebaseLogout() {
+    await firebase.auth().signOut();
+    if (this.listener) {
+      this.listener();
+    }
   }
 }

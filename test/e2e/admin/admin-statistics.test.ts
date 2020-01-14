@@ -13,31 +13,6 @@ import { Scan } from '../../../src/models/scanner/scan';
 import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
 
-let listener: firebase.Unsubscribe;
-let firebaseUser: firebase.User;
-
-function login(email: string, password: string): Promise<firebase.User> {
-  if (firebaseUser) {
-    return new Promise(resolve => resolve(firebaseUser));
-  }
-  return new Promise((resolve, reject) => {
-    firebase.auth()
-      .signInWithEmailAndPassword(email, password)
-      .catch(err => reject(err));
-    listener = firebase.auth()
-      .onAuthStateChanged((user) => {
-        if (user) {
-          firebaseUser = user;
-          resolve(user);
-        }
-      });
-  });
-}
-
-function loginAdmin() {
-  return login('admin@email.com', 'password');
-}
-
 @suite('INTEGRATION TEST: Admin Statistics')
 class AdminStatisticsIntegrationTest extends IntegrationTest {
 
@@ -47,10 +22,6 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
   public static async after() {
     await IntegrationTest.after();
-    await firebase.auth().signOut();
-    if (listener) {
-      listener();
-    }
   }
 
   protected readonly apiEndpoint = '/v2/admin/data?type';
@@ -60,7 +31,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getPreregistrationCountSuccessfully() {
     // GIVEN: API
     // WHEN: Getting the preregistration count
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -77,7 +48,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getRSVPUsersSuccessfully() {
     // GIVEN: API
     // WHEN: Getting RSVP'd user
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -94,7 +65,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getAttendanceDataByEventSuccessfully() {
     // GIVEN: API
     // WHEN: Getting attendance data by event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       uid: TestData.validEvent().uid,
@@ -116,7 +87,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getAttendanceDataByUserSuccessfully() {
     // GIVEN: API
     // WHEN: Getting attendance data by user
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       uid: TestData.validRegistration().uid,
@@ -138,7 +109,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getAttendanceDataSuccessfully() {
     // GIVEN: API
     // WHEN: Getting attendance data
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { allHackathons: false };
     const res = await this.chai
@@ -157,7 +128,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getEventScansSuccessfully() {
     // GIVEN: API
     // WHEN: Getting all event scans
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { allHackathons: false };
     const res = await this.chai
@@ -176,7 +147,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getExtraCreditAssignmentsSuccessfully() {
     // GIVEN: API
     // WHEN: Getting all extra credit assignments
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { allHackathons: false };
     const res = await this.chai
@@ -195,7 +166,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getPreregisteredUsersSuccessfully() {
     // GIVEN: API
     // WHEN: Getting all preregistered users
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { allHackathons: false };
     const res = await this.chai
@@ -214,7 +185,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getUserDataSuccessfully() {
     // GIVEN: API
     // WHEN: Getting all user data
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { allHackathons: false };
     const res = await this.chai
@@ -233,7 +204,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getWristbandAssignmentsSuccessfully() {
     // GIVEN: API
     // WHEN: Getting all wristband assignments
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { allHackathons: false };
     const res = await this.chai
@@ -252,7 +223,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getRSVPCountSuccessfully() {
     // GIVEN: API
     // WHEN: Getting number of RSVP'd users
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { allHackathons: false };
     const res = await this.chai
@@ -271,7 +242,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getUserCountByInteractionTypeSuccessfully() {
     // GIVEN: API
     // WHEN: Getting number users by interaction type
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -288,7 +259,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
   public async getRegistrationCategoryDataCountSuccessfully() {
     // GIVEN: API
     // WHEN: Getting number users for different registration categories
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -307,7 +278,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
-    const [result] = await AdminStatisticsIntegrationTest.mysqlUow.query<object>(
+    const [result] = await IntegrationTest.mysqlUow.query<object>(
       query.text,
       query.values,
     ) as object[];
@@ -324,7 +295,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
             'rsvp.hackathon = hackathon.uid')
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminStatisticsIntegrationTest.mysqlUow.query<Rsvp>(
+    const result = await IntegrationTest.mysqlUow.query<Rsvp>(
       query.text,
       query.values,
     );
@@ -404,7 +375,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .where('registration.hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat('');
-    const result = await AdminStatisticsIntegrationTest.mysqlUow.query<object>(
+    const result = await IntegrationTest.mysqlUow.query<object>(
       query.text,
       query.values,
     ) as object[];
@@ -422,7 +393,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .where('hackathon.uid = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminStatisticsIntegrationTest.mysqlUow.query<Scan>(
+    const result = await IntegrationTest.mysqlUow.query<Scan>(
       query.text,
       query.values,
     ) as Scan[];
@@ -435,7 +406,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminStatisticsIntegrationTest.mysqlUow.query<ExtraCreditAssignment>(
+    const result = await IntegrationTest.mysqlUow.query<ExtraCreditAssignment>(
       query.text,
       query.values,
     ) as ExtraCreditAssignment[];
@@ -448,7 +419,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminStatisticsIntegrationTest.mysqlUow.query<PreRegistration>(
+    const result = await IntegrationTest.mysqlUow.query<PreRegistration>(
       query.text,
       query.values,
     ) as PreRegistration[];
@@ -478,7 +449,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .where('reg.hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminStatisticsIntegrationTest.mysqlUow.query<IUserStatistics>(
+    const result = await IntegrationTest.mysqlUow.query<IUserStatistics>(
       query.text,
       query.values,
     ) as IUserStatistics[];
@@ -496,7 +467,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .where('hackathon.uid = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminStatisticsIntegrationTest.mysqlUow.query<RfidAssignment>(
+    const result = await IntegrationTest.mysqlUow.query<RfidAssignment>(
       query.text,
       query.values,
     );
@@ -510,7 +481,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .where('hackathon = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
-    const [result] = await AdminStatisticsIntegrationTest.mysqlUow.query<object>(
+    const [result] = await IntegrationTest.mysqlUow.query<object>(
       query.text,
       query.values,
     ) as object[];
@@ -541,7 +512,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       .join(scannerCountQuery, 'd')
       .toParam();
     query.text = query.text.concat(';');
-    const result = await AdminStatisticsIntegrationTest.mysqlUow.query<number>(
+    const result = await IntegrationTest.mysqlUow.query<number>(
       query.text,
       query.values,
     ) as number[];
@@ -568,7 +539,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    const result = await AdminStatisticsIntegrationTest.mysqlUow.query<number>(
+    const result = await IntegrationTest.mysqlUow.query<number>(
       query.text,
       query.values,
     ) as number[];

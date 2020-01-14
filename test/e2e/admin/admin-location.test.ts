@@ -1,34 +1,8 @@
-import * as firebase from 'firebase';
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
 import { Location } from '../../../src/models/location/location';
 import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
-
-let listener: firebase.Unsubscribe;
-let firebaseUser: firebase.User;
-
-function login(email: string, password: string): Promise<firebase.User> {
-  if (firebaseUser) {
-    return new Promise(resolve => resolve(firebaseUser));
-  }
-  return new Promise((resolve, reject) => {
-    firebase.auth()
-      .signInWithEmailAndPassword(email, password)
-      .catch(err => reject(err));
-    listener = firebase.auth()
-      .onAuthStateChanged((user) => {
-        if (user) {
-          firebaseUser = user;
-          resolve(user);
-        }
-      });
-  });
-}
-
-function loginAdmin() {
-  return login('admin@email.com', 'password');
-}
 
 @suite('INTEGRATION TEST: Admin Location')
 class AdminLocationIntegrationTest extends IntegrationTest {
@@ -39,10 +13,6 @@ class AdminLocationIntegrationTest extends IntegrationTest {
 
   public static async after() {
     await IntegrationTest.after();
-    await firebase.auth().signOut();
-    if (listener) {
-      listener();
-    }
   }
 
   protected readonly apiEndpoint = '/v2/admin/location';
@@ -54,7 +24,7 @@ class AdminLocationIntegrationTest extends IntegrationTest {
   public async createLocationSuccessfully() {
     // GIVEN: API
     // WHEN: Creating a new location
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       locationName: 'Test location 2',
@@ -77,7 +47,7 @@ class AdminLocationIntegrationTest extends IntegrationTest {
   public async getLocationsSuccessfully() {
     // GIVEN: API
     // WHEN: Getting the locations
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -95,7 +65,7 @@ class AdminLocationIntegrationTest extends IntegrationTest {
   public async updateLocationNameSuccessfully() {
     // GIVEN: API
     // WHEN: Updating name of a location
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       uid: TestData.validLocation().uid,
@@ -118,7 +88,7 @@ class AdminLocationIntegrationTest extends IntegrationTest {
   public async deleteLocationSuccessfully() {
     // GIVEN: API
     // WHEN: Removing a location
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { uid: 998 };
     const res = await this.chai
@@ -136,7 +106,7 @@ class AdminLocationIntegrationTest extends IntegrationTest {
   public async createLocationFailsDueToNoLocationName() {
     // GIVEN: API
     // WHEN: Creating a location
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -153,7 +123,7 @@ class AdminLocationIntegrationTest extends IntegrationTest {
   public async updateLocationFailsDueToNoId() {
     // GIVEN: API
     // WHEN: Updating a location
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {};
     const res = await this.chai
@@ -173,7 +143,7 @@ class AdminLocationIntegrationTest extends IntegrationTest {
   public async updateLocationFailsDueToNoLocationName() {
     // GIVEN: API
     // WHEN: Updating a location
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { uid: -1 };
     const res = await this.chai
@@ -193,7 +163,7 @@ class AdminLocationIntegrationTest extends IntegrationTest {
   public async deleteLocationFailsDueToNoId() {
     // GIVEN: API
     // WHEN: Deleting a location
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {};
     const res = await this.chai
@@ -215,7 +185,7 @@ class AdminLocationIntegrationTest extends IntegrationTest {
       .toParam();
     query.text = query.text.concat(';');
 
-    const result = await AdminLocationIntegrationTest.mysqlUow.query<Location>(
+    const result = await IntegrationTest.mysqlUow.query<Location>(
       query.text,
       query.values,
     ) as Location[];
@@ -228,7 +198,7 @@ class AdminLocationIntegrationTest extends IntegrationTest {
       .toParam();
     query.text = query.text.concat(';');
 
-    const result = await AdminLocationIntegrationTest.mysqlUow.query<Location>(
+    const result = await IntegrationTest.mysqlUow.query<Location>(
       query.text,
       query.values,
     ) as Location[];

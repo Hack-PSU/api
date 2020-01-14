@@ -16,7 +16,7 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
       .where('email = ?', 'test2@email.com')
       .toParam();
     query.text = query.text.concat(';');
-    await PreRegistrationIntegrationTest.mysqlUow.query(query.text, query.values);
+    await UsersIntegrationTest.mysqlUow.query(query.text, query.values);
     await UsersIntegrationTest.after();
   }
 
@@ -35,7 +35,7 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
     super.assertRequestFormat(res);
     // THEN: Pre-registration was added
     const preRegistration = new PreRegistration(res.body.body.data);
-    preRegistration.hackathon = PreRegistrationIntegrationTest.activeHackathon.uid;
+    preRegistration.hackathon = UsersIntegrationTest.activeHackathon.uid;
     this.expect(preRegistration.email).to.equal('test2@email.com');
     await this.verifyPreRegistration(preRegistration);
   }
@@ -59,7 +59,7 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
       .where('email = ?', 'test2@email.com')
       .toParam();
     query.text = query.text.concat(';');
-    const [result] = await PreRegistrationIntegrationTest.mysqlUow.query<PreRegistration>(
+    const [result] = await UsersIntegrationTest.mysqlUow.query<PreRegistration>(
       query.text,
       query.values,
     ) as PreRegistration[];
@@ -82,5 +82,4 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
 //   describe('INTEGRATION TEST: POST', () => {
 //
 //   });
-// });
 // });

@@ -1,34 +1,8 @@
-import * as firebase from 'firebase';
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
 import { Event } from '../../../src/models/event/event';
 import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
-
-let listener: firebase.Unsubscribe;
-let firebaseUser: firebase.User;
-
-function login(email: string, password: string): Promise<firebase.User> {
-  if (firebaseUser) {
-    return new Promise(resolve => resolve(firebaseUser));
-  }
-  return new Promise((resolve, reject) => {
-    firebase.auth()
-      .signInWithEmailAndPassword(email, password)
-      .catch(err => reject(err));
-    listener = firebase.auth()
-      .onAuthStateChanged((user) => {
-        if (user) {
-          firebaseUser = user;
-          resolve(user);
-        }
-      });
-  });
-}
-
-function loginAdmin() {
-  return login('admin@email.com', 'password');
-}
 
 @suite('INTEGRATION TEST: Live Events')
 class LiveEventsIntegrationTest extends IntegrationTest {
@@ -39,10 +13,6 @@ class LiveEventsIntegrationTest extends IntegrationTest {
 
   public static async after() {
     await IntegrationTest.after();
-    await firebase.auth().signOut();
-    if (listener) {
-      listener();
-    }
   }
 
   protected readonly apiEndpoint = '/v2/live/events';
@@ -54,7 +24,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async createEventSuccessfully() {
     // GIVEN: API
     // WHEN: Creating a new event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       uid: 'Test uid',
@@ -83,7 +53,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async updateEventSuccessfully() {
     // GIVEN: API
     // WHEN: Updating an event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       uid: 'test event uid',
@@ -111,7 +81,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async getEventsSuccessfully() {
     // GIVEN: API
     // WHEN: Getting the events
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -129,7 +99,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async deleteEventSuccessfully() {
     // GIVEN: API
     // WHEN: Removing an event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { uid: 'Test uid' };
     const res = await this.chai
@@ -147,7 +117,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async createEventFailsDueToNoLocation() {
     // GIVEN: API
     // WHEN: Creating an event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {};
     const res = await this.chai
@@ -166,7 +136,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async createEventFailsDueToNoStartTime() {
     // GIVEN: API
     // WHEN: Creating an event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = { eventLocation: 998 };
     const res = await this.chai
@@ -185,7 +155,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async createEventFailsDueToNoEndTime() {
     // GIVEN: API
     // WHEN: Creating an event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       eventLocation: 998,
@@ -207,7 +177,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async createEventFailsDueToNoTitle() {
     // GIVEN: API
     // WHEN: Creating an event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       eventLocation: 998,
@@ -230,7 +200,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async createEventFailsDueToNoDescription() {
     // GIVEN: API
     // WHEN: Creating an event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       eventLocation: 998,
@@ -254,7 +224,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async createEventFailsDueToNoEventType() {
     // GIVEN: API
     // WHEN: Creating an event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {
       eventLocation: 998,
@@ -279,7 +249,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async updateEventFailsDueToNoEvent() {
     // GIVEN: API
     // WHEN: Updating an event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const res = await this.chai
       .request(this.app)
@@ -297,7 +267,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
   public async deleteEventFailsDueToNoId() {
     // GIVEN: API
     // WHEN: Deleting an event
-    const user = await loginAdmin();
+    const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
     const parameters = {};
     const res = await this.chai
@@ -319,7 +289,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       .toParam();
     query.text = query.text.concat(';');
 
-    const result = await LiveEventsIntegrationTest.mysqlUow.query<Event>(
+    const result = await IntegrationTest.mysqlUow.query<Event>(
       query.text,
       query.values,
     ) as Event[];
@@ -337,11 +307,11 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       .order('event_start_time', true)
       .join('LOCATIONS', 'location', 'event_location=location.uid')
       .join('HACKATHON', 'h', 'h.uid = event.hackathon')
-      .where('h.uid = ?', LiveEventsIntegrationTest.activeHackathon.uid)
+      .where('h.uid = ?', IntegrationTest.activeHackathon.uid)
       .toParam();
     query.text = query.text.concat(';');
 
-    const result = await LiveEventsIntegrationTest.mysqlUow.query<Event>(
+    const result = await IntegrationTest.mysqlUow.query<Event>(
       query.text,
       query.values,
     ) as Event[];

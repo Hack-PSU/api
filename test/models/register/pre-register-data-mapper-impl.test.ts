@@ -18,10 +18,10 @@ let activeHackathonDataMapper: IActiveHackathonDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
-const validPreregistration = new PreRegistration(
-  'test@email.com',
-  'test uid',
-);
+const validPreregistration = new PreRegistration({
+  email: 'test@email.com',
+  uid: 'test uid',
+});
 describe('TEST: Pre-register data mapper', () => {
   beforeEach(() => {
     // Configure Mock MysqlUow
@@ -49,7 +49,7 @@ describe('TEST: Pre-register data mapper', () => {
     reset(mysqlUowMock);
   });
 
-  describe('TEST: Pre Registration read', () => {
+  describe('TEST: Pre-registration read', () => {
     it(
       'generates the correct sql to read a pre-registration based on the provided uid',
       // @ts-ignore
@@ -74,9 +74,9 @@ describe('TEST: Pre-register data mapper', () => {
       'generates the correct sql to read a pre-registration with specific fields based on the provided uid',
       // @ts-ignore
       async () => {
-        // GIVEN: A registration with a valid ID to read from
+        // GIVEN: A pre-registration with a valid ID to read from
         const uid = 'test uid';
-        // WHEN: Retrieving a single field for this registration
+        // WHEN: Retrieving a single field for this pre-registration
         await preRegisterDataMapper.get(uid, { fields: ['test field'] });
 
         // THEN: Generated SQL matches the expectation
@@ -96,7 +96,7 @@ describe('TEST: Pre-register data mapper', () => {
     it('generates the correct sql to read all pre-registrations', async () => {
       // GIVEN: A pre-registration data mapper instance
       // WHEN: Retrieving all pre-registration data
-      const result = await preRegisterDataMapper.getAll();
+      await preRegisterDataMapper.getAll();
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT * FROM `PRE_REGISTRATION`;';
@@ -208,13 +208,13 @@ describe('TEST: Pre-register data mapper', () => {
     // @ts-ignore
     it('inserts the pre-registration', async () => {
       // GIVEN: A pre-registration to insert
-      const registration = validPreregistration;
+      const preregistration = validPreregistration;
       // WHEN: Inserting the pre-registration
-      await preRegisterDataMapper.insert(registration);
+      await preRegisterDataMapper.insert(preregistration);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'INSERT INTO `PRE_REGISTRATION` (`email`, `uid`, `hackathon`) VALUES (?, ?, ?);';
-      const expectedParams = [registration.email, registration.uid, 'test uid'];
+      const expectedParams = [preregistration.email, preregistration.uid, 'test uid'];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -223,17 +223,18 @@ describe('TEST: Pre-register data mapper', () => {
     });
 
     // @ts-ignore
-    it('fails to insert an invalid registration', async () => {
+    it('fails to insert an invalid preregistration', async () => {
       // GIVEN: A pre-registration to insert
-      const registration = new PreRegistration('invalid email', 'test uid');
+      const preregistration = new PreRegistration({
+        email: 'invalid email',
+        uid: 'test uid',
+      });
       // WHEN: Adding an invalid pre-registration
       try {
-        const result = await preRegisterDataMapper.insert(registration);
+        await preRegisterDataMapper.insert(preregistration);
       } catch (error) {
         // THEN: Error is thrown for invalid email
-        expect(error.data.message)
-          .to
-          .equal('data.email should match format "email"');
+        expect(error.data.message).to.equal('data.email should match format "email"');
         return;
       }
       expect(false).to.equal(true);
@@ -244,12 +245,12 @@ describe('TEST: Pre-register data mapper', () => {
     // @ts-ignore
     it('updates the pre-registration', async () => {
       // GIVEN: A pre-registration to update
-      const registration = validPreregistration;
+      const preregistration = validPreregistration;
       // WHEN: Updating the pre-registration
-      await preRegisterDataMapper.update(registration);
+      await preRegisterDataMapper.update(preregistration);
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'UPDATE `PRE_REGISTRATION` SET `email` = ?, `uid` = ? WHERE (uid = ?);';
-      const expectedParams = [registration.email, registration.uid, registration.uid];
+      const expectedParams = [preregistration.email, preregistration.uid, preregistration.uid];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -260,15 +261,16 @@ describe('TEST: Pre-register data mapper', () => {
     // @ts-ignore
     it('fails to update an invalid pre-registration', async () => {
       // GIVEN: A pre-registration to update
-      const registration = new PreRegistration('invalid email', 'test uid');
+      const preregistration = new PreRegistration({
+        email: 'invalid email',
+        uid: 'test uid',
+      });
       // WHEN: Updating an invalid pre-registration
       try {
-        const result = await preRegisterDataMapper.update(registration);
+        await preRegisterDataMapper.update(preregistration);
       } catch (error) {
         // THEN: Error is thrown for invalid firstname
-        expect(error.data.message)
-          .to
-          .equal('data.email should match format "email"');
+        expect(error.data.message).to.equal('data.email should match format "email"');
         return;
       }
       expect(false).to.equal(true);

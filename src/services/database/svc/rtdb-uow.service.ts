@@ -27,9 +27,9 @@ export class RtdbUow implements IUow {
 
   /**
    *
-   * @param query {enum} GET, SET, REF
-   * @param reference {String} A reference in the database
-   * @param [data] {Object} Data if query is SET
+   * @param query {enum} GET, SET, REF, COUNT, UPDATE, DELETE
+   * @param reference {String[]} A reference in the database
+   * @param [data] {Object} Data if query is SET or UPDATE
    * @returns {Promise<DataSnapshot>}
    */
   public query<T>(query: RtdbQueryType, reference: string[], data?: any): Promise<T | T[]> {
@@ -40,15 +40,17 @@ export class RtdbUow implements IUow {
     switch (query) {
       case RtdbQueryType.GET:
         return this._get<T>(reference[0]);
+      case RtdbQueryType.COUNT:
+        return this._count<T>(reference[0]);
       case RtdbQueryType.SET:
         return this._set<T>(data, reference[0]);
+      case RtdbQueryType.UPDATE:
+        return this._set<T>(data, reference[0]);
+      case RtdbQueryType.DELETE:
+        return this._delete<T>(reference[0]);
       case RtdbQueryType.REF:
         return Promise.resolve(this.db.ref(reference[0])
           .toString() as unknown as T);
-      case RtdbQueryType.COUNT:
-        return this._count<T>(reference[0]);
-      case RtdbQueryType.UPDATE:
-        return this._set<T>(data, reference[0]);
       default:
         return Promise.reject(new Error('Illegal query'));
     }
@@ -89,10 +91,6 @@ export class RtdbUow implements IUow {
     });
   }
 
-  public complete() {
-    return Promise.resolve();
-  }
-
   public _set<T>(data, reference) {
     return new Promise<T>((resolve, reject) => {
       if (!data) {
@@ -113,6 +111,23 @@ export class RtdbUow implements IUow {
         },           true)
         .catch(reject);
     });
+  }
+
+  public _delete<T>(reference) {
+    return new Promise<T>((resolve, reject) => {
+      this.db.ref(reference)
+        .remove((error) => {
+          if (error) {
+            return reject(error);
+          }
+          resolve();
+        })
+        .catch(reject);
+    });
+  }
+
+  public complete() {
+    return Promise.resolve();
   }
 
   public commit(): Promise<any> {

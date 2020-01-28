@@ -8,29 +8,29 @@ const checkoutObjectSchema = jsonAssetLoader('checkoutObjectSchema');
 export const TABLE_NAME = 'CHECKOUT_DATA';
 
 /**
- * item_id: The ID of the item being checked out.
- * user_id: The ID of the user checking out the item.
- * checkout_time: The time the item was checked out.
- * return_time: The time the item was returned.
+ * itemId: The ID of the item being checked out.
+ * userId: The ID of the user checking out the item.
+ * checkoutTime: The time the item was checked out.
+ * returnTime: The time the item was returned.
  * hackathon: The hackathon that this checkout belongs to.
  */
-interface ICheckoutObjectApiModel {
-  item_id: number;
-  user_id: string;
-  checkout_time: EpochNumber;
-  return_time?: EpochNumber;
+export interface ICheckoutObjectApiModel {
+  uid?: number;
+  itemId: number;
+  userId: string;
+  checkoutTime: EpochNumber;
+  returnTime?: EpochNumber;
   hackathon?: UidType;
 }
 
 export class CheckoutObject extends BaseObject {
-
   public get schema() {
     return checkoutObjectSchema;
   }
   public get id() {
     return this.uid;
   }
-  public uid: number;
+  public uid?: number;
   public item_id: number;
   public user_id: string;
   public checkout_time: EpochNumber;
@@ -39,10 +39,11 @@ export class CheckoutObject extends BaseObject {
 
   constructor(data: ICheckoutObjectApiModel) {
     super();
-    this.item_id = data.item_id;
-    this.user_id = data.user_id;
-    this.checkout_time = data.checkout_time;
-    this.return_time = data.return_time;
+    this.uid = data.uid;
+    this.item_id = data.itemId;
+    this.user_id = data.userId;
+    this.checkout_time = data.checkoutTime || Date.now();
+    this.return_time = data.returnTime;
     this.hackathon = data.hackathon;
   }
 }

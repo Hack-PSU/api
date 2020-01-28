@@ -385,7 +385,6 @@ describe('TEST: Attendance data mapper', () => {
       // GIVEN: An attendance data mapper instance
       // WHEN: Retrieving all attendance data
       const { data } = await attendanceDataMapper.getAttendanceByEvent();
-      console.log(data.attendees);
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT DISTINCT * FROM `ATTENDANCE` `attendance` INNER JOIN ' +
         '`REGISTRATION` `registration` ON (attendance.user_uid = registration.uid);';

@@ -90,6 +90,10 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
   public async getAll(opts?: IUowOpts): Promise<IDbResult<PreRegistration[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName);
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -112,7 +116,7 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<PreRegistration>(
       query.text,
       query.values,
-      { cache: true },
+      { cache: checkCache },
     ))
       .pipe(
         map((preRegistrations: PreRegistration[]) => ({
@@ -123,20 +127,36 @@ export class PreRegisterDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getCount(): Promise<IDbResult<number>> {
-    const query = this.getCountQuery().toParam();
+  public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
+    const query = (await this.getCountQuery(opts)).toParam();
     query.text = query.text.concat(';');
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     return from(
-      this.sql.query<number>(query.text, query.values, { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: checkCache }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
   }
 
-  public getCountQuery() {
-    return squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
+  public async getCountQuery(opts?: IUowOpts) {
+    let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
       .field(`COUNT(${this.pkColumnName})`, 'preregistration_count');
+    if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder
+        .where(
+          'hackathon = ?',
+          await (opts.hackathon ?
+            Promise.resolve(opts.hackathon) :
+            this.activeHackathonDataMapper.activeHackathon
+              .pipe(map(hackathon => hackathon.uid))
+              .toPromise()),
+        );
+    }
+    return queryBuilder;
   }
 
   public async insert(object: PreRegistration): Promise<IDbResult<PreRegistration>> {

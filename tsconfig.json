@@ -25,11 +25,13 @@
     "esModuleInterop": true
   },
   "tslint": {
-    "exclude": ["**/*.js"]
+    "exclude": [
+      "**/*.js"
+    ]
   },
   "include": [
     "src/**/*.ts",
-    "src/bin/*", "test/models/checkout-object/checkout-object-data-mapper-impl.test.ts"
+    "src/bin/*",
   ],
   "exclude": [
     "node_modules",

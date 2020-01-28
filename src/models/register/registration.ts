@@ -105,6 +105,7 @@ export class Registration extends BaseObject {
   public time: number;
   public hackathon: string;
   public submitted: boolean;
+  public pin: number;
 
   constructor(data: IRegistrationApiModel) {
     super();

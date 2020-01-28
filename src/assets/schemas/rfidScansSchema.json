@@ -9,11 +9,15 @@
     },
     "scan_time": {
       "type": "number"
+    },
+    "scan_location": {
+      "type": "number"
     }
   },
   "required": [
     "rfid_uid",
     "scan_event",
+    "scan_location",
     "scan_time"
   ]
 }

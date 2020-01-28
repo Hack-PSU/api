@@ -5,6 +5,11 @@ import BaseObject from '../BaseObject';
 
 const preRegisteredSchema = jsonAssetLoader('preRegisteredSchema');
 
+export interface IPreRegistrationApiModel {
+  email: string;
+  uid?: UidType;
+}
+
 export class PreRegistration extends BaseObject {
   public get id() {
     return this.uid;
@@ -16,10 +21,11 @@ export class PreRegistration extends BaseObject {
 
   public readonly uid: UidType;
   public email: string;
+  public hackathon: string;
 
-  constructor(email: string, uid?: string) {
+  constructor(data: IPreRegistrationApiModel) {
     super();
-    this.email = email;
-    this.uid = uid || v4().replace(/-/g, '');
+    this.email = data.email;
+    this.uid = data.uid || v4().replace(/-/g, '');
   }
 }

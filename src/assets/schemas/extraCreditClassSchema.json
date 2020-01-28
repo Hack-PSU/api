@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "uid": {
+      "type": "number"
+    },
+    "class_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50
+    }
+  },
+  "required": [
+    "class_name"
+  ]
+}
+  

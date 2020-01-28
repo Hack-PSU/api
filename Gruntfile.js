@@ -1,6 +1,6 @@
 // Gruntfile.js
 const nodecipher = require('node-cipher');
-const { spawn } = require('child_process');
+const { spawn } = require('cross-spawn');
 
 const encryptedFiles = {
   'gcs_config.json.aes': 'gcs_config.json',

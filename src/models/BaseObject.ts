@@ -72,6 +72,11 @@ export default abstract class  BaseObject {
    */
   protected abstract get schema(): any;
 
+  public static fromDb(this: new () => BaseObject, dbObject: any) {
+    const obj = new this();
+    return _.merge(obj, dbObject);
+  }
+
   /*********** PROPERTIES *************/
   // In a sub-class, make sure this array also includes all super properties
   protected readonly disallowedPropertiesInternal: Set<string>;

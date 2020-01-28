@@ -11,9 +11,9 @@ export enum EventType {
   FOOD = 'food',
 }
 
-interface IEventApiModel {
+export interface IEventApiModel {
   uid?: UidType;
-  eventLocation: string;
+  eventLocation: number;
   eventStartTime: number;
   eventEndTime: number;
   eventTitle: string;
@@ -32,7 +32,7 @@ export class Event extends BaseObject {
   }
 
   public readonly uid: UidType;
-  public event_location: string;
+  public event_location: number;
   public event_start_time: number;
   public event_end_time: number;
   public event_title: string;

@@ -31,7 +31,7 @@ export interface IRegisterDataMapper
 }
 
 export interface IPreRegisterDataMapper extends IDataMapper<PreRegistration> {
-  getCountQuery(): squel.Select;
+  getCountQuery(opts?: IUowOpts): Promise<squel.Select>;
 }
 
 // export * from './registration';

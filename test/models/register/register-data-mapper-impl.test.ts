@@ -489,14 +489,13 @@ describe('TEST: Register data mapper', () => {
       // WHEN: Updating the registration
       await registerDataMapper.update(registration);
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'UPDATE `REGISTRATION` SET `time` = ?, `firstname` = ?, `lastname` = ?, ' +
-        '`gender` = ?, `shirt_size` = ?, `travel_reimbursement` = ?, `first_hackathon` = ?, ' +
-        '`university` = ?, `email` = ?, `academic_year` = ?, `major` = ?, `phone` = ?, `race` = ?,' +
-        ' `coding_experience` = ?, `uid` = ?, `eighteenBeforeEvent` = ?, `mlh_coc` = ?, ' +
-        '`mlh_dcp` = ?, `referral` = ?, `project` = ?, `expectations` = ?, `veteran` = ?, ' +
-        '`submitted` = ?, `hackathon` = ? WHERE (uid = ?) AND (hackathon = ?);';
+      const expectedSQL = 'UPDATE `REGISTRATION` SET `firstname` = ?, `lastname` = ?, `gender` = ?, ' +
+        '`shirt_size` = ?, `travel_reimbursement` = ?, `first_hackathon` = ?, `university` = ?, ' +
+        '`email` = ?, `academic_year` = ?, `major` = ?, `phone` = ?, `race` = ?, `coding_experience` = ?, ' +
+        '`uid` = ?, `eighteenBeforeEvent` = ?, `mlh_coc` = ?, `mlh_dcp` = ?, `referral` = ?, `project` = ?, ' +
+        '`expectations` = ?, `veteran` = ?, `time` = ?, `submitted` = ?, `hackathon` = ? ' +
+        'WHERE (uid = ?) AND (hackathon = ?);';
       const expectedParams = [
-        validRegistration.time,
         validRegistration.firstname,
         validRegistration.lastname,
         validRegistration.gender,
@@ -518,6 +517,7 @@ describe('TEST: Register data mapper', () => {
         validRegistration.project,
         validRegistration.expectations,
         validRegistration.veteran,
+        validRegistration.time,
         true,
         validRegistration.hackathon,
         validRegistration.id,

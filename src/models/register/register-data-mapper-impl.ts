@@ -97,11 +97,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       { cache: checkCache },
     ))
       .pipe(
-        map((event: Registration[]) => ({ result: 'Success', data: event[0] })),
-        map((value) => {
-          value.data.time = parseInt(value.data.time as any as string, 10);
-          return value;
-        }),
+        map((registration: Registration[]) => ({ result: 'Success', data: registration[0] })),
       )
       .toPromise();
   }
@@ -162,8 +158,12 @@ export class RegisterDataMapperImpl extends GenericDataMapper
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     const query = (await this.getCountQuery(opts)).toParam();
     query.text = query.text.concat(';');
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     return from(
-      this.sql.query<number>(query.text, query.values, { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: checkCache }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();
@@ -249,7 +249,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       throw new HttpError(validation.error, 400);
     }
     /**
-     * On line 226, await this.get() executes a join on the Registration table with the Hackathon table.
+     * On line 234, await this.get() executes a join on the Registration table with the Hackathon table.
      * As a result, currentDbObject contains fields from the Hackathon table, i.e. 'name', 'base_pin', 'start_time', 'end_time', and active'.
      * These fields are not valid for the Registration table and thus need to be removed from the currentDbObject.
      */
@@ -267,10 +267,16 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .where('hackathon = ?', currentObject.hackathon)
       .toParam();
     query.text = query.text.concat(';');
+
+    const output = currentObject.dbRepresentation;
+    output.time = String(output.time);
+    output.resume = object.resume || currentDbObject.data.resume;
+    output.end_time = (currentDbObject.data as any).end_time;
+
     return from(
       this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: currentObject.cleanRepresentation })),
+      map(() => ({ result: 'Success', data: output })),
     ).toPromise();
   }
 
@@ -314,11 +320,10 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       'veteran',
     ];
     let queryBuilder;
-    // tslint:disable-next-line:prefer-for-of
-    for (let i = 0; i < columnNames.length; i += 1) {
+    for (const name of columnNames) {
       queryBuilder = !queryBuilder ?
-        await this.getSelectQueryForOptionName(columnNames[i], opts) :
-        queryBuilder.union(await this.getSelectQueryForOptionName(columnNames[i], opts));
+        await this.getSelectQueryForOptionName(name, opts) :
+        queryBuilder.union(await this.getSelectQueryForOptionName(name, opts));
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
@@ -329,27 +334,6 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     ))
       .pipe(
         map((event: IRegistrationStats[]) => ({ result: 'Success', data: event })),
-      )
-      .toPromise();
-  }
-
-  public getEmailByUid(uid: UidType): Promise<IDbResult<string>> {
-    const query = squel.select({
-      autoQuoteFieldNames: true,
-      autoQuoteTableNames: true,
-    })
-      .from(this.tableName)
-      .field('email')
-      .where('uid = ?', uid)
-      .toParam();
-    query.text = query.text.concat(';');
-    return from(this.sql.query<string>(
-      query.text,
-      query.values,
-      { cache: true },
-    ))
-      .pipe(
-        map((email: string) => ({ result: 'Success', data: email })),
       )
       .toPromise();
   }
@@ -384,6 +368,27 @@ export class RegisterDataMapperImpl extends GenericDataMapper
         );
     }
     return queryBuilder.group(fieldname);
+  }
+
+  public getEmailByUid(uid: UidType): Promise<IDbResult<string>> {
+    const query = squel.select({
+      autoQuoteFieldNames: true,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName)
+      .field('email')
+      .where('uid = ?', uid)
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<string>(
+      query.text,
+      query.values,
+      { cache: true },
+    ))
+      .pipe(
+        map((email: string) => ({ result: 'Success', data: email })),
+      )
+      .toPromise();
   }
 
   public getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>> {

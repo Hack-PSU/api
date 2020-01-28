@@ -60,9 +60,10 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    *
    * @apiParam {Number} limit=Math.inf Limit to a certain number of responses
    * @apiParam {Number} offset=0 The offset to start retrieving users from. Useful for pagination
+   * @apiParam {Boolean} ignoreCache=false Force a fresh query to retrieve data
    *
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Location[]} Array of locations
+   * @apiSuccess {Location[]} data Array of locations
    * @apiUse ResponseBodyDescription
    */
   private async getAllLocationsHandler(res: Response, next: NextFunction) {
@@ -86,9 +87,9 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
    *
-   * @apiParam {String} locationName - the name of the new location that is to be inserted into the database
+   * @apiParam {String} locationName The name of the new location that is to be inserted into the database
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Location} The inserted location
+   * @apiSuccess {Location} data The inserted location
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -102,6 +103,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
     try {
       const locationObject = new Location({
         locationName: req.body.locationName,
+        uid: req.body.uid,
       });
       const result = await this.locationDataMapper.insert(locationObject);
       const response = new ResponseBody(
@@ -122,10 +124,10 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
    *
-   * @apiParam {String} uid - the uid that is having the name of the location associated with this id changed
-   * @apiParam {String} locationName - the new name that is being updated with the name associated with the uid
+   * @apiParam {String} uid The uid that is having the name of the location associated with this id changed
+   * @apiParam {String} locationName The new name that is being updated with the name associated with the uid
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Location} The updated location
+   * @apiSuccess {Location} data The updated location
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -167,7 +169,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiGroup Admin Location
    * @apiPermission DirectorPermission
    *
-   * @apiParam {String} uid - the uid of the location that is being selected for removal
+   * @apiParam {String} uid The uid of the location that is being selected for removal
    * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription

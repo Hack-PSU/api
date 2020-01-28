@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS `test`.`REGISTRATION` (
   `veteran` VARCHAR(15) NULL DEFAULT 'false',
   `pin` INT(11) NOT NULL AUTO_INCREMENT,
   `time` VARCHAR(45) NULL DEFAULT NULL,
-  `hackathon` VARCHAR(45) NOT NULL DEFAULT '84ed52ff52f84591aabe151666fae240',
+  `hackathon` VARCHAR(45) NOT NULL DEFAULT '0caffc937e1c4501bcb9d8d7db06ccbd',
   PRIMARY KEY (`uid`, `hackathon`),
   UNIQUE INDEX `pin_UNIQUE` (`pin` ASC),
   INDEX `hackathon_fkey_idx` (`hackathon` ASC),

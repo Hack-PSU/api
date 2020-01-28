@@ -49,11 +49,17 @@ export class EventDataMapperImpl extends GenericDataMapper
     );
   }
 
-  public delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
+  public async delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
       .where(`${this.pkColumnName} = ?`, id.uid)
-      .where('hackathon = ?', id.hackathon)
+      .where(
+        'hackathon = ?',
+        id.hackathon ||
+        await this.activeHackathonDataMapper.activeHackathon
+          .pipe(map(hackathon => hackathon.uid))
+          .toPromise(),
+      )
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -191,7 +197,7 @@ export class EventDataMapperImpl extends GenericDataMapper
     return from(
       this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
-      map(() => ({ result: 'Success', data: object })),
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 }

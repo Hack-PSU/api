@@ -4,7 +4,7 @@ import BaseObject from '../BaseObject';
 
 const rfidAssignmentSchema = jsonAssetLoader('rfidAssignmentSchema');
 
-interface IRfidAssignmentApiModel {
+export interface IRfidAssignmentApiModel {
   wid: UidType;
   uid: UidType;
   time: EpochNumber;

@@ -6,16 +6,6 @@ import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
 import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
-import { IRegisterDataMapper } from '../../../src/models/register';
-import { RegisterDataMapperImpl } from '../../../src/models/register/register-data-mapper-impl';
-import {
-  AcademicYear,
-  CodingExperience,
-  Gender,
-  Registration,
-  ShirtSize,
-  VeteranOptions,
-} from '../../../src/models/register/registration';
 import { IScannerDataMapper } from '../../../src/models/scanner';
 import { RfidAssignment } from '../../../src/models/scanner/rfid-assignment';
 import { ScannerDataMapperImpl } from '../../../src/models/scanner/scanner-data-mapper-impl';

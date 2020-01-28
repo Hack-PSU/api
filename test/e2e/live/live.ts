@@ -167,7 +167,7 @@ describe('INTEGRATION TESTS: /v1/live', () => {
 
   describe('POST: /events', () => {
     const generateGoodEvent = () => ({
-      eventLocation: '1',
+      eventLocation: 1,
       eventStartTime: new Date().getTime(),
       eventEndTime: new Date().getTime(),
       eventTitle: 'Test Event',

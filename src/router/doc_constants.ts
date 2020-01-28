@@ -61,9 +61,19 @@
  */
 /**
  * @apiDefine RequestOpts
- * @apiParam [allHackathons] {boolean} Get data for all hackathons. Defaults to false.
- * @apiParam [ignoreCache] {boolean} Force a fresh query to retrieve data
- * @apiParam [count] {number} Number of responses to return
- * @apiParam [hackathon] {String} uid of hackathon to get results by. byHackathon must be true
- * @apiParam [startAt] {number} offset to paginate results
+ * @apiParam {Boolean} [allHackathons] Get data for all hackathons. Defaults to false.
+ * @apiParam {Boolean} [ignoreCache] Force a fresh query to retrieve data
+ * @apiParam {Number} [count] Number of responses to return
+ * @apiParam {String} [hackathon] Uid of hackathon to get results by. byHackathon must be true
+ * @apiParam {Number} [startAt] Offset to paginate results
+ */
+/**
+ * @apiDefine RequestOptsCount
+ * @apiParam {Boolean} [allHackathons] Get data for all hackathons. Defaults to false.
+ * @apiParam {Boolean} [ignoreCache]  Force a fresh query to retrieve data
+ * @apiParam {String} [hackathon] Uid of hackathon to get results by. byHackathon must be true
+ */
+/**
+ * @apiDefine WristbandIdParam
+ * @apiParam {String} wid The wristband ID to look up user by
  */

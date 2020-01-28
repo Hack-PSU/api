@@ -116,11 +116,11 @@ describe('TEST: Admin Statistics data mapper', () => {
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT * FROM (SELECT COUNT(uid) AS "preregistration_count" FROM ' +
-          '`PRE_REGISTRATION`) `a` INNER JOIN (SELECT COUNT(uid) AS "registration_count" FROM ' +
+          '`PRE_REGISTRATION` WHERE (hackathon = ?)) `a` INNER JOIN (SELECT COUNT(uid) AS "registration_count" FROM ' +
           '`REGISTRATION` WHERE (hackathon = ?)) `b` INNER JOIN (SELECT COUNT(user_id) AS "rsvp_count"' +
           ' FROM `RSVP` WHERE (hackathon = ?)) `c` INNER JOIN (SELECT COUNT(rfid_uid) AS "checkin_count"' +
           ' FROM `RFID_ASSIGNMENTS` WHERE (hackathon = ?)) `d`;';
-        const expectedParams = ['test uid', 'test uid', 'test uid'];
+        const expectedParams = ['test uid', 'test uid', 'test uid', 'test uid'];
         const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
           .first();
         expect(generatedSQL).to.equal(expectedSQL);
@@ -140,11 +140,11 @@ describe('TEST: Admin Statistics data mapper', () => {
 
         // THEN: Generated SQL matches the expectation
         const expectedSQL = 'SELECT * FROM (SELECT COUNT(uid) AS "preregistration_count" FROM ' +
-          '`PRE_REGISTRATION`) `a` INNER JOIN (SELECT COUNT(uid) AS "registration_count" FROM ' +
+          '`PRE_REGISTRATION` WHERE (hackathon = ?)) `a` INNER JOIN (SELECT COUNT(uid) AS "registration_count" FROM ' +
           '`REGISTRATION` WHERE (hackathon = ?)) `b` INNER JOIN (SELECT COUNT(user_id) AS "rsvp_count"' +
           ' FROM `RSVP` WHERE (hackathon = ?)) `c` INNER JOIN (SELECT COUNT(rfid_uid) AS "checkin_count"' +
           ' FROM `RFID_ASSIGNMENTS` WHERE (hackathon = ?)) `d`;';
-        const expectedParams = ['provided test uid', 'provided test uid', 'provided test uid'];
+        const expectedParams = ['provided test uid', 'provided test uid', 'provided test uid', 'provided test uid'];
         const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
           .first();
         expect(generatedSQL).to.equal(expectedSQL);

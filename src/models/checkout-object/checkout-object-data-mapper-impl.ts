@@ -175,7 +175,7 @@ export class CheckoutObjectDataMapperImpl extends GenericDataMapper
     })
       .table(this.tableName)
       .set('return_time', returnTime)
-      .where('uid = ?', uid)
+      .where(`${this.pkColumnName} = ?`, uid)
       .toParam();
     query.text = query.text.concat(';');
     return from(

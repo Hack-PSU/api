@@ -1,4 +1,12 @@
+import jsonAssetLoader from '../../assets/schemas/json-asset-loader';
 import BaseObject from '../BaseObject';
+
+const extraCreditClassSchema = jsonAssetLoader('extraCreditClassSchema');
+
+export interface IExtraCreditClassApiModel {
+  uid?: number;
+  class_name: string;
+}
 
 export class ExtraCreditClass extends BaseObject {
 
@@ -7,21 +15,15 @@ export class ExtraCreditClass extends BaseObject {
   }
 
   protected get schema(): any {
-    return undefined;
+    return extraCreditClassSchema;
   }
-  public readonly uid: number;
+
+  public readonly uid?: number;
   public readonly class_name: string;
 
-  constructor(data: { class_name: string }) {
+  constructor(data: IExtraCreditClassApiModel) {
     super();
+    this.uid = data.uid;
     this.class_name = data.class_name;
-  }
-
-  public validate(): { result: boolean; error?: string } {
-    const result = typeof this.class_name === 'string';
-    if (!result) {
-      return { result, error: 'Class name must be of type string' };
-    }
-    return { result: true };
   }
 }

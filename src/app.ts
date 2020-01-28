@@ -3,9 +3,7 @@ import * as debugAgent from '@google-cloud/debug-agent';
 import * as traceAgent from '@google-cloud/trace-agent';
 import { Environment, Util } from './JSCommon/util';
 if (Util.getCurrentEnv() !== Environment.TEST) {
-  // @ts-ignore
   traceAgent.start();
-  // @ts-ignore
   debugAgent.start();
 }
 import * as bodyParser from 'body-parser';
@@ -19,7 +17,6 @@ import * as requestContext from 'request-context';
 import 'source-map-support/register';
 import { HttpError } from './JSCommon/errors';
 import { ParentRouter, ResponseBody } from './router/router-types';
-import { ScannerController } from './router/routes/scanner/scanner';
 import { ExpressProvider } from './services/common/injector/providers';
 import { Logger } from './services/logging/logging';
 

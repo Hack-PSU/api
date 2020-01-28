@@ -75,8 +75,8 @@ router.use(verifyAuthMiddleware);
  * @apiParam {String} fullName first and last names of the user as they would appear on a check.
  * @apiParam {Number} reimbursementAmount the total amount of money they are requesting, as appears
  *   on their receipts
- * @apiParam {String} mailingAddress the full postal address of the user
- * @apiParam {enum} groupMembers ["1", "2", "3", "4+"]
+ * @apiParam {String} mailingAddress The full postal address of the user
+ * @apiParam {Enum} groupMembers ["1", "2", "3", "4+"]
  * @apiParam {FILE} [receipt] The receipt files for this user, users can send up to 5 files all
  *   under fieldname receipt. (Max size: 5 MB each)
  * @apiPermission UserPermission

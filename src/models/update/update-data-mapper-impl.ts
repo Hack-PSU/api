@@ -36,7 +36,7 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   ) {
     super(acl);
     super.addRBAC(
-      [this.CREATE, this.UPDATE, this.DELETE],
+      [this.CREATE, this.UPDATE, this.DELETE, this.COUNT],
       [AuthLevel.TEAM_MEMBER],
       undefined,
       [AuthLevel[AuthLevel.VOLUNTEER]],
@@ -49,12 +49,16 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
     );
   }
 
-  public delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
+  public async delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
+    if (!id.hackathon) {
+      id.hackathon = await this.activeHackathonDataMapper.activeHackathon
+      .pipe(map(hackathon => hackathon.uid))
+      .toPromise();
+    }
     return from(
       this.rtdb.query<void>(
         RtdbQueryType.DELETE,
         [`${this.tableName}/${id.hackathon}/${id.uid}`],
-        { cache: false },
       ),
     ).pipe(
         map(() => ({ result: 'Success', data: undefined })),
@@ -67,7 +71,6 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
       this.rtdb.query<Update>(
         RtdbQueryType.GET,
         [`${this.tableName}/${id.hackathon}/${id.uid}`],
-        { cache: true },
       ))
       .pipe(
         map(result => ({ result: 'Success', data: result as Update })),
@@ -78,9 +81,11 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
     return this.activeHackathonDataMapper.activeHackathon
       .pipe(
         map(hackathon => hackathon.uid),
-        switchMap((result) => {
-          const reference = `/${this.tableName}/${result}`;
-          return from(this.rtdb.query<Update[]>(RtdbQueryType.GET, [reference], undefined));
+        switchMap((reference) => {
+          return from(this.rtdb.query<Update[]>(
+            RtdbQueryType.GET,
+            [`${this.tableName}/${reference}`],
+            null));
         }),
         map(data => ({ result: 'Success', data: data as Update[] })),
       ).toPromise();
@@ -90,9 +95,11 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
     return this.activeHackathonDataMapper.activeHackathon
       .pipe(
         map(hackathon => hackathon.uid),
-        switchMap((result) => {
-          const reference = `/${this.tableName}/${result}`;
-          return this.rtdb.query<number>(RtdbQueryType.COUNT, [reference], null);
+        switchMap((reference) => {
+          return this.rtdb.query<number>(
+            RtdbQueryType.COUNT,
+            [`/${this.tableName}/${reference}`],
+            null);
         }),
         map(data => ({ result: 'Success', data: data as number })),
       ).toPromise();
@@ -140,9 +147,11 @@ export class UpdateDataMapperImpl extends GenericDataMapper implements IUpdateDa
   public getReference() {
     return this.activeHackathonDataMapper.activeHackathon.pipe(
       map(hackathon => hackathon.uid),
-      switchMap((result) => {
-        const reference = `/${this.tableName}/${result}`;
-        return from(this.rtdb.query<string>(RtdbQueryType.REF, [reference], null));
+      switchMap((reference) => {
+        return from(this.rtdb.query<string>(
+          RtdbQueryType.REF,
+          [`${this.tableName}/${reference}`],
+          null));
       }),
       map(result => ({ result: 'Success', data: result as string })),
     )

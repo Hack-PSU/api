@@ -99,6 +99,10 @@ export class RsvpDataMapperImpl extends GenericDataMapper
   public async getAll(opts?: IUowOpts): Promise<IDbResult<Rsvp[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName, 'rsvp');
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -118,7 +122,7 @@ export class RsvpDataMapperImpl extends GenericDataMapper
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Rsvp>(query.text, query.values, { cache: true },
+    return from(this.sql.query<Rsvp>(query.text, query.values, { cache: checkCache },
     ))
       .pipe(
         map((rsvps: Rsvp[]) => ({ result: 'Success', data: rsvps })),
@@ -130,8 +134,12 @@ export class RsvpDataMapperImpl extends GenericDataMapper
     const query = (await this.getCountQuery(opts))
       .toParam();
     query.text = query.text.concat(';');
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     return from(
-      this.sql.query<number>(query.text, query.values, { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: checkCache }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

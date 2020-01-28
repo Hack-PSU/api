@@ -8,7 +8,7 @@ import { PreRegistrationProcessor } from '../../src/processors/pre-registration-
 // Global mocks
 const preregistrationDMMock = mock(PreRegisterDataMapperImpl);
 let preregistrationDataMapper: PreRegisterDataMapperImpl;
-const registration = new PreRegistration('test@email.com');
+const preregistration = new PreRegistration({ email: 'test@email.com' });
 
 describe('TEST: Pre Registration Processor', () => {
   beforeEach(() => {
@@ -23,9 +23,9 @@ describe('TEST: Pre Registration Processor', () => {
       // GIVEN: A registration processor
       const registrationProcessor = new PreRegistrationProcessor(preregistrationDataMapper);
       // WHEN: Processing the registration
-      await registrationProcessor.processPreregistration(registration);
+      await registrationProcessor.processPreregistration(preregistration);
       // THEN: Registration was inserted
-      verify(preregistrationDMMock.insert(registration)).once();
+      verify(preregistrationDMMock.insert(preregistration)).once();
     });
   });
 });

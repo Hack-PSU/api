@@ -96,7 +96,7 @@ describe('TEST: Update data mapper', () => {
 
         // THEN: Generated query matches the expectation
         const expectedQuery = RtdbQueryType.REF;
-        const expectedParams = ['/updates/test uid'];
+        const expectedParams = ['updates/test uid'];
         expect((result.data as any).query).to.equal(expectedQuery);
         expect((result.data as any).params).to.deep.equal(expectedParams);
       },
@@ -112,7 +112,7 @@ describe('TEST: Update data mapper', () => {
 
       // THEN: Generated query matches the expectation
       const expectedQuery = RtdbQueryType.GET;
-      const expectedParams = ['/updates/test uid'];
+      const expectedParams = ['updates/test uid'];
       expect((result.data as any).query).to.equal(expectedQuery);
       expect((result.data as any).params).to.deep.equal(expectedParams);
     });

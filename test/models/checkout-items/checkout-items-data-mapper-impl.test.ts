@@ -7,13 +7,13 @@ import { anyString, anything, capture, instance, mock, reset, verify, when } fro
 import { ICheckoutItemsDataMapper } from '../../../src/models/checkout-items';
 import { CheckoutItems } from '../../../src/models/checkout-items/checkout-items';
 import { CheckoutItemsDataMapperImpl } from '../../../src/models/checkout-items/checkout-items-data-mapper-impl';
+import { CheckoutObjectDataMapperImpl } from '../../../src/models/checkout-object/checkout-object-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
 import { RBAC } from '../../../src/services/auth/RBAC/rbac';
 import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
 import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../src/services/logging/logging';
-import { CheckoutObjectDataMapperImpl } from '../../../src/models/checkout-object/checkout-object-data-mapper-impl';
 
 let checkoutItemsDataMapper: ICheckoutItemsDataMapper;
 let checkoutObjectDataMapperImpl: CheckoutObjectDataMapperImpl;
@@ -249,8 +249,8 @@ describe('TEST: CheckoutItems Data Mapper', () => {
       await checkoutItemsDataMapper.update(testCheckoutItems);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'UPDATE `CHECKOUT_ITEMS` SET `name` = ?, `quantity` = ?, `uid` = ? WHERE (uid = ?);';
-      const expectedParams = [testCheckoutItems.name, testCheckoutItems.quantity, 0, 0];
+      const expectedSQL = 'UPDATE `CHECKOUT_ITEMS` SET `uid` = ?, `name` = ?, `quantity` = ? WHERE (uid = ?);';
+      const expectedParams = [0, testCheckoutItems.name, testCheckoutItems.quantity, 0];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

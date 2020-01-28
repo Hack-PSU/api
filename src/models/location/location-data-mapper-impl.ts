@@ -46,7 +46,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
     const query = squel
       .delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, object.id)
+      .where(`${this.pkColumnName} = ?`, object.uid)
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -86,6 +86,10 @@ export class LocationDataMapperImpl extends GenericDataMapper
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
     }).from(this.tableName, 'location');
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
@@ -98,7 +102,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<Location>(query.text, query.values, { cache: true }),
+      this.sql.query<Location>(query.text, query.values, { cache: checkCache }),
     )
       .pipe(
         map((locations: Location[]) => ({
@@ -141,12 +145,9 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<void>(query.text, query.values, {
-        cache: false,
-
-      }),
+      this.sql.query<void>(query.text, query.values, { cache: false }),
     )
-      .pipe(map(() => ({ result: 'Success', data: object })))
+      .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
       .toPromise();
   }
 
@@ -169,7 +170,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
     query.text = query.text.concat(';');
     return from(
       this.sql.query<void>(query.text, query.values, { cache: false }),
-    ).pipe(map(() => ({ result: 'Success', data: object })),
+    ).pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
 }

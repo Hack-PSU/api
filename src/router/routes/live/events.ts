@@ -6,7 +6,6 @@ import { Event } from '../../../models/event/event';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDataMapperHackathonSpecific } from '../../../services/database';
-import { Logger } from '../../../services/logging/logging';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
 
@@ -19,7 +18,6 @@ export class EventsController extends LiveController {
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IEventDataMapper') private readonly dataMapper: IDataMapperHackathonSpecific<Event>,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
-    @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
     super();
     this.routes(this.router);
@@ -59,11 +57,12 @@ export class EventsController extends LiveController {
    * Delete an event
    * @api {post} /live/events/delete Delete an existing event
    * @apiVersion 2.0.0
-   * @apiName Update Event
+   * @apiName Delete Event
    * @apiGroup Events
    * @apiPermission TeamMemberPermission
    *
-   * @apiParam {String} uid - The uid of the event.
+   * @apiParam {String} uid The uid of the event.
+   * @apiParam {String} [hackathon=current] The hackathon to delete the event from
    * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
@@ -74,11 +73,11 @@ export class EventsController extends LiveController {
     next: express.NextFunction,
   ) {
     if (!request.body || !request.body.uid) {
-      return next(new HttpError('Event uid must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
     }
     try {
-      await this.dataMapper.delete(request.body.uid);
-      const res = new ResponseBody('Success', 200, request.body.uid);
+      const result = await this.dataMapper.delete(request.body);
+      const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
     } catch (error) {
       Util.standardErrorHandler(error, next);
@@ -93,15 +92,15 @@ export class EventsController extends LiveController {
    * @apiGroup Events
    * @apiPermission TeamMemberPermission
    *
-   * @apiParam {String} uid - The uid of the event.
-   * @apiParam {String} eventLocation - The uid of the location for the event.
-   * @apiParam {String} eventStartTime - The unix time for the start of the event.
-   * @apiParam {String} eventEndTime - The unix time for the start of the event.
-   * @apiParam {String} eventTitle - The title of the event.
-   * @apiParam {String} eventDescription - The description of the event.
-   * @apiParam {Enum} eventType - The type of the event. Accepted values: ["food","workshop","activity"]
+   * @apiParam {String} uid The uid of the event.
+   * @apiParam {Number} eventLocation The uid of the location for the event.
+   * @apiParam {Number} eventStartTime The unix time for the start of the event.
+   * @apiParam {Number} eventEndTime The unix time for the start of the event.
+   * @apiParam {String} eventTitle The title of the event.
+   * @apiParam {String} [eventDescription] The description of the event.
+   * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Event} The updated event
+   * @apiSuccess {Event} data The updated event
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -110,18 +109,18 @@ export class EventsController extends LiveController {
     response: express.Response,
     next: express.NextFunction,
   ) {
-    if (!request.body) {
-      return next(new HttpError('No event provided to update', 400));
+    if (!request.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
     }
     let event;
     try {
       event = new Event(request.body);
     } catch (error) {
-      return Util.standardErrorHandler(new HttpError('Some properties were not as expected', 401), next);
+      return Util.standardErrorHandler(new HttpError('Some properties were not as expected', 400), next);
     }
     try {
-      await this.dataMapper.update(event);
-      const res = new ResponseBody('Success', 200, { result: 'Success', data: event });
+      const result = await this.dataMapper.update(event);
+      const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -136,15 +135,15 @@ export class EventsController extends LiveController {
    * @apiGroup Events
    * @apiPermission TeamMemberPermission
    *
-   * @apiParam {String} eventLocation - The uid of the location for the event.
-   * @apiParam {String} eventStartTime - The unix time for the start of the event.
-   * @apiParam {String} eventEndTime - The unix time for the start of the event.
-   * @apiParam {String} eventTitle - The title of the event.
-   * @apiParam {String} eventDescription - The description of the event.
-   * @apiParam {Enum} eventType - The type of the event. Accepted values: ["food","workshop","activity"]
-   * @apiParam {String} [hackathon] - optional uid of hackathon
+   * @apiParam {Number} eventLocation The uid of the location for the event.
+   * @apiParam {Number} eventStartTime The unix time for the start of the event.
+   * @apiParam {Number} eventEndTime The unix time for the start of the event.
+   * @apiParam {String} eventTitle The title of the event.
+   * @apiParam {String} eventDescription The description of the event.
+   * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
+   * @apiParam {String} [hackathon] Optional uid of hackathon
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {Event} The inserted event
+   * @apiSuccess {Event} data The inserted event
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -154,22 +153,22 @@ export class EventsController extends LiveController {
     next: express.NextFunction,
   ) {
     if (!request.body.eventLocation) {
-      return next(new HttpError('Event location must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event location must be provided', 400), next);
     }
     if (!request.body.eventStartTime) {
-      return next(new HttpError('Event start time must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event start time must be provided', 400), next);
     }
     if (!request.body.eventEndTime) {
-      return next(new HttpError('Event end time must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event end time must be provided', 400), next);
     }
     if (!request.body.eventTitle) {
-      return next(new HttpError('Event title must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event title must be provided', 400), next);
     }
     if (!request.body.eventDescription) {
-      return next(new HttpError('Event description must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event description must be provided', 400), next);
     }
     if (!request.body.eventType) {
-      return next(new HttpError('Event type must be provided', 400));
+      return Util.standardErrorHandler(new HttpError('Event type must be provided', 400), next);
     }
     let event;
     try {
@@ -179,7 +178,7 @@ export class EventsController extends LiveController {
     }
     try {
       const result = await this.dataMapper.insert(event);
-      const res = new ResponseBody('Success', 200, { result: 'Success', data: result });
+      const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -192,8 +191,10 @@ export class EventsController extends LiveController {
    * @apiVersion 2.0.0
    * @apiName Get events
    * @apiGroup Events
+   * @apiPermission UserPermission
+   *
+   * @apiSuccess {Event[]} data Array of current events
    * @apiUse RequestOpts
-   * @apiSuccess {Event[]} Array of current events
    * @apiUse ResponseBodyDescription
    */
   private async getEventHandler(

@@ -11,7 +11,6 @@ import { Util } from '../../JSCommon/util';
 import { IExtraCreditDataMapper } from '../../models/extra-credit';
 import { ExtraCreditAssignment } from '../../models/extra-credit/extra-credit-assignment';
 import { IActiveHackathonDataMapper } from '../../models/hackathon/active-hackathon';
-import { IRegisterDataMapper } from '../../models/register';
 import { PreRegistration } from '../../models/register/pre-registration';
 import { Registration } from '../../models/register/registration';
 import { IPreregistrationProcessor } from '../../processors/pre-registration-processor';
@@ -38,7 +37,6 @@ export class UsersController extends ParentRouter implements IExpressController 
     @Inject('IExtraCreditDataMapper') private readonly extraCreditPerm: IAclPerm,
     @Inject('IRegistrationProcessor') private readonly registrationProcessor: IRegistrationProcessor,
     @Inject('IPreregistrationProcessor') private readonly preregistrationProcessor: IPreregistrationProcessor,
-    @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IExtraCreditDataMapper,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IStorageService') private readonly storageService: IStorageService,
@@ -79,11 +77,11 @@ export class UsersController extends ParentRouter implements IExpressController 
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     // Authenticated routes
     app.post(
-      '/register',
-      this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
-      this.resumeUploader.upload(),
-      (req, res, next) => this.validateRegistrationFieldsMiddleware(req, res, next),
-      (req, res, next) => this.registrationHandler(req, res, next),
+        '/register',
+        this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
+        this.resumeUploader.upload(),
+        (req, res, next) => this.validateRegistrationFieldsMiddleware(req, res, next),
+        (req, res, next) => this.registrationHandler(req, res, next),
     );
     app.get(
       '/register',
@@ -145,7 +143,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiName Add Pre-Registration
    * @apiGroup User
    * @apiParam {String} email The email ID to register with
-   * @apiSuccess {PreRegistration} The inserted pre registration
+   * @apiSuccess {PreRegistration} data The inserted pre registration
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -155,9 +153,9 @@ export class UsersController extends ParentRouter implements IExpressController 
       !validate(request.body.email)) {
       return next(new HttpError('Valid email must be provided', 400));
     }
-    let preRegistration;
+    let preRegistration: PreRegistration;
     try {
-      preRegistration = new PreRegistration(request.body.email);
+      preRegistration = new PreRegistration({ email: request.body.email });
     } catch (error) {
       return Util.standardErrorHandler(
         new HttpError('Some properties were not as expected', 400),
@@ -203,11 +201,11 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} firstName First name of the user
    * @apiParam {String} lastName Last name of the user
    * @apiParam {String} gender Gender of the user
-   * @apiParam {enum} shirtSize [XS, S, M, L, XL, XXL]
+   * @apiParam {Enum} shirtSize [XS, S, M, L, XL, XXL]
    * @apiParam {String} [dietaryRestriction] The dietary restictions for the user
    * @apiParam {String} [allergies] Any allergies the user might have
-   * @apiParam {boolean} travelReimbursement=false
-   * @apiParam {boolean} firstHackathon=false Is this the user's first hackathon
+   * @apiParam {Boolean} travelReimbursement=false Will this user require travel reimbursement?
+   * @apiParam {Boolean} firstHackathon=false Is this the user's first hackathon?
    * @apiParam {String} university The university that the user attends
    * @apiParam {String} email The user's school email
    * @apiParam {String} academicYear The user's current year in school
@@ -217,15 +215,15 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} [ethnicity] The user's ethnicity
    * @apiParam {String} codingExperience The coding experience that the user has
    * @apiParam {String} uid The UID from their Firebase account
-   * @apiParam {boolean} eighteenBeforeEvent=true Will the person be eighteen before the event
-   * @apiParam {boolean} mlhcoc=true Does the user agree to the mlhcoc?
-   * @apiParam {boolean} mlhdcp=true Does the user agree to the mlh dcp?
+   * @apiParam {Boolean} eighteenBeforeEvent=true Will the person be eighteen before the event
+   * @apiParam {Boolean} mlhcoc=true Does the user agree to the mlh coc?
+   * @apiParam {Boolean} mlhdcp=true Does the user agree to the mlh dcp?
    * @apiParam {String} referral Where did the user hear about the Hackathon?
    * @apiParam {String} project A project description that the user is proud of
    * @apiParam {String} expectations What the user expects to get from the hackathon
    * @apiParam {String} veteran=false Is the user a veteran?
    *
-   * @apiSuccess {Registration} The inserted registration
+   * @apiSuccess {Registration} data The inserted registration
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -267,7 +265,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ExtraCreditClasses[]} Array of extra credit classes
+   * @apiSuccess {ExtraCreditClasses[]} data Array of extra credit classes
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -295,7 +293,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    *
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {Registration[]} Array of the user's registrations
+   * @apiSuccess {Registration[]} data Array of the user's registrations
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -318,7 +316,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} cid   The uid associated with the class
    * @apiParam {String} [uid] The uid associated with a user's Firebase account
    * @apiUse AuthArgumentRequired
-   * @apiSuccess {ExtraCreditAssignment} The inserted extra credit assignment
+   * @apiSuccess {ExtraCreditAssignment} data The inserted extra credit assignment
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
@@ -387,10 +385,10 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiGroup User
    * @apiPermission UserPermission
    *
-   * @apiParam {String} uid - the id associated with the assignment
+   * @apiParam {String} uid The id associated with the assignment
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ExtraCreditAssignment} The retrieved extra credit assignment
+   * @apiSuccess {ExtraCreditAssignment} data The retrieved extra credit assignment
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -423,10 +421,10 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiGroup User
    * @apiPermission UserPermission
    *
-   * @apiParam {String} uid - the id associated with the hacker
+   * @apiParam {String} uid The id associated with the hacker
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ExtraCreditAssignment} The retrieved extra credit assignments
+   * @apiSuccess {ExtraCreditAssignment} data The retrieved extra credit assignments
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -459,10 +457,10 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiGroup User
    * @apiPermission UserPermission
    *
-   * @apiParam {Integer} cid - the id associated with the class
+   * @apiParam {Integer} cid The id associated with the class
    * @apiUse AuthArgumentRequired
    *
-   * @apiSuccess {ExtraCreditAssignment} The retrieved extra credit assignments
+   * @apiSuccess {ExtraCreditAssignment} data The retrieved extra credit assignments
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
@@ -495,8 +493,8 @@ export class UsersController extends ParentRouter implements IExpressController 
   * @apiGroup User
   * @apiPermission DirectorPermission
   *
-  * @apiParam {String} uid - the id associated with the hacker
-  * @apiParam {String} hackathonUid - the id associated with the current hackathon
+  * @apiParam {String} uid The id associated with the hacker
+  * @apiParam {String} hackathonUid The id associated with the current hackathon
   * @apiUse AuthArgumentRequired
   * @apiUse IllegalArgumentError
   * @apiUse ResponseBodyDescription

@@ -22,7 +22,7 @@ export class PreRegistrationProcessor implements IPreregistrationProcessor {
     return new ResponseBody(
       'Success',
       200,
-      { result: 'Success', data: { preRegistration, result } },
+      result,
     );
   }
 }

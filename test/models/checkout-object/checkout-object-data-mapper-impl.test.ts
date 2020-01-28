@@ -209,11 +209,11 @@ describe('TEST: CheckoutObject Data Mapper', () => {
       // GIVEN: An item to insert
       const hackathonUid = 'test hackathon';
       const testCheckoutObject = new CheckoutObject({
-        checkout_time: Date.now(),
+        checkoutTime: Date.now(),
         hackathon: hackathonUid,
-        item_id: 1,
-        return_time: Date.now(),
-        user_id: 'test name',
+        itemId: 1,
+        returnTime: Date.now(),
+        userId: 'test name',
       });
       // WHEN: Inserting item
       await checkoutObjectDataMapper.insert(testCheckoutObject);
@@ -262,26 +262,26 @@ describe('TEST: CheckoutObject Data Mapper', () => {
       // GIVEN: An item to insert
       const hackathonUid = 'test name';
       const testCheckoutObject = new CheckoutObject({
-        item_id: 1,
-        user_id: 'test name',
-        checkout_time: Date.now(),
-        return_time: Date.now(),
-        hackathon:  hackathonUid,
+        itemId: 1,
+        userId: 'test name',
+        checkoutTime: Date.now(),
+        returnTime: Date.now(),
+        hackathon: hackathonUid,
       });
       testCheckoutObject.uid = 0;
       // WHEN: Updating item
       await checkoutObjectDataMapper.update(testCheckoutObject);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'UPDATE `CHECKOUT_DATA` SET `item_id` = ?, `user_id` = ?, ' +
-        '`checkout_time` = ?, `return_time` = ?, `hackathon` = ?, `uid` = ? WHERE (uid = ?);';
+      const expectedSQL = 'UPDATE `CHECKOUT_DATA` SET `uid` = ?, `item_id` = ?, `user_id` = ?, ' +
+        '`checkout_time` = ?, `return_time` = ?, `hackathon` = ? WHERE (uid = ?);';
       const expectedParams = [
+        testCheckoutObject.uid,
         testCheckoutObject.item_id,
         testCheckoutObject.user_id,
         testCheckoutObject.checkout_time,
         testCheckoutObject.return_time,
         testCheckoutObject.hackathon,
-        testCheckoutObject.uid,
         testCheckoutObject.uid,
       ];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)

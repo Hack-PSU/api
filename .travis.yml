@@ -1,4 +1,4 @@
-sudo: false
+os: linux
 language: node_js
 #cache: yarn
 branches:
@@ -32,7 +32,7 @@ before_deploy:
 - nodecipher decrypt ./encrypted/hackpsu18-ecc9dc4878c6.json.enc "./hackpsu18-ecc9dc4878c6.json" -p ${PKEY_PASS} -a aes-256-cbc-hmac-sha256
 deploy:
   provider: gae
-  skip_cleanup: true
+  edge: true
   keyfile: hackpsu18-ecc9dc4878c6.json
   project: hackpsu18
   config: app.v2.yaml

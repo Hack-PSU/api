@@ -70,6 +70,8 @@ export interface IRegistrationApiModel {
   expectations: string | null;
   veteran: VeteranOptions;
   submitted: boolean;
+  shareAddressMlh?: boolean;
+  shareAddressSponsors?: boolean;
 }
 
 export class Registration extends BaseObject {
@@ -106,6 +108,8 @@ export class Registration extends BaseObject {
   public hackathon: string;
   public submitted: boolean;
   public pin: number;
+  public share_address_mlh: boolean;
+  public share_address_sponsors: boolean;
 
   constructor(data: IRegistrationApiModel) {
     super();
@@ -135,6 +139,9 @@ export class Registration extends BaseObject {
     this.veteran = data.veteran;
     this.time = data.time;
     this.submitted = data.submitted;
+    this.share_address_mlh = data.shareAddressMlh || false;
+    this.share_address_sponsors = data.shareAddressSponsors || false;
+;
     // this.hackathon = data.hackathon;
   }
 

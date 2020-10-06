@@ -67,6 +67,8 @@ export class TestData {
       veteran: VeteranOptions.NO,
       time: 0,
       submitted: false,
+      shareAddressMlh: false,
+      shareAddressSponsors: false,
     };
   }
 

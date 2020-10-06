@@ -55,6 +55,8 @@ const validRegistration = new Registration({
   veteran: VeteranOptions.NODISCLOSE,
   time: Date.now(),
   submitted: true,
+  shareAddressMlh: false,
+  shareAddressSponsors: false,
 });
 
 describe('TEST: Register data mapper', () => {
@@ -352,8 +354,8 @@ describe('TEST: Register data mapper', () => {
         '`shirt_size`, `travel_reimbursement`, `first_hackathon`, `university`, `email`, ' +
         '`academic_year`, `major`, `phone`, `address`, `race`, `coding_experience`, `uid`, ' +
         '`eighteenBeforeEvent`, `mlh_coc`, `mlh_dcp`, `referral`, `project`, `expectations`, ' +
-        '`veteran`, `time`, `submitted`, `hackathon`) ' +
-        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
+        '`veteran`, `time`, `submitted`, `share_address_mlh`, `share_address_sponsors`, `hackathon`) ' +
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
       const expectedParams = [
         validRegistration.firstname,
         validRegistration.lastname,
@@ -379,6 +381,8 @@ describe('TEST: Register data mapper', () => {
         validRegistration.veteran,
         validRegistration.time,
         true,
+        validRegistration.share_address_mlh,
+        validRegistration.share_address_sponsors,
         'test uid',
       ];
       const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
@@ -419,6 +423,8 @@ describe('TEST: Register data mapper', () => {
         veteran: VeteranOptions.NODISCLOSE,
         time: Date.now(),
         submitted: true,
+        shareAddressMlh: false,
+        shareAddressSponsors: false,
       });
       // WHEN: Adding an invalid registration
       try {
@@ -497,7 +503,9 @@ describe('TEST: Register data mapper', () => {
         '`email` = ?, `academic_year` = ?, `major` = ?, `phone` = ?, `address` = ?, `race` = ?, ' +
         '`coding_experience` = ?, `uid` = ?, `eighteenBeforeEvent` = ?, `mlh_coc` = ?, `mlh_dcp` = ?, ' +
         '`referral` = ?, `project` = ?, `expectations` = ?, `veteran` = ?, `time` = ?, `submitted` = ?, ' +
-        '`hackathon` = ? WHERE (uid = ?) AND (hackathon = ?);';
+        '`share_address_mlh` = ?, `share_address_sponsors` = ?, `hackathon` = ? ' +
+        'WHERE (uid = ?) AND (hackathon = ?);';
+
       const expectedParams = [
         validRegistration.firstname,
         validRegistration.lastname,
@@ -523,6 +531,8 @@ describe('TEST: Register data mapper', () => {
         validRegistration.veteran,
         validRegistration.time,
         true,
+        validRegistration.share_address_mlh,
+        validRegistration.share_address_sponsors,
         validRegistration.hackathon,
         validRegistration.id,
         validRegistration.hackathon,
@@ -565,6 +575,8 @@ describe('TEST: Register data mapper', () => {
         veteran: VeteranOptions.NODISCLOSE,
         time: Date.now(),
         submitted: false,
+        shareAddressMlh: false,
+        shareAddressSponsors: false,
       });
       // WHEN: Updating an invalid registration
       try {

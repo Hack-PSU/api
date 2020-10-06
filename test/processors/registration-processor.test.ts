@@ -50,6 +50,8 @@ const registration = new Registration({
   veteran: VeteranOptions.NODISCLOSE,
   time: Date.now(),
   submitted: true,
+  shareAddressMlh: false,
+  shareAddressSponsors: false
 });
 
 describe('TEST: Registration Processor', () => {

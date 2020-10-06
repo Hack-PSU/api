@@ -63,7 +63,7 @@ class PreRegistrationIntegrationTest extends UsersIntegrationTest {
       query.text,
       query.values,
     ) as PreRegistration[];
-    this.expect(result).to.deep.equal(preRegistration.dbRepresentation);
+    this.expect(preRegistration.dbRepresentation).to.deep.equal(result);
   }
 }
 

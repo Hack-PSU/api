@@ -282,7 +282,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       query.text,
       query.values,
     ) as object[];
-    this.expect(result[1]).to.deep.equal(count[1]);
+    this.expect(count[1]).to.deep.equal(result[1]);
   }
 
   private async verifyRSVPUsers(users: Rsvp) {
@@ -323,8 +323,11 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     delete result[uid].hackathon;
     delete result[uid].attendees[0].uid;
     delete result[uid].attendees[0].eighteenBeforeEvent;
+    delete result[uid].attendees[0].address;
     delete result[uid].attendees[0].mlh_coc;
     delete result[uid].attendees[0].mlh_dcp;
+    delete result[uid].attendees[0].share_address_mlh;
+    delete result[uid].attendees[0].share_address_sponsors;
     delete result[uid].attendees[0].submitted;
     delete result[uid].attendees[0].time;
     this.expect(data).to.deep.equal(result);
@@ -353,7 +356,10 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     delete result[uid].uid;
     delete result[uid].mlh_coc;
     delete result[uid].mlh_dcp;
+    delete result[uid].share_address_mlh;
+    delete result[uid].share_address_sponsors;
     delete result[uid].submitted;
+    delete result[uid].address;
     delete result[uid].eighteenBeforeEvent;
     delete result[uid].time;
     delete result[uid].events[0].uid;
@@ -485,7 +491,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       query.text,
       query.values,
     ) as object[];
-    this.expect(result[1]).to.deep.equal(count[1]);
+    this.expect(count[1]).to.deep.equal(result[1]);
   }
 
   private async verifyUserCountByInteractionType(count: number[]) {
@@ -516,7 +522,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       query.text,
       query.values,
     ) as number[];
-    this.expect(result).to.deep.equal(count);
+    this.expect(count).to.deep.equal(result);
   }
 
   private async verifyRegistrationCategoryDataCount(count: number[]) {
@@ -543,7 +549,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
       query.text,
       query.values,
     ) as number[];
-    this.expect(result).to.deep.equal(count);
+    this.expect(count).to.deep.equal(result);
   }
 
   private getSelectQueryForOptionName(fieldname: string): squel.Select {

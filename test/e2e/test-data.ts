@@ -52,6 +52,7 @@ export class TestData {
       academicYear: AcademicYear.JUNIOR,
       major: 'test major',
       phone: '1234567890',
+      address: 'test address',
       resume: null,
       ethnicity: 'test ethnicity',
       codingExperience: CodingExperience.INTERMEDIATE,

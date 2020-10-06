@@ -58,6 +58,7 @@ export interface IRegistrationApiModel {
   academicYear: AcademicYear;
   major: string;
   phone: string;
+  address: string;
   ethnicity: string | null;
   resume: string | null;
   codingExperience: CodingExperience | null;
@@ -91,6 +92,7 @@ export class Registration extends BaseObject {
   public academic_year: string;
   public major: string;
   public phone: string;
+  public address: string;
   public race: string | null;
   public resume: string | null;
   public coding_experience: string | null;
@@ -122,6 +124,7 @@ export class Registration extends BaseObject {
     this.academic_year = data.academicYear;
     this.major = data.major;
     this.phone = data.phone;
+    this.address = data.address;
     this.race = data.ethnicity;
     this.resume = data.resume;
     this.coding_experience = data.codingExperience;

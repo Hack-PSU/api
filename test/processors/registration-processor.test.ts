@@ -24,6 +24,7 @@ let emailService: SendgridService;
 let hackathonDataMapper: HackathonDataMapperImpl;
 const registration = new Registration({
   academicYear: AcademicYear.FRESHMAN,
+  address: 'test address',
   allergies: null,
   codingExperience: CodingExperience.NONE,
   dietaryRestriction: null,
@@ -49,6 +50,8 @@ const registration = new Registration({
   veteran: VeteranOptions.NODISCLOSE,
   time: Date.now(),
   submitted: true,
+  shareAddressMlh: false,
+  shareAddressSponsors: false
 });
 
 describe('TEST: Registration Processor', () => {

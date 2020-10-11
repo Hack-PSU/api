@@ -124,6 +124,18 @@
     "mlh_dcp": {
       "type": "boolean"
     },
+    "share_address_mlh": {
+      "type": "boolean"
+    },
+    "share_address_sponsors": {
+      "type": "boolean"
+    },
+    "address": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "referral": {
       "type": [
         "string",

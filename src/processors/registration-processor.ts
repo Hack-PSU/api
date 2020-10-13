@@ -73,6 +73,10 @@ export class RegistrationProcessor implements IRegistrationProcessor {
     registration.mlhcoc = registration.mlhcoc === true || registration.mlhcoc === 'true';
 
     registration.mlhdcp = registration.mlhdcp === true || registration.mlhdcp === 'true';
+
+    registration.shareAddressMlh = registration.shareAddressMlh === true || registration.shareAddressMlh === 'true';
+
+    registration.shareAddressSponsors = registration.shareAddressSponsors === true || registration.shareAddressSponsors === 'true';
   }
 
   public async getAllRegistrationsByUser(id: UidType, opts?: IUowOpts): Promise<ResponseBody> {

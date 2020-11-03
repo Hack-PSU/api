@@ -170,6 +170,9 @@ export class EventsController extends LiveController {
     if (!request.body.eventType) {
       return Util.standardErrorHandler(new HttpError('Event type must be provided', 400), next);
     }
+    if (isNaN(Number(request.body.eventLocation))) {
+      return Util.standardErrorHandler(new HttpError('Event location must be a parsable number', 400), next);
+    }
     let event;
     try {
       event = new Event(request.body);

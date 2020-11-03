@@ -13,7 +13,7 @@ export enum EventType {
 
 export interface IEventApiModel {
   uid?: UidType;
-  eventLocation: number;
+  eventLocation: number | string;
   eventStartTime: number;
   eventEndTime: number;
   eventTitle: string;
@@ -43,7 +43,7 @@ export class Event extends BaseObject {
   constructor(data: IEventApiModel) {
     super();
     this.uid = data.uid || uuid.v4().replace(/-/g, '');
-    this.event_location = data.eventLocation;
+    this.event_location = Number(data.eventLocation);
     this.event_start_time = data.eventStartTime;
     this.event_end_time = data.eventEndTime;
     this.event_title = data.eventTitle;

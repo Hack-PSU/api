@@ -34,7 +34,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       eventTitle: 'Test event',
       eventDescription: 'This is a long test description',
       eventType: 'workshop',
-
+      eventIcon: 'https://standard.psu.edu/images/uploads/psu-mark.svg',
     };
     const res = await this.chai
       .request(this.app)
@@ -63,6 +63,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       eventTitle: 'Test Event',
       eventDescription: 'This is a long test description updated',
       eventType: 'workshop',
+      eventIcon: 'https://standard.psu.edu/images/uploads/psu-mark.svg',
     };
     const res = await this.chai
       .request(this.app)

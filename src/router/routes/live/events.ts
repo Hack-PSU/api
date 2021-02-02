@@ -98,6 +98,7 @@ export class EventsController extends LiveController {
    * @apiParam {Number} eventEndTime The unix time for the start of the event.
    * @apiParam {String} eventTitle The title of the event.
    * @apiParam {String} [eventDescription] The description of the event.
+   * @apiParam {String} [eventIcon] The URL for the icon image
    * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
    * @apiUse AuthArgumentRequired
    * @apiSuccess {Event} data The updated event
@@ -140,6 +141,7 @@ export class EventsController extends LiveController {
    * @apiParam {Number} eventEndTime The unix time for the start of the event.
    * @apiParam {String} eventTitle The title of the event.
    * @apiParam {String} eventDescription The description of the event.
+   * @apiParam {String} eventIcon The URL for the icon image
    * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
    * @apiParam {String} [hackathon] Optional uid of hackathon
    * @apiUse AuthArgumentRequired
@@ -169,6 +171,9 @@ export class EventsController extends LiveController {
     }
     if (!request.body.eventType) {
       return Util.standardErrorHandler(new HttpError('Event type must be provided', 400), next);
+    }
+    if (!request.body.eventIcon) {
+      return Util.standardErrorHandler(new HttpError('Event icon image link must be provided', 400), next);
     }
     let event;
     try {

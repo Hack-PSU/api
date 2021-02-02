@@ -19,6 +19,7 @@ export interface IEventApiModel {
   eventTitle: string;
   eventDescription?: string;
   eventType: EventType;
+  eventIcon: string;
 }
 
 export class Event extends BaseObject {
@@ -39,6 +40,7 @@ export class Event extends BaseObject {
   public event_description: string | null;
   public event_type: string;
   public hackathon?: UidType;
+  public event_icon: string | null;
 
   constructor(data: IEventApiModel) {
     super();
@@ -49,5 +51,6 @@ export class Event extends BaseObject {
     this.event_title = data.eventTitle;
     this.event_description = data.eventDescription || null;
     this.event_type = data.eventType;
+    this.event_icon = data.eventIcon;
   }
 }

@@ -95,7 +95,7 @@ export class TestData {
       eventEndTime: 4,
       eventTitle: 'Test Event',
       eventDescription: 'Test description',
-      eventIcon: 'https://standard.psu.edu/images/uploads/psu-mark.svg',
+      eventIcon: 'https://www.psu.edu/components/img/psu-mark-footer.png',
       eventType: EventType.WORKSHOP,
     };
   }

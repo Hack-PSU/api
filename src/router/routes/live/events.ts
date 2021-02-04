@@ -172,9 +172,6 @@ export class EventsController extends LiveController {
     if (!request.body.eventType) {
       return Util.standardErrorHandler(new HttpError('Event type must be provided', 400), next);
     }
-    if (!request.body.eventIcon) {
-      return Util.standardErrorHandler(new HttpError('Event icon image link must be provided', 400), next);
-    }
     let event;
     try {
       event = new Event(request.body);

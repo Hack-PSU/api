@@ -77,6 +77,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
         'event_description',
         'event_type',
         'event_name',
+        'event_icon',
       ],
     );
   }

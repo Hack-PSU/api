@@ -26,16 +26,16 @@ class LiveEventsIntegrationTest extends IntegrationTest {
     // WHEN: Creating a new event
     const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
-    const parameters = {
-      uid: 'Test uid',
-      eventLocation: TestData.validLocation().uid,
-      eventStartTime: 1,
-      eventEndTime: 2,
-      eventTitle: 'Test event',
-      eventDescription: 'This is a long test description',
-      eventType: 'workshop',
-
-    };
+     const parameters = {
+       uid: 'Test uid',
+       eventLocation: TestData.validLocation().uid,
+       eventStartTime: 1,
+       eventEndTime: 2,
+       eventTitle: 'Test event',
+       eventDescription: 'This is a long test description',
+       eventType: 'workshop',
+       eventIcon: 'https://www.psu.edu/components/img/psu-mark-footer.png',
+     };
     const res = await this.chai
       .request(this.app)
       .post(this.apiEndpoint)
@@ -63,6 +63,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       eventTitle: 'Test Event',
       eventDescription: 'This is a long test description updated',
       eventType: 'workshop',
+      eventIcon: 'https://standard.psu.edu/images/uploads/psu-mark.svg',
     };
     const res = await this.chai
       .request(this.app)

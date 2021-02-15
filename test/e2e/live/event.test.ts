@@ -34,6 +34,9 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       eventTitle: 'Test event',
       eventDescription: 'This is a long test description',
       eventType: 'workshop',
+      wsPresenterNames: 'John Smith and Jane Doe',
+      wsSkillLevel: 'Intermediate',
+      wsDownloadLinks: 'hackpsu.org',
 
     };
     const res = await this.chai
@@ -63,6 +66,9 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       eventTitle: 'Test Event',
       eventDescription: 'This is a long test description updated',
       eventType: 'workshop',
+      wsPresenterNames: 'Updated presenter names',
+      wsSkillLevel: 'Updated skill level',
+      wsDownloadLinks: 'hackpsu.org',
     };
     const res = await this.chai
       .request(this.app)

@@ -96,6 +96,9 @@ export class TestData {
       eventTitle: 'Test Event',
       eventDescription: 'Test description',
       eventType: EventType.WORKSHOP,
+      wsPresenterNames: 'John Smith and Jane Doe',
+      wsSkillLevel: 'Intermediate',
+      wsDownloadLinks: 'hackpsu.org',
     };
   }
 

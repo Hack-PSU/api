@@ -19,6 +19,9 @@ export interface IEventApiModel {
   eventTitle: string;
   eventDescription?: string;
   eventType: EventType;
+  wsPresenterNames?: string;
+  wsSkillLevel?: string;
+  wsDownloadLinks?: string;
 }
 
 export class Event extends BaseObject {
@@ -39,6 +42,9 @@ export class Event extends BaseObject {
   public event_description: string | null;
   public event_type: string;
   public hackathon?: UidType;
+  public ws_presenter_names?: string;
+  public ws_skill_level?: string;
+  public ws_download_links?: string;
 
   constructor(data: IEventApiModel) {
     super();
@@ -49,5 +55,8 @@ export class Event extends BaseObject {
     this.event_title = data.eventTitle;
     this.event_description = data.eventDescription || null;
     this.event_type = data.eventType;
+    this.ws_presenter_names = data.wsPresenterNames;
+    this.ws_skill_level = data.wsSkillLevel;
+    this.ws_download_links = data.wsDownloadLinks;
   }
 }

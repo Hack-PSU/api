@@ -320,6 +320,9 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
     delete result[uid].uid;
     delete result[uid].event_location;
+    delete result[uid].ws_presenter_names;
+    delete result[uid].ws_skill_level;
+    delete result[uid].ws_download_links;
     delete result[uid].hackathon;
     delete result[uid].attendees[0].uid;
     delete result[uid].attendees[0].eighteenBeforeEvent;
@@ -365,6 +368,9 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     delete result[uid].events[0].uid;
     delete result[uid].events[0].event_location;
     delete result[uid].events[0].hackathon;
+    delete result[uid].events[0].ws_presenter_names;
+    delete result[uid].events[0].ws_skill_level;
+    delete result[uid].events[0].ws_download_links;
     this.expect(data).to.deep.equal(result);
   }
 

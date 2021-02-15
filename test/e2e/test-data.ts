@@ -95,6 +95,7 @@ export class TestData {
       eventEndTime: 4,
       eventTitle: 'Test Event',
       eventDescription: 'Test description',
+      eventIcon: 'https://www.psu.edu/components/img/psu-mark-footer.png',
       eventType: EventType.WORKSHOP,
       wsPresenterNames: 'John Smith and Jane Doe',
       wsSkillLevel: 'Intermediate',

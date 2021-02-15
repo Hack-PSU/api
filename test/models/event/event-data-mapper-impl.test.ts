@@ -108,13 +108,14 @@ describe('TEST: Event Data Mapper', () => {
         wsPresenterNames: 'John Smith and Jane Doe',
         wsSkillLevel: 'Intermediate',
         wsDownloadLinks: 'hackpsu.org',
+        eventIcon: 'https://www.psu.edu/components/img/psu-mark-footer.png',
       });
       // WHEN: Retrieving number of events
       await eventDataMapper.insert(testEvent);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'INSERT INTO `EVENTS` (`uid`, `event_location`, `event_start_time`, ' +
-        '`event_end_time`, `event_title`, `event_type`, `ws_presenter_names`, `ws_skill_level`, `ws_download_links`, `hackathon`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
+        '`event_end_time`, `event_title`, `event_type`, `event_icon`, `ws_presenter_names`, ws_skill_level`, `ws_download_links`, `hackathon`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
       const expectedParams = [
         testEvent.uid,
         testEvent.event_location,
@@ -122,6 +123,7 @@ describe('TEST: Event Data Mapper', () => {
         testEvent.event_end_time,
         testEvent.event_title,
         testEvent.event_type,
+        testEvent.event_icon,
         testEvent.ws_presenter_names,
         testEvent.ws_skill_level,
         testEvent.ws_download_links,
@@ -149,6 +151,7 @@ describe('TEST: Event Data Mapper', () => {
         wsSkillLevel: 'Intermediate',
         wsDownloadLinks: 'hackspu.org',
         uid: 'test uid',
+        eventIcon: 'https://www.psu.edu/components/img/psu-mark-footer.png',
       });
       // WHEN: Retrieving number of events
       await eventDataMapper.update(testEvent);
@@ -156,7 +159,7 @@ describe('TEST: Event Data Mapper', () => {
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'UPDATE `EVENTS` SET `uid` = ?, `event_location` = ?, ' +
         '`event_start_time` = ?, `event_end_time` = ?, `event_title` = ?,' +
-        ' `event_type` = ?, `ws_presenter_names` = ?, `ws_skill_level` = ?, `ws_download_links` = ? WHERE (uid = ?);';
+        ' `event_type` = ?, `event_icon` = ?, `ws_presenter_names` = ?, `ws_skill_level` = ?, `ws_download_links` = ? WHERE (uid = ?);';
       const expectedParams = [
         testEvent.uid,
         testEvent.event_location,
@@ -164,6 +167,7 @@ describe('TEST: Event Data Mapper', () => {
         testEvent.event_end_time,
         testEvent.event_title,
         testEvent.event_type,
+        testEvent.event_icon,
         testEvent.ws_presenter_names,
         testEvent.ws_skill_level,
         testEvent.ws_download_links,

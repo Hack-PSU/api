@@ -11,6 +11,10 @@ export enum EventType {
   FOOD = 'food',
 }
 
+export enum EventDefaultIcons {
+  DEFAULT = 'https://standard.psu.edu/images/uploads/psu-mark.svg',
+}
+
 export interface IEventApiModel {
   uid?: UidType;
   eventLocation: number | string;
@@ -22,6 +26,7 @@ export interface IEventApiModel {
   wsPresenterNames?: string;
   wsSkillLevel?: string;
   wsDownloadLinks?: string;
+  eventIcon?: string;
 }
 
 export class Event extends BaseObject {
@@ -45,6 +50,7 @@ export class Event extends BaseObject {
   public ws_presenter_names?: string;
   public ws_skill_level?: string;
   public ws_download_links?: string;
+  public event_icon?: string;
 
   constructor(data: IEventApiModel) {
     super();
@@ -58,5 +64,6 @@ export class Event extends BaseObject {
     this.ws_presenter_names = data.wsPresenterNames;
     this.ws_skill_level = data.wsSkillLevel;
     this.ws_download_links = data.wsDownloadLinks;
+    this.event_icon = data.eventIcon || EventDefaultIcons.DEFAULT;
   }
 }

@@ -34,10 +34,10 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       eventTitle: 'Test event',
       eventDescription: 'This is a long test description',
       eventType: 'workshop',
+      eventIcon: 'https://www.psu.edu/components/img/psu-mark-footer.png',
       wsPresenterNames: 'John Smith and Jane Doe',
       wsSkillLevel: 'Intermediate',
       wsDownloadLinks: 'hackpsu.org',
-
     };
     const res = await this.chai
       .request(this.app)
@@ -69,6 +69,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       wsPresenterNames: 'Updated presenter names',
       wsSkillLevel: 'Updated skill level',
       wsDownloadLinks: 'hackpsu.org',
+      eventIcon: 'https://standard.psu.edu/images/uploads/psu-mark.svg',
     };
     const res = await this.chai
       .request(this.app)

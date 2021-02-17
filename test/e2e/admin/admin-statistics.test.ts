@@ -320,10 +320,13 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
     delete result[uid].uid;
     delete result[uid].event_location;
+    delete result[uid].ws_presenter_names;
     delete result[uid].ws_skill_level;
     delete result[uid].ws_download_links;
+    delete result[uid].hackathon;
     delete result[uid].event_icon;
     delete result[uid].attendees[0].uid;
+    delete result[uid].attendees[0].eighteenBeforeEvent;
     delete result[uid].attendees[0].address;
     delete result[uid].attendees[0].mlh_coc;
     delete result[uid].attendees[0].mlh_dcp;

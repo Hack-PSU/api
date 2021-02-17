@@ -115,7 +115,7 @@ describe('TEST: Event Data Mapper', () => {
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'INSERT INTO `EVENTS` (`uid`, `event_location`, `event_start_time`, ' +
-        '`event_end_time`, `event_title`, `event_type`, `event_icon`, `ws_presenter_names`, ws_skill_level`, `ws_download_links`, `hackathon`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
+        '`event_end_time`, `event_title`, `event_type`, `ws_presenter_names`, `ws_skill_level`, `ws_download_links`, `event_icon`, `hackathon`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
       const expectedParams = [
         testEvent.uid,
         testEvent.event_location,
@@ -123,10 +123,10 @@ describe('TEST: Event Data Mapper', () => {
         testEvent.event_end_time,
         testEvent.event_title,
         testEvent.event_type,
-        testEvent.event_icon,
         testEvent.ws_presenter_names,
         testEvent.ws_skill_level,
         testEvent.ws_download_links,
+        testEvent.event_icon,
         'test uid',
       ];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
@@ -159,7 +159,7 @@ describe('TEST: Event Data Mapper', () => {
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'UPDATE `EVENTS` SET `uid` = ?, `event_location` = ?, ' +
         '`event_start_time` = ?, `event_end_time` = ?, `event_title` = ?,' +
-        ' `event_type` = ?, `event_icon` = ?, `ws_presenter_names` = ?, `ws_skill_level` = ?, `ws_download_links` = ? WHERE (uid = ?);';
+        ' `event_type` = ?, `ws_presenter_names` = ?, `ws_skill_level` = ?, `ws_download_links` = ?, `event_icon` = ? WHERE (uid = ?);';
       const expectedParams = [
         testEvent.uid,
         testEvent.event_location,
@@ -167,10 +167,10 @@ describe('TEST: Event Data Mapper', () => {
         testEvent.event_end_time,
         testEvent.event_title,
         testEvent.event_type,
-        testEvent.event_icon,
         testEvent.ws_presenter_names,
         testEvent.ws_skill_level,
         testEvent.ws_download_links,
+        testEvent.event_icon,
         testEvent.uid,
       ];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)

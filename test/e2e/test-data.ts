@@ -6,8 +6,8 @@ import { CheckoutObject, ICheckoutObjectApiModel } from '../../src/models/checko
 import { Event, EventType, IEventApiModel } from '../../src/models/event/event';
 import { ExtraCreditAssignment, IExtraCreditAssignmentApiModel } from '../../src/models/extra-credit/extra-credit-assignment';
 import { ExtraCreditClass, IExtraCreditClassApiModel } from '../../src/models/extra-credit/extra-credit-class';
-import { ILocationApiModel, Location } from '../../src/models/location/location';
-import { IPreRegistrationApiModel, PreRegistration } from '../../src/models/register/pre-registration';
+import { Location, ILocationApiModel } from '../../src/models/location/location';
+import { PreRegistration, IPreRegistrationApiModel } from '../../src/models/register/pre-registration';
 import {
   AcademicYear,
   CodingExperience,
@@ -17,15 +17,17 @@ import {
   ShirtSize,
   VeteranOptions,
 } from '../../src/models/register/registration';
-import { IRsvpApiModel, Rsvp } from '../../src/models/RSVP/rsvp';
-import { IRfidAssignmentApiModel, RfidAssignment } from '../../src/models/scanner/rfid-assignment';
-import { IRfidScanApiModel, Scan } from '../../src/models/scanner/scan';
+import { Rsvp, IRsvpApiModel } from '../../src/models/RSVP/rsvp';
+import { RfidAssignment, IRfidAssignmentApiModel } from '../../src/models/scanner/rfid-assignment';
+import { Scan, IRfidScanApiModel } from '../../src/models/scanner/scan';
+import { Url, IURLApiModel } from '../../src/models/url/url';
 import { IntegrationTest } from './integration-test';
 
 export class TestData {
   public static readonly registerTableName = 'REGISTRATION';
   public static readonly rsvpTableName = 'RSVP';
   public static readonly eventsTableName = 'EVENTS';
+  public static readonly urlsTableName = 'URLS';
   public static readonly locationsTableName = 'LOCATIONS';
   public static readonly scansTableName = 'SCANS';
   public static readonly rfidTableName = 'RFID_ASSIGNMENTS';
@@ -99,8 +101,15 @@ export class TestData {
       eventType: EventType.WORKSHOP,
       wsPresenterNames: 'John Smith and Jane Doe',
       wsSkillLevel: 'Intermediate',
-      wsDownloadLinks: 'hackpsu.org',
     };
+  }
+
+  public static validUrl(): IURLApiModel {
+    return {
+      uid: 5,
+      eventId: this.validEvent().uid as string,
+      url: 'hackpsu.org'
+    }
   }
 
   public static validRfidAssignment(): IRfidAssignmentApiModel {
@@ -176,6 +185,7 @@ export class TestData {
       .set('hackathon', IntegrationTest.activeHackathon.uid)
       .toParam();
     rsvpQuery.text = rsvpQuery.text.concat(';');
+
     const testEvent = new Event(this.validEvent());
     const eventQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.eventsTableName)
@@ -183,6 +193,13 @@ export class TestData {
       .set('hackathon', IntegrationTest.activeHackathon.uid)
       .toParam();
     eventQuery.text = eventQuery.text.concat(';');
+
+    const testUrl = new Url(this.validUrl());
+    const urlQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .into(this.urlsTableName)
+      .setFieldsRows([testUrl.dbRepresentation])
+      .toParam();
+    urlQuery.text = urlQuery.text.concat(';');
 
     const testLocation = new Location(this.validLocation());
     const locationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
@@ -249,6 +266,7 @@ export class TestData {
     await IntegrationTest.mysqlUow.query(rsvpQuery.text, rsvpQuery.values);
     await IntegrationTest.mysqlUow.query(locationQuery.text, locationQuery.values);
     await IntegrationTest.mysqlUow.query(eventQuery.text, eventQuery.values);
+    await IntegrationTest.mysqlUow.query(urlQuery.text, urlQuery.values);
     await IntegrationTest.mysqlUow.query(rfidAssignmentQuery.text, rfidAssignmentQuery.values);
     await IntegrationTest.mysqlUow.query(scanQuery.text, scanQuery.values);
     await IntegrationTest.mysqlUow.query(extraCreditClassQuery.text, extraCreditClassQuery.values);
@@ -271,6 +289,10 @@ export class TestData {
       .from(this.eventsTableName)
       .toParam();
     eventQuery.text = eventQuery.text.concat(';');
+    const urlQuery = squel.delete()
+      .from(this.urlsTableName)
+      .toParam();
+    urlQuery.text = urlQuery.text.concat(';');
     const locationQuery = squel.delete()
       .from(this.locationsTableName)
       .toParam();
@@ -295,12 +317,10 @@ export class TestData {
       .from(this.preregisterTableName)
       .toParam();
     preRegistrationQuery.text = preRegistrationQuery.text.concat(';');
-
     const deleteCheckoutQuery = squel.delete()
       .from(this.checkoutTableName)
       .toParam();
     deleteCheckoutQuery.text = deleteCheckoutQuery.text.concat(';');
-
     const deleteCheckoutItemQuery = squel.delete()
       .from(this.checkoutItemTableName)
       .toParam();
@@ -313,6 +333,7 @@ export class TestData {
     await IntegrationTest.mysqlUow.query(extraCreditClassQuery.text, extraCreditClassQuery.values);
     await IntegrationTest.mysqlUow.query(scanQuery.text, scanQuery.values);
     await IntegrationTest.mysqlUow.query(rfidAssignmentQuery.text, rfidAssignmentQuery.values);
+    await IntegrationTest.mysqlUow.query(urlQuery.text, urlQuery.values);
     await IntegrationTest.mysqlUow.query(eventQuery.text, eventQuery.values);
     await IntegrationTest.mysqlUow.query(locationQuery.text, locationQuery.values);
     await IntegrationTest.mysqlUow.query(rsvpQuery.text, rsvpQuery.values);

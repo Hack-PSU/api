@@ -2,6 +2,7 @@ import { Inject, Injectable } from 'injection-js';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
+import { IUrlDataMapper } from '.';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
@@ -13,10 +14,9 @@ import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { Url } from './url';
 
-
 @Injectable()
 export class UrlDataMapperImpl extends GenericDataMapper
-  implements IDataMapper<Url>, IAclPerm {
+  implements IUrlDataMapper, IAclPerm {
   // ACL permissions
   public readonly CREATE: string = 'url:create';
   public readonly DELETE: string = 'url:delete';
@@ -27,6 +27,7 @@ export class UrlDataMapperImpl extends GenericDataMapper
   public tableName = 'URLS';
 
   protected pkColumnName = 'uid';
+  protected eventColumnName = 'event_id';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -57,6 +58,20 @@ export class UrlDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
+  public deleteByEvent(eventId: string): Promise<IDbResult<void>> {
+    const query = squel
+      .delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(this.tableName)
+      .where(`${this.eventColumnName} = ?`, eventId)
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query(query.text, query.values, { cache: false }),
+    )
+      .pipe(map(() => ({ result: 'Success', data: undefined })))
+      .toPromise();
+  }
+
   public get(id: UidType, opts?: IUowOpts): Promise<IDbResult<Url>> {
     let queryBuilder = squel
       .select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
@@ -72,12 +87,33 @@ export class UrlDataMapperImpl extends GenericDataMapper
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<Url>(query.text, query.values, {
-        cache: checkCache,
-      }),
+      this.sql.query<Url>(query.text, query.values, { cache: checkCache }),
     )
       .pipe(
-        map((location: Url[]) => ({ result: 'Success', data: location[0] })),
+        map((urls: Url[]) => ({ result: 'Success', data: urls[0] })),
+      )
+      .toPromise();
+  }
+
+  public getByEvent(eventId: string, opts?: IUowOpts): Promise<IDbResult<Url[]>> {
+    let queryBuilder = squel
+      .select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .from(this.tableName);
+    if (opts && opts.fields) {
+      queryBuilder = queryBuilder.fields(opts.fields);
+    }
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
+    queryBuilder = queryBuilder.where(`${this.eventColumnName} = ?`, eventId);
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query<Url>(query.text, query.values, { cache: checkCache }),
+    )
+      .pipe(
+        map((urls: Url[]) => ({ result: 'Success', data: urls })),
       )
       .toPromise();
   }
@@ -106,8 +142,8 @@ export class UrlDataMapperImpl extends GenericDataMapper
       this.sql.query<Url>(query.text, query.values, { cache: checkCache }),
     )
       .pipe(
-        map((locations: Url[]) => ({
-          data: locations,
+        map((urls: Url[]) => ({
+          data: urls,
           result: 'Success',
         })),
       )
@@ -175,4 +211,3 @@ export class UrlDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
 }
-

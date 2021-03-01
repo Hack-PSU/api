@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import 'mocha';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Url } from '../../../src/models/urls/url';
-import { UrlDataMapperImpl } from '../../../src/models/urls/url-data-mapper-impl';
+import { Url } from '../../../src/models/url/url';
+import { UrlDataMapperImpl } from '../../../src/models/url/url-data-mapper-impl';
 import { RBAC } from '../../../src/services/auth/RBAC/rbac';
 import { IAcl } from '../../../src/services/auth/RBAC/rbac-types';
 import { IDataMapper } from '../../../src/services/database';
@@ -124,7 +124,7 @@ describe('TEST: Url Data Mapper', () => {
       const uid = 1;
       const testUrl = new Url({
         uid,
-        eventId: 0,
+        eventId: 'test event id',
         url: 'Test Url Name',
       });
       // WHEN: Retrieving data for this url
@@ -162,7 +162,7 @@ describe('TEST: Url Data Mapper', () => {
       // GIVEN: A url to insert
       const testUrl = new Url({
         uid: 0,
-        eventId: 0,
+        eventId: 'test event id',
         url: 'test url',
       });
       // WHEN: Retrieving number of urls
@@ -189,7 +189,7 @@ describe('TEST: Url Data Mapper', () => {
     it('updates the urls', async () => {
       // GIVEN: A url to insert
       const testUrl = new Url({
-        eventId: 0,
+        eventId: 'test event id',
         url: 'test url',
       });
       // WHEN: Retrieving number of urls

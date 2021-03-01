@@ -1,5 +1,6 @@
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
+import { Url } from '../../../lib/models/url/url';
 import { Event } from '../../../src/models/event/event';
 import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
@@ -37,7 +38,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       eventIcon: 'https://www.psu.edu/components/img/psu-mark-footer.png',
       wsPresenterNames: 'John Smith and Jane Doe',
       wsSkillLevel: 'Intermediate',
-      wsDownloadLinks: 'hackpsu.org',
+      wsUrls: 'hackpsu.org|python.org|conda.io',
     };
     const res = await this.chai
       .request(this.app)
@@ -68,7 +69,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       eventType: 'workshop',
       wsPresenterNames: 'Updated presenter names',
       wsSkillLevel: 'Updated skill level',
-      wsDownloadLinks: 'hackpsu.org',
+      wsUrls: 'hackpsu.org|python.org',
       eventIcon: 'https://standard.psu.edu/images/uploads/psu-mark.svg',
     };
     const res = await this.chai
@@ -295,7 +296,6 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       .where(`${this.pkColumnName} = ?`, event.uid)
       .toParam();
     query.text = query.text.concat(';');
-
     const result = await IntegrationTest.mysqlUow.query<Event>(
       query.text,
       query.values,
@@ -303,6 +303,20 @@ class LiveEventsIntegrationTest extends IntegrationTest {
     delete result[0].hackathon;
     result[0].event_start_time = parseInt(result[0].event_start_time as any as string, 10);
     result[0].event_end_time = parseInt(result[0].event_end_time as any as string, 10);
+
+    await new Promise(r => setTimeout(r, 100)); // Even with all the awaits, the query happens too quickly
+
+    const urlQuery = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .from('URLS', 'urls')
+      .where('event_id = ?', event.uid)
+      .toParam();
+    urlQuery.text = urlQuery.text.concat(';');
+    const urlResult = await IntegrationTest.mysqlUow.query<Url>(
+      urlQuery.text,
+      urlQuery.values,
+    ) as Url[];
+    result[0].ws_urls = urlResult.map(url => url.url).sort();
+    (event.ws_urls as string[]).sort();
     this.expect(event).to.deep.equal(result[0]);
   }
 

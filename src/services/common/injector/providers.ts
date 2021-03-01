@@ -13,6 +13,7 @@ import { RegisterDataMapperImpl } from '../../../models/register/register-data-m
 import { RsvpDataMapperImpl } from '../../../models/RSVP/RSVP-data-mapper-impl';
 import { ScannerDataMapperImpl } from '../../../models/scanner/scanner-data-mapper-impl';
 import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';
+import { UrlDataMapperImpl } from '../../../models/url/url-data-mapper-impl';
 import { AdminProcessor } from '../../../processors/admin-processor';
 import { IndexProcessor } from '../../../processors/index-processor';
 import { PreRegistrationProcessor } from '../../../processors/pre-registration-processor';
@@ -94,6 +95,7 @@ export class ExpressProvider {
         { provide: 'IScannerDataMapper', useClass: ScannerDataMapperImpl },
         { provide: 'ICheckoutObjectDataMapper', useClass: CheckoutObjectDataMapperImpl },
         { provide: 'ICheckoutItemsDataMapper', useClass: CheckoutItemsDataMapperImpl },
+        { provide: 'IUrlDataMapper', useClass: UrlDataMapperImpl },
 
         // Interfaces
         { provide: 'IAcl', useClass: RBAC },

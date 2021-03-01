@@ -77,6 +77,8 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
         'event_description',
         'event_type',
         'event_name',
+        'ws_presenter_names',
+        'ws_skill_level',
         'event_icon',
       ],
     );

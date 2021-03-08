@@ -38,6 +38,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       eventIcon: 'https://www.psu.edu/components/img/psu-mark-footer.png',
       wsPresenterNames: 'John Smith and Jane Doe',
       wsSkillLevel: 'Intermediate',
+      wsRelevantSkills: 'Programming Languages',
       wsUrls: 'hackpsu.org|python.org|conda.io',
     };
     const res = await this.chai
@@ -69,6 +70,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       eventType: 'workshop',
       wsPresenterNames: 'Updated presenter names',
       wsSkillLevel: 'Updated skill level',
+      wsRelevantSkills: 'Updated Programming Languages',
       wsUrls: 'hackpsu.org|python.org',
       eventIcon: 'https://standard.psu.edu/images/uploads/psu-mark.svg',
     };

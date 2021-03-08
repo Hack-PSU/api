@@ -101,6 +101,7 @@ export class TestData {
       eventType: EventType.WORKSHOP,
       wsPresenterNames: 'John Smith and Jane Doe',
       wsSkillLevel: 'Intermediate',
+      wsRelevantSkills: 'Programming Languages',
     };
   }
 

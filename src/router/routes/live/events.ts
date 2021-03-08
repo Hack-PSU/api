@@ -104,6 +104,7 @@ export class EventsController extends LiveController {
    * @apiParam {String} [eventDescription] The description of the event.
    * @apiParam {String} [wsPresenterNames] The names of workshop presenters.
    * @apiParam {String} [wsSkillLevel] The approximate skill level of a workshop.
+   * @apiParam {String} [wsRelevantSkills] The relevant skills needed for a workshop
    * @apiParam {String} [wsUrls] The download links for workshop materials separated by '|'. Replaces all old urls.
    * @apiParam {String} [eventIcon] The URL for the icon image
    * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
@@ -175,6 +176,7 @@ export class EventsController extends LiveController {
    * @apiParam {String} eventDescription The description of the event.
    * @apiParam {String} [wsPresenterNames] The names of workshop presenters.
    * @apiParam {String} [wsSkillLevel] The approximate skill level of a workshop.
+   * @apiParam {String} [wsRelevantSkills] The relevant skills needed for a workshop
    * @apiParam {String} [wsUrls] The download links for workshop materials separated by '|'.
    * @apiParam {String} eventIcon The URL for the icon image
    * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]

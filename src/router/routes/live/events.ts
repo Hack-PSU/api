@@ -3,9 +3,11 @@ import { Inject, Injectable } from 'injection-js';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { Event } from '../../../models/event/event';
+import { Url } from '../../../models/url/url';
+import { UrlDataMapperImpl } from '../../../models/url/url-data-mapper-impl';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { IDataMapperHackathonSpecific } from '../../../services/database';
+import { IDataMapper, IDataMapperHackathonSpecific } from '../../../services/database';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
 
@@ -18,6 +20,7 @@ export class EventsController extends LiveController {
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IEventDataMapper') private readonly dataMapper: IDataMapperHackathonSpecific<Event>,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
+    @Inject('IUrlDataMapper') private readonly urlDataMapper: UrlDataMapperImpl,
   ) {
     super();
     this.routes(this.router);
@@ -76,6 +79,7 @@ export class EventsController extends LiveController {
       return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
     }
     try {
+      await this.urlDataMapper.deleteByEvent(request.body.uid);
       const result = await this.dataMapper.delete(request.body);
       const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
@@ -98,6 +102,11 @@ export class EventsController extends LiveController {
    * @apiParam {Number} eventEndTime The unix time for the start of the event.
    * @apiParam {String} eventTitle The title of the event.
    * @apiParam {String} [eventDescription] The description of the event.
+   * @apiParam {String} [wsPresenterNames] The names of workshop presenters.
+   * @apiParam {String} [wsSkillLevel] The approximate skill level of a workshop.
+   * @apiParam {String} [wsRelevantSkills] The relevant skills needed for a workshop
+   * @apiParam {String} [wsUrls] The download links for workshop materials separated by '|'. Replaces all old urls.
+   * @apiParam {String} [eventIcon] The URL for the icon image
    * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
    * @apiUse AuthArgumentRequired
    * @apiSuccess {Event} data The updated event
@@ -112,6 +121,15 @@ export class EventsController extends LiveController {
     if (!request.body.uid) {
       return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
     }
+    let urls: string[] | undefined;
+    if (request.body.wsUrls) {
+      try {
+        urls = (request.body.wsUrls as string).split('|');
+      } catch (error) {
+        return Util.standardErrorHandler(new HttpError('Failed to parse workshop URLs', 400), next);
+      }
+    }
+
     let event;
     try {
       event = new Event(request.body);
@@ -120,6 +138,22 @@ export class EventsController extends LiveController {
     }
     try {
       const result = await this.dataMapper.update(event);
+      if (urls) {
+        try {
+          await this.urlDataMapper.deleteByEvent(event.id);
+        } catch (error) {
+          // Event had no previous urls
+        }
+        urls.forEach(url => this.urlDataMapper.insert(new Url({ eventId: event.id, url })));
+        result.data.ws_urls = urls;
+      } else {
+        try {
+          const oldUrls = await this.urlDataMapper.getByEvent(event.id);
+          result.data.ws_urls = oldUrls.data.map(url => url.url);
+        } catch (error) {
+          // Event had no previous urls
+        }
+      }
       const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
     } catch (error) {
@@ -140,6 +174,11 @@ export class EventsController extends LiveController {
    * @apiParam {Number} eventEndTime The unix time for the start of the event.
    * @apiParam {String} eventTitle The title of the event.
    * @apiParam {String} eventDescription The description of the event.
+   * @apiParam {String} [wsPresenterNames] The names of workshop presenters.
+   * @apiParam {String} [wsSkillLevel] The approximate skill level of a workshop.
+   * @apiParam {String} [wsRelevantSkills] The relevant skills needed for a workshop
+   * @apiParam {String} [wsUrls] The download links for workshop materials separated by '|'.
+   * @apiParam {String} eventIcon The URL for the icon image
    * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
    * @apiParam {String} [hackathon] Optional uid of hackathon
    * @apiUse AuthArgumentRequired
@@ -173,6 +212,16 @@ export class EventsController extends LiveController {
     if (isNaN(Number(request.body.eventLocation))) {
       return Util.standardErrorHandler(new HttpError('Event location must be a parsable number', 400), next);
     }
+
+    let urls: string[] | undefined;
+    if (request.body.wsUrls && request.body.eventType === 'workshop') {
+      try {
+        urls = (request.body.wsUrls as string).split('|');
+      } catch (error) {
+        return Util.standardErrorHandler(new HttpError('Failed to parse workshop URLs', 400), next);
+      }
+    }
+
     let event;
     try {
       event = new Event(request.body);
@@ -181,6 +230,10 @@ export class EventsController extends LiveController {
     }
     try {
       const result = await this.dataMapper.insert(event);
+      if (urls) {
+        urls.forEach(url => this.urlDataMapper.insert(new Url({ eventId: event.id, url })));
+        result.data.ws_urls = urls;
+      }
       const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
     } catch (error) {
@@ -206,14 +259,22 @@ export class EventsController extends LiveController {
     next: express.NextFunction,
   ) {
     try {
-      const stream = await this.dataMapper.getAll({
+      const events = await this.dataMapper.getAll({
         byHackathon: !request.query.allHackathons,
         count: request.query.limit,
         hackathon: request.query.hackathon,
         startAt: request.query.offset,
         ignoreCache: request.query.ignoreCache,
       });
-      const res = new ResponseBody('Success', 200, stream);
+      events.data.forEach(async (event, index, array) => {
+        try {
+          const urls = await this.urlDataMapper.getByEvent(event.id);
+          array[index].ws_urls = urls.data.map(urlObj => urlObj.url);
+        } catch {
+          // Event had no previous urls
+        }
+      });
+      const res = new ResponseBody('Success', 200, events);
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);

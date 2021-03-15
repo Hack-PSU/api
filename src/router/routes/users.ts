@@ -513,8 +513,11 @@ export class UsersController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Could not find valid assignment uid', 400), next);
     }
     try {
-      const ecAssignment = new ExtraCreditAssignment({ uid: "hackpsu", cid: 1 });
-      ecAssignment.uid = req.body.uid;
+      const ecAssignment = new ExtraCreditAssignment({
+        uid: req.body.uid,
+        userUid: 'temp',
+        classUid: 1,
+      });
       const result = await this.extraCreditDataMapper.delete(ecAssignment);
       const response = new ResponseBody(
         'Success',

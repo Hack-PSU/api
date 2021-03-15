@@ -73,10 +73,10 @@ describe('TEST: Extra Credit Data Mapper', () => {
     it('causes the extra credit assignment to get deleted', async () => {
       // GIVEN: An extra credit assignment with a valid ID to read from
       const testExtraCreditAssignment = new ExtraCreditAssignment({
-        uid: 'test',
-        cid: 0,
+        userUid: 'test',
+        classUid: 0,
+        uid: 1234,
       });
-      testExtraCreditAssignment.uid = 1234;
 
       // WHEN: Retrieving data for this extra credit assignment
       await extraCreditDataMapper.delete(testExtraCreditAssignment);
@@ -164,8 +164,8 @@ describe('TEST: Extra Credit Data Mapper', () => {
     it('inserts an extra credit assignment', async () => {
       // GIVEN: An extra credit assignment to insert
       const testExtraCreditAssignment = new ExtraCreditAssignment({
-        uid: 'test',
-        cid: 0,
+        userUid: 'test',
+        classUid: 0,
       });
       testExtraCreditAssignment.hackathon = 'test uid';
       // WHEN: Retrieving number of extra credit assignments

@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
+import { IExtraCreditDataMapper } from '../../../src/models/extra-credit';
 import { ExtraCreditAssignment } from '../../../src/models/extra-credit/extra-credit-assignment';
 import { ExtraCreditDataMapperImpl } from '../../../src/models/extra-credit/extra-credit-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
@@ -13,7 +14,7 @@ import { IDataMapper } from '../../../src/services/database';
 import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../src/services/logging/logging';
 
-let extraCreditDataMapper: IDataMapper<ExtraCreditAssignment>;
+let extraCreditDataMapper: IExtraCreditDataMapper;
 let activeHackathonDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
@@ -75,13 +76,14 @@ describe('TEST: Extra Credit Data Mapper', () => {
         uid: 'test',
         cid: 0,
       });
+      testExtraCreditAssignment.uid = 1234;
 
       // WHEN: Retrieving data for this extra credit assignment
       await extraCreditDataMapper.delete(testExtraCreditAssignment);
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'DELETE FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (uid = ?);';
-      const expectedParams = [undefined];
+      const expectedParams = [1234];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

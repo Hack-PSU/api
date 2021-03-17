@@ -495,7 +495,7 @@ export class UsersController extends ParentRouter implements IExpressController 
   * @apiGroup User
   * @apiPermission DirectorPermission
   *
-  * @apiParam {String} uid The id associated with the hacker
+  * @apiParam {String} uid The id associated with the assignment
   * @apiParam {String} hackathonUid The id associated with the current hackathon
   * @apiUse AuthArgumentRequired
   * @apiUse IllegalArgumentError
@@ -513,7 +513,11 @@ export class UsersController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Could not find valid assignment uid', 400), next);
     }
     try {
-      const ecAssignment = new ExtraCreditAssignment({ uid: req.body.uid, cid: 1 });
+      const ecAssignment = new ExtraCreditAssignment({
+        uid: req.body.uid,
+        userUid: 'temp',
+        classUid: 1,
+      });
       const result = await this.extraCreditDataMapper.delete(ecAssignment);
       const response = new ResponseBody(
         'Success',

@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
+import { IExtraCreditDataMapper } from '../../../src/models/extra-credit';
 import { ExtraCreditAssignment } from '../../../src/models/extra-credit/extra-credit-assignment';
 import { ExtraCreditDataMapperImpl } from '../../../src/models/extra-credit/extra-credit-data-mapper-impl';
 import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
@@ -13,7 +14,7 @@ import { IDataMapper } from '../../../src/services/database';
 import { MysqlUow } from '../../../src/services/database/svc/mysql-uow.service';
 import { Logger } from '../../../src/services/logging/logging';
 
-let extraCreditDataMapper: IDataMapper<ExtraCreditAssignment>;
+let extraCreditDataMapper: IExtraCreditDataMapper;
 let activeHackathonDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
@@ -72,8 +73,9 @@ describe('TEST: Extra Credit Data Mapper', () => {
     it('causes the extra credit assignment to get deleted', async () => {
       // GIVEN: An extra credit assignment with a valid ID to read from
       const testExtraCreditAssignment = new ExtraCreditAssignment({
-        uid: 'test',
-        cid: 0,
+        userUid: 'test',
+        classUid: 0,
+        uid: 1234,
       });
 
       // WHEN: Retrieving data for this extra credit assignment
@@ -81,7 +83,7 @@ describe('TEST: Extra Credit Data Mapper', () => {
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'DELETE FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (uid = ?);';
-      const expectedParams = [undefined];
+      const expectedParams = [1234];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -162,8 +164,8 @@ describe('TEST: Extra Credit Data Mapper', () => {
     it('inserts an extra credit assignment', async () => {
       // GIVEN: An extra credit assignment to insert
       const testExtraCreditAssignment = new ExtraCreditAssignment({
-        uid: 'test',
-        cid: 0,
+        userUid: 'test',
+        classUid: 0,
       });
       testExtraCreditAssignment.hackathon = 'test uid';
       // WHEN: Retrieving number of extra credit assignments

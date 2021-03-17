@@ -50,7 +50,7 @@ export class Event extends BaseObject {
   public hackathon?: UidType;
   public ws_presenter_names?: string;
   public ws_skill_level?: string;
-  public ws_relevant_skills;
+  public ws_relevant_skills?: string;
   public ws_urls?: string[];
   public event_icon?: string;
 

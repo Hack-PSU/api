@@ -4,8 +4,9 @@ import BaseObject from '../BaseObject';
 
 const extraCreditAssignmentSchema = jsonAssetLoader('extraCreditAssignmentSchema');
 export interface IExtraCreditAssignmentApiModel {
-  uid: UidType;
-  cid: number;
+  userUid: UidType;
+  classUid: number;
+  uid?: number;
 }
 
 export class ExtraCreditAssignment extends BaseObject {
@@ -19,12 +20,13 @@ export class ExtraCreditAssignment extends BaseObject {
 
   public readonly class_uid: number;
   public readonly user_uid: UidType;
-  public uid: number;
+  public uid?: number;
   public hackathon: UidType;
 
   constructor(data: IExtraCreditAssignmentApiModel) {
     super();
-    this.class_uid = data.cid;
-    this.user_uid = data.uid;
+    this.class_uid = data.classUid;
+    this.user_uid = data.userUid;
+    this.uid = data.uid;
   }
 }

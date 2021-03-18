@@ -42,7 +42,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   ) {
     super(acl);
     super.addRBAC(
-      [this.READ_ALL_CLASSES, this.READ_BY_UID, this.CREATE, this.READ],
+      [this.READ_ALL_CLASSES, this.READ_BY_UID, this.CREATE, this.READ, this.DELETE],
       [AuthLevel.PARTICIPANT],
     );
     super.addRBAC(
@@ -51,12 +51,12 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       undefined,
       [AuthLevel[AuthLevel.VOLUNTEER]],
     );
-    super.addRBAC(
-      [this.DELETE],
-      [AuthLevel.DIRECTOR],
-      undefined,
-      [AuthLevel[AuthLevel.TEAM_MEMBER]],
-    );
+    // super.addRBAC(
+    //   [this.DELETE],
+    //   [AuthLevel.DIRECTOR],
+    //   undefined,
+    //   [AuthLevel[AuthLevel.TEAM_MEMBER]],
+    // );
   }
 
   public delete(object: ExtraCreditAssignment): Promise<IDbResult<void>> {

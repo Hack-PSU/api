@@ -104,7 +104,7 @@ describe('TEST: Extra Credit Data Mapper', () => {
       await extraCreditDataMapper.deleteByUser(userUid);
 
       //THEN: Generated SQL matches the expectation
-      const expectedSQL = 'DELETE FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (user_id = ?) AND (hackathon = ?);';
+      const expectedSQL = 'DELETE FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (user_uid = ?) AND (hackathon = ?);';
       const expectedParams = [userUid, hackathonUid];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query).first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

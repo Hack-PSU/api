@@ -19,6 +19,7 @@ let activeHackathonDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
+const testHackathonUid = 'test uid';
 
 describe('TEST: Extra Credit Data Mapper', () => {
 
@@ -33,7 +34,7 @@ describe('TEST: Extra Credit Data Mapper', () => {
       basePin: 0,
       endTime: null,
       name: 'test hackathon',
-      uid: 'test uid',
+      uid: testHackathonUid,
     })));
     activeHackathonDataMapper.tableName.returns('HACKATHON');
     when(mysqlUowMock.query(anyString(), anything(), anything()))
@@ -91,6 +92,26 @@ describe('TEST: Extra Credit Data Mapper', () => {
       expect(generatedParams).to.deep.equal(expectedParams);
     });
   });
+
+  describe('TEST: Extra Credit delete by user', () => {
+    //@ts-ignore
+    it('causes all of a user\'s extra credit assignments to be deleted', async () => {
+      //GIVEN: A valid user's Uid
+      const userUid = 'test';
+      const hackathonUid = testHackathonUid;
+
+      //WHEN: Deleting the user's assignments
+      await extraCreditDataMapper.deleteByUser(userUid);
+
+      //THEN: Generated SQL matches the expectation
+      const expectedSQL = 'DELETE FROM `EXTRA_CREDIT_ASSIGNMENT` WHERE (user_uid = ?) AND (hackathon = ?);';
+      const expectedParams = [userUid, hackathonUid];
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query).first();
+      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+      expect(generatedSQL).to.equal(expectedSQL);
+      expect(generatedParams).to.deep.equal(expectedParams);
+    })
+  })
 
   describe('TEST: Extra Credit get', () => {
     // @ts-ignore
@@ -167,7 +188,7 @@ describe('TEST: Extra Credit Data Mapper', () => {
         userUid: 'test',
         classUid: 0,
       });
-      testExtraCreditAssignment.hackathon = 'test uid';
+      testExtraCreditAssignment.hackathon = testHackathonUid;
       // WHEN: Retrieving number of extra credit assignments
       await extraCreditDataMapper.insert(testExtraCreditAssignment);
 

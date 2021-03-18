@@ -107,6 +107,11 @@ export class UsersController extends ParentRouter implements IExpressController 
       this.authService.verifyAcl(this.extraCreditPerm, AclOperations.DELETE),
       (req, res, next) => this.deleteExtraCreditAssignmentHandler(req, res, next),
     );
+    app.post(
+      '/extra-credit/delete-user',
+      this.authService.verifyAcl(this.extraCreditPerm, AclOperations.DELETE),
+      (req, res, next) => this.deleteExtraCreditAssignmentsByUserHandler(req, res, next),
+    );
   }
 
   private async generateFileName(uid: UidType, firstName: string, lastName: string) {
@@ -519,6 +524,42 @@ export class UsersController extends ParentRouter implements IExpressController 
         classUid: 1,
       });
       const result = await this.extraCreditDataMapper.delete(ecAssignment);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {post} /users/extra-credit/delete-user Remove all extra credit assignments for a particular user
+   * @apiVersion 2.0.0
+   * @apiName Remove User's Extra Credit Assignments
+   * @apiGroup User
+   * @apiPermission DirectorPermission
+   *
+   * @apiParam {String} userId The id associated with the user
+   * @apiParam {String} hackathonUid The id associated with the current hackathon
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async deleteExtraCreditAssignmentsByUserHandler(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+    if (!req.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid uid', 400), next);
+    }
+    try {
+      const result = await this.extraCreditDataMapper.deleteByUser(req.body.userId, req.body.hackathonUid);
       const response = new ResponseBody(
         'Success',
         200,

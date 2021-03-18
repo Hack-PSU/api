@@ -32,6 +32,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   public READ_BY_CLASS: string = 'extra-credit:read-by-class';
   public READ_BY_UID: string = 'extra-credit:read-by-uid';
   protected pkColumnName: string = 'uid';
+  protected UserColumnName: string = 'user_id';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -74,7 +75,37 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
    ).toPromise();
   }
 
-  public get(uid: UidType , opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {
+  public async deleteByUser(user_id: UidType, hackathon?: UidType): Promise<IDbResult<void>> {
+    let queryBuilder = squel.delete({
+      autoQuoteTableNames: true,
+      autoQuoteFieldNames: true,
+    }) 
+      .from(this.tableName)
+      .where(`${this.UserColumnName} = ?`, user_id);
+    
+    //if no hackathon is provided, use the active hackathon
+    if (!hackathon) {
+    queryBuilder = queryBuilder.where(
+      'hackathon = ?',
+      await (hackathon ?
+        Promise.resolve(hackathon) :
+        this.activeHackathonDataMapper.activeHackathon
+          .pipe(map(hackathon => hackathon.uid))
+          .toPromise()),
+    );
+    } else {
+      queryBuilder = queryBuilder.where('hackathon = ?', hackathon);
+    }
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query(query.text, query.values, {cache: false}),
+    ).pipe(
+      map(() => ({result: 'Success', data: undefined })),
+    ).toPromise();  
+  }
+
+  public get(uid: UidType, opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,

@@ -32,7 +32,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   public READ_BY_CLASS: string = 'extra-credit:read-by-class';
   public READ_BY_UID: string = 'extra-credit:read-by-uid';
   protected pkColumnName: string = 'uid';
-  protected UserColumnName: string = 'user_id';
+  protected UserColumnName: string = 'user_uid';
 
   constructor(
     @Inject('IAcl') acl: IAcl,

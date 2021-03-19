@@ -266,14 +266,15 @@ export class EventsController extends LiveController {
         startAt: request.query.offset,
         ignoreCache: request.query.ignoreCache,
       });
-      events.data.forEach(async (event, index, array) => {
-        try {
-          const urls = await this.urlDataMapper.getByEvent(event.id);
-          array[index].ws_urls = urls.data.map(urlObj => urlObj.url);
-        } catch {
-          // Event had no previous urls
+      try {
+        const allUrls = (await this.urlDataMapper.getAll()).data;
+        for (const event of events.data) {
+          event.ws_urls = allUrls.filter(url => url.event_id === event.uid).map(url => url.url);
         }
-      });
+      } catch {
+        // There are no URLs at all
+      }
+
       const res = new ResponseBody('Success', 200, events);
       return this.sendResponse(response, res);
     } catch (error) {

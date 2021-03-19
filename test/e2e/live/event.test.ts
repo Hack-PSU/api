@@ -342,6 +342,20 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       event.event_start_time = parseInt(event.event_start_time as any as string, 10);
       event.event_end_time = parseInt(event.event_end_time as any as string, 10);
     });
+
+    const urlQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from('URLS', 'url')
+    .toParam();
+    urlQuery.text = urlQuery.text.concat(';');
+
+    const urlResult = await IntegrationTest.mysqlUow.query<Url>(
+      urlQuery.text,
+      urlQuery.values,
+    ) as Url[];
+    result.forEach((event, index) => {
+      result[index].ws_urls = urlResult.filter(url => url.event_id === event.uid).map(url => url.url) || [];
+    });
+
     this.expect(events).to.deep.equal(result);
   }
 }

@@ -107,6 +107,11 @@ export class UsersController extends ParentRouter implements IExpressController 
       this.authService.verifyAcl(this.extraCreditPerm, AclOperations.DELETE),
       (req, res, next) => this.deleteExtraCreditAssignmentHandler(req, res, next),
     );
+    app.post(
+      '/extra-credit/delete-user',
+      this.authService.verifyAcl(this.extraCreditPerm, AclOperations.DELETE),
+      (req, res, next) => this.deleteExtraCreditAssignmentsByUserHandler(req, res, next),
+    );
   }
 
   private async generateFileName(uid: UidType, firstName: string, lastName: string) {
@@ -315,8 +320,8 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiGroup User
    * @apiPermission UserPermission
    *
-   * @apiParam {String} cid   The uid associated with the class
-   * @apiParam {String} [uid] The uid associated with a user's Firebase account
+   * @apiParam {String} classUid   The uid associated with the class
+   * @apiParam {String} [userUid] The uid associated with a user's Firebase account
    * @apiUse AuthArgumentRequired
    * @apiSuccess {ExtraCreditAssignment} data The inserted extra credit assignment
    * @apiUse IllegalArgumentError
@@ -332,26 +337,22 @@ export class UsersController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
     }
 
-    if (!req.body.cid || !parseInt(req.body.cid, 10)) {
+    if (!req.body.classUid || !parseInt(req.body.classUid, 10)) {
       return Util.standardErrorHandler(new HttpError('Could not find valid class id', 400), next);
     }
-    req.body.uid = req.body.uid || res.locals.user.uid;
+    req.body.userUid = req.body.userUid || res.locals.user.uid;
 
     try {
       const ecAssignment = new ExtraCreditAssignment(req.body);
       const result = await this.extraCreditDataMapper.insert(ecAssignment);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-      );
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
   }
 
-  private async getExtraCreditAssignmentMiddleware(req, res, next) {
+  private async getExtraCreditAssignmentMiddleware(req: Request, res: Response, next: NextFunction) {
     /**
      * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
      */
@@ -406,10 +407,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     try {
       const id: string = req.query.uid;
       const result = await this.extraCreditDataMapper.get(id);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result);
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -441,11 +439,8 @@ export class UsersController extends ParentRouter implements IExpressController 
 
     try {
       const uid: string = req.query.uid;
-      const result = await this.extraCreditDataMapper.getByUser(uid);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result);
+      const result = await this.extraCreditDataMapper.getByUser(uid, { ignoreCache: req.query.ignoreCache });
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -478,10 +473,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     try {
       const cid: number = req.query.cid;
       const result = await this.extraCreditDataMapper.getByClass(cid);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result);
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -495,7 +487,7 @@ export class UsersController extends ParentRouter implements IExpressController 
   * @apiGroup User
   * @apiPermission DirectorPermission
   *
-  * @apiParam {String} uid The id associated with the hacker
+  * @apiParam {String} uid The id associated with the assignment
   * @apiParam {String} hackathonUid The id associated with the current hackathon
   * @apiUse AuthArgumentRequired
   * @apiUse IllegalArgumentError
@@ -513,12 +505,46 @@ export class UsersController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Could not find valid assignment uid', 400), next);
     }
     try {
-      const ecAssignment = new ExtraCreditAssignment({ uid: req.body.uid, cid: 1 });
+      const ecAssignment = new ExtraCreditAssignment({
+        uid: req.body.uid,
+        userUid: 'temp',
+        classUid: 1,
+      });
       const result = await this.extraCreditDataMapper.delete(ecAssignment);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result);
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {post} /users/extra-credit/delete-user Remove all extra credit assignments for a particular user
+   * @apiVersion 2.0.0
+   * @apiName Remove User's Extra Credit Assignments
+   * @apiGroup User
+   * @apiPermission DirectorPermission
+   *
+   * @apiParam {String} userUid The id associated with the user
+   * @apiParam {String} hackathonUid The id associated with the current hackathon
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async deleteExtraCreditAssignmentsByUserHandler(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    if (!req.body) {
+      return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+    }
+    if (!req.body.userUid) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid userUid', 400), next);
+    }
+    try {
+      const result = await this.extraCreditDataMapper.deleteByUser(req.body.userUid, req.body.hackathonUid);
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

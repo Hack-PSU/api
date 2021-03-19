@@ -345,18 +345,14 @@ export class UsersController extends ParentRouter implements IExpressController 
     try {
       const ecAssignment = new ExtraCreditAssignment(req.body);
       const result = await this.extraCreditDataMapper.insert(ecAssignment);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-      );
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
   }
 
-  private async getExtraCreditAssignmentMiddleware(req, res, next) {
+  private async getExtraCreditAssignmentMiddleware(req: Request, res: Response, next: NextFunction) {
     /**
      * The user is an {@link AuthLevel.PARTICIPANT} which is the default AuthLevel
      */
@@ -411,10 +407,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     try {
       const id: string = req.query.uid;
       const result = await this.extraCreditDataMapper.get(id);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result);
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -447,10 +440,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     try {
       const uid: string = req.query.uid;
       const result = await this.extraCreditDataMapper.getByUser(uid);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result);
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -483,10 +473,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     try {
       const cid: number = req.query.cid;
       const result = await this.extraCreditDataMapper.getByClass(cid);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result);
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -524,10 +511,7 @@ export class UsersController extends ParentRouter implements IExpressController 
         classUid: 1,
       });
       const result = await this.extraCreditDataMapper.delete(ecAssignment);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result);
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -550,7 +534,7 @@ export class UsersController extends ParentRouter implements IExpressController 
   private async deleteExtraCreditAssignmentsByUserHandler(
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) {
     if (!req.body) {
       return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
@@ -560,10 +544,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     }
     try {
       const result = await this.extraCreditDataMapper.deleteByUser(req.body.userId, req.body.hackathonUid);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result);
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

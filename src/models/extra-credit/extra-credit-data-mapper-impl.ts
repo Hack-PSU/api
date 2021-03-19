@@ -42,7 +42,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   ) {
     super(acl);
     super.addRBAC(
-      [this.READ_ALL_CLASSES, this.READ_BY_UID, this.CREATE, this.READ],
+      [this.READ_ALL_CLASSES, this.READ_BY_UID, this.CREATE, this.READ, this.DELETE],
       [AuthLevel.PARTICIPANT],
     );
     super.addRBAC(
@@ -50,12 +50,6 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       [AuthLevel.TEAM_MEMBER],
       undefined,
       [AuthLevel[AuthLevel.VOLUNTEER]],
-    );
-    super.addRBAC(
-      [this.DELETE],
-      [AuthLevel.DIRECTOR],
-      undefined,
-      [AuthLevel[AuthLevel.TEAM_MEMBER]],
     );
   }
 
@@ -79,30 +73,27 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     let queryBuilder = squel.delete({
       autoQuoteTableNames: true,
       autoQuoteFieldNames: true,
-    }) 
+    })
       .from(this.tableName)
       .where(`${this.UserColumnName} = ?`, user_id);
-    
-    //if no hackathon is provided, use the active hackathon
-    if (!hackathon) {
-    queryBuilder = queryBuilder.where(
-      'hackathon = ?',
-      await (hackathon ?
-        Promise.resolve(hackathon) :
-        this.activeHackathonDataMapper.activeHackathon
-          .pipe(map(hackathon => hackathon.uid))
-          .toPromise()),
-    );
-    } else {
-      queryBuilder = queryBuilder.where('hackathon = ?', hackathon);
-    }
+
+    // If no hackathon is provided, use the active hackathon
+    queryBuilder = queryBuilder
+      .where(
+        'hackathon = ?',
+        await (hackathon ?
+          Promise.resolve(hackathon) :
+          this.activeHackathonDataMapper.activeHackathon
+            .pipe(map(activeHackathon => activeHackathon.uid))
+            .toPromise()),
+      );
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, {cache: false}),
+      this.sql.query(query.text, query.values, { cache: false }),
     ).pipe(
-      map(() => ({result: 'Success', data: undefined })),
-    ).toPromise();  
+      map(() => ({ result: 'Success', data: undefined })),
+    ).toPromise();
   }
 
   public get(uid: UidType, opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {

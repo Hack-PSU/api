@@ -320,8 +320,8 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiGroup User
    * @apiPermission UserPermission
    *
-   * @apiParam {String} cid   The uid associated with the class
-   * @apiParam {String} [uid] The uid associated with a user's Firebase account
+   * @apiParam {String} classUid   The uid associated with the class
+   * @apiParam {String} [userUid] The uid associated with a user's Firebase account
    * @apiUse AuthArgumentRequired
    * @apiSuccess {ExtraCreditAssignment} data The inserted extra credit assignment
    * @apiUse IllegalArgumentError
@@ -337,10 +337,10 @@ export class UsersController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
     }
 
-    if (!req.body.cid || !parseInt(req.body.cid, 10)) {
+    if (!req.body.classUid || !parseInt(req.body.classUid, 10)) {
       return Util.standardErrorHandler(new HttpError('Could not find valid class id', 400), next);
     }
-    req.body.uid = req.body.uid || res.locals.user.uid;
+    req.body.userUid = req.body.userUid || res.locals.user.uid;
 
     try {
       const ecAssignment = new ExtraCreditAssignment(req.body);
@@ -525,7 +525,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiGroup User
    * @apiPermission DirectorPermission
    *
-   * @apiParam {String} userId The id associated with the user
+   * @apiParam {String} userUid The id associated with the user
    * @apiParam {String} hackathonUid The id associated with the current hackathon
    * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
@@ -543,7 +543,7 @@ export class UsersController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Could not find valid uid', 400), next);
     }
     try {
-      const result = await this.extraCreditDataMapper.deleteByUser(req.body.userId, req.body.hackathonUid);
+      const result = await this.extraCreditDataMapper.deleteByUser(req.body.userUid, req.body.hackathonUid);
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {

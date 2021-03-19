@@ -102,6 +102,10 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       autoQuoteTableNames: true,
     })
       .from(this.tableName);
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
@@ -111,7 +115,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text
       .concat(';');
-    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: checkCache }))
       .pipe(
         map((extraCreditAssignment: ExtraCreditAssignment[]) => ({ result: 'Success', data: extraCreditAssignment[0] })),
       )
@@ -186,6 +190,10 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   ): Promise<IDbResult<ExtraCreditAssignment[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName);
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -216,7 +224,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toParam();
 
     query.text = query.text.concat(';');
-    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: checkCache }))
       .pipe(
         map((assignments: ExtraCreditAssignment[]) => ({ result: 'Success', data: assignments })),
       )

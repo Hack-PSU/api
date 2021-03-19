@@ -539,8 +539,8 @@ export class UsersController extends ParentRouter implements IExpressController 
     if (!req.body) {
       return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
     }
-    if (!req.body.uid) {
-      return Util.standardErrorHandler(new HttpError('Could not find valid uid', 400), next);
+    if (!req.body.userUid) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid userUid', 400), next);
     }
     try {
       const result = await this.extraCreditDataMapper.deleteByUser(req.body.userUid, req.body.hackathonUid);

@@ -32,6 +32,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   public READ_BY_CLASS: string = 'extra-credit:read-by-class';
   public READ_BY_UID: string = 'extra-credit:read-by-uid';
   protected pkColumnName: string = 'uid';
+  protected UserColumnName: string = 'user_uid';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -41,7 +42,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   ) {
     super(acl);
     super.addRBAC(
-      [this.READ_ALL_CLASSES, this.READ_BY_UID, this.CREATE, this.READ],
+      [this.READ_ALL_CLASSES, this.READ_BY_UID, this.CREATE, this.READ, this.DELETE],
       [AuthLevel.PARTICIPANT],
     );
     super.addRBAC(
@@ -49,12 +50,6 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       [AuthLevel.TEAM_MEMBER],
       undefined,
       [AuthLevel[AuthLevel.VOLUNTEER]],
-    );
-    super.addRBAC(
-      [this.DELETE],
-      [AuthLevel.DIRECTOR],
-      undefined,
-      [AuthLevel[AuthLevel.TEAM_MEMBER]],
     );
   }
 
@@ -74,12 +69,43 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
    ).toPromise();
   }
 
-  public get(uid: UidType , opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {
+  public async deleteByUser(user_id: UidType, hackathon?: UidType): Promise<IDbResult<void>> {
+    let queryBuilder = squel.delete({
+      autoQuoteTableNames: true,
+      autoQuoteFieldNames: true,
+    })
+      .from(this.tableName)
+      .where(`${this.UserColumnName} = ?`, user_id);
+
+    // If no hackathon is provided, use the active hackathon
+    queryBuilder = queryBuilder
+      .where(
+        'hackathon = ?',
+        await (hackathon ?
+          Promise.resolve(hackathon) :
+          this.activeHackathonDataMapper.activeHackathon
+            .pipe(map(activeHackathon => activeHackathon.uid))
+            .toPromise()),
+      );
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query(query.text, query.values, { cache: false }),
+    ).pipe(
+      map(() => ({ result: 'Success', data: undefined })),
+    ).toPromise();
+  }
+
+  public get(uid: UidType, opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {
     let queryBuilder = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
     })
       .from(this.tableName);
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
     }
@@ -89,7 +115,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text
       .concat(';');
-    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: checkCache }))
       .pipe(
         map((extraCreditAssignment: ExtraCreditAssignment[]) => ({ result: 'Success', data: extraCreditAssignment[0] })),
       )
@@ -164,6 +190,10 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   ): Promise<IDbResult<ExtraCreditAssignment[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName);
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -194,7 +224,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toParam();
 
     query.text = query.text.concat(';');
-    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: true }))
+    return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: checkCache }))
       .pipe(
         map((assignments: ExtraCreditAssignment[]) => ({ result: 'Success', data: assignments })),
       )

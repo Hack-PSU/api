@@ -139,8 +139,8 @@ export class TestData {
 
   public static validExtraCreditAssignment(): IExtraCreditAssignmentApiModel {
     return {
-      uid: this.validRegistration().uid as string,
-      cid: 5,
+      userUid: this.validRegistration().uid as string,
+      classUid: 5,
     };
   }
 

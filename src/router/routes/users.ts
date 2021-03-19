@@ -439,7 +439,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
     try {
       const uid: string = req.query.uid;
-      const result = await this.extraCreditDataMapper.getByUser(uid);
+      const result = await this.extraCreditDataMapper.getByUser(uid, { ignoreCache: req.query.ignoreCache });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {

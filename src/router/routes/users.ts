@@ -216,6 +216,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} academicYear The user's current year in school
    * @apiParam {String} major Intended or current major
    * @apiParam {String} phone The user's phone number (For MLH)
+   * @apiParam {String} [address] The user's address
    * @apiParam {FILE} [resume] The resume file for the user (Max size: 10 MB)
    * @apiParam {String} [ethnicity] The user's ethnicity
    * @apiParam {String} codingExperience The coding experience that the user has
@@ -485,7 +486,7 @@ export class UsersController extends ParentRouter implements IExpressController 
   * @apiVersion 2.0.0
   * @apiName Remove Extra Credit Assignment
   * @apiGroup User
-  * @apiPermission DirectorPermission
+  * @apiPermission UserPermission
   *
   * @apiParam {String} uid The id associated with the assignment
   * @apiParam {String} hackathonUid The id associated with the current hackathon
@@ -523,7 +524,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiVersion 2.0.0
    * @apiName Remove User's Extra Credit Assignments
    * @apiGroup User
-   * @apiPermission DirectorPermission
+   * @apiPermission UserPermission
    *
    * @apiParam {String} userUid The id associated with the user
    * @apiParam {String} hackathonUid The id associated with the current hackathon

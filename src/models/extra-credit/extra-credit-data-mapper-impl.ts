@@ -25,7 +25,8 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   public READ: string = 'extra-credit:read';
   public READ_ALL: string = 'extra-credit:readall';
   public UPDATE: string;
-  public tableName: string = 'EXTRA_CREDIT_ASSIGNMENT';
+  public tableName: string = 'EXTRA_CREDIT_ASSIGNMENT'; //prefer not to use in this file, but must be implemented because of inheritance
+  public assignmentsTableName: string = 'EXTRA_CREDIT_ASSIGNMENT';
   public classesTableName: string = 'EXTRA_CREDIT_CLASSES';
 
   public READ_ALL_CLASSES: string = 'extra-credit:readall-classes';
@@ -58,7 +59,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       autoQuoteTableNames: true,
       autoQuoteFieldNames: true,
     })
-     .from(this.tableName)
+     .from(this.assignmentsTableName)
      .where(`${this.pkColumnName} = ?`, object.uid)
      .toParam();
     query.text = query.text.concat(';');
@@ -74,7 +75,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       autoQuoteTableNames: true,
       autoQuoteFieldNames: true,
     })
-      .from(this.tableName)
+      .from(this.assignmentsTableName)
       .where(`${this.UserColumnName} = ?`, user_id);
 
     // If no hackathon is provided, use the active hackathon
@@ -101,7 +102,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
     })
-      .from(this.tableName);
+      .from(this.assignmentsTableName);
     let checkCache = true;
     if (opts && opts.ignoreCache) {
       checkCache = false;
@@ -124,7 +125,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
 
   public async getAll(opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(this.tableName);
+      .from(this.assignmentsTableName);
     let checkCache = true;
     if (opts && opts.ignoreCache) {
       checkCache = false;
@@ -184,12 +185,9 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getByUser(
-    userId: UidType,
-    opts?: IUowOpts,
-  ): Promise<IDbResult<ExtraCreditAssignment[]>> {
+  public async getByUser(userId: UidType, opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(this.tableName);
+      .from(this.assignmentsTableName);
     let checkCache = true;
     if (opts && opts.ignoreCache) {
       checkCache = false;
@@ -233,7 +231,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
 
   public async getByClass(cid: number, opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .from(this.tableName);
+      .from(this.assignmentsTableName);
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
@@ -272,7 +270,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
 
   public async insert(object: ExtraCreditAssignment): Promise<IDbResult<ExtraCreditAssignment>> {
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.tableName)
+      .into(this.assignmentsTableName)
       .setFieldsRows([object.dbRepresentation])
       .set(
         'hackathon',
@@ -283,6 +281,19 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     query.text = query.text.concat(';');
     return from(
       this.sql.query<void>(query.text, query.values, { cache: false }),
+    ).pipe(
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
+    ).toPromise();
+  }
+
+  public async insertClass(object: ExtraCreditClass): Promise<IDbResult<ExtraCreditClass>> {
+    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true})
+      .into(this.classesTableName)
+      .setFieldsRows([object.dbRepresentation])
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query<void>(query.text, query.values, {cache: false}),
     ).pipe(
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();

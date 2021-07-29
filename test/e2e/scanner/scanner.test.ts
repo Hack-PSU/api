@@ -431,7 +431,7 @@ class ScannerIntegrationTest extends IntegrationTest {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(pinData),
       };
-      fetch('http://staging.hackpsu18.appspot.com/v2/scanner/register', options)
+      fetch('https://hackpsu18-staging.appspot.com/v2/scanner/register', options)
         .then(res => res.json())
         .then((data) => {
           this.apiKey = String(data.body.data.key);
@@ -451,7 +451,7 @@ class ScannerIntegrationTest extends IntegrationTest {
         method: 'GET',
         headers,
       };
-      fetch('http://staging.hackpsu18.appspot.com/v2/scanner/register', options)
+      fetch('https://hackpsu18-staging.appspot.com/v2/scanner/register', options)
         .then(res => res.json())
         .then((data) => {
           this.pin = String(data.body.data.pin);

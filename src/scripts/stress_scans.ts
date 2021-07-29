@@ -11,7 +11,7 @@ firebase.initializeApp({
   storageBucket: 'hackpsu18-staging.appspot.com',
   messagingSenderId: '614592542726',
 });
-const baseUrl = 'http://hackpsu18-staging.appspot.com/v2/';
+const baseUrl = 'https://hackpsu18-staging.appspot.com/v2/';
 
 export async function main() {
   // Login

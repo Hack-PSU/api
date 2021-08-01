@@ -12,7 +12,7 @@ export interface IIndexProcessor {
 export class IndexProcessor implements IIndexProcessor {
   public processIndex() {
     return new ResponseBody(
-      'Welcome to the HackPSU API!',
+      'Is Travis still deploying from Dev?',
       200,
       { result: 'Success', data: {} },
     );

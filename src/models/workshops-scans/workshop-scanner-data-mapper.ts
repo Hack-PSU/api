@@ -3,10 +3,9 @@ import { default as _ } from 'lodash';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as squel from 'squel';
-import { IStatUowOpts } from '.';
 import { MethodNotImplementedError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
-import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
+import { IAcl, IAclPerm, IWorkshopAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDataMapper, IDbResult } from '../../services/database';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
@@ -14,75 +13,27 @@ import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { IRegisterDataMapper } from '../register';
-import { Attendance } from './attendance';
-
-export const TABLE_NAME = 'ATTENDANCE';
-
-export interface IAttendanceDataMapper extends IDataMapper<Attendance> {
-  getAttendanceByEvent(opts?: IStatUowOpts): Promise<{ result: string; data: any }>;
-
-  getAttendanceByUser(opts?: IStatUowOpts): Promise<{ result: string; data: any }>;
-}
+import { WorkshopScan } from './workshop-scans';
+import { Hackathon } from 'models/hackathon';
+import { Registration } from 'models/register/registration';
 
 /**
  * TODO: Add documentation
  */
+
+ export interface IWorkshopScansDataMapper extends IDataMapper<WorkshopScan> {
+  
+  getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>>;
+
+  getEvent(): Promise<IDbResult<Event>>;
+
+ }
 @Injectable()
-export class AttendanceDataMapperImpl extends GenericDataMapper
-  implements IAclPerm, IAttendanceDataMapper {
+export class WorkshopDataMapperImpl extends GenericDataMapper
+  implements IAclPerm, IWorkshopAclPerm, IWorkshopScansDataMapper {
 
   get tableName() {
-    return TABLE_NAME;
-  }
-
-  private static extractRegistrationDetails(attendanceValue: any) {
-    return _.pick(
-      attendanceValue,
-      [
-        'user_uid',
-        'firstname',
-        'lastname',
-        'gender',
-        'shirt_size',
-        'dietary_restriction',
-        'allergies',
-        'travel_reimbursement',
-        'first_hackathon',
-        'university',
-        'email',
-        'academic_year',
-        'major',
-        'resume',
-        'phone',
-        'race',
-        'coding_experience',
-        'referral',
-        'project',
-        'expectations',
-        'veteran',
-        'pin',
-        'hackathon',
-      ],
-    );
-  }
-
-  private static extractEventDetails(attendanceValue: any) {
-    return _.pick(
-      attendanceValue,
-      [
-        'event_uid',
-        'event_start_time',
-        'event_end_time',
-        'event_title',
-        'event_description',
-        'event_type',
-        'event_name',
-        'ws_presenter_names',
-        'ws_skill_level',
-        'ws_relevant_skills',
-        'event_icon',
-      ],
-    );
+    return this.TABLE_NAME;
   }
 
   public readonly CREATE: string = 'attendance:create';
@@ -91,7 +42,10 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
   public readonly UPDATE: string = 'attendance:update';
   public readonly READ_ALL: string = 'attendance:readall';
   public readonly COUNT: string = 'attendance:count';
-  protected pkColumnName: string = 'uid';
+  public readonly CHECK_IN: string = 'workshop:checkin';
+  
+  protected readonly pkColumnName: string = 'uid';
+  protected readonly TABLE_NAME = 'ATTENDANCE';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -103,192 +57,91 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
     super(acl);
     super.addRBAC(
       [this.READ, this.READ_ALL],
-      [
-        AuthLevel.TECHNOLOGY,
-      ],
-      undefined,
-      [AuthLevel[AuthLevel.DIRECTOR]],
+      [AuthLevel.TECHNOLOGY],
     );
+    // team member verification is required to check in to a workshop
+    super.addRBAC(
+      [this.CHECK_IN],
+      [AuthLevel.TEAM_MEMBER]
+    )
   }
+
+  // TODO: Should probably move this to the Registration mapper instead
+  public async getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>> {
+    const query = squel.select({
+      autoQuoteFieldNames: false,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName)
+      .where('hackathon = ?', hackathon.uid)
+      .where('pin = ?', hackathon.base_pin! + pin)
+      .toParam();
+    return from(this.sql.query<Registration>(
+      query.text,
+      query.values,
+      { cache: true },
+    ))
+      .pipe(
+        map((registration: Registration[]) => ({ result: 'Success', data: registration[0] })),
+      )
+      .toPromise();
+  }
+
+  public async getEvent(): Promise<IDbResult<Event>> {
+    // remove this when you write the function
+    throw new MethodNotImplementedError('VSCode, stop yelling at me before the function is finished');
+    
+    // construct query
+
+    // execute query and return result
+    
+  }
+
+  public insert(object: WorkshopScan): Promise<IDbResult<WorkshopScan>> {
+    // remove this when you write the function
+    throw new MethodNotImplementedError('VSCode, stop yelling at me before the function is finished');
+    
+    // construct query 
+    squel.insert()
+    .into(this.tableName)
+    .setFieldsRows([object.dbRepresentation])
+    // You can find a pretty close example of how to finish this in src/models/register/register-data-mapper-impl.ts
+    
+    // I left this here in case you needed it because you had started to write it in the other file.
+    // However, it's probably better and more concise to use setFieldsRows([object.dbRepresentation]) instead
+    // .set("event_id", req.query.event_id)
+    // .set("hackathon_id", hackathon)
+    // .set("timestamp", Date.now())
+    // .set("user_pin", req.query.pin);
+
+    // execute query and return result
+
+  }
+
 
   /**
    *
    * @param opts?
    * @return {Promise<Stream>}
    */
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Attendance[]>> {
-    let queryBuilder = await this.getAttendanceStatQuery(opts);
-    let checkCache = true;
-    if (opts && opts.ignoreCache) {
-      checkCache = false;
-    }
-    if (opts && opts.fields) {
-      queryBuilder = queryBuilder.fields(opts.fields);
-    }
-    const query = queryBuilder.toParam();
-    query.text = query.text.concat(';');
-    return from(this.sql.query<Attendance>(query.text, query.values, { cache: checkCache }))
-        .pipe(
-          map((attendances: Attendance[]) => ({
-            data: attendances,
-            result: 'Success',
-          })),
-        )
-        .toPromise();
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<WorkshopScan[]>> {
+    throw new MethodNotImplementedError('This method is not supported by this class');
   }
 
-  /**
-   * Returns a count of the number of Attendance objects.
-   */
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
-    let queryBuilder = squel.select({
-      autoQuoteFieldNames: false,
-      autoQuoteTableNames: true,
-    })
-      .from(this.tableName)
-      .field(`COUNT(${this.pkColumnName})`, 'count');
-
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder.
-        where(
-          'hackathon_id = ?',
-          await (opts.hackathon ?
-            Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()),
-        );
-    }
-
-    const query = queryBuilder.toParam();
-    query.text = query.text.concat(';');
-    return from(
-      this.sql.query<number>(query.text, query.values, { cache: true }),
-    ).pipe(
-      map((result: number[]) => ({ result: 'Success', data: result[0] })),
-    ).toPromise();
-  }
-
-  public async getAttendanceByUser(opts?: IStatUowOpts) {
-    let queryBuilder = await this.getAttendanceStatQuery(opts);
-    let checkCache = true;
-    if (opts && opts.ignoreCache) {
-      checkCache = false;
-    }
-    if (opts && opts.uid) {
-      queryBuilder = queryBuilder.where('attendance.user_uid = ?', opts.uid);
-    }
-    const query = queryBuilder
-      .order('event_start_time')
-      .toParam();
-    query.text = query.text.concat(';');
-    return from(
-      this.sql.query<any>(query.text, query.values, { cache: checkCache }),
-    ).pipe(
-      map((result: Attendance[]) => {
-        // Reduce the result to a condensed object
-        return result.reduce(
-          (currentAggregation, nextAttendance) => {
-            if (currentAggregation[nextAttendance.user_uid]) {
-              currentAggregation[nextAttendance.user_uid].events
-                .push(AttendanceDataMapperImpl.extractEventDetails(nextAttendance));
-            } else {
-              currentAggregation[nextAttendance.user_uid] = {
-                ...AttendanceDataMapperImpl.extractRegistrationDetails(nextAttendance),
-                events: [AttendanceDataMapperImpl.extractEventDetails(nextAttendance)],
-              };
-            }
-            return currentAggregation;
-          },
-          {},
-        );
-      }),
-      map((result: any) => ({ result: 'Success', data: result })),
-    ).toPromise();
-  }
-
-  public async getAttendanceByEvent(opts?: IStatUowOpts) {
-    let queryBuilder = await this.getAttendanceStatQuery(opts);
-    let checkCache = true;
-    if (opts && opts.ignoreCache) {
-      checkCache = false;
-    }
-    if (opts && opts.uid) {
-      queryBuilder = queryBuilder.where('attendance.event_uid = ?', opts.uid);
-    }
-    const query = queryBuilder
-      .toParam();
-    query.text = query.text.concat(';');
-    return from(
-      this.sql.query<any>(query.text, query.values, { cache: checkCache }),
-    ).pipe(
-      map((result: Attendance[]) => {
-        // Reduce the result to a condensed object
-        return result.reduce(
-          (currentAggregation, nextAttendance) => {
-            if (currentAggregation[nextAttendance.event_uid]) {
-              currentAggregation[nextAttendance.event_uid].attendees
-                .push(AttendanceDataMapperImpl.extractRegistrationDetails(nextAttendance));
-            } else {
-              currentAggregation[nextAttendance.event_uid] = {
-                ...AttendanceDataMapperImpl.extractEventDetails(nextAttendance),
-                attendees: [AttendanceDataMapperImpl.extractRegistrationDetails(nextAttendance)],
-              };
-            }
-            return currentAggregation;
-          },
-          {},
-        );
-      }),
-      map((result: any) => ({ result: 'Success', data: result })),
-    ).toPromise();
-  }
-
-  public get(uid: string, opts?: IUowOpts): Promise<IDbResult<Attendance>> {
     throw new MethodNotImplementedError('This method is not supported by this class');
   }
-  public insert(object: Attendance, opts?: IUowOpts): Promise<IDbResult<Attendance>> {
+
+  public get(uid: string, opts?: IUowOpts): Promise<IDbResult<WorkshopScan>> {
     throw new MethodNotImplementedError('This method is not supported by this class');
   }
-  public update(object: Attendance, opts?: IUowOpts): Promise<IDbResult<Attendance>> {
+
+  public update(object: WorkshopScan, opts?: IUowOpts): Promise<IDbResult<WorkshopScan>> {
     throw new MethodNotImplementedError('This method is not supported by this class');
   }
+
   public delete(uid: string, opts?: IUowOpts): Promise<IDbResult<void>> {
     throw new MethodNotImplementedError('This method is not supported by this class');
   }
 
-  private async getAttendanceStatQuery(opts?: IUowOpts) {
-    let queryBuilder = squel.select({
-      autoQuoteFieldNames: true,
-      autoQuoteTableNames: true,
-    })
-      .from(this.tableName, 'attendance')
-      .join(
-        this.registerDataMapper.tableName,
-        'registration',
-        'attendance.user_uid = registration.uid',
-      )
-      .distinct();
-    if (opts && opts.startAt) {
-      queryBuilder = queryBuilder.offset(opts.startAt);
-    }
-    if (opts && opts.count) {
-      queryBuilder = queryBuilder.limit(opts.count);
-    }
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder.where(
-        'hackathon_id = ?',
-        await (opts.hackathon ?
-          Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
-            .toPromise()),
-      );
-      queryBuilder = queryBuilder.where(
-        'registration.hackathon = ?',
-        await (opts.hackathon ?
-          Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
-            .toPromise()),
-      );
-    }
-    return queryBuilder;
-  }
 }

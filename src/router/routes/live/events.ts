@@ -1,13 +1,16 @@
 import express from 'express';
+import * as path from 'path';
 import { Inject, Injectable } from 'injection-js';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
+import { Constants } from '../../../assets/constants/constants';
 import { Event } from '../../../models/event/event';
 import { Url } from '../../../models/url/url';
 import { UrlDataMapperImpl } from '../../../models/url/url-data-mapper-impl';
+import { IStorageMapper, IStorageService } from '../../../services/storage/svc/storage.service';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types/';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { IDataMapper, IDataMapperHackathonSpecific } from '../../../services/database';
+import { IDataMapperHackathonSpecific } from '../../../services/database';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
 
@@ -15,14 +18,40 @@ import { LiveController } from '../controllers';
 export class EventsController extends LiveController {
 
   protected static baseRoute: string = 'events/';
+  private imageUploader: IStorageMapper;
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IEventDataMapper') private readonly dataMapper: IDataMapperHackathonSpecific<Event>,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IUrlDataMapper') private readonly urlDataMapper: UrlDataMapperImpl,
+    @Inject('IStorageService') private readonly storageService: IStorageService,
   ) {
     super();
+    this.imageUploader = this.storageService.mapper({
+      opts: {
+        filename: (req) => {
+          if (!req.body.filename) {
+            throw new HttpError('Could not parse filename for image upload', 400);
+          }
+          return req.body.filename;
+        },
+        bucket: Constants.GCS.eventImageBucket,
+        projectId: Constants.GCS.projectId,
+        keyFilename: Constants.GCS.keyFile,
+        metadata: {
+          contentType: 'image/png',
+          public: true,
+          resumable: false,
+          gzip: true,
+        },
+      },
+      fieldName: 'image',
+      fileFilter: file => path.extname(file.originalname) === '.png',
+      fileLimits: { maxNumFiles: 1 },
+      multipleFiles: false,
+    });
+    this.router = express.Router();
     this.routes(this.router);
   }
 
@@ -54,6 +83,12 @@ export class EventsController extends LiveController {
         this.authService.verifyAcl(this.aclPerm, AclOperations.DELETE),
         (req, res, next) => this.deleteEventHandler(req, res, next),
       );
+    app.post(
+      '/image', 
+      this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
+      this.imageUploader.upload(),
+      (req, res, next) => this.postImageHandler(req, res, next),
+    )
   }
 
   /**
@@ -64,7 +99,7 @@ export class EventsController extends LiveController {
    * @apiGroup Events
    * @apiPermission TeamMemberPermission
    *
-   * @apiParam {String} uid The uid of the event.
+   * @apiParam {String} uid The uid of the event
    * @apiParam {String} [hackathon=current] The hackathon to delete the event from
    * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
@@ -280,5 +315,47 @@ export class EventsController extends LiveController {
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
+  }
+
+  /**
+   * Insert an image for an event
+   * @api {post} /live/events/image Add an event's image
+   * @apiVersion 2.0.0
+   * @apiName Event Image
+   * @apiGroup Events
+   * @apiPermission TeamMemberPermission
+   *
+   * @apiParam {FILE} image The image file for the event (.png format)
+   * @apiParam {String} filename the filename of the image
+   * @apiParam {String} uid The uid of the event
+   * @apiSuccess {String} the filename of the image
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+
+  private async postImageHandler(request: express.Request, response: express.Response, next: express.NextFunction) {    
+    if (!request.body.image) {
+      return Util.standardErrorHandler(new HttpError('Could not find image', 400), next);
+    }
+    if (!request.body.filename) {
+      return Util.standardErrorHandler(new HttpError('Could not find filename', 400), next);
+    }
+
+    let url: Url;
+    try {
+      url = new Url({url: request.body.filename, eventId: request.body.uid});
+    } catch (error) {
+      return Util.standardErrorHandler(new HttpError('Some properties were not as expected when creating URL', 400), next);
+    }
+    
+    try {
+      await this.urlDataMapper.insert(url);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+    
+    const res = new ResponseBody('Success', 200, request.body.filename);    
+    return this.sendResponse(response, res);
   }
 }

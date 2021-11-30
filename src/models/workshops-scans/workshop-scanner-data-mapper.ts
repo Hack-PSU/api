@@ -25,7 +25,7 @@ import { Registration } from 'models/register/registration';
   
   getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>>;
 
-  getEvent(): Promise<IDbResult<Event>>;
+  getEvent(event_id: number): Promise<IDbResult<Event>>;
 
  }
 @Injectable()
@@ -87,10 +87,25 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getEvent(): Promise<IDbResult<Event>> {
+  public async getEvent(event_id: number): Promise<IDbResult<Event>> {
     // remove this when you write the function
-    throw new MethodNotImplementedError('VSCode, stop yelling at me before the function is finished');
-    
+    //throw new MethodNotImplementedError('VSCode, stop yelling at me before the function is finished');
+    const query = squel.select({
+      autoQuoteFieldNames: false,
+      autoQuoteTableNames: true,
+    })
+      .from("EVENTS")
+      .where('uid = ?', event_id)
+      .toParam();
+    return from(this.sql.query<Event>(
+      query.text,
+      query.values,
+      { cache: true },
+    ))
+      .pipe(
+        map((registration: Event[]) => ({ result: 'Success', data: event[0]})),
+      )
+      .toPromise();
     // construct query
 
     // execute query and return result
@@ -99,12 +114,32 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
 
   public insert(object: WorkshopScan): Promise<IDbResult<WorkshopScan>> {
     // remove this when you write the function
-    throw new MethodNotImplementedError('VSCode, stop yelling at me before the function is finished');
+    //throw new MethodNotImplementedError('VSCode, stop yelling at me before the function is finished');
     
     // construct query 
-    squel.insert()
+    /*squel.insert()
     .into(this.tableName)
-    .setFieldsRows([object.dbRepresentation])
+    .setFieldsRows([object.dbRepresentation])*/
+    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .into(this.tableName)
+      .setFieldsRows([object.dbRepresentation])
+      .set(
+        'hackathon',
+        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
+          .toPromise(),
+      )
+      .set("event_id", req.query.event_id)
+      .set("hackathon_id", hackathon)
+      .set("timestamp", Date.now())
+      .set("user_pin", req.query.pin);
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query<void>(query.text, query.values, { cache: false }),
+    ).pipe(
+      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
+    ).toPromise();
+  }
     // You can find a pretty close example of how to finish this in src/models/register/register-data-mapper-impl.ts
     
     // I left this here in case you needed it because you had started to write it in the other file.

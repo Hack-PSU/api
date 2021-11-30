@@ -9,6 +9,7 @@ import { Util } from '../../../JSCommon/util';
 import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
+import { WorkshopScan } from 'models/workshops-scans/workshop-scans';
 @Injectable()
 export class WorkshopScannerController extends ParentRouter implements IExpressController {
   public router: Router;
@@ -18,6 +19,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('IWorkshopScansDataMapper') private readonly workshopScansDataMapper: IWorkshopScansDataMapper,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
+    @Inject('IRegisterDataMapper') private readonly registerDataMapper,
   ) {
     super();
     this.router = Router();
@@ -37,7 +39,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
       this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
       (req, res, next) => this.getEvent(req, res, next),
     );
-    app.get(
+    app.post(
       '/check-in',
       this.authService.verifyAcl(this.aclPerm, AclOperations.CHECK_IN),
       (req, res, next) => this.scanWorkshopByPin(req, res, next),
@@ -62,19 +64,35 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
    */
   private async getUserByPin(req: Request, res: Response, next: NextFunction) {
     // do input validation
+    if ((!req.query.pin || !parseInt(req.query.pin, 10)) && parseInt(req.query.pin, 10) !== 0) {
+      return Util.standardErrorHandler(
+        new HttpError('Could not find pin to query by', 400),
+        next,
+      );
+    }
+
 
     // call function to create and execute the query
+    try{
+      const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
+      const user = await this.registerDataMapper.getByPin(req.body.pin, hackathon);
 
-    const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
     // const result = await this.workshopScansDataMapper.getByPin(<put arguments here>);
-    
+      return new ResponseBody(
+        'Success',
+        200,
+        { result: 'Success', data: {user} },
+      );
+    }catch(error){
+      return Util.errorHandler500(error, next);
+    }
     // return the result as an api response. If we catch an error instead, return a 500 code
   }
 
   // Documentation goes here
   private async getEvent(req: Request, res: Response, next: NextFunction) {
     // write your function here
-
+    //check fields are correct and call datamapper equivalent
     //const result = await this.workshopScansDataMapper.getEvent(<put arguments here>);
   }
   
@@ -98,10 +116,10 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
       const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
  
       // create a WorkshopScans object
-      // const scan = new WorkshopScan(<data>)
+      const scan = new WorkshopScan(<data>)
 
       // Pass that object to the insertion function
-      // const result = this.workshopScansDataMapper.insert(scan);
+      const result = this.workshopScansDataMapper.insert(scan);
 
       // constrct a successful api response
       /*const responseBody = new ResponseBody (

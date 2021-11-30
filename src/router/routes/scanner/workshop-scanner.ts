@@ -33,12 +33,6 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
       this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
       (req, res, next) => this.getUserByPin(req, res, next),
     );
-    app.get(
-      // TODO: Consider moving this to the Events route?
-      '/event',
-      this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
-      (req, res, next) => this.getEvent(req, res, next),
-    );
     app.post(
       '/check-in',
       this.authService.verifyAcl(this.aclPerm, AclOperations.CHECK_IN),
@@ -88,13 +82,6 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     }
     // return the result as an api response. If we catch an error instead, return a 500 code
   }
-
-  // Documentation goes here
-  private async getEvent(req: Request, res: Response, next: NextFunction) {
-    // write your function here
-    //check fields are correct and call datamapper equivalent
-    //const result = await this.workshopScansDataMapper.getEvent(<put arguments here>);
-  }
   
   // Documentation goes here
   private async scanWorkshopByPin(req: Request, res: Response, next: NextFunction) {
@@ -116,17 +103,14 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
       const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
  
       // create a WorkshopScans object
-      const scan = new WorkshopScan(<data>)
+      const scan = new WorkshopScan(req.body);
 
       // Pass that object to the insertion function
-      const result = this.workshopScansDataMapper.insert(scan);
+      const result = await this.workshopScansDataMapper.insert(scan);
 
       // constrct a successful api response
-      /*const responseBody = new ResponseBody (
-        'Success',
-        200,
-
-      );*/
+      const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
       
       //return this.sendResponse(res, responseBody);
     } catch (error) {

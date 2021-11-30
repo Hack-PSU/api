@@ -25,7 +25,6 @@ import { Registration } from 'models/register/registration';
   
   getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>>;
 
-  getEvent(event_id: number): Promise<IDbResult<Event>>;
 
  }
 @Injectable()
@@ -103,7 +102,7 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
       { cache: true },
     ))
       .pipe(
-        map((registration: Event[]) => ({ result: 'Success', data: event[0]})),
+        map((event: Event[]) => ({ result: 'Success', data: event[0]})),
       )
       .toPromise();
     // construct query
@@ -112,26 +111,17 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
     
   }
 
-  public insert(object: WorkshopScan): Promise<IDbResult<WorkshopScan>> {
-    // remove this when you write the function
-    //throw new MethodNotImplementedError('VSCode, stop yelling at me before the function is finished');
+  public async insert(object: WorkshopScan): Promise<IDbResult<WorkshopScan>> {
     
-    // construct query 
-    /*squel.insert()
-    .into(this.tableName)
-    .setFieldsRows([object.dbRepresentation])*/
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation])
       .set(
-        'hackathon',
+        'hackathon_id',
         await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
           .toPromise(),
       )
-      .set("event_id", req.query.event_id)
-      .set("hackathon_id", hackathon)
-      .set("timestamp", Date.now())
-      .set("user_pin", req.query.pin);
+      
       .toParam();
     query.text = query.text.concat(';');
     return from(
@@ -140,18 +130,7 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
       map(() => ({ result: 'Success', data: object.cleanRepresentation })),
     ).toPromise();
   }
-    // You can find a pretty close example of how to finish this in src/models/register/register-data-mapper-impl.ts
     
-    // I left this here in case you needed it because you had started to write it in the other file.
-    // However, it's probably better and more concise to use setFieldsRows([object.dbRepresentation]) instead
-    // .set("event_id", req.query.event_id)
-    // .set("hackathon_id", hackathon)
-    // .set("timestamp", Date.now())
-    // .set("user_pin", req.query.pin);
-
-    // execute query and return result
-
-  }
 
 
   /**

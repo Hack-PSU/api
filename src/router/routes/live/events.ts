@@ -34,7 +34,7 @@ export class EventsController extends LiveController {
           if (!req.body.filename) {
             throw new HttpError('Could not parse filename for image upload', 400);
           }
-          return req.body.filename;
+          return this.generateImageFileName(req.body.filename);
         },
         bucket: Constants.GCS.eventImageBucket,
         projectId: Constants.GCS.projectId,
@@ -51,7 +51,6 @@ export class EventsController extends LiveController {
       fileLimits: { maxNumFiles: 1 },
       multipleFiles: false,
     });
-    this.router = express.Router();
     this.routes(this.router);
   }
 
@@ -72,23 +71,23 @@ export class EventsController extends LiveController {
         '/',
         this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
         (req, res, next) => this.postEventHandler(req, res, next),
-      )
-      .post(
+      );
+    app.post(
         '/update',
         this.authService.verifyAcl(this.aclPerm, AclOperations.UPDATE),
         (req, res, next) => this.updateEventHandler(req, res, next),
-      )
-      .post(
+      );
+    app.post(
         '/delete',
         this.authService.verifyAcl(this.aclPerm, AclOperations.DELETE),
         (req, res, next) => this.deleteEventHandler(req, res, next),
       );
     app.post(
       '/image', 
-      this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
+      // this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
       this.imageUploader.upload(),
       (req, res, next) => this.postImageHandler(req, res, next),
-    )
+    );
   }
 
   /**
@@ -342,9 +341,13 @@ export class EventsController extends LiveController {
       return Util.standardErrorHandler(new HttpError('Could not find filename', 400), next);
     }
 
+    const fileURL = this.imageUploader.uploadedFileUrl(
+      await this.generateImageFileName(request.body.filename),
+    );
+
     let url: Url;
     try {
-      url = new Url({url: request.body.filename, eventId: request.body.uid});
+      url = new Url({url: fileURL, eventId: request.body.uid});
     } catch (error) {
       return Util.standardErrorHandler(new HttpError('Some properties were not as expected when creating URL', 400), next);
     }
@@ -355,7 +358,11 @@ export class EventsController extends LiveController {
       return Util.errorHandler500(error, next);
     }
     
-    const res = new ResponseBody('Success', 200, request.body.filename);    
+    const res = new ResponseBody('Success', 200, fileURL);
     return this.sendResponse(response, res);
+  }
+
+  private async generateImageFileName(filename: String) {
+    return `${filename}.png`;
   }
 }

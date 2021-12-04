@@ -43,11 +43,13 @@ export class Constants {
     app_id: Util.readEnv('ONESIGNAL_APP_ID', ''),
     key: Util.readEnv('ONESIGNAL_API_KEY', ''),
   };
+
   public static readonly s3Connection = {
     accessKeyId: Util.readEnv('ACCESS_KEY_ID', ''),
     region: 'us-east-2',
     s3BucketName: 'hackpsu-resumes',
     s3TravelReimbursementBucket: 'hackpsu2018-travel-reimbursement-receipts',
+    s3ImageBucket: 'hackpsu18.appspot.com',
     secretAccessKey: Util.readEnv('SECRET_ACCESS_KEY', ''),
   };
 
@@ -61,6 +63,7 @@ export class Constants {
     resumeBucket: 'hackpsu-resumes',
     travelReimbursementBucket: 'hackpsu2018-travel-reimbursement-receipts',
   };
+  
   public static readonly SendGridApiKey = Util.readEnv('SENDGRID_ACCESS_KEY', '');
   public static readonly MailchimpApiKey = Util.readEnv('MAILCHIMP_API_KEY', '');
   public static readonly MailchimpPreregEmailList = 'HackPSU Email List';

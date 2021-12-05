@@ -14,6 +14,8 @@ interface IExtraCreditDataMapper extends IDataMapper<ExtraCreditAssignment> {
 
   deleteByUser(user_id: UidType, hackathon?: UidType): Promise<IDbResult<void>>;
 
+  insertClass(object: ExtraCreditClass): Promise<IDbResult<ExtraCreditClass>>;
+
 }
 
 export { IExtraCreditDataMapper };

@@ -5,7 +5,7 @@ const extraCreditClassSchema = jsonAssetLoader('extraCreditClassSchema');
 
 export interface IExtraCreditClassApiModel {
   uid?: number;
-  class_name: string;
+  className: string;
 }
 
 export class ExtraCreditClass extends BaseObject {
@@ -24,6 +24,6 @@ export class ExtraCreditClass extends BaseObject {
   constructor(data: IExtraCreditClassApiModel) {
     super();
     this.uid = data.uid;
-    this.class_name = data.class_name;
+    this.class_name = data.className;
   }
 }

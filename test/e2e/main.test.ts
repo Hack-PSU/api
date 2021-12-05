@@ -18,6 +18,6 @@ class IndexIntegrationTest extends IntegrationTest {
     const res = await this.chai.request(this.app)
       .get(this.apiEndpoint);
     // THEN: Standard response is sent
-    super.assertRequestFormat(res, 'Welcome to the HackPSU API!');
+    super.assertRequestFormat(res, 'Is Travis still deploying from Dev?');
   }
 }

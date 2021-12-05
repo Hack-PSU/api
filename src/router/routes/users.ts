@@ -10,6 +10,7 @@ import { HttpError } from '../../JSCommon/errors';
 import { Util } from '../../JSCommon/util';
 import { IExtraCreditDataMapper } from '../../models/extra-credit';
 import { ExtraCreditAssignment } from '../../models/extra-credit/extra-credit-assignment';
+import { ExtraCreditClass } from '../../models/extra-credit/extra-credit-class';
 import { IActiveHackathonDataMapper } from '../../models/hackathon/active-hackathon';
 import { PreRegistration } from '../../models/register/pre-registration';
 import { Registration } from '../../models/register/registration';
@@ -97,6 +98,11 @@ export class UsersController extends ParentRouter implements IExpressController 
       '/extra-credit',
       this.authService.verifyAcl(this.extraCreditPerm, AclOperations.CREATE),
       (req, res, next) => this.addExtraCreditAssignmentHandler(req, res, next),
+    );
+    app.post(
+      '/extra-credit/add-class',
+      this.authService.verifyAcl(this.extraCreditPerm, AclOperations.DELETE),
+      (req, res, next) => this.addExtraCreditClassHandler(req, res, next),
     );
     app.get(
       '/extra-credit/assignment',
@@ -216,6 +222,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} academicYear The user's current year in school
    * @apiParam {String} major Intended or current major
    * @apiParam {String} phone The user's phone number (For MLH)
+   * @apiParam {String} [address] The user's address
    * @apiParam {FILE} [resume] The resume file for the user (Max size: 10 MB)
    * @apiParam {String} [ethnicity] The user's ethnicity
    * @apiParam {String} codingExperience The coding experience that the user has
@@ -314,6 +321,39 @@ export class UsersController extends ParentRouter implements IExpressController 
   }
 
   /**
+   * @api {post} /users/extra-credit/add-class
+   * @apiName Add Extra Credit Class
+   * @apiVersion 2.0.0
+   * @apiGroup User
+   * @apiPermission DirectorPermission
+   * 
+   * @apiParam {String} className The name of the class to be added
+   * @apiUse AuthArgumentRequired
+   * @apiSuccess {ExtraCreditClass} data The inserted extra credit class
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async addExtraCreditClassHandler(req: Request, res: Response, next: NextFunction) {
+      //Validate incoming request
+      if (!req.body) {
+        return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
+      }
+
+      if (!req.body.className) {
+        return Util.standardErrorHandler(new HttpError('Could not find valid class name', 400), next);
+      }
+      
+      try {
+        const ecClass = new ExtraCreditClass(req.body);
+        const result = await this.extraCreditDataMapper.insertClass(ecClass);
+        const response = new ResponseBody('Success', 200, result);
+        return this.sendResponse(res, response);
+      } catch (error) {
+        return Util.errorHandler500(error, next);
+      }
+  }
+
+  /**
    * @api {post} /users/extra-credit Track an extra credit class
    * @apiName Assign Extra Credit
    * @apiVersion 2.0.0
@@ -327,18 +367,14 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-  private async addExtraCreditAssignmentHandler(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) {
+  private async addExtraCreditAssignmentHandler(req: Request, res: Response, next: NextFunction) {
     // Validate incoming request
     if (!req.body) {
       return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
     }
 
     if (!req.body.classUid || !parseInt(req.body.classUid, 10)) {
-      return Util.standardErrorHandler(new HttpError('Could not find valid class id', 400), next);
+      return Util.standardErrorHandler(new HttpError('Could not find valid class uid', 400), next);
     }
     req.body.userUid = req.body.userUid || res.locals.user.uid;
 
@@ -467,7 +503,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     }
 
     if (!req.query.cid) {
-      return Util.standardErrorHandler(new HttpError('Could not find valid class id', 400), next);
+      return Util.standardErrorHandler(new HttpError('Could not find valid class uid', 400), next);
     }
 
     try {
@@ -485,7 +521,7 @@ export class UsersController extends ParentRouter implements IExpressController 
   * @apiVersion 2.0.0
   * @apiName Remove Extra Credit Assignment
   * @apiGroup User
-  * @apiPermission DirectorPermission
+  * @apiPermission UserPermission
   *
   * @apiParam {String} uid The id associated with the assignment
   * @apiParam {String} hackathonUid The id associated with the current hackathon
@@ -523,7 +559,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiVersion 2.0.0
    * @apiName Remove User's Extra Credit Assignments
    * @apiGroup User
-   * @apiPermission DirectorPermission
+   * @apiPermission UserPermission
    *
    * @apiParam {String} userUid The id associated with the user
    * @apiParam {String} hackathonUid The id associated with the current hackathon

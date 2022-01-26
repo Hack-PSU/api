@@ -86,31 +86,6 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public async getEvent(event_id: number): Promise<IDbResult<Event>> {
-    // remove this when you write the function
-    //throw new MethodNotImplementedError('VSCode, stop yelling at me before the function is finished');
-    const query = squel.select({
-      autoQuoteFieldNames: false,
-      autoQuoteTableNames: true,
-    })
-      .from("EVENTS")
-      .where('uid = ?', event_id)
-      .toParam();
-    return from(this.sql.query<Event>(
-      query.text,
-      query.values,
-      { cache: true },
-    ))
-      .pipe(
-        map((event: Event[]) => ({ result: 'Success', data: event[0]})),
-      )
-      .toPromise();
-    // construct query
-
-    // execute query and return result
-    
-  }
-
   public async insert(object: WorkshopScan): Promise<IDbResult<WorkshopScan>> {
     
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })

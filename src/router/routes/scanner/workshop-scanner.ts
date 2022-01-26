@@ -43,7 +43,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
   }  
 
   /**
-   * @api {get} /workshop/getpin Get a user's registration by their pin
+   * @api {get} /workshop/user Get a user's registration by their pin
    * @apiVersion 2.0.0
    * @apiName Get User by Pin (Scanner)
    * @apiParam {Number} pin Current pin for the registration

@@ -3,8 +3,7 @@ import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
-import { Event, EventType } from '../../../src/models/event/event';
-import { EventDataMapperImpl } from '../../../src/models/event/event-data-mapper-impl';
+import { WorkshopScan } from '../../../src/models/workshops-scans/workshop-scans';
 import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
 import { RBAC } from '../../../src/services/auth/RBAC/rbac';
@@ -38,56 +37,15 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
       when(mysqlUowMock.query(anyString(), anything(), anything()))
         .thenResolve([]);
       mysqlUow = instance(mysqlUowMock);
-      // Configure Event Data Mapper
+      // Configure Workshop Scans Data Mapper
       workshopScansDataMapper = new WorkshopDataMapperImpl(acl, mysqlUow, activeHackathonDataMapper, registerDataMapper, new Logger());
     });
   
     afterEach(() => {
       reset(mysqlUowMock);
     });
-    describe('TEST: WorkshopScan insert', () => {
-        // @ts-ignore
-        it('inserts the events', async () => {
-        // GIVEN: An event to insert
-        const testEvent = new Event({
-            eventEndTime: Date.now(),
-            eventLocation: 1,
-            eventStartTime: Date.now(),
-            eventTitle: 'test title',
-            eventType: EventType.WORKSHOP,
-            wsPresenterNames: 'John Smith and Jane Doe',
-            wsSkillLevel: 'Intermediate',
-            wsRelevantSkills: 'Programming Languages',
-            eventIcon: 'https://www.psu.edu/components/img/psu-mark-footer.png',
-        });
-        // WHEN: Retrieving number of events
-        await workshopScansDataMapper.insert(testEvent);
 
-        // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'INSERT INTO `EVENTS` (`uid`, `event_location`, `event_start_time`, ' +
-            '`event_end_time`, `event_title`, `event_type`, `ws_presenter_names`, `ws_skill_level`, `ws_relevant_skills`, `event_icon`, `hackathon`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
-        const expectedParams = [
-            testEvent.uid,
-            testEvent.event_location,
-            testEvent.event_start_time,
-            testEvent.event_end_time,
-            testEvent.event_title,
-            testEvent.event_type,
-            testEvent.ws_presenter_names,
-            testEvent.ws_skill_level,
-            testEvent.ws_relevant_skills,
-            testEvent.event_icon,
-            'test uid',
-        ];
-        const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
-            .first();
-        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
-        expect(generatedSQL).to.equal(expectedSQL);
-        expect(generatedParams).to.deep.equal(expectedParams);
-        });
-    });
-
-    describe('TEST: Registration get email from uid', () => {
+    describe('TEST: WorkshopScan get user by pin', () => {
         beforeEach(() => {
         when(mysqlUowMock.query(anyString(), anything(), anything()))
             .thenResolve([{}]);
@@ -104,14 +62,14 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
         reset(mysqlUowMock);
         });
         // @ts-ignore
-        it('generates the correct sql to get the email from registrtation', async () => {
-        // GIVEN: A valid registration ID
-        const uid = 'test registration';
+        it('generates the correct sql to get the specific registration from the registration table', async () => {
+        // GIVEN: A valid pin
+        const pin = 12345;
         // WHEN: The current registration version is retrieved
-        await registerDataMapper.getEmailByUid(uid);
+        await workshopScansDataMapper.getByPin(pin, 'test uid');
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT `email` FROM `REGISTRATION` WHERE (uid = ?);';
-        const expectedParams = [uid];
+        const expectedSQL = 'SELECT * FROM `REGISTRATION` WHERE (pin = ?) WHERE (hackathon = ?);';
+        const expectedParams = [pin, 'test uid'];
         const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
             .first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -119,4 +77,36 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
         expect(generatedParams).to.deep.equal(expectedParams);
         });
     });
+
+    describe('TEST: WorkshopScan insert', () => {
+        // @ts-ignore
+        it('inserts the events', async () => {
+        // GIVEN: A workshop scan to insert
+        const testWorkshopScan = new WorkshopScan({
+            eventID: 'test event id',
+            hackathonID: 'test hackathon id',
+            scanUid: null,
+            timeStamp: Date.now(),
+            userPin: 12345,
+        });
+        // WHEN: Inserting the workshop scan
+        await workshopScansDataMapper.insert(testWorkshopScan);
+
+        // THEN: Generated SQL matches the expectation
+        const expectedSQL = 'INSERT INTO `WORKSHOP_SCANS` (`event_id`, `hackathon_id`, `timestamp`, `user_pin`) VALUES (?, ?, ?, ?);';
+        const expectedParams = [
+            testWorkshopScan.event_id,
+            testWorkshopScan.hackathon_id,
+            testWorkshopScan.timestamp,
+            testWorkshopScan.user_pin,
+        ];
+        const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
+            .first();
+        verify(mysqlUowMock.query(anything(), anything(), anything())).once();
+        expect(generatedSQL).to.equal(expectedSQL);
+        expect(generatedParams).to.deep.equal(expectedParams);
+        });
+    });
+
+    
 });

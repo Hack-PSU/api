@@ -45,7 +45,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     @slow(1500)
     public async getRegistrationSuccessfullyFailsDueToNoPin() {
         // GIVEN: API
-        // WHEN: creating new workshop scans instance
+        // WHEN: Getting a registration by pin
         const res = await this.chai
         .request(this.app)
         .post(`${this.apiEndpoint}/user`)
@@ -60,7 +60,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     @slow(1500)
     public async getRegistrationSuccessfullyFailsDueToInvalidPin() {
         // GIVEN: API
-        // WHEN: creating new workshop scans instance
+        // WHEN: Getting a registration by pin
         const parameters = {pin: 1};
         const res = await this.chai
         .request(this.app)
@@ -96,7 +96,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     @slow(1500)
     public async scanWorkshopSuccessfullyFailsDueToNoPin() {
         // GIVEN: API
-        // WHEN: creating new workshop scans instance
+        // WHEN: Entering a workshop scan instance by user pin
         const parameters = {event_id: 'test event uid'};
         const res = await this.chai
         .request(this.app)
@@ -113,7 +113,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     @slow(1500)
     public async scanWorkshopSuccessfullyFailsDueToInvalidPin() {
         // GIVEN: API
-        // WHEN: creating new workshop scans instance
+        // WHEN: Entering a workshop scan instance by user pin
         const parameters = {pin: 1, event_id: 'test event uid'};
         const res = await this.chai
         .request(this.app)
@@ -130,7 +130,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     @slow(1500)
     public async scanWorkshopSuccessfullyFailsDueToNoEventID() {
         // GIVEN: API
-        // WHEN: creating new workshop scans instance
+        // WHEN: Entering a workshop scan instance by user pin
         const parameters = {pin: 5};
         const res = await this.chai
         .request(this.app)
@@ -147,7 +147,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     @slow(1500)
     public async scanWorkshopSuccessfullyFailsDueToInvalidEventID() {
         // GIVEN: API
-        // WHEN: creating new workshop scans instance
+        // WHEN: Entering a workshop scan instance by user pin
         const parameters = {pin: 5, event_id: 'invalid id'};
         const res = await this.chai
         .request(this.app)

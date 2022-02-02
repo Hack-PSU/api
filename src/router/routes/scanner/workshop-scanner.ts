@@ -81,7 +81,20 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     // return the result as an api response. If we catch an error instead, return a 500 code
   }
   
-  // Documentation goes here
+  /**
+   * @api {get} /workshop/check-in Inputs a users workshop attendance given a pin
+   * @apiVersion 2.0.0
+   * @apiName Scan Workshop By Pin (Scanner)
+   * @apiParam {Number} pin Current pin for the user
+   * @apiGroup Admin Scanner
+   * @apiPermission TeamMemberPermission
+   * @apiPermission ScannerPermission
+   * @apiUse AuthArgumentRequired
+   * @apiUse ApiKeyArgumentRequired
+   * @apiSuccess {WorkshopScan} data A WorkshopScan insertion
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
   private async scanWorkshopByPin(req: Request, res: Response, next: NextFunction) {
     if ((!req.query.pin || !parseInt(req.query.pin, 11)) && parseInt(req.query.pin, 11) !== 0) {
       return Util.standardErrorHandler(

@@ -38,6 +38,7 @@ export class TestData {
   public static readonly attendancetableName = 'ATTENDANCE';
   public static readonly checkoutItemTableName = 'CHECKOUT_ITEMS';
   public static readonly checkoutTableName = 'CHECKOUT_DATA';
+  public static readonly workshopScansTableName = 'WORKSHOP_SCANS';
 
   public static validRegistration(): IRegistrationApiModel {
     return {

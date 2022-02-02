@@ -9,7 +9,7 @@ import { Util } from '../../../JSCommon/util';
 import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { WorkshopScan } from 'models/workshops-scans/workshop-scans';
+import { WorkshopScan } from '../../../models/workshops-scans/workshop-scans';
 @Injectable()
 export class WorkshopScannerController extends ParentRouter implements IExpressController {
   public router: Router;
@@ -70,8 +70,6 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     try{
       const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
       const user = await this.registerDataMapper.getByPin(req.body.pin, hackathon);
-
-    // const result = await this.workshopScansDataMapper.getByPin(<put arguments here>);
       return new ResponseBody(
         'Success',
         200,

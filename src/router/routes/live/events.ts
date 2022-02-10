@@ -334,13 +334,13 @@ export class EventsController extends LiveController {
    */
 
   private async postImageHandler(request: express.Request, response: express.Response, next: express.NextFunction) {    
-    if (!request.body.image) {
-      return Util.standardErrorHandler(new HttpError('Could not find image', 400), next);
-    }
+    
     if (!request.body.filename) {
       return Util.standardErrorHandler(new HttpError('Could not find filename', 400), next);
     }
-
+    if (!request.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find event uid', 400), next);
+    }
     const fileURL = this.imageUploader.uploadedFileUrl(
       await this.generateImageFileName(request.body.filename),
     );

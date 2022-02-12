@@ -44,7 +44,7 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
   public readonly CHECK_IN: string = 'workshop:checkin';
   
   protected readonly pkColumnName: string = 'uid';
-  protected readonly TABLE_NAME = 'ATTENDANCE';
+  protected readonly TABLE_NAME = 'WORKSHOP_SCANS';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -71,7 +71,7 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
       autoQuoteFieldNames: false,
       autoQuoteTableNames: true,
     })
-      .from(this.tableName)
+      .from('REGISTRATION')
       .where('hackathon = ?', hackathon.uid)
       .where('pin = ?', hackathon.base_pin! + pin)
       .toParam();
@@ -96,7 +96,6 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
         await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
           .toPromise(),
       )
-      
       .toParam();
     query.text = query.text.concat(';');
     return from(

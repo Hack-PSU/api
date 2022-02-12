@@ -65,11 +65,10 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
       );
     }
 
-
     // call function to create and execute the query
     try{
       const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
-      const user = await this.registerDataMapper.getByPin(req.body.pin, hackathon);
+      const user = await this.registerDataMapper.getByPin(req.body.pin, hackathon.uid);
       return new ResponseBody(
         'Success',
         200,

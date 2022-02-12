@@ -21,7 +21,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     protected readonly tableName = 'WORKSHOP_SCANS';
     protected readonly pkColumnName = 'scan_uid';
     private pin: string;
-    @test('looks for a specific registration based on a given pin')
+    @test('obtains the registration associated with the given pin')
     @slow(1500)
     public async getRegistrationSuccessfully() {
         // GIVEN: API
@@ -48,7 +48,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         // WHEN: Getting a registration by pin
         const res = await this.chai
         .request(this.app)
-        .post(`${this.apiEndpoint}/user`)
+        .get(`${this.apiEndpoint}/user`)
         .set('content-type', 'application/json');
         // THEN: Returns a well formed response
         super.assertRequestFormat(res, 'Error', 400, 'Error');
@@ -64,7 +64,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         const parameters = {pin: 1};
         const res = await this.chai
         .request(this.app)
-        .post(`${this.apiEndpoint}/user`)
+        .get(`${this.apiEndpoint}/user`)
         .set('content-type', 'application/json')
         .query(parameters);
         // THEN: Returns a well formed response
@@ -73,7 +73,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find a valid pin' });
     }
 
-    @test('creates new workshop_scans instance')
+    @test('creates new workshop scan instance')
     public async scanWorkshopSuccessfully(){
         //GIVEN: API
         //WHEN: Entering a workshop scan instance by user pin
@@ -82,7 +82,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         const parameters = {pin: 5, event_id: 'test event uid'};
         const res = await this.chai
         .request(this.app)
-        .get(`${this.apiEndpoint}/check-in`)
+        .post(`${this.apiEndpoint}/check-in`)
         .set('idToken', idToken)
         .set('content-type', 'application/json')
         .query(parameters);
@@ -92,7 +92,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         await this.verifyWorkshopScan(res.body.body.data);
     }
 
-    @test('fails to create a new workshop scans instance when no pin is provided')
+    @test('fails to create a new workshop scan instance when no pin is provided')
     @slow(1500)
     public async scanWorkshopSuccessfullyFailsDueToNoPin() {
         // GIVEN: API
@@ -109,7 +109,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find a pin' });
     }
 
-    @test('fails to create a new workshop scans instance when invalid pin is provided')
+    @test('fails to create a new workshop scan instance when invalid pin is provided')
     @slow(1500)
     public async scanWorkshopSuccessfullyFailsDueToInvalidPin() {
         // GIVEN: API
@@ -126,7 +126,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid pin' });
     }
 
-    @test('fails to create a new workshop scans instance when no event_id is provided')
+    @test('fails to create a new workshop scan instance when no event_id is provided')
     @slow(1500)
     public async scanWorkshopSuccessfullyFailsDueToNoEventID() {
         // GIVEN: API
@@ -143,7 +143,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find event_id' });
     }
 
-    @test('fails to create a new workshop scans instance when invalid event_id is provided')
+    @test('fails to create a new workshop scan instance when invalid event_id is provided')
     @slow(1500)
     public async scanWorkshopSuccessfullyFailsDueToInvalidEventID() {
         // GIVEN: API

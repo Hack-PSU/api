@@ -20,6 +20,7 @@ let activeHackathonDataMapper: IActiveHackathonDataMapper;
 let mysqlUow: MysqlUow;
 const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
+const testHackathonUid = 'test uid';
 
 describe('TEST: Workshop Scanner Data Mapper', () => {
 
@@ -30,7 +31,7 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
         basePin: 0,
         endTime: null,
         name: 'test hackathon',
-        uid: 'test uid',
+        uid: testHackathonUid,
       })));
       (activeHackathonDataMapper.tableName as any).mimicks(() => 'HACKATHON');
       // Configure Mock MysqlUow
@@ -66,10 +67,10 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
         // GIVEN: A valid pin
         const pin = 12345;
         // WHEN: The current registration version is retrieved
-        await workshopScansDataMapper.getByPin(pin, 'test uid');
+        await registerDataMapper.getByPin(pin, testHackathonUid);
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'SELECT * FROM `REGISTRATION` WHERE (pin = ?) WHERE (hackathon = ?);';
-        const expectedParams = [pin, 'test uid'];
+        const expectedSQL = 'SELECT * FROM `REGISTRATION` WHERE (hackathon = ?) AND (pin = ?)';
+        const expectedParams = [testHackathonUid, pin];
         const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
             .first();
         verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -80,11 +81,11 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
 
     describe('TEST: WorkshopScan insert', () => {
         // @ts-ignore
-        it('inserts the events', async () => {
+        it('inserts attendance for an event', async () => {
         // GIVEN: A workshop scan to insert
         const testWorkshopScan = new WorkshopScan({
             eventID: 'test event id',
-            hackathonID: 'test hackathon id',
+            hackathonID: testHackathonUid,
             scanUid: null,
             timeStamp: Date.now(),
             userPin: 12345,

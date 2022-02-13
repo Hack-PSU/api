@@ -85,10 +85,9 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
         // GIVEN: A workshop scan to insert
         const testWorkshopScan = new WorkshopScan({
             eventUid: 'test event id',
-            hackathonID: testHackathonUid,
-            scanUid: null,
-            timeStamp: Date.now(),
-            userPin: 12345,
+            hackathonUid: testHackathonUid,
+            timestamp: Date.now(),
+            pin: 12345,
         });
         // WHEN: Inserting the workshop scan
         await workshopScansDataMapper.insert(testWorkshopScan);

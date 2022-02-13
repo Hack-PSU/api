@@ -7,19 +7,19 @@ export const TABLE_NAME = 'WORKSHOP_SCANS';
 
  export interface IWorkshopScansApiModel {
   eventUid: UidType;
-  hackathonID: UidType;
-  scanUid?: number | null;
-  timeStamp?: EpochNumber | null;
-  userPin: number;
+  hackathonUid?: UidType;
+  scanUid?: number;
+  timestamp?: EpochNumber;
+  pin: number;
   
 }
 
 export class WorkshopScan extends BaseObject {
   
   public event_id: UidType;
-  public hackathon_id: UidType;
-  public scan_uid?: number | null;
-  public timestamp?: EpochNumber | null;
+  public hackathon_id?: UidType;
+  public scan_uid?: number;
+  public timestamp?: EpochNumber;
   public user_pin: number;
   
 
@@ -33,9 +33,9 @@ export class WorkshopScan extends BaseObject {
   constructor(data: IWorkshopScansApiModel) {
     super();
     this.event_id = data.eventUid;
-    this.hackathon_id = data.hackathonID;
-    this.scan_uid = data.scanUid || null;
-    this.timestamp = data.timeStamp || null;
-    this.user_pin = data.userPin;
+    this.hackathon_id = data.hackathonUid;
+    this.scan_uid = data.scanUid;
+    this.timestamp = data.timestamp || Date.now();
+    this.user_pin = data.pin;
   }
 }

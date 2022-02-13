@@ -96,15 +96,14 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
    * @apiUse ResponseBodyDescription
    */
   private async scanWorkshopByPin(req: Request, res: Response, next: NextFunction) {
-    const parsed = parseInt(req.query.pin, 10);
-    if (!req.query.pin || !parseInt(req.query.pin, 10)) {
+    if (!req.body.pin || !parseInt(req.body.pin, 10)) {
       return Util.standardErrorHandler(
         new HttpError('Could not find valid pin', 400),
         next,
       );
     }
     
-    if (!req.query.eventUid || !req.query.eventUid.length || req.query.eventUid.length > 45 || req.query.eventUid == '0') {
+    if (!req.body.eventUid || !req.body.eventUid.length || req.body.eventUid.length > 45 || req.body.eventUid == '0') {
       return Util.standardErrorHandler(
         new HttpError('Could not find valid event uid', 400),
         next,
@@ -112,15 +111,13 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     }
     
     try {
-      const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
- 
       // create a WorkshopScans object
       const scan = new WorkshopScan(req.body);
 
       // Pass that object to the insertion function
       const result = await this.workshopScansDataMapper.insert(scan);
 
-      // constrct a successful api response
+      // construct a successful api response
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
       

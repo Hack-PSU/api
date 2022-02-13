@@ -44,7 +44,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
 
     @test('fails to get a registration when no pin is provided')
     @slow(1500)
-    public async getRegistrationSuccessfullyFailsDueToNoPin() {
+    public async getRegistrationFailsDueToNoPin() {
         // GIVEN: API
         // WHEN: Getting a registration by pin
         const user = await IntegrationTest.loginAdmin();
@@ -89,13 +89,13 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
 
-        const parameters = {pin: 5, event_id: 'test event uid'};
+        const parameters = {pin: 5, eventUid: 'test event uid'};
         const res = await this.chai
         .request(this.app)
         .post(`${this.apiEndpoint}/check-in`)
         .set('idToken', idToken)
         .set('content-type', 'application/json')
-        .query(parameters);
+        .send(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res);
         // THEN: The response is checked
@@ -116,7 +116,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         .post(`${this.apiEndpoint}/check-in`)
         .set('idToken', idToken)
         .set('content-type', 'application/json')
-        .query(parameters);
+        .send(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res, 'Error', 400, 'Error');
         // THEN: Failed to validate input
@@ -137,7 +137,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         .post(`${this.apiEndpoint}/check-in`)
         .set('idToken', idToken)
         .set('content-type', 'application/json')
-        .query(parameters);
+        .send(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res, 'Error', 400, 'Error');
         // THEN: Failed to validate input
@@ -158,7 +158,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         .post(`${this.apiEndpoint}/check-in`)
         .set('idToken', idToken)
         .set('content-type', 'application/json')
-        .query(parameters);
+        .send(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res, 'Error', 400, 'Error');
         // THEN: Failed to validate input
@@ -179,7 +179,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         .post(`${this.apiEndpoint}/check-in`)
         .set('idToken', idToken)
         .set('content-type', 'application/json')
-        .query(parameters);
+        .send(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res, 'Error', 400, 'Error');
         // THEN: Failed to validate input
@@ -190,14 +190,21 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     private async verifyWorkshopScan(object: WorkshopScan) {
         const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
         .from(TestData.workshopScansTableName)
-        .where('pin = ?', 5)
+        .where('user_pin = ?', 5)
         .where('event_id = ?', 'test event uid')
         .toParam();
         const [result] = await WorkshopScanIntegrationTest.mysqlUow.query<WorkshopScan>(
         query.text,
         query.values,
         ) as WorkshopScan[];
-        this.expect(object).to.deep.equal(result);
+        
+        // remove properties that we didn't send
+        delete result.hackathon_id;
+        delete result.scan_uid;
+        delete result.timestamp;
+        delete object.timestamp;
+
+        this.expect(result).to.deep.equal(object);
     }
 
     private async verifyRegistration(registration: Registration) {

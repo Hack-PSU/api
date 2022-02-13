@@ -28,6 +28,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         // WHEN: Getting a registration by pin
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
+        // console.log(idToken);
         const parameters = {pin: 5};
         const res = await this.chai
         .request(this.app)
@@ -46,31 +47,39 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     public async getRegistrationSuccessfullyFailsDueToNoPin() {
         // GIVEN: API
         // WHEN: Getting a registration by pin
+        const user = await IntegrationTest.loginAdmin();
+        const idToken = await user.getIdToken();
+
         const res = await this.chai
         .request(this.app)
         .get(`${this.apiEndpoint}/user`)
+        .set('idToken', idToken)
         .set('content-type', 'application/json');
         // THEN: Returns a well formed response
         super.assertRequestFormat(res, 'Error', 400, 'Error');
         // THEN: Failed to validate input
-        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find a pin' });
+        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find pin to query by' });
     }
 
     @test('fails to get a registration when invalid pin is provided')
     @slow(1500)
-    public async getRegistrationSuccessfullyFailsDueToInvalidPin() {
+    public async getRegistrationFailsDueToInvalidPin() {
         // GIVEN: API
         // WHEN: Getting a registration by pin
-        const parameters = {pin: 1};
+        const user = await IntegrationTest.loginAdmin();
+        const idToken = await user.getIdToken();
+        
+        const parameters = {pin: 'asdfasdf'};
         const res = await this.chai
         .request(this.app)
         .get(`${this.apiEndpoint}/user`)
+        .set('idToken', idToken)
         .set('content-type', 'application/json')
         .query(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res, 'Error', 400, 'Error');
         // THEN: Failed to validate input
-        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find a valid pin' });
+        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find pin to query by' });
     }
 
     @test('creates new workshop scan instance')
@@ -79,6 +88,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         //WHEN: Entering a workshop scan instance by user pin
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
+
         const parameters = {pin: 5, event_id: 'test event uid'};
         const res = await this.chai
         .request(this.app)
@@ -94,30 +104,17 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
 
     @test('fails to create a new workshop scan instance when no pin is provided')
     @slow(1500)
-    public async scanWorkshopSuccessfullyFailsDueToNoPin() {
+    public async scanWorkshopFailsDueToNoPin() {
         // GIVEN: API
         // WHEN: Entering a workshop scan instance by user pin
+        const user = await IntegrationTest.loginAdmin();
+        const idToken = await user.getIdToken();
+        
         const parameters = {event_id: 'test event uid'};
         const res = await this.chai
         .request(this.app)
         .post(`${this.apiEndpoint}/check-in`)
-        .set('content-type', 'application/json')
-        .query(parameters);
-        // THEN: Returns a well formed response
-        super.assertRequestFormat(res, 'Error', 400, 'Error');
-        // THEN: Failed to validate input
-        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find a pin' });
-    }
-
-    @test('fails to create a new workshop scan instance when invalid pin is provided')
-    @slow(1500)
-    public async scanWorkshopSuccessfullyFailsDueToInvalidPin() {
-        // GIVEN: API
-        // WHEN: Entering a workshop scan instance by user pin
-        const parameters = {pin: 1, event_id: 'test event uid'};
-        const res = await this.chai
-        .request(this.app)
-        .post(`${this.apiEndpoint}/check-in`)
+        .set('idToken', idToken)
         .set('content-type', 'application/json')
         .query(parameters);
         // THEN: Returns a well formed response
@@ -126,38 +123,67 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid pin' });
     }
 
-    @test('fails to create a new workshop scan instance when no event_id is provided')
+    @test('fails to create a new workshop scan instance when invalid pin is provided')
     @slow(1500)
-    public async scanWorkshopSuccessfullyFailsDueToNoEventID() {
+    public async scanWorkshopFailsDueToInvalidPin() {
         // GIVEN: API
         // WHEN: Entering a workshop scan instance by user pin
+        const user = await IntegrationTest.loginAdmin();
+        const idToken = await user.getIdToken();
+        
+        const parameters = {pin: 'asdfasdf', event_id: 'test event uid'};
+        const res = await this.chai
+        .request(this.app)
+        .post(`${this.apiEndpoint}/check-in`)
+        .set('idToken', idToken)
+        .set('content-type', 'application/json')
+        .query(parameters);
+        // THEN: Returns a well formed response
+        super.assertRequestFormat(res, 'Error', 400, 'Error');
+        // THEN: Failed to validate input
+        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid pin' });
+    }
+
+    @test('fails to create a new workshop scan instance when no event uid is provided')
+    @slow(1500)
+    public async scanWorkshopFailsDueToNoEventID() {
+        // GIVEN: API
+        // WHEN: Entering a workshop scan instance by user pin
+        const user = await IntegrationTest.loginAdmin();
+        const idToken = await user.getIdToken();
+        
         const parameters = {pin: 5};
         const res = await this.chai
         .request(this.app)
         .post(`${this.apiEndpoint}/check-in`)
+        .set('idToken', idToken)
         .set('content-type', 'application/json')
         .query(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res, 'Error', 400, 'Error');
         // THEN: Failed to validate input
-        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find event_id' });
+        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid event uid' });
     }
 
-    @test('fails to create a new workshop scan instance when invalid event_id is provided')
+    @test('fails to create a new workshop scan instance when invalid event uid is provided')
     @slow(1500)
-    public async scanWorkshopSuccessfullyFailsDueToInvalidEventID() {
+    public async scanWorkshopFailsDueToInvalidEventID() {
         // GIVEN: API
         // WHEN: Entering a workshop scan instance by user pin
+        const user = await IntegrationTest.loginAdmin();
+        const idToken = await user.getIdToken();
+
         const parameters = {pin: 5, event_id: 'invalid id'};
         const res = await this.chai
         .request(this.app)
         .post(`${this.apiEndpoint}/check-in`)
+        .set('idToken', idToken)
         .set('content-type', 'application/json')
         .query(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res, 'Error', 400, 'Error');
         // THEN: Failed to validate input
-        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid event_id' });
+        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid event uid' });
     }
 
 

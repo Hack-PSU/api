@@ -84,7 +84,7 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
         it('inserts attendance for an event', async () => {
         // GIVEN: A workshop scan to insert
         const testWorkshopScan = new WorkshopScan({
-            eventID: 'test event id',
+            eventUid: 'test event id',
             hackathonID: testHackathonUid,
             scanUid: null,
             timeStamp: Date.now(),

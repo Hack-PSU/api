@@ -35,12 +35,13 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
     return this.TABLE_NAME;
   }
 
+  public readonly READ: string = 'registration:read';
   public readonly CREATE: string = 'attendance:create';
   public readonly DELETE: string = 'attendance:delete';
-  public readonly READ: string = 'attendance:read';
-  public readonly UPDATE: string = 'attendance:update';
-  public readonly READ_ALL: string = 'attendance:readall';
+  public readonly READ_ALL: string = 'registration:read';
+  public readonly UPDATE: string = 'attendance:create';
   public readonly COUNT: string = 'attendance:count';
+
   public readonly CHECK_IN: string = 'workshop:checkin';
   
   protected readonly pkColumnName: string = 'uid';
@@ -54,10 +55,10 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
-    super.addRBAC(
-      [this.READ, this.READ_ALL],
-      [AuthLevel.TECHNOLOGY],
-    );
+    // super.addRBAC(
+    //   [this.READ, this.READ_ALL],
+    //   [AuthLevel.TECHNOLOGY],
+    // );
     // team member verification is required to check in to a workshop
     super.addRBAC(
       [this.CHECK_IN],

@@ -6,7 +6,7 @@ export const TABLE_NAME = 'WORKSHOP_SCANS';
 
 
  export interface IWorkshopScansApiModel {
-  eventID: UidType;
+  eventUid: UidType;
   hackathonID: UidType;
   scanUid?: number | null;
   timeStamp?: EpochNumber | null;
@@ -32,7 +32,7 @@ export class WorkshopScan extends BaseObject {
 
   constructor(data: IWorkshopScansApiModel) {
     super();
-    this.event_id = data.eventID;
+    this.event_id = data.eventUid;
     this.hackathon_id = data.hackathonID;
     this.scan_uid = data.scanUid || null;
     this.timestamp = data.timeStamp || null;

@@ -27,6 +27,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
   }
 
   public routes(app: Router): void {
+    app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     app.get(
       // TODO: Should probably move this implementation to the Users route
       '/user',
@@ -81,13 +82,13 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
   }
   
   /**
-   * @api {get} /workshop/check-in Inputs a users workshop attendance given a pin
+   * @api {post} /workshop/check-in Inputs a users workshop attendance given a pin
    * @apiVersion 2.0.0
    * @apiName Scan Workshop By Pin (Scanner)
    * @apiParam {Number} pin Current pin for the user
+   * @apiParam {String} eventUid uid of the event
    * @apiGroup Admin Scanner
    * @apiPermission TeamMemberPermission
-   * @apiPermission ScannerPermission
    * @apiUse AuthArgumentRequired
    * @apiUse ApiKeyArgumentRequired
    * @apiSuccess {WorkshopScan} data A WorkshopScan insertion
@@ -95,16 +96,17 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
    * @apiUse ResponseBodyDescription
    */
   private async scanWorkshopByPin(req: Request, res: Response, next: NextFunction) {
-    if ((!req.query.pin || !parseInt(req.query.pin, 11)) && parseInt(req.query.pin, 11) !== 0) {
+    const parsed = parseInt(req.query.pin, 10);
+    if (!req.query.pin || !parseInt(req.query.pin, 10)) {
       return Util.standardErrorHandler(
-        new HttpError('Could not find pin to query by', 400),
+        new HttpError('Could not find valid pin', 400),
         next,
       );
     }
     
-    if ((!req.query.event_id || req.query.event_id.length != 45) && ((req.query.event_id.length == 45) && req.query.event_id !== '0')) {
+    if (!req.query.eventUid || !req.query.eventUid.length || req.query.eventUid.length > 45 || req.query.eventUid == '0') {
       return Util.standardErrorHandler(
-        new HttpError('Could not find event id to query by', 400),
+        new HttpError('Could not find valid event uid', 400),
         next,
       );
     }

@@ -60,8 +60,7 @@ export class TestData {
       resume: null,
       ethnicity: 'test ethnicity',
       codingExperience: CodingExperience.INTERMEDIATE,
-      // The actual uid of test@email.com in firebase
-      uid: 'N79Hnh4eq8Wapxvhn8jaX2I0kSq2',
+      uid: 'N79Hnh4eq8Wapxvhn8jaX2I0kSq2', // The actual uid of test@email.com in firebase
       eighteenBeforeEvent: true,
       mlhcoc: true,
       mlhdcp: true,
@@ -180,12 +179,16 @@ export class TestData {
     }
   }
 
+  public static insertedUserPin(): number {
+    return 5;
+  }
+  
   public static async setup() {
     const testRegistration = new Registration(this.validRegistration());
     const registrationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.registerTableName)
       .setFieldsRows([testRegistration.dbRepresentation])
-      .set('pin', 5)
+      .set('pin', this.insertedUserPin())
       .set('hackathon', IntegrationTest.activeHackathon.uid)
       .toParam();
     registrationQuery.text = registrationQuery.text.concat(';');

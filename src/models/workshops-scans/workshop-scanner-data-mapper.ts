@@ -106,8 +106,6 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
     ).toPromise();
   }
     
-
-
   //Unsupported methods, but forced to be created
   public async getAll(opts?: IUowOpts): Promise<IDbResult<WorkshopScan[]>> {
     throw new MethodNotImplementedError('This method is not supported by this class');

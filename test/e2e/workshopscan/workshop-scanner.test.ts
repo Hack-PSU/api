@@ -1,6 +1,5 @@
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
-import { Event } from '../../../src/models/event/event';
 import { Registration } from '../../../src/models/register/registration';
 import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
@@ -29,13 +28,13 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
         // console.log(idToken);
-        const parameters = {pin: 5};
+        const parameters = {pin: TestData.insertedUserPin()};
         const res = await this.chai
-        .request(this.app)
-        .get(`${this.apiEndpoint}/user`)
-        .set('idToken', idToken)
-        .set('content-type', 'application/json')
-        .query(parameters);
+          .request(this.app)
+          .get(`${this.apiEndpoint}/user`)
+          .set('idToken', idToken)
+          .set('content-type', 'application/json')
+          .query(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res);
         // THEN: The response is checked
@@ -146,13 +145,13 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
 
     @test('fails to create a new workshop scan instance when no event uid is provided')
     @slow(1500)
-    public async scanWorkshopFailsDueToNoEventID() {
+    public async scanWorkshopFailsDueToNoEventUid() {
         // GIVEN: API
         // WHEN: Entering a workshop scan instance by user pin
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
         
-        const parameters = {pin: 5};
+        const parameters = {pin: TestData.insertedUserPin()};
         const res = await this.chai
         .request(this.app)
         .post(`${this.apiEndpoint}/check-in`)
@@ -167,7 +166,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
 
     @test('fails to create a new workshop scan instance when invalid event uid is provided')
     @slow(1500)
-    public async scanWorkshopFailsDueToInvalidEventID() {
+    public async scanWorkshopFailsDueToInvalidEventUid() {
         // GIVEN: API
         // WHEN: Entering a workshop scan instance by user pin
         const user = await IntegrationTest.loginAdmin();
@@ -189,10 +188,10 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
 
     private async verifyWorkshopScan(object: WorkshopScan) {
         const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-        .from(TestData.workshopScansTableName)
-        .where('user_pin = ?', 5)
-        .where('event_id = ?', 'test event uid')
-        .toParam();
+          .from(TestData.workshopScansTableName)
+          .where('user_pin = ?', 5)
+          .where('event_id = ?', 'test event uid')
+          .toParam();
         const [result] = await WorkshopScanIntegrationTest.mysqlUow.query<WorkshopScan>(
         query.text,
         query.values,
@@ -209,15 +208,13 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
 
     private async verifyRegistration(registration: Registration) {
         const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-        .from(TestData.registerTableName, 'register')
-        .where('pin = ?', 5)
-        .toParam();
+            .from(TestData.registerTableName, 'register')
+            .where('pin = ?', TestData.insertedUserPin())
+            .toParam();
         const [result] = await WorkshopScanIntegrationTest.mysqlUow.query<Registration>(
-        query.text,
-        query.values,
+            query.text,
+            query.values,
         ) as Registration[];
-        this.expect(registration).to.deep.equal(result);
+        this.expect(result).to.deep.equal(registration);
     }
-
-
 }

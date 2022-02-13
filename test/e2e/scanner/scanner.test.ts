@@ -137,7 +137,7 @@ class ScannerIntegrationTest extends IntegrationTest {
     // This test must be run with Admin Hackathon to work
     // If running Scanner Integration individually,
     // change pin to pin set in TestData or comment this out
-    const parameters = { pin: 0 };
+    const parameters = { pin: TestData.insertedUserPin() };
     const res = await this.chai
       .request(this.app)
       .get(`${this.apiEndpoint}/getpin`)

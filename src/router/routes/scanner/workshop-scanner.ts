@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
-import { IWorkshopScansDataMapper, WorkshopDataMapperImpl } from '../../../models/workshops-scans/workshop-scanner-data-mapper';
+import { IWorkshopScansDataMapper } from '../../../models/workshops-scans/workshop-scanner-data-mapper';
 import { ParentRouter } from '../../router-types';
 import { MysqlUow } from '../../../services/database/svc/mysql-uow.service';
 import { IExpressController, ResponseBody } from '../..';
@@ -49,13 +49,14 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
    * @apiVersion 2.0.0
    * @apiName Get User by Pin (Scanner)
    * @apiParam {Number} pin Current pin for the registration
+   * @apiParam {boolean} [relativePin=true] whether the pin is relative to the current hackathon's base pin
    * @apiGroup Admin Scanner
    * @apiPermission TeamMemberPermission
    * @apiPermission ScannerPermission
    * @apiUse AuthArgumentRequired
    * @apiUse ApiKeyArgumentRequired
    * @apiSuccess {Registration} data The relevant registration for the provided pin
-   * @apiUse IllegalArgumentError
+   * @apiUse IllegalArgumentErrors
    * @apiUse ResponseBodyDescription
    */
   private async getUserByPin(req: Request, res: Response, next: NextFunction) {
@@ -68,7 +69,13 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
 
     try {
       const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
-      const result = await this.registerDataMapper.getByPin(req.query.pin, hackathon.uid);
+      var result;
+      if (req.query.relativePin) {
+        result = await this.registerDataMapper.getByPin(req.query.pin + (hackathon.base_pin as number), hackathon.uid);
+      } else {
+        result = await this.registerDataMapper.getByPin(req.query.pin, hackathon.uid);
+      }
+      
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch(error) {
       return Util.errorHandler500(error, next);
@@ -81,6 +88,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
    * @apiName Scan Workshop By Pin (Scanner)
    * @apiParam {Number} pin Current pin for the user
    * @apiParam {String} eventUid uid of the event
+   * @apiParam {Boolean} [relativePin=true] whether the pin is relative to the current hackathon's base pin  
    * @apiGroup Admin Scanner
    * @apiPermission TeamMemberPermission
    * @apiUse AuthArgumentRequired
@@ -106,6 +114,9 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     
     try {
       const scan = new WorkshopScan(req.body);
+      if (req.body.relativePin) {
+        scan.user_pin = scan.user_pin + ((await this.activeHackathonDataMapper.activeHackathon.toPromise()).base_pin as number);
+      }
       const result = await this.workshopScansDataMapper.insert(scan);
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);

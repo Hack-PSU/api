@@ -175,7 +175,7 @@ export class TestData {
       eventUid: this.validEvent().uid as string,
       hackathonUid: IntegrationTest.activeHackathon.uid,
       timestamp: 1234567890,
-      pin: 1
+      pin: this.insertedUserPin(),
     }
   }
 

@@ -56,7 +56,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
    * @apiUse AuthArgumentRequired
    * @apiUse ApiKeyArgumentRequired
    * @apiSuccess {Registration} data The relevant registration for the provided pin
-   * @apiUse IllegalArgumentErrors
+   * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
   private async getUserByPin(req: Request, res: Response, next: NextFunction) {

@@ -41,7 +41,7 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
   public READ: string = 'active-hackathon:read';
   public UPDATE: string = 'active-hackathon:update';
   public COUNT: string = 'active-hackathon:count';
-  private hackathonObservable?: Observable<ActiveHackathon>;
+  public hackathonObservable?: Observable<ActiveHackathon>;
 
   constructor(
     @Inject('IAcl') acl: IAcl,
@@ -113,7 +113,7 @@ export class ActiveHackathonDataMapperImpl extends HackathonDataMapperImpl
       .toPromise();
   }
 
-  private getActiveHackathonQuery() {
+  public getActiveHackathonQuery() {
     return squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,

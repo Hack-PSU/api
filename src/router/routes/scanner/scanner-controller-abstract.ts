@@ -22,7 +22,7 @@ abstract class AbstractScannerController extends ParentRouter {
     protected readonly scannerAcl: IAclPerm,
     protected readonly scannerDataMapper: IScannerDataMapper,
     private readonly registerDataMapper: IRegisterDataMapper,
-    private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
+    public readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
   ) {
     super();
   }

@@ -1,3 +1,4 @@
+import { WorkshopDataMapperImpl } from '../../../models/workshops-scans/workshop-scanner-data-mapper';
 import { AdminDataMapperImpl } from '../../../models/admin';
 import { AdminStatisticsDataMapperImpl } from '../../../models/admin/statistics/admin-statistics-data-mapper-impl';
 import { AttendanceDataMapperImpl } from '../../../models/attendance/attendance-data-mapper-impl';
@@ -34,6 +35,7 @@ import { EventsController } from '../../../router/routes/live/events';
 import { LiveController } from '../../../router/routes/live/live';
 import { UpdatesController } from '../../../router/routes/live/updates';
 import { ScannerController } from '../../../router/routes/scanner/scanner';
+import { WorkshopScannerController } from '../../../router/routes/scanner/workshop-scanner';
 import { UsersController } from '../../../router/routes/users';
 import { FirebaseAuthService } from '../../auth';
 import { ApikeyAuthService } from '../../auth/apikey-auth';
@@ -64,6 +66,7 @@ export class ExpressProvider {
         { provide: 'UsersController', useClass: UsersController },
         { provide: 'AdminController', useClass: AdminController },
         { provide: 'ScannerController', useClass: ScannerController },
+        { provide: 'WorkshopController', useClass: WorkshopScannerController},
         { provide: 'AdminRegisterController', useClass: AdminRegisterController },
         { provide: 'AdminStatisticsController', useClass: AdminStatisticsController },
         { provide: 'AdminHackathonController', useClass: AdminHackathonController },
@@ -93,6 +96,7 @@ export class ExpressProvider {
         { provide: 'IAdminDataMapper', useClass: AdminDataMapperImpl },
         { provide: 'IAdminStatisticsDataMapper', useClass: AdminStatisticsDataMapperImpl },
         { provide: 'IScannerDataMapper', useClass: ScannerDataMapperImpl },
+        { provide: 'IWorkshopScansDataMapper', useClass: WorkshopDataMapperImpl },
         { provide: 'ICheckoutObjectDataMapper', useClass: CheckoutObjectDataMapperImpl },
         { provide: 'ICheckoutItemsDataMapper', useClass: CheckoutItemsDataMapperImpl },
         { provide: 'IUrlDataMapper', useClass: UrlDataMapperImpl },

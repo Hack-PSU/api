@@ -134,12 +134,13 @@ export class TestData {
   public static validExtraCreditClass(): IExtraCreditClassApiModel {
     return {
       uid: 5,
-      class_name: 'test class',
+      className: 'test class',
     };
   }
 
   public static validExtraCreditAssignment(): IExtraCreditAssignmentApiModel {
     return {
+      uid: 12,
       userUid: this.validRegistration().uid as string,
       classUid: 5,
     };
@@ -304,46 +305,57 @@ export class TestData {
       .from(this.registerTableName)
       .toParam();
     registrationQuery.text = registrationQuery.text.concat(';');
+    
     const rsvpQuery = squel.delete()
       .from(this.rsvpTableName)
       .toParam();
     rsvpQuery.text = rsvpQuery.text.concat(';');
+    
     const eventQuery = squel.delete()
       .from(this.eventsTableName)
       .toParam();
     eventQuery.text = eventQuery.text.concat(';');
+    
     const urlQuery = squel.delete()
       .from(this.urlsTableName)
       .toParam();
     urlQuery.text = urlQuery.text.concat(';');
+    
     const locationQuery = squel.delete()
       .from(this.locationsTableName)
       .toParam();
     locationQuery.text = locationQuery.text.concat(';');
+    
     const scanQuery = squel.delete()
       .from(this.scansTableName)
       .toParam();
     scanQuery.text = scanQuery.text.concat(';');
+    
     const rfidAssignmentQuery = squel.delete()
       .from(this.rfidTableName)
       .toParam();
     rfidAssignmentQuery.text = rfidAssignmentQuery.text.concat(';');
+    
     const extraCreditClassQuery = squel.delete()
       .from(this.ecClassesTableName)
       .toParam();
     extraCreditClassQuery.text = extraCreditClassQuery.text.concat(';');
+    
     const extraCreditAssignmentQuery = squel.delete()
       .from(this.ecAssignmentsTableName)
       .toParam();
     extraCreditAssignmentQuery.text = extraCreditAssignmentQuery.text.concat(';');
+    
     const preRegistrationQuery = squel.delete()
       .from(this.preregisterTableName)
       .toParam();
     preRegistrationQuery.text = preRegistrationQuery.text.concat(';');
+    
     const deleteCheckoutQuery = squel.delete()
       .from(this.checkoutTableName)
       .toParam();
     deleteCheckoutQuery.text = deleteCheckoutQuery.text.concat(';');
+    
     const deleteCheckoutItemQuery = squel.delete()
       .from(this.checkoutItemTableName)
       .toParam();

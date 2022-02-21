@@ -1,4 +1,4 @@
-# hackPSU-api
+# HackPSU-api
 
 This is the backend monolith for HackPSU.
 

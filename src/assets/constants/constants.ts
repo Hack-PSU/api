@@ -58,9 +58,11 @@ export class Constants {
   public static readonly GCS = {
     resumeBucket: Util.readEnv('RESUME_BUCKET', 'resumes'),
     travelReimbursementBucket: Util.readEnv('TRAVEL_REIMBURSEMENT_BUCKET', 'travel-reimbursement-receipts'),
+    eventImageBucket: 'hackpsu18.appspot.com', //TODO: put this in the actual environment variables?
     projectId: Util.readEnv('GOOGLE_CLOUD_PROJECT', ''),
     keyFile: 'gcs_config.json',
   };
+
   public static readonly SendGridApiKey = Util.readEnv('SENDGRID_ACCESS_KEY', '');
   public static readonly MailchimpApiKey = Util.readEnv('MAILCHIMP_API_KEY', '');
   public static readonly MailchimpPreregEmailList = 'HackPSU Email List';

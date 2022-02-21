@@ -246,7 +246,7 @@ export class ScannerProcessor implements IScannerProcessor {
 
   public async getUserByCurrentPin(pin: number): Promise<ResponseBody> {
     const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
-    const registration = await this.registerDataMapper.getByPin(pin, hackathon);
+    const registration = await this.registerDataMapper.getByPin(pin, hackathon.uid);
     return new ResponseBody(
       'Success',
       200,

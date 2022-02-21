@@ -391,14 +391,14 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>> {
+  public getByPin(pin: number, hackathonUid: UidType): Promise<IDbResult<Registration>> {
     const query = squel.select({
       autoQuoteFieldNames: false,
       autoQuoteTableNames: true,
     })
       .from(this.tableName)
-      .where('hackathon = ?', hackathon.uid)
-      .where('pin = ?', hackathon.base_pin! + pin)
+      .where('hackathon = ?', hackathonUid)
+      .where('pin = ?', pin)
       .toParam();
     return from(this.sql.query<Registration>(
       query.text,

@@ -27,7 +27,7 @@ export interface IRegisterDataMapper
 
   getCountQuery(opts?: IUowOpts): Promise<squel.Select>;
 
-  getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>>;
+  getByPin(pin: number, hackathonUid: UidType): Promise<IDbResult<Registration>>;
 }
 
 export interface IPreRegisterDataMapper extends IDataMapper<PreRegistration> {

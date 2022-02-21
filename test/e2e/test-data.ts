@@ -21,6 +21,7 @@ import { Rsvp, IRsvpApiModel } from '../../src/models/RSVP/rsvp';
 import { RfidAssignment, IRfidAssignmentApiModel } from '../../src/models/scanner/rfid-assignment';
 import { Scan, IRfidScanApiModel } from '../../src/models/scanner/scan';
 import { Url, IURLApiModel } from '../../src/models/url/url';
+import { IWorkshopScansApiModel, WorkshopScan } from '../../src/models/workshops-scans/workshop-scans';
 import { IntegrationTest } from './integration-test';
 
 export class TestData {
@@ -38,6 +39,7 @@ export class TestData {
   public static readonly attendancetableName = 'ATTENDANCE';
   public static readonly checkoutItemTableName = 'CHECKOUT_ITEMS';
   public static readonly checkoutTableName = 'CHECKOUT_DATA';
+  public static readonly workshopScansTableName = 'WORKSHOP_SCANS';
 
   public static validRegistration(): IRegistrationApiModel {
     return {
@@ -58,8 +60,7 @@ export class TestData {
       resume: null,
       ethnicity: 'test ethnicity',
       codingExperience: CodingExperience.INTERMEDIATE,
-      // The actual uid of test@email.com in firebase
-      uid: 'N79Hnh4eq8Wapxvhn8jaX2I0kSq2',
+      uid: 'N79Hnh4eq8Wapxvhn8jaX2I0kSq2', // The actual uid of test@email.com in firebase
       eighteenBeforeEvent: true,
       mlhcoc: true,
       mlhdcp: true,
@@ -170,12 +171,25 @@ export class TestData {
     };
   }
 
+  public static validWorkshopScan(): IWorkshopScansApiModel {
+    return {
+      eventUid: this.validEvent().uid as string,
+      hackathonUid: IntegrationTest.activeHackathon.uid,
+      timestamp: 1234567890,
+      pin: this.insertedUserPin(),
+    }
+  }
+
+  public static insertedUserPin(): number {
+    return 5;
+  }
+  
   public static async setup() {
     const testRegistration = new Registration(this.validRegistration());
     const registrationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.registerTableName)
       .setFieldsRows([testRegistration.dbRepresentation])
-      .set('pin', 5)
+      .set('pin', this.insertedUserPin())
       .set('hackathon', IntegrationTest.activeHackathon.uid)
       .toParam();
     registrationQuery.text = registrationQuery.text.concat(';');
@@ -264,6 +278,13 @@ export class TestData {
       .toParam();
     checkoutQuery.text = checkoutQuery.text.concat(';');
 
+    const testWorkshopScan = new WorkshopScan(this.validWorkshopScan());
+    const workshopScanQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true})
+      .into('WORKSHOP_SCANS')
+      .setFieldsRows([testWorkshopScan.dbRepresentation])
+      .toParam();
+    workshopScanQuery.text = workshopScanQuery.text.concat(';');
+
     await IntegrationTest.mysqlUow.query(registrationQuery.text, registrationQuery.values);
     await IntegrationTest.mysqlUow.query(rsvpQuery.text, rsvpQuery.values);
     await IntegrationTest.mysqlUow.query(locationQuery.text, locationQuery.values);
@@ -276,6 +297,7 @@ export class TestData {
     await IntegrationTest.mysqlUow.query(preRegistrationQuery.text, preRegistrationQuery.values);
     await IntegrationTest.mysqlUow.query(checkoutItemQuery.text, checkoutItemQuery.values);
     await IntegrationTest.mysqlUow.query(checkoutQuery.text, checkoutQuery.values);
+    await IntegrationTest.mysqlUow.query(workshopScanQuery.text, workshopScanQuery.values);
   }
 
   public static async tearDown() {
@@ -338,6 +360,10 @@ export class TestData {
       .from(this.checkoutItemTableName)
       .toParam();
     deleteCheckoutItemQuery.text = deleteCheckoutItemQuery.text.concat(';');
+    const deleteWorkshopScansQuery = squel.delete()
+      .from(this.workshopScansTableName)
+      .toParam();
+    deleteWorkshopScansQuery.text = deleteWorkshopScansQuery.text.concat(';');
 
     await IntegrationTest.mysqlUow.query(deleteCheckoutQuery.text, deleteCheckoutQuery.values);
     await IntegrationTest.mysqlUow.query(deleteCheckoutItemQuery.text, deleteCheckoutItemQuery.values);
@@ -351,5 +377,6 @@ export class TestData {
     await IntegrationTest.mysqlUow.query(locationQuery.text, locationQuery.values);
     await IntegrationTest.mysqlUow.query(rsvpQuery.text, rsvpQuery.values);
     await IntegrationTest.mysqlUow.query(registrationQuery.text, registrationQuery.values);
+    await IntegrationTest.mysqlUow.query(deleteWorkshopScansQuery.text, deleteWorkshopScansQuery.values);
   }
 }

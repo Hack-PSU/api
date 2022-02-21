@@ -54,6 +54,10 @@ export interface IAdminAclPerm extends IAclPerm {
   MAKE_ACTIVE: string;
 }
 
+export interface IWorkshopAclPerm extends IAclPerm {
+  CHECK_IN: string;
+}
+
 /**
  * This enum is used as a mapping from operations to
  * An IAcl's member IAclPerm implementation. In order to
@@ -74,4 +78,5 @@ export enum AclOperations {
   READ_ALL_CLASSES,
   READ_BY_UID,
   READ_BY_CLASS,
+  CHECK_IN,
 }

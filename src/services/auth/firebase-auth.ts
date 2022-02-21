@@ -15,6 +15,7 @@ import {
   IAclPerm,
   IAdminAclPerm,
   IExtraCreditAclPerm,
+  IWorkshopAclPerm,
 } from './RBAC/rbac-types';
 
 @Injectable()
@@ -68,6 +69,10 @@ export class FirebaseAuthService implements IFirebaseAuthService {
       case AclOperations.READ_BY_CLASS:
         // Only supported for IExtraCreditAclPerm
         requestPermission = (permission as IExtraCreditAclPerm).READ_BY_CLASS;
+        break;
+      case AclOperations.CHECK_IN:
+        // Only supported for IWorkshopAclPerm
+        requestPermission = (permission as IWorkshopAclPerm).CHECK_IN;
         break;
       default:
         requestPermission = '';

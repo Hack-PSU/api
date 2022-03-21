@@ -63,7 +63,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
         next,
         AclOperations.READ_ALL,
       ),
-      // this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.READ_ALL),
+      // this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.READ_ALL), 
       (req, res, next) => this.getAllCheckoutItemsHandler(res, next),
     );
     // Create a new checkout request

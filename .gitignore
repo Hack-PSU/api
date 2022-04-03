@@ -19,3 +19,5 @@ doc/
 lib/
 coverage/
 firebase_config.json
+launch.json
+cloud_sql_proxy

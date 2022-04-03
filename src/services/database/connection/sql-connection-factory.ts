@@ -14,6 +14,7 @@ export class SqlConnectionFactory implements IConnectionFactory {
     } else {
       Constants.sqlConnection.socketPath = '';
     }
+    console.log(Constants.sqlConnection.socketPath == '');
     this.dbConnection = createPool(Constants.sqlConnection);
   }
 

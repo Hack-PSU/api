@@ -169,4 +169,4 @@ export class AdminDataMapperImpl extends GenericDataMapper
       map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
   }
-}
+} 

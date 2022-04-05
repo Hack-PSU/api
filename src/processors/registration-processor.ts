@@ -68,6 +68,8 @@ export class RegistrationProcessor implements IRegistrationProcessor {
 
     registration.firstHackathon = registration.firstHackathon === true || registration.firstHackathon === 'true';
 
+    registration.driving = registration.driving === true || registration.driving === 'true';
+
     registration.eighteenBeforeEvent = registration.eighteenBeforeEvent === true || registration.eighteenBeforeEvent === 'true';
 
     registration.mlhcoc = registration.mlhcoc === true || registration.mlhcoc === 'true';

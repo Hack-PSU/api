@@ -45,6 +45,7 @@ const registration = new Registration({
   resume: null,
   shirtSize: ShirtSize.MEDIUM,
   travelReimbursement: false,
+  driving: true,
   uid: 'test uid',
   university: 'test university',
   veteran: VeteranOptions.NODISCLOSE,

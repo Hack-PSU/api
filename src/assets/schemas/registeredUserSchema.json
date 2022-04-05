@@ -47,6 +47,9 @@
     "travel_reimbursement": {
       "type": "boolean"
     },
+    "driving": {
+      "type": ["boolean", "null"]
+    },
     "first_hackathon": {
       "type": "boolean"
     },

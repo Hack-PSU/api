@@ -50,6 +50,7 @@ export class TestData {
       dietaryRestriction: 'test restriction',
       allergies: 'test allergy',
       travelReimbursement: false,
+      driving: true,
       firstHackathon: false,
       university: 'Test University',
       email: 'test@email.com',

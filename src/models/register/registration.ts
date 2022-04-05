@@ -52,6 +52,7 @@ export interface IRegistrationApiModel {
   dietaryRestriction: string | null;
   allergies: string | null;
   travelReimbursement: boolean;
+  driving: boolean | null;
   firstHackathon: boolean;
   university: string;
   email: string;
@@ -88,6 +89,7 @@ export class Registration extends BaseObject {
   public dietary_restriction: string | null;
   public allergies: string | null;
   public travel_reimbursement: boolean;
+  public driving: boolean | null;
   public first_hackathon: boolean;
   public university: string;
   public email: string;
@@ -122,6 +124,7 @@ export class Registration extends BaseObject {
     this.dietary_restriction = data.dietaryRestriction || null;
     this.allergies = data.allergies || null;
     this.travel_reimbursement = data.travelReimbursement;
+    this.driving = data.driving;
     this.first_hackathon = data.firstHackathon;
     this.university = data.university;
     this.email = data.email;

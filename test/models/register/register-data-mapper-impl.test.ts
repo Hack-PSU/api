@@ -50,6 +50,7 @@ const validRegistration = new Registration({
   resume: null,
   shirtSize: ShirtSize.MEDIUM,
   travelReimbursement: false,
+  driving: true,
   uid: 'test uid',
   university: 'test university',
   veteran: VeteranOptions.NODISCLOSE,
@@ -351,17 +352,18 @@ describe('TEST: Register data mapper', () => {
 
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'INSERT INTO `REGISTRATION` (`firstname`, `lastname`, `gender`, ' +
-        '`shirt_size`, `travel_reimbursement`, `first_hackathon`, `university`, `email`, ' +
+        '`shirt_size`, `travel_reimbursement`, `driving`, `first_hackathon`, `university`, `email`, ' +
         '`academic_year`, `major`, `phone`, `address`, `race`, `coding_experience`, `uid`, ' +
         '`eighteenBeforeEvent`, `mlh_coc`, `mlh_dcp`, `referral`, `project`, `expectations`, ' +
         '`veteran`, `time`, `submitted`, `share_address_mlh`, `share_address_sponsors`, `hackathon`) ' +
-        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
       const expectedParams = [
         validRegistration.firstname,
         validRegistration.lastname,
         validRegistration.gender,
         validRegistration.shirt_size,
         validRegistration.travel_reimbursement,
+        validRegistration.driving,
         validRegistration.first_hackathon,
         validRegistration.university,
         validRegistration.email,
@@ -418,6 +420,7 @@ describe('TEST: Register data mapper', () => {
         resume: null,
         shirtSize: ShirtSize.MEDIUM,
         travelReimbursement: false,
+        driving: true,
         uid: 'test uid',
         university: 'test university',
         veteran: VeteranOptions.NODISCLOSE,
@@ -499,7 +502,7 @@ describe('TEST: Register data mapper', () => {
       await registerDataMapper.update(registration);
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'UPDATE `REGISTRATION` SET `firstname` = ?, `lastname` = ?, `gender` = ?, ' +
-        '`shirt_size` = ?, `travel_reimbursement` = ?, `first_hackathon` = ?, `university` = ?, ' +
+        '`shirt_size` = ?, `travel_reimbursement` = ?, `driving` = ?, `first_hackathon` = ?, `university` = ?, ' +
         '`email` = ?, `academic_year` = ?, `major` = ?, `phone` = ?, `address` = ?, `race` = ?, ' +
         '`coding_experience` = ?, `uid` = ?, `eighteenBeforeEvent` = ?, `mlh_coc` = ?, `mlh_dcp` = ?, ' +
         '`referral` = ?, `project` = ?, `expectations` = ?, `veteran` = ?, `time` = ?, `submitted` = ?, ' +
@@ -512,6 +515,7 @@ describe('TEST: Register data mapper', () => {
         validRegistration.gender,
         validRegistration.shirt_size,
         validRegistration.travel_reimbursement,
+        validRegistration.driving,
         validRegistration.first_hackathon,
         validRegistration.university,
         validRegistration.email,
@@ -570,6 +574,7 @@ describe('TEST: Register data mapper', () => {
         resume: null,
         shirtSize: ShirtSize.MEDIUM,
         travelReimbursement: false,
+        driving: true,
         uid: 'test uid',
         university: 'test university',
         veteran: VeteranOptions.NODISCLOSE,

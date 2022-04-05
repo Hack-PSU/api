@@ -48,7 +48,7 @@
       "type": "boolean"
     },
     "driving": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "first_hackathon": {
       "type": "boolean"

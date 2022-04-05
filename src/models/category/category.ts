@@ -4,7 +4,7 @@ import BaseObject from '../BaseObject';
 
 const categorySchema = jsonAssetLoader('categorySchema');
 
-export const TABLE_NAME = 'CATEGORY_LIST';
+export const TABLE_NAME = 'CATEGORY_LIST'; 
 
 /**
  * TODO: Add documentation

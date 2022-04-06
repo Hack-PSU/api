@@ -16,6 +16,7 @@ import { ParentRouter } from '../../router-types';
 @Injectable()
 export class AdminController extends ParentRouter implements IExpressController {
   protected static baseRoute = 'admin/';
+  protected static notificationFunctionRoute = 'https://us-central1-hackpsu18.cloudfunctions.net/notifications/message/send';
 
   private static parseCommonRequestFields(
     request: Request,
@@ -294,7 +295,7 @@ export class AdminController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Could not find valid pin', 400), next);
     }
 
-    const result = await axios.post('https://us-central1-hackpsu18.cloudfunctions.net/notifications/message/send', req);
+    const result = await axios.post(AdminController.notificationFunctionRoute, req);
     const responseBody = new ResponseBody(result.statusText, result.status, result.data);
     return this.sendResponse(response, responseBody);
   }

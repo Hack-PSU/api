@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { validate } from 'email-validator';
 import { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
@@ -15,6 +16,7 @@ import { ParentRouter } from '../../router-types';
 @Injectable()
 export class AdminController extends ParentRouter implements IExpressController {
   protected static baseRoute = 'admin/';
+  protected static notificationFunctionRoute = 'https://us-central1-hackpsu18.cloudfunctions.net/notifications/message/send';
 
   private static parseCommonRequestFields(
     request: Request,
@@ -85,6 +87,11 @@ export class AdminController extends ParentRouter implements IExpressController 
       '/makeadmin',
       this.authService.verifyAcl(this.adminAcl, AclOperations.CREATE),
       (req, res, next) => this.makeAdminHandler(req, res, next),
+    );
+    app.post(
+      '/mobile-notification',
+      this.authService.verifyAcl(this.adminAcl, AclOperations.DELETE),
+      (req, res, next) => this.mobilePushNotificationHandler(req, res, next),
     );
   }
 
@@ -267,5 +274,35 @@ export class AdminController extends ParentRouter implements IExpressController 
     } catch (error) {
       return Util.standardErrorHandler(error, next);
     }
+  }
+  
+  /**
+   * @api {post} /admin/mobile-push-notification Send a push notification to a user
+   * @apiVersion 2.0.0
+   * @apiName Push Mobile Notification
+   * @apiGroup Updates
+   * @apiPermission DirectorPermission
+   * 
+   * @apiParam {Number} userPin the pin of the user to send a notification to
+   * @apiParam {String} title the title of the notification to send
+   * @apiParam {String} message the message included in the notification
+   * 
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   */
+   private async mobilePushNotificationHandler(req: Request, response: Response, next: NextFunction) {
+    if (!req.body.userPin || !parseInt(req.body.userPin, 10)) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid pin', 400), next);
+    }
+    if (!req.body.title) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid title', 400), next);
+    }
+    if (!req.body.message) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid message', 400), next);
+    }
+
+    const result = await axios.post(AdminController.notificationFunctionRoute, req);
+    const responseBody = new ResponseBody(result.statusText, result.status, result.data);
+    return this.sendResponse(response, responseBody);
   }
 }

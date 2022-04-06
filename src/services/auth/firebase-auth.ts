@@ -9,14 +9,7 @@ import { Environment, Util } from '../../JSCommon/util';
 import { IFirebaseService } from '../common/firebase/firebase-types/firebase-service';
 import { Logger } from '../logging/logging';
 import { AuthLevel, IFirebaseAuthService } from './auth-types/';
-import {
-  AclOperations,
-  IAcl,
-  IAclPerm,
-  IAdminAclPerm,
-  IExtraCreditAclPerm,
-  IWorkshopAclPerm,
-} from './RBAC/rbac-types';
+import { AclOperations, IAcl, IAclPerm, IAdminAclPerm, IExtraCreditAclPerm, IWorkshopAclPerm, } from './RBAC/rbac-types';
 
 @Injectable()
 export class FirebaseAuthService implements IFirebaseAuthService {
@@ -57,6 +50,10 @@ export class FirebaseAuthService implements IFirebaseAuthService {
       case AclOperations.SEND_EMAIL:
         // Only supported for IAdminAclPerm
         requestPermission = (permission as IAdminAclPerm).SEND_EMAIL;
+        break;
+      case AclOperations.PUSH_NOTIFICATION:
+        // Only supported for IAdminAclPerm
+        requestPermission = (permission as IAdminAclPerm).PUSH_NOTIFICATION;
         break;
       case AclOperations.READ_ALL_CLASSES:
         // Only supported for IExtraCreditAclPerm

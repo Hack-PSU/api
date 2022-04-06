@@ -52,6 +52,7 @@ export interface IAdminAclPerm extends IAclPerm {
   SEND_EMAIL: string;
   REDUCE_PERMISSION: string;
   MAKE_ACTIVE: string;
+  PUSH_NOTIFICATION: string;
 }
 
 export interface IWorkshopAclPerm extends IAclPerm {
@@ -79,4 +80,5 @@ export enum AclOperations {
   READ_BY_UID,
   READ_BY_CLASS,
   CHECK_IN,
+  PUSH_NOTIFICATION,
 }

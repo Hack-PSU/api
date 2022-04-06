@@ -31,6 +31,23 @@ class AdminIntegrationTest extends IntegrationTest {
     // THEN: Error message is returned
   }
 
+  @test('fails to send mobile notification without permissions')
+  @slow(1500)
+  public async notificationAuthorizationFailsDueToInvalidPermission() {
+    // GIVEN: API
+    // WHEN: Attmepting to access notification route
+    const user = await IntegrationTest.loginRegular();
+    const idToken = await user.getIdToken();
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/mobile-notification`)
+      .set('idToken', idToken);
+    // THEN: Returns a well-formed response
+    super.assertRequestFormat(res, 'Error', 401, 'Error');
+    // THEN: Error message is returned
+    this.expect(res.body.body.data).to.deep.equal({ message: 'Insufficient permissions for this operation'});
+  }
+
   @test('fails to grant entry without authorization token')
   @slow(1500)
   public async authorizationFailsDueToNoIdToken() {

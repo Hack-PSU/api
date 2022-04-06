@@ -131,4 +131,61 @@ class AdminIntegrationTest extends IntegrationTest {
     // THEN: Error message is returned
     this.expect(res.body.body.data).to.deep.equal({ message: 'Offset must be an integer' });
   }
+
+  @test('fails to push notification with no pin')
+  @slow(1500)
+  public async pushNotificationFailsDueToNoPin() {
+    // GIVEN: API
+    // WHEN: Attempting to send a push notification
+    const user = await IntegrationTest.loginAdmin();
+    const idToken = await user.getIdToken();
+    const parameters = { title: 'test title', message: 'test message'};
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/mobile-notification`)
+      .set('idToken', idToken)
+      .send(parameters);
+    // THEN: Returns a well-formed response
+    super.assertRequestFormat(res, 'Error', 400, 'Error');
+    //THEN: Error message is returned
+    this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid pin'});
+  }
+
+  @test('fails to push notification with no title')
+  @slow(1500)
+  public async pushNotificationFailsDueToNoTitle() {
+    // GIVEN: API
+    // WHEN: Attempting to send a push notification
+    const user = await IntegrationTest.loginAdmin();
+    const idToken = await user.getIdToken();
+    const parameters = { userPin: 12345, message: 'test message'};
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/mobile-notification`)
+      .set('idToken', idToken)
+      .send(parameters);
+    // THEN: Returns a well-formed response
+    super.assertRequestFormat(res, 'Error', 400, 'Error');
+    //THEN: Error message is returned
+    this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid title'});
+  }
+
+  @test('fails to push notification with no message')
+  @slow(1500)
+  public async pushNotificationFailsDueToNoMessage() {
+    // GIVEN: API
+    // WHEN: Attempting to send a push notification
+    const user = await IntegrationTest.loginAdmin();
+    const idToken = await user.getIdToken();
+    const parameters = { userPin: 12345, title: 'test title'};
+    const res = await this.chai
+      .request(this.app)
+      .post(`${this.apiEndpoint}/mobile-notification`)
+      .set('idToken', idToken)
+      .send(parameters);
+    // THEN: Returns a well-formed response
+    super.assertRequestFormat(res, 'Error', 400, 'Error');
+    //THEN: Error message is returned
+    this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid message'});
+  }
 }

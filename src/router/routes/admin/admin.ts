@@ -295,10 +295,10 @@ export class AdminController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Could not find valid pin', 400), next);
     }
     if (!req.body.title) {
-      return Util.standardErrorHandler(new HttpError('Could not find title', 400), next);
+      return Util.standardErrorHandler(new HttpError('Could not find valid title', 400), next);
     }
     if (!req.body.message) {
-      return Util.standardErrorHandler(new HttpError('Could not find message', 400), next);
+      return Util.standardErrorHandler(new HttpError('Could not find valid message', 400), next);
     }
 
     const result = await axios.post(AdminController.notificationFunctionRoute, req);

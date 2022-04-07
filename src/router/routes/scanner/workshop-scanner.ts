@@ -5,15 +5,17 @@ import { ParentRouter } from '../../router-types';
 import { MysqlUow } from '../../../services/database/svc/mysql-uow.service';
 import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
-import { Util } from '../../../JSCommon/util';
+import { Environment, Util } from '../../../JSCommon/util';
 import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { WorkshopScan } from '../../../models/workshops-scans/workshop-scans';
 import { IRegisterDataMapper } from 'models/register';
+import axios from 'axios';
 @Injectable()
 export class WorkshopScannerController extends ParentRouter implements IExpressController {
   public router: Router;
+  protected notificationFunctionRoute = 'https://us-central1-hackpsu18.cloudfunctions.net/notifications/message/send';
   constructor(
     @Inject('IWorkshopScansDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
@@ -119,6 +121,14 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
       }
       const result = await this.workshopScansDataMapper.insert(scan);
       const response = new ResponseBody('Success', 200, result);
+      try { 
+        // don't send push notifications when on staging, since this involves calling an external function
+        if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+          axios.post(this.notificationFunctionRoute, {userPin: req.body.pin, title: "Check In", message: "You've just checked in to a workshop at HackPSU!"});
+        }
+      } catch (error) {
+
+      }
       return this.sendResponse(res, response);
       
     } catch (error) {

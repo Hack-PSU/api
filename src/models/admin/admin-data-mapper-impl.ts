@@ -158,7 +158,8 @@ export class AdminDataMapperImpl extends GenericDataMapper
       );
     }
     if (
-      permissionLevel < (userRecord.customClaims! as ICustomPermissions).privilege &&
+      userRecord.customClaims && 
+      permissionLevel < (userRecord.customClaims as ICustomPermissions).privilege && 
       !this.authService.aclVerifier(userPrivilege, this.REDUCE_PERMISSION)
     ) {
       throw new HttpError('You do not have permission to reduce someone else\'s permission', 400);

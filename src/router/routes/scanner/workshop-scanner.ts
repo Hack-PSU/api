@@ -125,7 +125,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
         // don't send push notifications when testing, since this involves calling an external function
         if (Util.getCurrentEnv() == Environment.PRODUCTION) {
           const notificationParams = {userPin: req.body.pin, title: "Check In", message: "You've just checked in to a workshop at HackPSU!"};
-          const notificationHeaders = {headers: {idToken: req.headers.idtoken}}
+          const notificationHeaders = {headers: {idToken: req.headers.idtoken}};
           axios.post(this.notificationFunctionRoute, notificationParams, notificationHeaders);
         }
       } catch (error) {

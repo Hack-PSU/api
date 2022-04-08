@@ -115,16 +115,18 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     }
     
     try {
-      const scan = new WorkshopScan(req.body);
+      const scan = new WorkshopScan(req.body); 
       if (req.body.relativePin) {
         scan.user_pin = scan.user_pin + ((await this.activeHackathonDataMapper.activeHackathon.toPromise()).base_pin as number);
       }
       const result = await this.workshopScansDataMapper.insert(scan);
       const response = new ResponseBody('Success', 200, result);
       try { 
-        // don't send push notifications when on staging, since this involves calling an external function
+        // don't send push notifications when testing, since this involves calling an external function
         if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-          axios.post(this.notificationFunctionRoute, {userPin: req.body.pin, title: "Check In", message: "You've just checked in to a workshop at HackPSU!"});
+          const notificationParams = {userPin: req.body.pin, title: "Check In", message: "You've just checked in to a workshop at HackPSU!"};
+          const notificationHeaders = {headers: {idToken: req.headers.idtoken}};
+          axios.post(this.notificationFunctionRoute, notificationParams, notificationHeaders);
         }
       } catch (error) {
 
@@ -132,7 +134,11 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
       return this.sendResponse(res, response);
       
     } catch (error) {
-      return Util.errorHandler500(error, next);
+      if (error.status == 409 && error.message === 'duplicate objects not allowed') {
+        return this.sendResponse(res, new ResponseBody('User has already checked in to this event', 409));
+      } else {
+        return Util.errorHandler500(error, next);
+      }
     }
   }
 }

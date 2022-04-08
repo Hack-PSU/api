@@ -125,7 +125,7 @@ class ExtraCreditIntegrationTest extends UsersIntegrationTest {
   private async getClassAssignmentsSuccessfully() {
 
     // needs multiple assignments in the database to test properly, but they should already be there from the previous test
-    //this.insertAssignments();
+    // TODO: Change that behavior ^^ because that's not how unit tests work
 
     const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();

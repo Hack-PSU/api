@@ -19,7 +19,8 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     protected readonly apiEndpoint = '/v2/workshop';
     protected readonly tableName = 'WORKSHOP_SCANS';
     protected readonly pkColumnName = 'scan_uid';
-    private pin: string;
+    protected readonly insertionTestPin = 6;
+    
     @test('obtains the registration associated with the given pin')
     @slow(1500)
     public async getRegistrationSuccessfully() {
@@ -27,7 +28,6 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         // WHEN: Getting a registration by pin
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
-        // console.log(idToken);
         const parameters = {pin: TestData.insertedUserPin()};
         const res = await this.chai
           .request(this.app)
@@ -88,7 +88,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
 
-        const parameters = {pin: 5, eventUid: 'test event uid'};
+        const parameters = {pin: this.insertionTestPin, eventUid: 'test event uid'};
         const res = await this.chai
         .request(this.app)
         .post(`${this.apiEndpoint}/check-in`)
@@ -99,6 +99,34 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         super.assertRequestFormat(res);
         // THEN: The response is checked
         await this.verifyWorkshopScan(res.body.body.data);
+    }
+
+    @test('fails to insert a scan when user already scanned in to the event')
+    @slow(1500)
+    public async insertScanFailsDueToDuplicateScan() {
+        //GIVEN: API
+        //WHEN: Entering a workshop scan instance by user pin
+        const user = await IntegrationTest.loginAdmin();
+        const idToken = await user.getIdToken();
+        
+        // Needs to have a duplicate scan already in the database
+        const scan = new WorkshopScan(TestData.validWorkshopScan());
+        scan.user_pin += 2;
+        const insertionQuery = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+            .into(TestData.workshopScansTableName)
+            .setFieldsRows([scan.dbRepresentation])
+            .toParam();
+        insertionQuery.text = insertionQuery.text.concat(';');
+        await WorkshopScanIntegrationTest.mysqlUow.query(insertionQuery.text, insertionQuery.values);
+
+        const parameters = {pin: scan.user_pin, eventUid: scan.event_id}
+        const res = await this.chai
+          .request(this.app)
+          .post(`${this.apiEndpoint}/check-in`)
+          .set('idToken', idToken)
+          .set('content-type', 'application/json')
+          .send(parameters);
+        super.assertRequestFormat(res, 'User has already checked in to this event', 409, undefined, false);
     }
 
     @test('fails to create a new workshop scan instance when no pin is provided')
@@ -189,7 +217,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
     private async verifyWorkshopScan(object: WorkshopScan) {
         const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
           .from(TestData.workshopScansTableName)
-          .where('user_pin = ?', 5)
+          .where('user_pin = ?', object.user_pin)
           .where('event_id = ?', 'test event uid')
           .toParam();
         const [result] = await WorkshopScanIntegrationTest.mysqlUow.query<WorkshopScan>(

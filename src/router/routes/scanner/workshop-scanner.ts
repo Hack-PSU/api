@@ -122,7 +122,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
       const result = await this.workshopScansDataMapper.insert(scan);
       const response = new ResponseBody('Success', 200, result);
       try { 
-        // don't send push notifications when on staging, since this involves calling an external function
+        // don't send push notifications when testing, since this involves calling an external function
         if (Util.getCurrentEnv() == Environment.PRODUCTION) {
           axios.post(this.notificationFunctionRoute, {userPin: req.body.pin, title: "Check In", message: "You've just checked in to a workshop at HackPSU!"});
         }
@@ -132,7 +132,11 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
       return this.sendResponse(res, response);
       
     } catch (error) {
-      return Util.errorHandler500(error, next);
+      if (error.status == 409 && error.message === 'duplicate objects not allowed') {
+        return this.sendResponse(res, new ResponseBody('User has already checked in to this event', 409));
+      } else {
+        return Util.errorHandler500(error, next);
+      }
     }
   }
 }

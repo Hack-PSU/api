@@ -104,6 +104,7 @@ export abstract class IntegrationTest {
     api_response: string = 'Success',
     status: number = 200,
     bodyResult: string = 'Success',
+    bodyExpected: boolean = true,
   ) {
     this.expect(res).status(status);
     this.expect(res).header('content-type', 'application/json; charset=utf-8');
@@ -111,9 +112,11 @@ export abstract class IntegrationTest {
       api_response: api_response,
       status: status,
     });
-    this.expect(res.body.body).to.deep.include({
-      result: bodyResult,
-    });
+    if (bodyExpected) {
+      this.expect(res.body.body).to.deep.include({
+        result: bodyResult,
+      });
+    }
   }
 
   protected static async login(email: string, password: string): Promise<firebase.User> {

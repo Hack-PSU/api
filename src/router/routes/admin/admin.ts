@@ -280,7 +280,7 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @api {post} /admin/mobile-push-notification Send a push notification to a user
    * @apiVersion 2.0.0
    * @apiName Push Mobile Notification
-   * @apiGroup Updates
+   * @apiGroup Admin
    * @apiPermission DirectorPermission
    * 
    * @apiParam {Number} userPin the pin of the user to send a notification to

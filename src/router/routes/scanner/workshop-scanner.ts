@@ -115,7 +115,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     }
     
     try {
-      const scan = new WorkshopScan(req.body);
+      const scan = new WorkshopScan(req.body); 
       if (req.body.relativePin) {
         scan.user_pin = scan.user_pin + ((await this.activeHackathonDataMapper.activeHackathon.toPromise()).base_pin as number);
       }

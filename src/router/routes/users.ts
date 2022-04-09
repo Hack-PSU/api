@@ -1,6 +1,7 @@
 import { validate } from 'email-validator';
 import express, { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
+import { IRegisterDataMapper } from 'models/register';
 import * as path from 'path';
 import { map } from 'rxjs/operators';
 import { IExpressController, ResponseBody } from '..';
@@ -40,6 +41,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     @Inject('IPreregistrationProcessor') private readonly preregistrationProcessor: IPreregistrationProcessor,
     @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IExtraCreditDataMapper,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
+    @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
     @Inject('IStorageService') private readonly storageService: IStorageService,
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
@@ -581,6 +583,41 @@ export class UsersController extends ParentRouter implements IExpressController 
     try {
       const result = await this.extraCreditDataMapper.deleteByUser(req.body.userUid, req.body.hackathonUid);
       const response = new ResponseBody('Success', 200, result);
+      return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  
+  /**
+   * @api {get} /users/pin-by-email Get the uid corresponding to an email
+   * @apiVersion 2.0.0
+   * @apiName Get User Id
+   * @apiGroup Admin
+   * @apiPermission DirectorPermission
+   *
+   * @apiUse AuthArgumentRequired
+   * @apiParam {String} email The email to query user id by
+   * @apiSuccess {UserRecord} Object {uid, displayName, privilege, admin}
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+   private async getRelativePinByEmail(req: Request, res: Response, next: NextFunction) {
+    if (!req.query || !req.query.email) {
+      return Util.standardErrorHandler(
+        new HttpError('Email could not be found in request parameters', 400),
+        next,
+      );
+    }
+    try {
+      const hackathon = (await this.activeHackathonDataMapper.activeHackathon.toPromise());
+      const result = await this.registerDataMapper.getRegistrationByEmail(req.query.email, hackathon.uid);
+      const response = new ResponseBody(
+        'Success',
+        200,
+        result,
+    );
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

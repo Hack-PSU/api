@@ -120,6 +120,9 @@ export class UsersController extends ParentRouter implements IExpressController 
       this.authService.verifyAcl(this.extraCreditPerm, AclOperations.DELETE),
       (req, res, next) => this.deleteExtraCreditAssignmentsByUserHandler(req, res, next),
     );
+    app.get('/registration-by-email',
+    (req, res, next) => this.getRegistrationByEmailHandler(req, res, next),
+    );
   }
 
   private async generateFileName(uid: UidType, firstName: string, lastName: string) {
@@ -591,7 +594,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
   
   /**
-   * @api {get} /users/pin-by-email Get the uid corresponding to an email
+   * @api {get} /users/registration-by-email Get the uid corresponding to an email
    * @apiVersion 2.0.0
    * @apiName Get User Id
    * @apiGroup Admin
@@ -603,7 +606,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-   private async getRelativePinByEmail(req: Request, res: Response, next: NextFunction) {
+   private async getRegistrationByEmailHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.query || !req.query.email) {
       return Util.standardErrorHandler(
         new HttpError('Email could not be found in request parameters', 400),

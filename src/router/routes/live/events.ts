@@ -13,7 +13,7 @@ import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types'
 import { IDataMapperHackathonSpecific } from '../../../services/database';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
-//this is a test message for committing purposes
+
 @Injectable()
 export class EventsController extends LiveController {
 

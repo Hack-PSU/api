@@ -78,7 +78,7 @@
     "@types/mysql": "2.15.5",
     "@types/uuid": "3.4.4",
     "ajv": "^5.5.2",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "body-parser": "1.18.3",
     "bunyan": "1.8.12",
     "chai": "4.2.0",

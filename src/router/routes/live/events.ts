@@ -13,7 +13,9 @@ import { AclOperations, IAclPerm } from '../../../services/auth/RBAC/rbac-types'
 import { IDataMapperHackathonSpecific } from '../../../services/database';
 import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
-//this is a test message for committing purposes
+import { IActiveHackathonDataMapper } from 'models/hackathon/active-hackathon';
+import { map } from 'rxjs/internal/operators/map';
+
 @Injectable()
 export class EventsController extends LiveController {
 
@@ -26,6 +28,7 @@ export class EventsController extends LiveController {
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IUrlDataMapper') private readonly urlDataMapper: UrlDataMapperImpl,
     @Inject('IStorageService') private readonly storageService: IStorageService,
+    @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
   ) {
     super();
     this.imageUploader = this.storageService.mapper({
@@ -62,6 +65,7 @@ export class EventsController extends LiveController {
       return;
     }
     // Unauthenticated route
+    app.get('/get-by-uid', (req, res, next) => this.getEventByUidHandler(req, res, next));
     app.get('/', (req, res, next) => this.getEventHandler(req, res, next));
     // Use authentication
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
@@ -88,6 +92,37 @@ export class EventsController extends LiveController {
       this.imageUploader.upload(),
       (req, res, next) => this.postImageHandler(req, res, next),
     );
+  }
+
+  /**
+   * Get an event by its uid
+   * @api {get} /live/event
+   * @apiVersion 2.0.0
+   * @apiName Get Event by Uid
+   * @apiGroup Events
+   * @apiPermission TeamMemberPermission
+   * 
+   * @apiParam {String} uid the Uid of the event
+   * @apiParam {String} [hackathon=current] The hackathon to get the event from
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async getEventByUidHandler(
+    request: express.Request,
+    response: express.Response,
+    next: express.NextFunction,
+  ) {
+    if (!request.query || !request.query.uid) {
+      return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
+    }
+    try {
+      const activeHackathonUid = await this.activeHackathonDataMapper.activeHackathon.pipe(
+        map(hackathon => hackathon.uid)).toPromise();
+      const result = await this.dataMapper.get({uid: request.query.uid, hackathon: request.query.hackathon || activeHackathonUid});
+      return this.sendResponse(response, new ResponseBody('Success', 200, result));
+    } catch (error) {
+      Util.standardErrorHandler(error, next);
+    }
   }
 
   /**

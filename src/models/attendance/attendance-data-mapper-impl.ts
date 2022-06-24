@@ -62,6 +62,7 @@ export class AttendanceDataMapperImpl extends GenericDataMapper
         'veteran',
         'pin',
         'hackathon',
+        'word_pin',
       ],
     );
   }

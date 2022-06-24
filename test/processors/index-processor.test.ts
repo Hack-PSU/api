@@ -12,7 +12,7 @@ describe('TEST: Index Processor', () => {
     const response = await indexProcessor.processIndex();
     // THEN: response fields are correctly set
     const expectedBody = {
-      api_response: 'Is Travis still deploying from Dev?',
+      api_response: 'Welcome to the HackPSU api!',
       body: { result: 'Success', data: {} },
       status: 200,
     };

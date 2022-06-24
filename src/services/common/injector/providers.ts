@@ -37,6 +37,7 @@ import { UpdatesController } from '../../../router/routes/live/updates';
 import { ScannerController } from '../../../router/routes/scanner/scanner';
 import { WorkshopScannerController } from '../../../router/routes/scanner/workshop-scanner';
 import { UsersController } from '../../../router/routes/users';
+import { JudgingController } from '../../../router/routes/judging';
 import { FirebaseAuthService } from '../../auth';
 import { ApikeyAuthService } from '../../auth/apikey-auth';
 import { RBAC } from '../../auth/RBAC/rbac';
@@ -67,6 +68,7 @@ export class ExpressProvider {
         { provide: 'AdminController', useClass: AdminController },
         { provide: 'ScannerController', useClass: ScannerController },
         { provide: 'WorkshopController', useClass: WorkshopScannerController},
+        { provide: 'JudgingController', useClass: JudgingController },
         { provide: 'AdminRegisterController', useClass: AdminRegisterController },
         { provide: 'AdminStatisticsController', useClass: AdminStatisticsController },
         { provide: 'AdminHackathonController', useClass: AdminHackathonController },

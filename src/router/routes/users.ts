@@ -23,6 +23,7 @@ import { Logger } from '../../services/logging/logging';
 import { IStorageService } from '../../services/storage';
 import { IStorageMapper } from '../../services/storage/svc/storage.service';
 import { ParentRouter } from '../router-types';
+const RandomWords = require('random-words');
 
 @Injectable()
 export class UsersController extends ParentRouter implements IExpressController {
@@ -257,6 +258,9 @@ export class UsersController extends ParentRouter implements IExpressController 
         ),
       );
     }
+
+    // Generate a random word pin
+    request.body.wordpin = RandomWords({exactly: 4, join: " ", minLength: 3});
 
     let registration: Registration;
     try {

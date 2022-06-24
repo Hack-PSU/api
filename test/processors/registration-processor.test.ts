@@ -52,7 +52,8 @@ const registration = new Registration({
   time: Date.now(),
   submitted: true,
   shareAddressMlh: false,
-  shareAddressSponsors: false
+  shareAddressSponsors: false,
+  wordpin: "test pin"
 });
 
 describe('TEST: Registration Processor', () => {

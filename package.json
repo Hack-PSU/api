@@ -114,6 +114,7 @@
     "node-time-uuid": "0.1.5",
     "pug": "2.0.3",
     "random-number-csprng": "1.0.2",
+    "random-words": "1.2.0",
     "reflect-metadata": "0.1.12",
     "request": "2.86.0",
     "request-context": "2.0.0",

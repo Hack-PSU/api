@@ -2,6 +2,7 @@ import { Substitute } from '@fluffy-spoon/substitute';
 import { expect } from 'chai';
 import 'mocha';
 import { of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { anyString, anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
 import { IActiveHackathonDataMapper } from '../../../src/models/hackathon/active-hackathon';
 import { ActiveHackathon } from '../../../src/models/hackathon/active-hackathon/active-hackathon';
@@ -51,7 +52,7 @@ describe('TEST: Project Data Mapper', () => {
       await projectDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `PROJECT_LIST` WHERE (projectID = ?);';
+      const expectedSQL = 'SELECT * FROM `PROJECTS` WHERE (uid = ?);';
       const expectedParams = [uid];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
                 .first();
@@ -70,7 +71,7 @@ describe('TEST: Project Data Mapper', () => {
       await projectDataMapper.delete(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'DELETE FROM `PROJECT_LIST` WHERE (projectID = ?);';
+      const expectedSQL = 'DELETE FROM `PROJECTS` WHERE (uid = ?);';
       const expectedParams = [uid];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
                 .first();
@@ -88,7 +89,7 @@ describe('TEST: Project Data Mapper', () => {
       await projectDataMapper.getCount();
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT COUNT(projectID) AS "project_count" FROM `PROJECT_LIST`;';
+      const expectedSQL = 'SELECT COUNT(uid) AS "project_count" FROM `PROJECTS`;';
       const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
       expect(generatedSQL).to.equal(expectedSQL);
@@ -100,20 +101,16 @@ describe('TEST: Project Data Mapper', () => {
     it('inserts the project', async () => {
       // GIVEN: An project to insert
       const testProject = new Project({
-        project_name: 'test_project',
-        team: ['a', 'b'],
-        categories: ['1', '2'],
-        projectId: 'test uid',
+        project: 'test_project',
       });
       // WHEN: Retrieving number of projects
       await projectDataMapper.insert(testProject);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'CALL assignTeam (?,?,?,@projectID_out); SELECT @projectID_out as projectID;';
+      const expectedSQL = 'INSERT INTO `PROJECTS` (`project`, `hackathon`) VALUES (?, ?);';
       const expectedParams = [
-        testProject.project_name,
-        testProject.team.join(','),
-        testProject.categories.join(','),
+        testProject.project,
+        await activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise()
       ];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
                 .first();
@@ -128,23 +125,20 @@ describe('TEST: Project Data Mapper', () => {
     it('updates the projects', async () => {
       // GIVEN: An project to insert
       const testProject = new Project({
-        project_name: 'test_project_b',
-        team: ['peter'],
-        categories: ['core'],
-        projectId: 'test uid',
+        project: 'test_project',
+        uid: 5,
       });
       // WHEN: Retrieving number of projects
       await projectDataMapper.update(testProject);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'UPDATE `PROJECT_LIST` SET `team` = ?, ' +
-                '`categories` = ?, `project_name` = ? WHERE (projectID = ?);';
+      const expectedSQL = 'UPDATE `PROJECTS` SET `project` = ?, `uid` = ? WHERE (uid = ?);';
       const expectedParams = [
-        testProject.team.join(','),
-        testProject.categories.join(','),
-        testProject.project_name,
-        testProject.projectId,
+        testProject.project,
+        testProject.uid,
+        testProject.uid
       ];
+      console.log(await activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise());
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
                 .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
@@ -153,76 +147,4 @@ describe('TEST: Project Data Mapper', () => {
     });
   });
 
-  describe('TEST: Project get by user', () => {
-    it('get the project by userID', async () => {
-      // GIVEN: An Project associated with a valid user ID to read from
-      const uid = 'test uid';
-      // WHEN: Retriving data for this project
-      await projectDataMapper.getByUser(uid);
-
-      // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT `project_list`.`projectName`, `project_team`.*, `table_assignment`.`tableNumber`, ' +
-                '`category_list`.* FROM `PROJECT_TEAM` `project_team` INNER JOIN `PROJECT_LIST` `project_list` ON ' +
-                '(project_list.projectID=project_list.projectID) INNER JOIN `PROJECT_CATEGORIES` `project_category` ON ' +
-                '(project_category.projectID = project_team.projectID) INNER JOIN `CATEGORY_LIST` `category_list` ON ' +
-                '(category_list.uid = project_category.categoryID ) LEFT JOIN `TABLE_ASSIGNMENTS` `table_assignment` ON ' +
-                '(table_assignment.projectID = project_list.project.ID) WHERE (project_team.userID = ?);';
-      const [generatedSQL] = capture<string>(mysqlUowMock.query).first();
-      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
-      expect(generatedSQL).to.equal(expectedSQL);
-
-    });
-  });
-
-  describe('TEST: Project assign table', () => {
-    it('assign project to table', async () => {
-      // GIVEN: An Project created in to the database
-      const testProject = new Project({
-        project_name: 'test_project_b',
-        team: ['peter'],
-        categories: ['1'],
-        projectId: 'test uid',
-      });
-      // WHEN: assigning a project for table number
-      await projectDataMapper.assignTable(testProject);
-
-      // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'CALL assignTable(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;';
-      const expectedParams = [
-        testProject.projectId,
-        1,
-      ];
-      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
-                .first();
-      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
-      expect(generatedSQL).to.equal(expectedSQL);
-      expect(generatedParams).to.deep.equal(expectedParams);
-    });
-  });
-
-  describe('TEST: Project assign table multi-category', () => {
-    it('assign project associated with multiple cateogry to table', async () => {
-      // GIVEN: An Project created in to the database
-      const testProject = new Project({
-        project_name: 'test_project_b',
-        team: ['peter'],
-        categories: ['1', '2', '10'],
-        projectId: 'test uid',
-      });
-      // WHEN: assigning a project for table number
-      await projectDataMapper.assignTable(testProject);
-
-      // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'CALL assignTable(?,?,@tableNumber_out); SELECT @tableNumber_out as table_number;';
-      const expectedParams = [
-        testProject.projectId,
-        1,
-      ];
-      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
-                .first();
-      verify(mysqlUowMock.query(anything(), anything(), anything())).once();
-      expect(generatedSQL).to.equal(expectedSQL);
-      expect(generatedParams).to.deep.equal(expectedParams);
-    });
-  });
-});
+})

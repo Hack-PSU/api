@@ -122,7 +122,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IProject
       .pipe(map((projects: Project[]) => ({ result: 'Success', data: projects })),
       )
       .toPromise();
-    }
+  }
 
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })

@@ -19,3 +19,4 @@ doc/
 lib/
 coverage/
 firebase_config.json
+launch.json

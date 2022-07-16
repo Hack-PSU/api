@@ -25,7 +25,6 @@ import { Registration } from 'models/register/registration';
   
   getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>>;
 
-
  }
 @Injectable()
 export class WorkshopDataMapperImpl extends GenericDataMapper
@@ -88,7 +87,6 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
   }
 
   public async insert(object: WorkshopScan): Promise<IDbResult<WorkshopScan>> {
-    
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation])

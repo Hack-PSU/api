@@ -59,7 +59,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm
     );
     super.addRBAC(
       [this.CREATE, this.READ, this.UPDATE],
-      [AuthLevel.PARTICIPANT],
+      [AuthLevel.DIRECTOR],
     );
   }
 

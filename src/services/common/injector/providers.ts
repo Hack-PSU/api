@@ -103,7 +103,7 @@ export class ExpressProvider {
         { provide: 'IRegisterDataMapper', useClass: RegisterDataMapperImpl },
         { provide: 'IRsvpDataMapper', useClass: RsvpDataMapperImpl },
         { provide: 'IScannerDataMapper', useClass: ScannerDataMapperImpl },
-        { provide: 'IScoresDataMapper', useClass: ScoreDataMapperImpl },
+        { provide: 'IScoreDataMapper', useClass: ScoreDataMapperImpl },
         { provide: 'IUpdateDataMapper', useClass: UpdateDataMapperImpl },
         { provide: 'IUrlDataMapper', useClass: UrlDataMapperImpl },
         { provide: 'IWorkshopScansDataMapper', useClass: WorkshopDataMapperImpl },

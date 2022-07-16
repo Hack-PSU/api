@@ -12,6 +12,7 @@ import { MysqlUow } from "../../services/database/svc/mysql-uow.service";
 import { IActiveHackathonDataMapper } from "models/hackathon/active-hackathon";
 import Logger from "bunyan";
 import { IRegisterDataMapper } from "models/register";
+import { AuthLevel } from "../../services/auth/auth-types";
 
 export interface IScoreDataMapper extends IDataMapper<Score> {
   
@@ -39,13 +40,20 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
-    // TODO: permissions
+    super.addRBAC(
+      [this.CREATE],
+      [AuthLevel.TEAM_MEMBER],
+    );
+    super.addRBAC(
+      [this.READ],
+      [AuthLevel.DIRECTOR],
+    )
   }
 
   get(object: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score>> {
     throw new Error("Method not implemented.");
   }
-  
+
   public async insert(object: Score): Promise<IDbResult<Score>> {
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)

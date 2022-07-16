@@ -1,4 +1,4 @@
-import BaseObject from "models/BaseObject";
+import BaseObject from "../BaseObject";
 
 export interface IScoreApiModel {
   project_id: number,

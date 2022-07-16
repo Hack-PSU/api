@@ -11,7 +11,6 @@ import { GenericDataMapper } from '../../services/database/svc/generic-data-mapp
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
-import { Hackathon } from '../hackathon';
 import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
 import { IRegisterDataMapper } from './index';
 import { IRegistrationStats, Registration } from './registration';

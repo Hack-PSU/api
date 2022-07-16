@@ -8,7 +8,7 @@ import { from } from "rxjs";
 import { map } from "rxjs/operators";
 import { Inject, Injectable } from 'injection-js';
 import { default as _ } from 'lodash';
-import { MysqlUow } from "services/database/svc/mysql-uow.service";
+import { MysqlUow } from "../../services/database/svc/mysql-uow.service";
 import { IActiveHackathonDataMapper } from "models/hackathon/active-hackathon";
 import Logger from "bunyan";
 import { IRegisterDataMapper } from "models/register";

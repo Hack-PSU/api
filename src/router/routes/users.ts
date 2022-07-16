@@ -601,7 +601,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @api {get} /users/registration-by-email Get the uid corresponding to an email
    * @apiVersion 2.0.0
    * @apiName Get User Id
-   * @apiGroup Users
+   * @apiGroup User
    * @apiPermission DirectorPermission
    *
    * @apiUse AuthArgumentRequired

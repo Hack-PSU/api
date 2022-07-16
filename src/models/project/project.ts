@@ -5,22 +5,19 @@ import BaseObject from '../BaseObject';
 const projectSchema = jsonAssetLoader('projectRegistrationSchema');
 
 export interface IProjectApiModel {
-  project_name: string;
-  team: string[];
-  categories: string[];
-  projectId: UidType;
-
+  project: string;
+  uid?: number;
+  hackathon?: UidType;
 }
 
 export class Project extends BaseObject {
 
-  public readonly project_name: string;
-  public readonly team: string[];
-  public readonly categories: string[];
-  public projectId: UidType;
+  public readonly project: string;
+  public readonly hackathon?: UidType;
+  public readonly uid?: number;
 
   public get id() {
-    return this.projectId;
+    return this.uid;
   }
 
   public get schema(): any {
@@ -29,10 +26,9 @@ export class Project extends BaseObject {
 
   constructor(data: IProjectApiModel) {
     super();
-    this.project_name = data.projectId;
-    this.team = data.team;
-    this.categories = data.categories;
-    this.projectId = data.projectId;
+    this.project = data.project;
+    this.hackathon = data.hackathon;
+    this.uid = data.uid;
   }
 
 }

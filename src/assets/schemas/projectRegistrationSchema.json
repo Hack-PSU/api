@@ -1,25 +1,17 @@
 {
   "type": "object",
   "properties": {
-    "project_name": {
+    "project": {
       "type": "string"
     },
-    "team": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "minItems": 0,
-      "maxItems": 5
-    },
-    "categories": {
-      "type": "array",
-      "uniqueItems": true
+    "hackathon": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 45
     }
   },
   "required": [
-    "project_name",
-    "team",
-    "categories"
+    "project",
+    "hackathon"
   ]
 }

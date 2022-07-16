@@ -4,7 +4,6 @@ import { map } from 'rxjs/operators';
 import { GenericDataMapper } from '../../services/database/svc/generic-data-mapper';
 import * as squel from 'squel';
 import { UidType } from '../../JSCommon/common-types';
-import { HttpError } from '../../JSCommon/errors';
 import { AuthLevel } from '../../services/auth/auth-types';
 import { IAcl, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { IDataMapper, IDbResult } from '../../services/database';
@@ -16,9 +15,12 @@ import { Project } from './project';
 
 export interface IProjectDataMapper extends IDataMapper<Project> {
 
+  // the normal delete requires a String uid, but we use a numerical uid for these in the database. Until we refactor, this is how it's going to have to be, unfortunately.
+  deleteProject(uid: Number): Promise<IDbResult<void>>;
+
 }
 @Injectable()
-export class ProjectDataMapperImpl extends GenericDataMapper implements IProjectDataMapper, IAclPerm {
+export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm, IProjectDataMapper {
 
   public COUNT: string = 'project:count';
   public CREATE: string = 'project:create';
@@ -61,7 +63,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IProject
     );
   }
 
-  public delete(uid: UidType): Promise<IDbResult<void>> {
+  public async delete(uid: UidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
       .where(`${this.pkColumnName} = ?`, uid)
@@ -74,7 +76,20 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IProject
     ).toPromise();
   }
 
-  public get(uid: UidType, opts?: IUowOpts): Promise<IDbResult<Project>> {
+  public async deleteProject(uid: Number): Promise<IDbResult<void>> {
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    .from(this.tableName)
+    .where(`${this.pkColumnName} = ?`, uid)
+    .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query(query.text, query.values, { cache: false }),
+    ).pipe(
+      map(() => ({ result: 'Success', data: undefined })),
+    ).toPromise();
+  }
+
+  public async get(uid: UidType, opts?: IUowOpts): Promise<IDbResult<Project>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.fields) {

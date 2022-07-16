@@ -15,12 +15,16 @@ import { RsvpDataMapperImpl } from '../../../models/RSVP/RSVP-data-mapper-impl';
 import { ScannerDataMapperImpl } from '../../../models/scanner/scanner-data-mapper-impl';
 import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';
 import { UrlDataMapperImpl } from '../../../models/url/url-data-mapper-impl';
+import { ProjectDataMapperImpl } from '../../../models/project/project-data-mapper-impl';
+import { ScoreDataMapperImpl } from '../../../models/score/score-data-mapper';
+
 import { AdminProcessor } from '../../../processors/admin-processor';
 import { IndexProcessor } from '../../../processors/index-processor';
 import { PreRegistrationProcessor } from '../../../processors/pre-registration-processor';
 import { RegistrationProcessor } from '../../../processors/registration-processor';
 import { ScannerProcessor } from '../../../processors/scanner-processor';
 import { UpdateProcessor } from '../../../processors/update-processor';
+
 import { IndexController } from '../../../router/routes';
 import {
   AdminHackathonController,
@@ -102,6 +106,8 @@ export class ExpressProvider {
         { provide: 'ICheckoutObjectDataMapper', useClass: CheckoutObjectDataMapperImpl },
         { provide: 'ICheckoutItemsDataMapper', useClass: CheckoutItemsDataMapperImpl },
         { provide: 'IUrlDataMapper', useClass: UrlDataMapperImpl },
+        { provide: 'IProjectDataMapper', useClass: ProjectDataMapperImpl },
+        { provide: 'IScoresDataMapper', useClass: ScoreDataMapperImpl },
 
         // Interfaces
         { provide: 'IAcl', useClass: RBAC },

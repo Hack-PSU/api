@@ -2,6 +2,8 @@ import axios from 'axios';
 import { validate } from 'email-validator';
 import { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
+import { Organizer } from '../../../models/admin/organizer';
+import { IOrganizerDataMapper } from 'models/admin/organizer-data-mapper-impl';
 import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
@@ -54,6 +56,8 @@ export class AdminController extends ParentRouter implements IExpressController 
     @Inject('IAdminProcessor') private readonly adminProcessor: IAdminProcessor,
     @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IDataMapper<ExtraCreditAssignment>,
     @Inject('IExtraCreditDataMapper') private readonly extraCreditAcl: IAclPerm,
+    @Inject('IOrganizerDataMapper') private readonly organizerDataMapper: IOrganizerDataMapper,
+    @Inject('IOrganizerDataMapper') private readonly organizerAcl,
   ) {
     super();
     this.router = Router();
@@ -92,6 +96,31 @@ export class AdminController extends ParentRouter implements IExpressController 
       '/mobile-notification',
       this.authService.verifyAcl(this.adminAcl, AclOperations.DELETE),
       (req, res, next) => this.mobilePushNotificationHandler(req, res, next),
+    );
+    app.get(
+      '/organizers',
+      this.authService.verifyAcl(this.organizerAcl, AclOperations.READ),
+      (req, res, next) => this.getOrganizerByUidHandler(req, res, next),
+    );
+    app.post(
+      '/organizers',
+      this.authService.verifyAcl(this.organizerAcl, AclOperations.CREATE),
+      (req, res, next) => this.insertOrganizerHandler(req, res, next),
+    );
+    app.get(
+      '/organizers/all',
+      this.authService.verifyAcl(this.organizerAcl, AclOperations.READ_ALL),
+      (req, res, next) => this.getAllOrganizersHandler(req, res, next),
+    );
+    app.post(
+      '/organizers/update',
+      this.authService.verifyAcl(this.organizerAcl, AclOperations.CREATE),
+      (req, res, next) => this.updateOrganizerHandler(req, res, next),
+    );
+    app.post(
+      '/organizers/delete',
+      this.authService.verifyAcl(this.organizerAcl, AclOperations.DELETE),
+      (req, res, next) => this.deleteOrganizerHandler(req, res, next),
     );
   }
 
@@ -198,22 +227,13 @@ export class AdminController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
     }
     if (!req.body.emails) {
-      return Util.standardErrorHandler(
-        new HttpError('Could not find email data to send', 400),
-        next,
-      );
+      return Util.standardErrorHandler(new HttpError('Could not find email data to send', 400), next);
     }
     if (!req.body.html || typeof req.body.html !== 'string') {
-      return Util.standardErrorHandler(
-        new HttpError('Could not find email content to send', 400),
-        next,
-      );
+      return Util.standardErrorHandler(new HttpError('Could not find email content to send', 400), next);
     }
     if (!req.body.subject) {
-      return Util.standardErrorHandler(
-        new HttpError('Could not find email subject to send', 400),
-        next,
-      );
+      return Util.standardErrorHandler(new HttpError('Could not find email subject to send', 400), next);
     }
     // Send the emails
     try {
@@ -246,16 +266,10 @@ export class AdminController extends ParentRouter implements IExpressController 
    */
   private async makeAdminHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.body || !req.body.uid) {
-      return Util.standardErrorHandler(
-        new HttpError('Uid of new admin required', 400),
-        next,
-      );
+      return Util.standardErrorHandler(new HttpError('Uid of new admin required', 400), next);
     }
     if (!req.body || !req.body.privilege) {
-      return Util.standardErrorHandler(
-        new HttpError('New privilege level required', 400),
-        next,
-      );
+      return Util.standardErrorHandler(new HttpError('New privilege level required', 400), next);
     }
     try {
       const result = await this.adminDataMapper.modifyPermissions(
@@ -263,14 +277,7 @@ export class AdminController extends ParentRouter implements IExpressController 
         parseInt(req.body.privilege, 10),
         res.locals.user.privilege,
       );
-      return this.sendResponse(
-        res,
-        new ResponseBody(
-          'Successfully changed the status',
-          200,
-          result,
-        ),
-      );
+      return this.sendResponse(res, new ResponseBody('Successfully changed the status.', 200, result));
     } catch (error) {
       return Util.standardErrorHandler(error, next);
     }
@@ -290,19 +297,179 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
    */
-   private async mobilePushNotificationHandler(req: Request, response: Response, next: NextFunction) {
+   private async mobilePushNotificationHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.body.userPin || !parseInt(req.body.userPin, 10)) {
-      return Util.standardErrorHandler(new HttpError('Could not find valid pin', 400), next);
+      return Util.standardErrorHandler(new HttpError('Could not find valid pin.', 400), next);
     }
     if (!req.body.title) {
-      return Util.standardErrorHandler(new HttpError('Could not find valid title', 400), next);
+      return Util.standardErrorHandler(new HttpError('Could not find valid title.', 400), next);
     }
     if (!req.body.message) {
-      return Util.standardErrorHandler(new HttpError('Could not find valid message', 400), next);
+      return Util.standardErrorHandler(new HttpError('Could not find valid message.', 400), next);
     }
 
     const result = await axios.post(AdminController.notificationFunctionRoute, req);
     const responseBody = new ResponseBody(result.statusText, result.status, result.data);
-    return this.sendResponse(response, responseBody);
+    return this.sendResponse(res, responseBody);
+  }
+
+  /**
+   * @api {post} /admin/organizer Insert an organizer with the given privilege level
+   * @apiVersion 2.0.0
+   * @apiName Add Organizer
+   * @apiGroup Admin
+   * @apiPermission DirectorPermission
+   * 
+   * @apiParam {String} uid the firebase uid of the organizer to add
+   * @apiParam {String} email the email of the organizer to add
+   * @apiParam {String} firstname the first name of the organizer to add
+   * @apiParam {String} lastname the last name of the organizer to add
+   * @apiParam {Number} [permission] the permission of the organizer to add
+   * 
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async insertOrganizerHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find uid in request.', 400), next);
+    }
+    if (!req.body.permission || !parseInt(req.body.permission, 10)) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid permission in request.', 400), next);
+    }
+    
+    let organizer;
+    try {
+      organizer = new Organizer(req.body);
+    } catch (error) {
+      return Util.standardErrorHandler(new HttpError('Some Organizer object fields were not as expected.', 400), next);
+    }
+
+    try {
+      await this.adminDataMapper.modifyPermissions(req.body.uid, parseInt(req.body.permission), res.locals.user.privilege);
+      const result = await this.organizerDataMapper.insert(organizer);
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }    
+  }
+
+  /**
+   * @api {post} /admin/organizer/delete Delete the organizer with the given uid
+   * @apiVersion 2.0.0
+   * @apiName Delete Organizer
+   * @apiGroup Admin
+   * @apiPermission DirectorPermission
+   * 
+   * @apiParam {String} uid the firebase uid of the organizer to delete
+   * 
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async deleteOrganizerHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find uid in request.', 400), next);
+    }
+
+    try {
+      await this.adminDataMapper.modifyPermissions(req.body.uid, 1, res.locals.user.privilege);
+      const result = await this.organizerDataMapper.delete(req.body.uid);
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    } 
+  }
+
+  /**
+   * @api {get} /admin/organizer/ Retrieve the organizer with the given uid
+   * @apiVersion 2.0.0
+   * @apiName Get Organizer
+   * @apiGroup Admin
+   * @apiPermission DirectorPermission
+   * 
+   * @apiParam {String} uid the firebase uid of the organizer to retrieve
+   * 
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async getOrganizerByUidHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find uid in request.', 400), next);
+    }
+
+    try {
+      const result = await this.organizerDataMapper.get(req.body.uid);
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /admin/organizer/all Get all organizers
+   * @apiVersion 2.0.0
+   * @apiName Delete Organizer
+   * @apiGroup Admin
+   * @apiPermission DirectorPermission
+   * 
+   * @apiParam {String} uid the firebase uid of the organizer to delete
+   * 
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async getAllOrganizersHandler(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await this.organizerDataMapper.getAll();
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {post} /admin/organizer/update Update an organizer with the given information
+   * @apiVersion 2.0.0
+   * @apiName Delete Organizer
+   * @apiGroup Admin
+   * @apiPermission DirectorPermission
+   * 
+   * @apiParam {String} uid the firebase uid of the organizer to add
+   * @apiParam {String} email the email of the organizer to add
+   * @apiParam {String} firstname the first name of the organizer to add
+   * @apiParam {String} lastname the last name of the organizer to add
+   * @apiParam {Number} [permission] the permission of the organizer to add
+   * 
+   * @apiUse AuthArgumentRequired
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async updateOrganizerHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find uid in request.', 400), next);
+    }
+
+    let organizer;
+    try {
+      organizer = new Organizer(req.body);
+    } catch (error) {
+      return Util.standardErrorHandler(new HttpError('Some Organizer object fields were not as expected.', 400), next);
+    }
+
+    try {
+      // only attempt to update permissions if permissions are given
+      if (req.body.permission) {
+        if (!parseInt(req.body.permission, 10)) {
+          return Util.standardErrorHandler(new HttpError('Permission could not be parsed as a base-10 integer.', 400), next);
+        }
+        await this.adminDataMapper.modifyPermissions(req.body.uid, parseInt(req.body.privilege), res.locals.user.privilege);
+      }
+      const result = await this.organizerDataMapper.update(organizer);
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
   }
 }

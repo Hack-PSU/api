@@ -148,7 +148,7 @@ class AdminIntegrationTest extends IntegrationTest {
     // THEN: Returns a well-formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
     //THEN: Error message is returned
-    this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid pin'});
+    this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid pin.'});
   }
 
   @test('fails to push notification with no title')
@@ -167,7 +167,7 @@ class AdminIntegrationTest extends IntegrationTest {
     // THEN: Returns a well-formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
     //THEN: Error message is returned
-    this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid title'});
+    this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid title.'});
   }
 
   @test('fails to push notification with no message')
@@ -186,6 +186,6 @@ class AdminIntegrationTest extends IntegrationTest {
     // THEN: Returns a well-formed response
     super.assertRequestFormat(res, 'Error', 400, 'Error');
     //THEN: Error message is returned
-    this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid message'});
+    this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid message.'});
   }
 }

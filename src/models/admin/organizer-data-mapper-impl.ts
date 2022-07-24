@@ -10,32 +10,27 @@ import { IDataMapper, IDbResult } from '../../services/database';
 import { MysqlUow } from '../../services/database/svc/mysql-uow.service';
 import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
-import { IActiveHackathonDataMapper } from '../hackathon/active-hackathon';
-import { Project } from './project';
+import { Organizer } from './organizer';
 
-export interface IProjectDataMapper extends IDataMapper<Project> {
-
-  // the normal delete requires a String uid, but we use a numerical uid for these in the database. Until we refactor, this is how it's going to have to be, unfortunately.
-  deleteProject(uid: Number): Promise<IDbResult<void>>;
+export interface IOrganizerDataMapper extends IDataMapper<Organizer> {
 
 }
 @Injectable()
-export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm, IProjectDataMapper {
+export class OrganizerDataMapperImpl extends GenericDataMapper implements IAclPerm, IOrganizerDataMapper {
 
-  public COUNT: string = 'project:count';
-  public CREATE: string = 'project:create';
-  public DELETE: string = 'project:delete';
-  public READ: string = 'project:read';
-  public READ_ALL: string = 'project:readall';
-  public UPDATE: string = 'project:update';
+  public COUNT: string = 'organizer:count';
+  public CREATE: string = 'organizer:create';
+  public DELETE: string = 'organizer:delete';
+  public READ: string = 'organizer:read';
+  public READ_ALL: string = 'organizer:readall';
+  public UPDATE: string = 'organizer:update';
 
-  public tableName: string = 'PROJECTS';
+  public tableName: string = 'ORGANIZERS';
   protected pkColumnName: string = 'uid';
 
   constructor(
     @Inject('IAcl') acl: IAcl,
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
-    @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
@@ -53,9 +48,9 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm
     );
     super.addRBAC(
       [this.READ_ALL],
-      [AuthLevel.VOLUNTEER],
+      [AuthLevel.DIRECTOR],
       undefined,
-      [AuthLevel[AuthLevel.PARTICIPANT]],
+      [AuthLevel[AuthLevel.TEAM_MEMBER]],
     );
     super.addRBAC(
       [this.CREATE, this.READ, this.UPDATE],
@@ -76,20 +71,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm
     ).toPromise();
   }
 
-  public async deleteProject(uid: Number): Promise<IDbResult<void>> {
-    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-    .from(this.tableName)
-    .where(`${this.pkColumnName} = ?`, uid)
-    .toParam();
-    query.text = query.text.concat(';');
-    return from(
-      this.sql.query(query.text, query.values, { cache: false }),
-    ).pipe(
-      map(() => ({ result: 'Success', data: undefined })),
-    ).toPromise();
-  }
-
-  public async get(uid: UidType, opts?: IUowOpts): Promise<IDbResult<Project>> {
+  public async get(uid: UidType, opts?: IUowOpts): Promise<IDbResult<Organizer>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.fields) {
@@ -99,18 +81,18 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm
       .where(`${this.pkColumnName} = ?`, uid);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Project>(
+    return from(this.sql.query<Organizer>(
       query.text,
       query.values,
       { cache: true },
     ))
       .pipe(
-        map((event: Project[]) => ({ result: 'Success', data: event[0] })),
+        map((event: Organizer[]) => ({ result: 'Success', data: event[0] })),
       )
       .toPromise();
   }
 
-  public async getAll(opts?: IUowOpts): Promise<IDbResult<Project[]>> {
+  public async getAll(opts?: IUowOpts): Promise<IDbResult<Organizer[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName);
     if (opts && opts.startAt) {
@@ -119,22 +101,11 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder
-        .where(
-          'hackathon = ?',
-          await (opts && opts.hackathon ?
-          Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon
-            .pipe(map(hackathon => hackathon.uid))
-            .toPromise()),
-        );
-    }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Project>(query.text, query.values, { cache: true },
+    return from(this.sql.query<Organizer>(query.text, query.values, { cache: true },
       ))
-      .pipe(map((projects: Project[]) => ({ result: 'Success', data: projects })),
+      .pipe(map((projects: Organizer[]) => ({ result: 'Success', data: projects })),
       )
       .toPromise();
   }
@@ -142,18 +113,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm
   public async getCount(opts?: IUowOpts): Promise<IDbResult<number>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: false })
       .from(this.tableName)
-      .field(`COUNT(${this.pkColumnName})`, 'project_count');
-    if (opts && opts.byHackathon) {
-      queryBuilder = queryBuilder
-        .where(
-          'hackathon = ?',
-          await (opts.hackathon ?
-            Promise.resolve(opts.hackathon) :
-            this.activeHackathonDataMapper.activeHackathon
-              .pipe(map(hackathon => hackathon.uid))
-              .toPromise()),
-        );
-    }
+      .field(`COUNT(${this.pkColumnName})`, 'organizer_count');
     const query = queryBuilder
       .toParam();
     query.text = query.text.concat(';');
@@ -164,15 +124,10 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm
     ).toPromise();
   }
 
-  public async insert(object: Project): Promise<IDbResult<Project>> {
+  public async insert(object: Organizer): Promise<IDbResult<Organizer>> {
     let queryBuilder = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .into(this.tableName)
       .setFieldsRows([object.dbRepresentation]);
-    if (!object.hackathon) {
-      queryBuilder = queryBuilder.set(
-        'hackathon', 
-        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise());
-    }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
@@ -182,7 +137,7 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm
     ).toPromise();
   }
 
-  public async update(object: Project): Promise<IDbResult<Project>> {
+  public async update(object: Organizer): Promise<IDbResult<Organizer>> {
     let queryBuilder = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)
       .where(`${this.pkColumnName} = ?`, object.id)

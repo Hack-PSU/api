@@ -330,7 +330,7 @@ export class UsersController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {post} /users/extra-credit/add-class
+   * @api {post} /users/extra-credit/add-class Add an Extra Credit Class
    * @apiName Add Extra Credit Class
    * @apiVersion 2.0.0
    * @apiGroup User

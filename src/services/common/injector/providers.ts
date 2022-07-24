@@ -8,6 +8,7 @@ import { EventDataMapperImpl } from '../../../models/event/event-data-mapper-imp
 import { ExtraCreditDataMapperImpl } from '../../../models/extra-credit/extra-credit-data-mapper-impl';
 import { HackathonDataMapperImpl } from '../../../models/hackathon';
 import { LocationDataMapperImpl } from '../../../models/location/location-data-mapper-impl';
+import { OrganizerDataMapperImpl } from '../../../models/admin/organizer-data-mapper-impl';
 import { PreRegisterDataMapperImpl } from '../../../models/register/pre-register-data-mapper-impl';
 import { ProjectDataMapperImpl } from '../../../models/project/project-data-mapper-impl';
 import { RegisterDataMapperImpl } from '../../../models/register/register-data-mapper-impl';
@@ -98,6 +99,7 @@ export class ExpressProvider {
         { provide: 'IExtraCreditDataMapper', useClass: ExtraCreditDataMapperImpl },
         { provide: 'IHackathonDataMapper', useClass: HackathonDataMapperImpl },
         { provide: 'ILocationDataMapper', useClass: LocationDataMapperImpl },
+        { provide: 'IOrganizerDataMapper', useClass: OrganizerDataMapperImpl },
         { provide: 'IPreRegisterDataMapper', useClass: PreRegisterDataMapperImpl },
         { provide: 'IProjectDataMapper', useClass: ProjectDataMapperImpl },
         { provide: 'IRegisterDataMapper', useClass: RegisterDataMapperImpl },

@@ -410,11 +410,9 @@ export class AdminController extends ParentRouter implements IExpressController 
   /**
    * @api {get} /admin/organizer/all Get all organizers
    * @apiVersion 2.0.0
-   * @apiName Delete Organizer
+   * @apiName Get All Organizers
    * @apiGroup Admin
    * @apiPermission DirectorPermission
-   * 
-   * @apiParam {String} uid the firebase uid of the organizer to delete
    * 
    * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError

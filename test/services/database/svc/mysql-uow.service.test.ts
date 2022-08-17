@@ -78,7 +78,7 @@ describe('TEST: Mysql Uow test', () => {
         await mysqlUow.query(query, params);
       } catch (error) {
         // Error is thrown
-        expect(error.status).to.equal(404);
+        expect(error.status).to.equal(204);
         expect(error.message).to.equal('no data was found for this query');
         expect(error.body).to.deep.equal({ message: 'no data was found for this query' });
         // THEN: Query is made on the connection

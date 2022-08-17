@@ -161,7 +161,7 @@ export class MysqlUow implements IUow {
         );
       case SQL_ERRORS.NOT_FOUND:
         throw new HttpError(
-          'no data was found for this query', 404,
+          'no data was found for this query', 204,
         );
     }
     // TODO: Handle other known SQL errors here

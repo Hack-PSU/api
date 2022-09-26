@@ -24,7 +24,8 @@ export class EventDataMapperImpl extends GenericDataMapper
   public readonly UPDATE: string = 'event:update';
   public readonly READ_ALL: string = 'event:readall';
   public readonly COUNT: string = 'event:count';
-  public tableName = 'EVENTS';
+  public readonly tableName = 'EVENTS';
+  public readonly locationTableName = 'LOCATIONS';
 
   protected pkColumnName = 'uid';
 
@@ -80,8 +81,9 @@ export class EventDataMapperImpl extends GenericDataMapper
       checkCache = false;
     }
     queryBuilder = queryBuilder
-      .where(`${this.pkColumnName}= ?`, id.uid)
-      .where('hackathon = ?', id.hackathon);
+      .where(`${this.tableName}.${this.pkColumnName}= ?`, id.uid)
+      .where('hackathon = ?', id.hackathon)
+      .join(`${this.locationTableName}`, "locations", `locations.uid = ${this.tableName}.event_location`);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<Event>(query.text, query.values, { cache: checkCache }))

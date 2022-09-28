@@ -59,6 +59,10 @@ export class JudgingController extends ParentRouter implements IExpressControlle
             this.authService.verifyAcl(this.scoreAclPerm, AclOperations.READ),
             (req, res, next) => this.getAllScoresHandler(req, res, next),
         );
+        app.post('/assignments',
+            this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
+            (req, res, next) => this.generateAssignmentshandler(req, res, next),
+        );
     }
 
     /**
@@ -200,7 +204,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     }
 
    /**
-    * @api {get} /judging/score/all Get all Scores
+    * @api {get} /judging/score/all Get all Submitted Scores
     * @apiVersion 2.0.0
     * @apiPermission DirectorPermission
     * @apiUse AuthArgumentRequired
@@ -214,6 +218,39 @@ export class JudgingController extends ParentRouter implements IExpressControlle
         try {
             const result = await this.scoreDataMapper.getAll(req.query.opts);
             return this.sendResponse(res, new ResponseBody('Success', 200, result));
+        } catch (error) {
+            return Util.errorHandler500(error, next);
+        }
+    }
+
+    /**
+     * @api {post} /judging/assignments Generate Assignments for Given Users
+     * @apiVersion 2.0.0
+     * @apiPermission DirectorPermission
+     * @apiUse AuthArgumentRequired
+     * @apiName Generate Judging Assignments
+     * @apiGroup Judging
+     * @apiParam {String[]} emails A list of organizer emails to generate assignments for
+     * @apiParam {Number} projectsPerOrganizer How many judging assignment each organizer should receive
+     * @apiUse IllegalArgumentError
+     * @apiUse ResponseBodyDescription
+     */
+    private async generateAssignmentshandler(req: Request, res: Response, next: NextFunction) {
+        if (!req.body) {
+            return next(new HttpError('Could not find request body.', 400));
+        }
+        if (!req.body.emails) {
+            return next(new HttpError('Could not find emails in request body.', 400));
+        }
+        if (!req.body.emails[0]) {
+            return next(new HttpError('Emails field in request body was not an array.', 400));
+        }
+        if (!req.body.projectsPerOrganizer || !parseInt(req.body.projectsPerOrganizer, 10)) {
+            return next(new HttpError('Could not find an integer for projectsPerOrganizer', 400));
+        }
+        try {
+            const result = await this.scoreDataMapper.generateAssignments(req.body.getMaxListeners, req.body.projectsPerOrganizer);
+            return this.sendResponse(res, new ResponseBody('Success', 200, result));    
         } catch (error) {
             return Util.errorHandler500(error, next);
         }

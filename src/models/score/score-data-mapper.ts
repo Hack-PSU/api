@@ -13,9 +13,12 @@ import { IActiveHackathonDataMapper } from "models/hackathon/active-hackathon";
 import Logger from "bunyan";
 import { IRegisterDataMapper } from "models/register";
 import { AuthLevel } from "../../services/auth/auth-types";
+import { IProjectDataMapper } from "../../models/project/project-data-mapper-impl";
+import { Project } from "../../models/project/project";
 
 export interface IScoreDataMapper extends IDataMapper<Score> {
   
+  generateAssignments(emails: String[], projectsPerOrganizer: number);
 }
 
 // TODO: create tests for these
@@ -37,6 +40,7 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
     @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IRegisterDataMapper') protected readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IProjectDataMapper') protected readonly projectDataMapper: IProjectDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
@@ -48,10 +52,6 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
       [this.READ],
       [AuthLevel.DIRECTOR],
     )
-  }
-
-  get(object: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score>> {
-    throw new Error("Method not implemented.");
   }
 
   public async insert(object: Score): Promise<IDbResult<Score>> {
@@ -99,15 +99,38 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
           this.activeHackathonDataMapper.activeHackathon
             .pipe(map(hackathon => hackathon.uid))
             .toPromise()),
+        )
+        .where(
+          'submitted = 1'
         );
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Score>(query.text, query.values, { cache: true },
+    return from(this.sql.query<Score>(query.text, query.values, { cache: false },
       ))
       .pipe(map((scores: Score[]) => ({ result: 'Success', data: scores })),
       )
       .toPromise();
+  }
+
+  public async generateAssignments(judges: string[], projectsPerOrganizer: number): Promise<IDbResult<Score[]>> {
+    const projects: Project[] = (await this.projectDataMapper.getAll()).data;
+    const assignments: Score[] = [];
+    var index = 0;
+
+    judges.forEach(element => {
+      for (let i=0; i<projectsPerOrganizer; i++) {
+        assignments.push(Score.blankScore(projects[index % projects.length].uid as number, element))
+      }
+    });
+
+    const query = squel.insert().into(this.tableName).setFieldsRows(assignments).toParam();
+    this.sql.query<void>(query.text, query.values, { cache: false });
+    return this.getAll();
+  }
+
+  get(object: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score>> {
+    throw new Error("Method not implemented.");
   }
 
   public async delete(object: string | Score): Promise<IDbResult<void>> {

@@ -51,7 +51,7 @@ describe('TEST: Event Data Mapper', () => {
       await eventDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `EVENTS` WHERE (uid= ?) AND (hackathon = ?);';
+      const expectedSQL = 'SELECT * FROM `EVENTS` INNER JOIN `LOCATIONS` `locations` ON (locations.uid = EVENTS.event_location) WHERE (EVENTS.uid= ?) AND (hackathon = ?);';
       const expectedParams = [uid.uid, uid.hackathon];
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
         .first();

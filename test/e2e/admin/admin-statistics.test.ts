@@ -320,6 +320,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
 
     delete result[uid].uid;
     delete result[uid].event_location;
+    delete result[uid].location_name;
     delete result[uid].ws_presenter_names;
     delete result[uid].ws_skill_level;
     delete result[uid].ws_relevant_skills;
@@ -370,6 +371,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     delete result[uid].time;
     delete result[uid].events[0].uid;
     delete result[uid].events[0].event_location;
+    delete result[uid].events[0].location_name;
     delete result[uid].events[0].hackathon;
     delete result[uid].events[0].ws_presenter_names;
     delete result[uid].events[0].ws_skill_level;

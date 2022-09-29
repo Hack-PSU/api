@@ -120,13 +120,15 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
 
     judges.forEach(element => {
       for (let i=0; i<projectsPerOrganizer; i++) {
-        assignments.push(Score.blankScore(projects[index % projects.length].uid as number, element))
+        assignments.push(Score.blankScore(projects[index % projects.length].uid as number, element).dbRepresentation)
+        index++;
       }
     });
 
-    const query = squel.insert().into(this.tableName).setFieldsRows(assignments).toParam();
-    this.sql.query<void>(query.text, query.values, { cache: false });
-    return this.getAll();
+    let queryBuilder = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true }).into(this.tableName).setFieldsRows(assignments);
+    const query = queryBuilder.toParam();
+    await this.sql.query<void>(query.text, query.values, { cache: false });
+    return await this.getAll();
   }
 
   get(object: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score>> {

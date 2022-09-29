@@ -60,6 +60,7 @@ export class Score extends BaseObject {
       implementation: 1,
       clarity: 1,
       growth: 1,
+      submitted: false,
     })
   }
   

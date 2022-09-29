@@ -28,6 +28,7 @@ export interface IEventApiModel {
   wsRelevantSkills?: string;
   wsUrls?: string;
   eventIcon?: string;
+  locationName?: string;
 }
 
 export class Event extends BaseObject {
@@ -53,6 +54,7 @@ export class Event extends BaseObject {
   public ws_relevant_skills?: string;
   public ws_urls?: string[];
   public event_icon?: string;
+  public location_name?: string;
 
   constructor(data: IEventApiModel) {
     super();
@@ -67,5 +69,6 @@ export class Event extends BaseObject {
     this.ws_skill_level = data.wsSkillLevel;
     this.ws_relevant_skills = data.wsRelevantSkills;
     this.event_icon = data.eventIcon || EventDefaultIcons.DEFAULT;
+    this.location_name = data.locationName;
   }
 }

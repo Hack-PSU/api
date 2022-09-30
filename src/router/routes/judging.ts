@@ -51,6 +51,10 @@ export class JudgingController extends ParentRouter implements IExpressControlle
             this.authService.verifyAcl(this.projectAclPerm, AclOperations.DELETE),
             (req, res, next) => this.deleteProjectHandler(req, res, next),
         );
+        app.get('/score',
+            this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
+            (req, res, next) => this.getUserScoresHandler(req, res, next),
+        );
         app.post('/score',
             this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
             (req, res, next) => this.insertScoreHandler(req, res, next),
@@ -58,6 +62,10 @@ export class JudgingController extends ParentRouter implements IExpressControlle
         app.get('/score/all',
             this.authService.verifyAcl(this.scoreAclPerm, AclOperations.READ),
             (req, res, next) => this.getAllScoresHandler(req, res, next),
+        );
+        app.post('/assignments',
+            this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
+            (req, res, next) => this.generateAssignmentshandler(req, res, next),
         );
     }
 
@@ -172,6 +180,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     * @apiParam {Number} implementation Score for the 'Implementation' category
     * @apiParam {Number} clarity Score for the 'Clarity' category
     * @apiParam {Number} growth Score for the 'Growth' category
+    * @apiParam {Boolean} submitted Whether this scoring is finished
     * @apiParam {Number} [humanitarian] Score for the 'Humanitarian' award
     * @apiParam {Number} [supply_chain] Score for the 'Supply Chain' award
     * @apiParam {Number} [environmental] Score for the 'environmental' award
@@ -200,7 +209,31 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     }
 
    /**
-    * @api {get} /judging/score/all Get all Scores
+    * @api {get} /judging/score/ Get scoring assignments for a specific judge
+    * @apiVersion 2.0.0
+    * @apiPermission DirectorPermission
+    * @apiUse AuthArgumentRequired
+    * @apiName Get judge's Assignments
+    * @apiGroup Judging
+    * @apiParam {String} judge The email of the judge whose assignments to retrieve
+    * @apiSuccess {Score[]} data The retrieved assignments (scores)
+    * @apiUse IllegalArgumentError
+    * @apiUse ResponseBodyDescription
+    */
+    private async getUserScoresHandler(req: Request, res: Response, next: NextFunction) {
+        if (!req.query.judge) {
+            return next(new HttpError('Could not find judge in query parameters.', 400));
+        }
+        try {
+            const result = await this.scoreDataMapper.getByUser(req.query.judge, req.query.opts);
+            return this.sendResponse(res, new ResponseBody('Success', 200, result));
+        } catch (error) {
+            return Util.errorHandler500(error, next);
+        }
+    }
+
+   /**
+    * @api {get} /judging/score/all Get all Submitted Scores
     * @apiVersion 2.0.0
     * @apiPermission DirectorPermission
     * @apiUse AuthArgumentRequired
@@ -214,6 +247,40 @@ export class JudgingController extends ParentRouter implements IExpressControlle
         try {
             const result = await this.scoreDataMapper.getAll(req.query.opts);
             return this.sendResponse(res, new ResponseBody('Success', 200, result));
+        } catch (error) {
+            return Util.errorHandler500(error, next);
+        }
+    }
+
+    /**
+     * @api {post} /judging/assignments Generate Assignments for Given Users
+     * @apiVersion 2.0.0
+     * @apiPermission DirectorPermission
+     * @apiUse AuthArgumentRequired
+     * @apiName Generate Judging Assignments
+     * @apiGroup Judging
+     * @apiParam {String[]} judges A list of organizer emails to generate assignments for
+     * @apiParam {Number} projectsPerOrganizer How many judging assignment each organizer should receive
+     * @apiSuccess {Score[]} data The judging assignments inserted 
+     * @apiUse IllegalArgumentError
+     * @apiUse ResponseBodyDescription
+     */
+    private async generateAssignmentshandler(req: Request, res: Response, next: NextFunction) {
+        if (!req.body) {
+            return next(new HttpError('Could not find request body.', 400));
+        }
+        if (!req.body.judges) {
+            return next(new HttpError('Could not find judges in request body.', 400));
+        }
+        if (!req.body.judges[0]) {
+            return next(new HttpError('Judges field in request body was not an array.', 400));
+        }
+        if (!req.body.projectsPerOrganizer) {
+            return next(new HttpError('Could not find an integer for projectsPerOrganizer', 400));
+        }
+        try {
+            const result = await this.scoreDataMapper.generateAssignments(req.body.judges, req.body.projectsPerOrganizer);
+            return this.sendResponse(res, new ResponseBody('Success', 200, result));    
         } catch (error) {
             return Util.errorHandler500(error, next);
         }

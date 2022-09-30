@@ -13,9 +13,14 @@ import { IActiveHackathonDataMapper } from "models/hackathon/active-hackathon";
 import Logger from "bunyan";
 import { IRegisterDataMapper } from "models/register";
 import { AuthLevel } from "../../services/auth/auth-types";
+import { IProjectDataMapper } from "../../models/project/project-data-mapper-impl";
+import { Project } from "../../models/project/project";
 
 export interface IScoreDataMapper extends IDataMapper<Score> {
   
+  generateAssignments(emails: String[], projectsPerOrganizer: number): Promise<IDbResult<Score[]>>;
+
+  getByUser(judge: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score[]>>;
 }
 
 // TODO: create tests for these
@@ -30,6 +35,7 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
   public readonly COUNT: string = 'score:count';
 
   public readonly TABLE_NAME: string = 'SCORES';
+  public readonly PROJECTS_TABLE_NAME: string = 'PROJECTS';
   protected readonly pkColumnName: string = 'unused cause these interfaces suck lol';
   
   constructor(
@@ -37,6 +43,7 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
     @Inject('MysqlUow') protected readonly sql: MysqlUow,
     @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IRegisterDataMapper') protected readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IProjectDataMapper') protected readonly projectDataMapper: IProjectDataMapper,
     @Inject('BunyanLogger') protected readonly logger: Logger,
   ) {
     super(acl);
@@ -48,10 +55,6 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
       [this.READ],
       [AuthLevel.DIRECTOR],
     )
-  }
-
-  get(object: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score>> {
-    throw new Error("Method not implemented.");
   }
 
   public async insert(object: Score): Promise<IDbResult<Score>> {
@@ -81,33 +84,76 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
     ).toPromise();
   }
 
-  public async getAll(opts?: IUowOpts | undefined): Promise<IDbResult<Score[]>> {
+  public async getByUser(judge: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-    .from(this.tableName);
+      .from(this.tableName)
+      .where('judge = ?', judge)
+      .join(`${this.PROJECTS_TABLE_NAME}`, "projects", `projects.uid = ${this.TABLE_NAME}.project_id`);
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
-    if (opts && opts.byHackathon) {
+    if (opts && opts.hackathon) {
       queryBuilder = queryBuilder
-        .where(
-          'hackathon = ?',
-          await (opts && opts.hackathon ?
-          Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon
-            .pipe(map(hackathon => hackathon.uid))
-            .toPromise()),
-        );
+        .where('hackathon = ?', opts.hackathon);
+    } else {
+      queryBuilder = queryBuilder
+        .where('hackathon = ?', (await this.activeHackathonDataMapper.activeHackathon.toPromise()).uid);
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Score>(query.text, query.values, { cache: true },
-      ))
-      .pipe(map((scores: Score[]) => ({ result: 'Success', data: scores })),
-      )
+    return from(this.sql.query<Score>(query.text, query.values, { cache: false }))
+      .pipe(map((scores: Score[]) => ({ result: 'Success', data: scores })))
       .toPromise();
+  }
+
+  public async getAll(opts?: IUowOpts | undefined): Promise<IDbResult<Score[]>> {
+    let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .from(this.tableName)
+      .where('submitted = ?', 1)
+      .join(`${this.PROJECTS_TABLE_NAME}`, "projects", `projects.uid = ${this.TABLE_NAME}.project_id`);
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.hackathon) {
+      queryBuilder = queryBuilder
+        .where('hackathon = ?', opts.hackathon);
+    } else {
+      queryBuilder = queryBuilder
+        .where('hackathon = ?', (await this.activeHackathonDataMapper.activeHackathon.toPromise()).uid);
+    }
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<Score>(query.text, query.values, { cache: false }))
+      .pipe(map((scores: Score[]) => ({ result: 'Success', data: scores })))
+      .toPromise();
+  }
+
+  public async generateAssignments(judges: string[], projectsPerOrganizer: number): Promise<IDbResult<Score[]>> {
+    const projects: Project[] = (await this.projectDataMapper.getAll()).data;
+    const assignments: Score[] = [];
+    var index = 0;
+
+    judges.forEach(element => {
+      for (let i=0; i<projectsPerOrganizer; i++) {
+        assignments.push(Score.blankScore(projects[index % projects.length].uid as number, element).dbRepresentation)
+        index++;
+      }
+    });
+
+    let queryBuilder = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true }).into(this.tableName).setFieldsRows(assignments);
+    const query = queryBuilder.toParam();
+    await this.sql.query<void>(query.text, query.values, { cache: false });
+    return await this.getAll();
+  }
+
+  get(object: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score>> {
+    throw new Error("Method not implemented.");
   }
 
   public async delete(object: string | Score): Promise<IDbResult<void>> {

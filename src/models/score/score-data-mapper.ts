@@ -18,7 +18,9 @@ import { Project } from "../../models/project/project";
 
 export interface IScoreDataMapper extends IDataMapper<Score> {
   
-  generateAssignments(emails: String[], projectsPerOrganizer: number);
+  generateAssignments(emails: String[], projectsPerOrganizer: number): Promise<IDbResult<Score[]>>;
+
+  getByUser(judge: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score[]>>;
 }
 
 // TODO: create tests for these
@@ -33,6 +35,7 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
   public readonly COUNT: string = 'score:count';
 
   public readonly TABLE_NAME: string = 'SCORES';
+  public readonly PROJECTS_TABLE_NAME: string = 'PROJECTS';
   protected readonly pkColumnName: string = 'unused cause these interfaces suck lol';
   
   constructor(
@@ -81,35 +84,53 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
     ).toPromise();
   }
 
-  public async getAll(opts?: IUowOpts | undefined): Promise<IDbResult<Score[]>> {
+  public async getByUser(judge: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score[]>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-    .from(this.tableName);
+      .from(this.tableName)
+      .where('judge = ?', judge)
+      .join(`${this.PROJECTS_TABLE_NAME}`, "projects", `projects.uid = ${this.TABLE_NAME}.project_id`);
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
-    if (opts && opts.byHackathon) {
+    if (opts && opts.hackathon) {
       queryBuilder = queryBuilder
-        .where(
-          'hackathon = ?',
-          await (opts && opts.hackathon ?
-          Promise.resolve(opts.hackathon) :
-          this.activeHackathonDataMapper.activeHackathon
-            .pipe(map(hackathon => hackathon.uid))
-            .toPromise()),
-        )
-        .where(
-          'submitted = 1'
-        );
+        .where('hackathon = ?', opts.hackathon);
+    } else {
+      queryBuilder = queryBuilder
+        .where('hackathon = ?', (await this.activeHackathonDataMapper.activeHackathon.toPromise()).uid);
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Score>(query.text, query.values, { cache: false },
-      ))
-      .pipe(map((scores: Score[]) => ({ result: 'Success', data: scores })),
-      )
+    return from(this.sql.query<Score>(query.text, query.values, { cache: false }))
+      .pipe(map((scores: Score[]) => ({ result: 'Success', data: scores })))
+      .toPromise();
+  }
+
+  public async getAll(opts?: IUowOpts | undefined): Promise<IDbResult<Score[]>> {
+    let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .from(this.tableName)
+      .where('submitted = ?', 1)
+      .join(`${this.PROJECTS_TABLE_NAME}`, "projects", `projects.uid = ${this.TABLE_NAME}.project_id`);
+    if (opts && opts.startAt) {
+      queryBuilder = queryBuilder.offset(opts.startAt);
+    }
+    if (opts && opts.count) {
+      queryBuilder = queryBuilder.limit(opts.count);
+    }
+    if (opts && opts.hackathon) {
+      queryBuilder = queryBuilder
+        .where('hackathon = ?', opts.hackathon);
+    } else {
+      queryBuilder = queryBuilder
+        .where('hackathon = ?', (await this.activeHackathonDataMapper.activeHackathon.toPromise()).uid);
+    }
+    const query = queryBuilder.toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<Score>(query.text, query.values, { cache: false }))
+      .pipe(map((scores: Score[]) => ({ result: 'Success', data: scores })))
       .toPromise();
   }
 

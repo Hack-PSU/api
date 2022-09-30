@@ -12,6 +12,7 @@ export interface IScoreApiModel {
   humanitarian?: number,
   supply_chain?: number,
   environmental?: number
+  project?: string,
 }
 
 export class Score extends BaseObject {
@@ -27,6 +28,7 @@ export class Score extends BaseObject {
   public humanitarian?: number;
   public supply_chain?: number;
   public environmental?: number;
+  public project?: string;
 
   constructor(data: IScoreApiModel) {
     super();
@@ -41,6 +43,7 @@ export class Score extends BaseObject {
     this.humanitarian = data.humanitarian;
     this.supply_chain = data.supply_chain;
     this.environmental = data.environmental;
+    this.project = data.project;
   }
 
   public get id() {

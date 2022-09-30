@@ -51,6 +51,10 @@ export class JudgingController extends ParentRouter implements IExpressControlle
             this.authService.verifyAcl(this.projectAclPerm, AclOperations.DELETE),
             (req, res, next) => this.deleteProjectHandler(req, res, next),
         );
+        app.get('/score',
+            this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
+            (req, res, next) => this.getUserScoresHandler(req, res, next),
+        );
         app.post('/score',
             this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
             (req, res, next) => this.insertScoreHandler(req, res, next),
@@ -198,6 +202,30 @@ export class JudgingController extends ParentRouter implements IExpressControlle
 
         try {
             const result = await this.scoreDataMapper.insert(score);
+            return this.sendResponse(res, new ResponseBody('Success', 200, result));
+        } catch (error) {
+            return Util.errorHandler500(error, next);
+        }
+    }
+
+   /**
+    * @api {get} /judging/score/ Get scoring assignments for a specific judge
+    * @apiVersion 2.0.0
+    * @apiPermission DirectorPermission
+    * @apiUse AuthArgumentRequired
+    * @apiName Get judge's Assignments
+    * @apiGroup Judging
+    * @apiParam {String} judge The email of the judge whose assignments to retrieve
+    * @apiSuccess {Score[]} data The retrieved assignments (scores)
+    * @apiUse IllegalArgumentError
+    * @apiUse ResponseBodyDescription
+    */
+    private async getUserScoresHandler(req: Request, res: Response, next: NextFunction) {
+        if (!req.query.judge) {
+            return next(new HttpError('Could not find judge in query parameters.', 400));
+        }
+        try {
+            const result = await this.scoreDataMapper.getByUser(req.query.judge, req.query.opts);
             return this.sendResponse(res, new ResponseBody('Success', 200, result));
         } catch (error) {
             return Util.errorHandler500(error, next);

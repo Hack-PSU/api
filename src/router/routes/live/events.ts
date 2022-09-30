@@ -96,7 +96,7 @@ export class EventsController extends LiveController {
 
   /**
    * Get an event by its uid
-   * @api {get} /live/event
+   * @api {get} /live/events/get-by-uid
    * @apiVersion 2.0.0
    * @apiName Get Event by Uid
    * @apiGroup Events

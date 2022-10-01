@@ -6,7 +6,7 @@ export interface ISponsorApiModel {
   name: string;
   level: string;
   logo: string;
-  hackathon: UidType;
+  hackathon?: UidType;
 }
 
 export class Sponsor extends BaseObject {
@@ -15,7 +15,7 @@ export class Sponsor extends BaseObject {
   name: string;
   level: string;
   logo: string;
-  hackathon: UidType;
+  hackathon?: UidType;
 
   constructor(data: ISponsorApiModel) {
     super();

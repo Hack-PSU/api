@@ -1,20 +1,20 @@
-import { IUowOpts } from "../../services/database/svc/uow.service";
-import { IDataMapper, IDbResult } from "../../services/database";
-import { Sponsor } from "./sponsor";
-import { GenericDataMapper } from "../../services/database/svc/generic-data-mapper";
-import { IAcl, IAclPerm } from "../../services/auth/RBAC/rbac-types";
-import { MysqlUow } from "../../services/database/svc/mysql-uow.service";
-import { IActiveHackathonDataMapper } from "../../models/hackathon/active-hackathon";
-import Logger from "bunyan";
-import { Inject, Injectable } from "injection-js";
-import { AuthLevel } from "../../services/auth/auth-types";
-import { UidType } from "JSCommon/common-types";
 import squel from "squel";
 import { map } from "rxjs/operators";
 import { from } from "rxjs";
+import { Inject, Injectable } from "injection-js";
+import Logger from "bunyan";
+import { UidType } from "JSCommon/common-types";
+import { IUowOpts } from "../../services/database/svc/uow.service";
+import { IDataMapper, IDbResult } from "../../services/database";
+import { GenericDataMapper } from "../../services/database/svc/generic-data-mapper";
+import { IAcl, IAclPerm } from "../../services/auth/RBAC/rbac-types";
+import { MysqlUow } from "../../services/database/svc/mysql-uow.service";
+import { AuthLevel } from "../../services/auth/auth-types";
+import { Sponsor } from "./sponsor";
+import { IActiveHackathonDataMapper } from "../../models/hackathon/active-hackathon";
 
 export interface ISponsorDataMapper extends IDataMapper<Sponsor> {
-  
+  deleteSponsor(uid: number): Promise<IDbResult<void>>;
 }
 
 // TODO: create tests for these
@@ -44,7 +44,7 @@ export class SponsorDataMapperImpl extends GenericDataMapper implements ISponsor
     );
     super.addRBAC(
       [this.READ],
-      [AuthLevel.DIRECTOR],
+      [AuthLevel.PARTICIPANT],
     )
   }  
   
@@ -80,7 +80,7 @@ export class SponsorDataMapperImpl extends GenericDataMapper implements ISponsor
   public async update(object: Sponsor): Promise<IDbResult<Sponsor>> {
     let queryBuilder = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)
-      .where(`${this.pkColumnName} = ?`, object.id)
+      .where(`${this.pkColumnName} = ?`, object.uid)
       .setFields(object.dbRepresentation);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
@@ -89,17 +89,15 @@ export class SponsorDataMapperImpl extends GenericDataMapper implements ISponsor
       .toPromise();
   }
 
-  public async delete(uid: UidType): Promise<IDbResult<void>> {
+  public async deleteSponsor(uid: number): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
       .where(`${this.pkColumnName} = ?`, uid)
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query(query.text, query.values, { cache: false }),
-    ).pipe(
-      map(() => ({ result: 'Success', data: undefined })),
-    ).toPromise();
+    return from(this.sql.query(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: undefined })))
+      .toPromise();
   }
 
   public async getAll(opts?: IUowOpts | undefined): Promise<IDbResult<Sponsor[]>> {
@@ -131,4 +129,9 @@ export class SponsorDataMapperImpl extends GenericDataMapper implements ISponsor
   public async getCount(opts?: IUowOpts | undefined): Promise<IDbResult<number>> {
     throw new Error("Method not implemented.");
   }
+
+  public async delete(object: string | Sponsor): Promise<IDbResult<void>> {
+    throw new Error("Method not implemented because these interfaces suck lol.");
+  }
+
 }

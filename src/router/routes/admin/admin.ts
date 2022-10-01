@@ -395,12 +395,12 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiUse ResponseBodyDescription
    */
   private async getOrganizerByUidHandler(req: Request, res: Response, next: NextFunction) {
-    if (!req.body.uid) {
+    if (!req.query.uid) {
       return Util.standardErrorHandler(new HttpError('Could not find uid in request.', 400), next);
     }
 
     try {
-      const result = await this.organizerDataMapper.get(req.body.uid);
+      const result = await this.organizerDataMapper.get(req.query.uid);
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);

@@ -438,7 +438,6 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiParam {String} email the email of the organizer to add
    * @apiParam {String} firstname the first name of the organizer to add
    * @apiParam {String} lastname the last name of the organizer to add
-   * @apiParam {Number} [permission] the permission of the organizer to add
    * 
    * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
@@ -458,12 +457,12 @@ export class AdminController extends ParentRouter implements IExpressController 
 
     try {
       // only attempt to update permissions if permissions are given
-      if (req.body.permission) {
-        if (!parseInt(req.body.permission, 10)) {
-          return Util.standardErrorHandler(new HttpError('Permission could not be parsed as a base-10 integer.', 400), next);
-        }
-        await this.adminDataMapper.modifyPermissions(req.body.uid, parseInt(req.body.privilege), res.locals.user.privilege);
-      }
+      // if (req.body.permission) {
+      //   if (!parseInt(req.body.permission, 10)) {
+      //     return Util.standardErrorHandler(new HttpError('Permission could not be parsed as a base-10 integer.', 400), next);
+      //   }
+        // await this.adminDataMapper.modifyPermissions(req.body.uid, parseInt(req.body.privilege), res.locals.user.privilege);
+      // }
       const result = await this.organizerDataMapper.update(organizer);
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {

@@ -14,6 +14,7 @@ import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDataMapper } from '../../../services/database';
 import { ParentRouter } from '../../router-types';
+import { ICustomPermissions } from 'services/auth';
 
 @Injectable()
 export class AdminController extends ParentRouter implements IExpressController {
@@ -343,7 +344,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {post} /admin/organizer Insert an organizer with the given privilege level
+   * @api {post} /admin/organizers Insert an organizer with the given privilege level
    * @apiVersion 2.0.0
    * @apiName Add Organizer
    * @apiGroup Admin
@@ -382,7 +383,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {post} /admin/organizer/delete Delete the organizer with the given uid
+   * @api {post} /admin/organizers/delete Delete the organizer with the given uid
    * @apiVersion 2.0.0
    * @apiName Delete Organizer
    * @apiGroup Admin
@@ -409,7 +410,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {get} /admin/organizer/ Retrieve the organizer with the given uid
+   * @api {get} /admin/organizers Retrieve the organizer with the given uid
    * @apiVersion 2.0.0
    * @apiName Get Organizer
    * @apiGroup Admin
@@ -428,6 +429,8 @@ export class AdminController extends ParentRouter implements IExpressController 
 
     try {
       const result = await this.organizerDataMapper.get(req.query.uid);
+      result.data.privilege = (
+        (await this.authService.getUserId(result.data.uid)).customClaims as ICustomPermissions).privilege;
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -435,7 +438,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {get} /admin/organizer/all Get all organizers
+   * @api {get} /admin/organizers/all Get all organizers
    * @apiVersion 2.0.0
    * @apiName Get All Organizers
    * @apiGroup Admin
@@ -448,6 +451,10 @@ export class AdminController extends ParentRouter implements IExpressController 
   private async getAllOrganizersHandler(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await this.organizerDataMapper.getAll();
+      result.data.forEach(async element => (
+        element.privilege = (
+          (await this.authService.getUserId(element.uid)).customClaims as ICustomPermissions).privilege
+      ));
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -455,7 +462,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {post} /admin/organizer/update Update an organizer with the given information
+   * @api {post} /admin/organizers/update Update an organizer with the given information
    * @apiVersion 2.0.0
    * @apiName Delete Organizer
    * @apiGroup Admin

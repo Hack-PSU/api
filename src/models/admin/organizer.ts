@@ -5,7 +5,7 @@ export interface IOrganizerApiModel {
   email: string;
   firstname: string;
   lastname: string;
-  permission?: number;
+  privilege?: number;
 }
 
 export class Organizer extends BaseObject {
@@ -14,15 +14,16 @@ export class Organizer extends BaseObject {
   email: string;
   firstname: string;
   lastname: string;
-  permission?: number;
+  privilege?: number;
 
   constructor(data: IOrganizerApiModel) {
     super();
+    this.disallowedProperties.push('privilege');
     this.uid = data.uid;
     this.email = data.email;
     this.firstname = data.firstname;
     this.lastname = data.lastname;
-    this.permission = data.permission;
+    this.privilege = data.privilege;
   }
 
   public get id(): any {

@@ -61,6 +61,8 @@ export class OrganizerDataMapperImpl extends GenericDataMapper implements IAclPe
     super.addRBAC(
       [this.CREATE, this.UPDATE],
       [AuthLevel.DIRECTOR],
+      undefined,
+      [AuthLevel[AuthLevel.TEAM_MEMBER]],
     );
   }
 

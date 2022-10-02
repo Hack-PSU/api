@@ -18,6 +18,7 @@ export class Organizer extends BaseObject {
 
   constructor(data: IOrganizerApiModel) {
     super();
+    this.disallowedProperties.push('permission');
     this.uid = data.uid;
     this.email = data.email;
     this.firstname = data.firstname;

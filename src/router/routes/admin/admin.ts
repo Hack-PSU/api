@@ -82,6 +82,11 @@ export class AdminController extends ParentRouter implements IExpressController 
       this.authService.verifyAcl(this.adminAcl, AclOperations.GET_EMAIL),
       (req, res, next) => this.getUserIdHandler(req, res, next),
     );
+    app.get(
+      '/user-from-uid',
+      this.authService.verifyAcl(this.organizerAcl, AclOperations.READ),
+      (req, res, next) => this.getUserPrivilegeLevelHandler(req, res, next),
+    )
     app.post(
       '/email',
       this.authService.verifyAcl(this.adminAcl, AclOperations.SEND_EMAIL),
@@ -146,11 +151,35 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {get} /admin/userid Get the uid corresponding to an email
+   * @api {get} /admin/user-from-uid Get the user's privilege level
+   * @apiVersion 2.0.0
+   * @apiName Get User Privilege
+   * @apiGroup Admin
+   * @apiPermission TeamMemberPermission
+   * @apiUse AuthArgumentRequired
+   * @apiParam {String} uid The firebase uid of the user to get level of
+   * @apiSuccess {UserRecord} Object {uid, displayName, privilege, admin}
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async getUserPrivilegeLevelHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.query.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find uid in query parameters.', 400), next);
+    }
+    try {
+      const result = await this.authService.getUserId(req.query.uid);
+      return this.sendResponse(res, new ResponseBody('Success', 200, { result: 'Success', data: result }));
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /admin/userid Get the firebase user record corresponding to an email
    * @apiVersion 2.0.0
    * @apiName Get User Id
    * @apiGroup Admin
-   * @apiPermission DirectorPermission
+   * @apiPermission TeamMemberPermission
    *
    * @apiUse AuthArgumentRequired
    * @apiParam {String} email The email to query user id by
@@ -323,8 +352,7 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiParam {String} uid the firebase uid of the organizer to add
    * @apiParam {String} email the email of the organizer to add
    * @apiParam {String} firstname the first name of the organizer to add
-   * @apiParam {String} lastname the last name of the organizer to add
-   * @apiParam {Number} [permission] the permission of the organizer to add
+   * @apiParam {String} lastname the last name of the organizer to ad
    * 
    * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
@@ -346,7 +374,6 @@ export class AdminController extends ParentRouter implements IExpressController 
     }
 
     try {
-      await this.adminDataMapper.modifyPermissions(req.body.uid, parseInt(req.body.permission), res.locals.user.privilege);
       const result = await this.organizerDataMapper.insert(organizer);
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {

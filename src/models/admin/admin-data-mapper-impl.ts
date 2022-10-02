@@ -46,7 +46,13 @@ export class AdminDataMapperImpl extends GenericDataMapper
   ) {
     super(acl);
     super.addRBAC(
-      [this.GET_EMAIL, this.SEND_EMAIL, this.CREATE, this.MAKE_ACTIVE, this.PUSH_NOTIFICATION],
+      [this.GET_EMAIL],
+      [AuthLevel.TEAM_MEMBER],
+      undefined,
+      [AuthLevel[AuthLevel.VOLUNTEER]],
+    )
+    super.addRBAC(
+      [this.SEND_EMAIL, this.CREATE, this.MAKE_ACTIVE, this.PUSH_NOTIFICATION],
       [AuthLevel.DIRECTOR],
       undefined,
       [AuthLevel[AuthLevel.TEAM_MEMBER]],

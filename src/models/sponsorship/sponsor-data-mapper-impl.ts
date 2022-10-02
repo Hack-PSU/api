@@ -41,6 +41,8 @@ export class SponsorDataMapperImpl extends GenericDataMapper implements ISponsor
     super.addRBAC(
       [this.CREATE],
       [AuthLevel.TEAM_MEMBER],
+      undefined,
+      [AuthLevel[AuthLevel.VOLUNTEER]],
     );
     super.addRBAC(
       [this.READ],

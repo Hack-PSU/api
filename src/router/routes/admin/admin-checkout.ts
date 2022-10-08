@@ -52,7 +52,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
         AclOperations.READ_ALL,
       ),
       // this.authService.verifyAcl(this.scannerAcl, AclOperations.READ_ALL),
-      (req, res, next) => this.getAllCheckoutObjectHandler(res, next),
+      (req, res, next) => this.getAllCheckoutObjectHandler(req, res, next),
     );
     // Get all items that can be checked out
     app.get(
@@ -64,7 +64,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
         AclOperations.READ_ALL,
       ),
       // this.authService.verifyAcl(this.checkoutItemsAcl, AclOperations.READ_ALL), 
-      (req, res, next) => this.getAllCheckoutItemsHandler(res, next),
+      (req, res, next) => this.getAllCheckoutItemsHandler(req, res, next),
     );
     // Create a new checkout request
     app.post(
@@ -99,7 +99,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
         next,
         AclOperations.READ_ALL,
       ),
-      (req, res, next) => this.getAllAvailableCheckoutItemsHandler(res, next),
+      (req, res, next) => this.getAllAvailableCheckoutItemsHandler(req, res, next),
     );
 
     // Create a checkout item
@@ -225,6 +225,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiUse ResponseBodyDescription
    */
   private async getAllCheckoutObjectHandler(
+    req: Request,
     res: Response,
     next: NextFunction,
   ) {
@@ -255,6 +256,7 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiUse ResponseBodyDescription
    */
   private async getAllCheckoutItemsHandler(
+    req: Request,
     res: Response,
     next: NextFunction,
   ) {
@@ -335,11 +337,12 @@ export class AdminCheckoutController extends AbstractScannerController implement
    * @apiUse ResponseBodyDescription
    */
   private async getAllAvailableCheckoutItemsHandler(
+    req: Request,
     res: Response,
     next: NextFunction,
   ) {
     try {
-      const result = await this.checkoutItemsDataMapper.getAllAvailable();
+      const result = await this.checkoutItemsDataMapper.getAllAvailable({ignoreCache: req.query.ignoreCache});
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {

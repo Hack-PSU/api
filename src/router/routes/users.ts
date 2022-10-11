@@ -226,6 +226,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} university The university that the user attends
    * @apiParam {String} email The user's school email
    * @apiParam {String} academicYear The user's current year in school
+   * @apiParam {String} educationalInstitutionType The user's current type of institution attended
    * @apiParam {String} major Intended or current major
    * @apiParam {String} phone The user's phone number (For MLH)
    * @apiParam {String} [address] The user's address

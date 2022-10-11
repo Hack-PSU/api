@@ -327,6 +327,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     delete result[uid].hackathon;
     delete result[uid].event_icon;
     delete result[uid].attendees[0].uid;
+    delete result[uid].attendees[0].educational_institution_type;
     delete result[uid].attendees[0].eighteenBeforeEvent;
     delete result[uid].attendees[0].driving;
     delete result[uid].attendees[0].address;
@@ -369,6 +370,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     delete result[uid].eighteenBeforeEvent;
     delete result[uid].driving;
     delete result[uid].time;
+    delete result[uid].educational_institution_type;
     delete result[uid].events[0].uid;
     delete result[uid].events[0].event_location;
     delete result[uid].events[0].location_name;

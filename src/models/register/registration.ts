@@ -43,6 +43,19 @@ export enum VeteranOptions {
   NODISCLOSE = 'no-disclose',
 }
 
+export enum EducationalInstitutionType {
+  LESS_THAN_SECONDARY = 'less-than-secondary',
+  SECONDARY = 'secondary',
+  TWO_YEAR_UNIVERSITY = 'two-year-university',
+  THREE_PLUS_YEAR_UNIVERSITY = 'three-plus-year-university',
+  GRADUATE_UNIVERSITY = 'graduate-university',
+  CODE_SCHOOL_BOOTCAMP = 'code-school-or-bootcamp',
+  VOCATIONAL_TRADE_APPRENTICESHIP = 'vocational-trade-apprenticeship',
+  OTHER = 'other',
+  NOT_A_STUDENT = 'not-a-student',
+  PREFER_NO_ANSWER = 'prefer-no-answer',
+}
+
 export interface IRegistrationApiModel {
   time: number;
   firstName: string;
@@ -57,6 +70,7 @@ export interface IRegistrationApiModel {
   university: string;
   email: string;
   academicYear: AcademicYear;
+  educationalInstitutionType: EducationalInstitutionType;
   major: string;
   phone: string;
   address: string;
@@ -95,6 +109,7 @@ export class Registration extends BaseObject {
   public university: string;
   public email: string;
   public academic_year: string;
+  public educational_institution_type: string;
   public major: string;
   public phone: string;
   public address: string;
@@ -131,6 +146,7 @@ export class Registration extends BaseObject {
     this.university = data.university;
     this.email = data.email;
     this.academic_year = data.academicYear;
+    this.educational_institution_type = data.educationalInstitutionType;
     this.major = data.major;
     this.phone = data.phone;
     this.address = data.address;

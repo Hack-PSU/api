@@ -75,7 +75,8 @@ export class TestData {
       submitted: false,
       shareAddressMlh: false,
       shareAddressSponsors: false,
-      wordpin: "test pin"
+      shareEmailMlh: false,
+      wordpin: "test pin",
     };
   }
 

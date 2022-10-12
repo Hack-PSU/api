@@ -55,6 +55,7 @@ const registration = new Registration({
   submitted: true,
   shareAddressMlh: false,
   shareAddressSponsors: false,
+  shareEmailMlh: false,
   wordpin: "test pin"
 });
 

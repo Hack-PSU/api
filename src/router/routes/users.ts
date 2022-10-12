@@ -241,8 +241,9 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} project A project description that the user is proud of
    * @apiParam {String} expectations What the user expects to get from the hackathon
    * @apiParam {String} veteran=false Is the user a veteran?
-   * @apiParam {Boolean} shareAddressMlh Does the user agree to share their address with mlh?
-   * @apiParam {Boolean} shareAddressSponsors Does the user agree to share their address with event sponsors
+   * @apiParam {Boolean} shareAddressMlh Does the user agree to share their address with MLH?
+   * @apiParam {Boolean} shareAddressSponsors Does the user agree to share their address with event sponsors?
+   * @apiParam {Boolean} shareEmailMlh Does the user agree to share their email address with MLH?
    *
    * @apiSuccess {Registration} data The inserted registration
    * @apiUse IllegalArgumentError

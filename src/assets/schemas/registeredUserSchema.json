@@ -147,6 +147,9 @@
     "share_address_sponsors": {
       "type": "boolean"
     },
+    "share_email_mlh": {
+      "type": "boolean"
+    },
     "address": {
       "type": [
         "string",

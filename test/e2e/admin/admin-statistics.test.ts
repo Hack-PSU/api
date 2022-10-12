@@ -335,6 +335,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     delete result[uid].attendees[0].mlh_dcp;
     delete result[uid].attendees[0].share_address_mlh;
     delete result[uid].attendees[0].share_address_sponsors;
+    delete result[uid].attendees[0].share_email_mlh;
     delete result[uid].attendees[0].submitted;
     delete result[uid].attendees[0].time;
     this.expect(data).to.deep.equal(result);
@@ -365,6 +366,7 @@ class AdminStatisticsIntegrationTest extends IntegrationTest {
     delete result[uid].mlh_dcp;
     delete result[uid].share_address_mlh;
     delete result[uid].share_address_sponsors;
+    delete result[uid].share_email_mlh;
     delete result[uid].submitted;
     delete result[uid].address;
     delete result[uid].eighteenBeforeEvent;

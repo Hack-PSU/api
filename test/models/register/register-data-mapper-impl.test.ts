@@ -60,6 +60,7 @@ const validRegistration = new Registration({
   submitted: true,
   shareAddressMlh: false,
   shareAddressSponsors: false,
+  shareEmailMlh: false,
   wordpin: "test pin"
 });
 
@@ -358,8 +359,8 @@ describe('TEST: Register data mapper', () => {
         '`shirt_size`, `travel_reimbursement`, `driving`, `first_hackathon`, `university`, `email`, ' +
         '`academic_year`, `educational_institution_type`, `major`, `phone`, `address`, `race`, `coding_experience`, `uid`, ' +
         '`eighteenBeforeEvent`, `mlh_coc`, `mlh_dcp`, `referral`, `project`, `expectations`, ' +
-        '`veteran`, `time`, `submitted`, `share_address_mlh`, `share_address_sponsors`, `word_pin`, `hackathon`) ' +
-        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
+        '`veteran`, `time`, `submitted`, `share_address_mlh`, `share_address_sponsors`, `share_email_mlh`, `word_pin`, `hackathon`) ' +
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
       const expectedParams = [
         validRegistration.firstname,
         validRegistration.lastname,
@@ -389,6 +390,7 @@ describe('TEST: Register data mapper', () => {
         true,
         validRegistration.share_address_mlh,
         validRegistration.share_address_sponsors,
+        validRegistration.share_email_mlh,
         validRegistration.word_pin,
         'test uid',
       ];
@@ -434,6 +436,7 @@ describe('TEST: Register data mapper', () => {
         submitted: true,
         shareAddressMlh: false,
         shareAddressSponsors: false,
+        shareEmailMlh: false,
         wordpin: "test pin"
       });
       // WHEN: Adding an invalid registration
@@ -513,7 +516,7 @@ describe('TEST: Register data mapper', () => {
         '`email` = ?, `academic_year` = ?, `educational_institution_type` = ?, `major` = ?, `phone` = ?, `address` = ?, `race` = ?, ' +
         '`coding_experience` = ?, `uid` = ?, `eighteenBeforeEvent` = ?, `mlh_coc` = ?, `mlh_dcp` = ?, ' +
         '`referral` = ?, `project` = ?, `expectations` = ?, `veteran` = ?, `time` = ?, `submitted` = ?, ' +
-        '`share_address_mlh` = ?, `share_address_sponsors` = ?, `word_pin` = ?, `hackathon` = ? ' +
+        '`share_address_mlh` = ?, `share_address_sponsors` = ?, `share_email_mlh` = ?, `word_pin` = ?, `hackathon` = ? ' +
         'WHERE (uid = ?) AND (hackathon = ?);';
 
       const expectedParams = [
@@ -545,6 +548,7 @@ describe('TEST: Register data mapper', () => {
         true,
         validRegistration.share_address_mlh,
         validRegistration.share_address_sponsors,
+        validRegistration.share_email_mlh,
         validRegistration.word_pin,
         validRegistration.hackathon,
         validRegistration.id,
@@ -592,6 +596,7 @@ describe('TEST: Register data mapper', () => {
         submitted: false,
         shareAddressMlh: false,
         shareAddressSponsors: false,
+        shareEmailMlh: false,
         wordpin: "test pin"
       });
       // WHEN: Updating an invalid registration

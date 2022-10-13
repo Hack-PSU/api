@@ -72,6 +72,20 @@
         "other"
       ]
     },
+    "educational_institution_type": {
+      "enum": [
+        "less-than-secondary",
+        "secondary",
+        "two-year-university",
+        "three-plus-year-university",
+        "graduate-university",
+        "code-school-or-bootcamp",
+        "vocational-trade-apprenticeship",
+        "other",
+        "not-a-student",
+        "prefer-no-answer"
+      ]
+    },
     "major": {
       "type": "string",
       "minLength": 1,
@@ -131,6 +145,9 @@
       "type": "boolean"
     },
     "share_address_sponsors": {
+      "type": "boolean"
+    },
+    "share_email_mlh": {
       "type": "boolean"
     },
     "address": {

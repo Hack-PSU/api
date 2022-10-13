@@ -236,6 +236,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
       const result = await this.adminHackathonDataMapper.getAll({
         count: res.locals.limit,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -257,7 +258,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
    */
   private async countHackathonHandler(res: Response, next: NextFunction) {
     try {
-      const result = await this.adminHackathonDataMapper.getCount();
+      const result = await this.adminHackathonDataMapper.getCount({ignoreCache: res.locals.ignoreCache});
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {

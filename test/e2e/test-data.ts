@@ -11,6 +11,7 @@ import { PreRegistration, IPreRegistrationApiModel } from '../../src/models/regi
 import {
   AcademicYear,
   CodingExperience,
+  EducationalInstitutionType,
   Gender,
   IRegistrationApiModel,
   Registration,
@@ -55,6 +56,7 @@ export class TestData {
       university: 'Test University',
       email: 'test@email.com',
       academicYear: AcademicYear.JUNIOR,
+      educationalInstitutionType: EducationalInstitutionType.CODE_SCHOOL_BOOTCAMP,
       major: 'test major',
       phone: '1234567890',
       address: 'test address',
@@ -73,7 +75,8 @@ export class TestData {
       submitted: false,
       shareAddressMlh: false,
       shareAddressSponsors: false,
-      wordpin: "test pin"
+      shareEmailMlh: false,
+      wordpin: "test pin",
     };
   }
 

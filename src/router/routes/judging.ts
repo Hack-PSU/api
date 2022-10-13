@@ -59,6 +59,14 @@ export class JudgingController extends ParentRouter implements IExpressControlle
             this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
             (req, res, next) => this.insertScoreHandler(req, res, next),
         );
+        app.post('/score',
+            this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
+            (req, res, next) => this.updateScoreHandler(req, res, next),
+        );
+        app.post('/score',
+            this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
+            (req, res, next) => this.deleteScoreHandler(req, res, next),
+        );
         app.get('/score/all',
             this.authService.verifyAcl(this.scoreAclPerm, AclOperations.READ),
             (req, res, next) => this.getAllScoresHandler(req, res, next),
@@ -202,6 +210,82 @@ export class JudgingController extends ParentRouter implements IExpressControlle
 
         try {
             const result = await this.scoreDataMapper.insert(score);
+            return this.sendResponse(res, new ResponseBody('Success', 200, result));
+        } catch (error) {
+            return Util.errorHandler500(error, next);
+        }
+    }
+
+    /**
+    * @api {post} /judging/score Update a Scoring
+    * @apiVersion 2.0.0
+    * @apiName Update Scoring
+    * @apiPermission TeamMemberPermission
+    * @apiUse AuthArgumentRequired
+    * @apiGroup Judging
+    * @apiParam {Number} project_id The project's uid
+    * @apiParam {String} judge The email of the judge
+    * @apiParam {Number} creativity Score for the 'Creativity' category
+    * @apiParam {Number} technical Score for the 'Technical' category
+    * @apiParam {Number} implementation Score for the 'Implementation' category
+    * @apiParam {Number} clarity Score for the 'Clarity' category
+    * @apiParam {Number} growth Score for the 'Growth' category
+    * @apiParam {Boolean} submitted Whether this scoring is finished
+    * @apiParam {Number} [humanitarian] Score for the 'Humanitarian' award
+    * @apiParam {Number} [supply_chain] Score for the 'Supply Chain' award
+    * @apiParam {Number} [environmental] Score for the 'environmental' award
+    * @apiSuccess {Score} data The updated score
+    * @apiUse IllegalArgumentError
+    * @apiUse ResponseBodyDescription
+    */
+     private async updateScoreHandler(req: Request, res: Response, next: NextFunction) {
+        if (!req.body) {
+            return next(new HttpError('Could not find request body', 400));
+        }
+        
+        let score: Score;
+        try {
+            score = new Score(req.body);
+        } catch (error) {
+            return next(new HttpError('Some properties were not as expected.', 400));
+        }
+
+        try {
+            const result = await this.scoreDataMapper.update(score);
+            return this.sendResponse(res, new ResponseBody('Success', 200, result));
+        } catch (error) {
+            return Util.errorHandler500(error, next);
+        }
+    }
+
+    /**
+    * @api {post} /judging/score Delete a Scoring
+    * @apiVersion 2.0.0
+    * @apiName Delete Scoring
+    * @apiPermission TeamMemberPermission
+    * @apiUse AuthArgumentRequired
+    * @apiGroup Judging
+    * @apiParam {Number} project_id The project's uid
+    * @apiParam {String} judge The email of the judge
+    * @apiSuccess {Score} data The deleted score
+    * @apiUse IllegalArgumentError
+    * @apiUse ResponseBodyDescription
+    */
+     private async deleteScoreHandler(req: Request, res: Response, next: NextFunction) {
+        if (!req.body) {
+            return next(new HttpError('Could not find request body', 400));
+        }
+        
+        if (!req.body.project_id || !parseInt(req.body.uid, 10)) {
+            return next(new HttpError('Could not find valid uid.', 400));
+        }
+
+        if (!req.body.judge) {
+            return next(new HttpError('Could not find an associated judge.', 400));
+        }
+
+        try {
+            const result = await this.scoreDataMapper.deleteScoring(req.body.project_id, req.body.judge);
             return this.sendResponse(res, new ResponseBody('Success', 200, result));
         } catch (error) {
             return Util.errorHandler500(error, next);

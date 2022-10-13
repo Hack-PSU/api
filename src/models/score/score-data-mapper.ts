@@ -2,6 +2,7 @@ import { IAcl, IAclPerm } from "services/auth/RBAC/rbac-types";
 import { GenericDataMapper } from "../../services/database/svc/generic-data-mapper";
 import { IDataMapper, IDbResult } from "../../services/database";
 import { Score } from "./score";
+import { UidType } from '../../JSCommon/common-types';
 import { IUowOpts } from "services/database/svc/uow.service";
 import * as squel from "squel";
 import { from } from "rxjs";
@@ -17,6 +18,7 @@ import { IProjectDataMapper } from "../../models/project/project-data-mapper-imp
 import { Project } from "../../models/project/project";
 
 export interface IScoreDataMapper extends IDataMapper<Score> {
+  deleteScoring(project_id: number, judge: string): Promise<IDbResult<void>>;
   
   generateAssignments(emails: String[], projectsPerOrganizer: number): Promise<IDbResult<Score[]>>;
 
@@ -81,6 +83,20 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
       this.sql.query<void>(query.text, query.values, { cache: false }),
     ).pipe(
       map(() => ({ result: 'Success', data: object })),
+    ).toPromise();
+  }
+
+  public async deleteScoring(uid: number, judge: string): Promise<IDbResult<void>> {
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(this.tableName)
+      .where(`${this.pkColumnName} = ?`, uid)
+      .where(`${this.pkColumnName} = ?`, judge)
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query(query.text, query.values, { cache: false }),
+    ).pipe(
+      map(() => ({ result: 'Success', data: undefined })),
     ).toPromise();
   }
 
@@ -156,8 +172,19 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
     throw new Error("Method not implemented.");
   }
 
-  public async delete(object: string | Score): Promise<IDbResult<void>> {
+  public async delete(object: Score): Promise<IDbResult<void>> {
     throw new Error("Method not implemented.");
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(this.tableName)
+      .where(`${this.pkColumnName} = ?`, object.project_id)
+      .where(`${this.pkColumnName} = ?`, object.judge)
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(
+      this.sql.query(query.text, query.values, { cache: false }),
+    ).pipe(
+      map(() => ({ result: 'Success', data: undefined })),
+    ).toPromise();
   }
 
   public async getCount(opts?: IUowOpts | undefined): Promise<IDbResult<number>> {

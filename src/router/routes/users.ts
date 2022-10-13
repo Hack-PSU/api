@@ -226,6 +226,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} university The university that the user attends
    * @apiParam {String} email The user's school email
    * @apiParam {String} academicYear The user's current year in school
+   * @apiParam {String} educationalInstitutionType The user's current type of institution attended
    * @apiParam {String} major Intended or current major
    * @apiParam {String} phone The user's phone number (For MLH)
    * @apiParam {String} [address] The user's address
@@ -240,8 +241,9 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} project A project description that the user is proud of
    * @apiParam {String} expectations What the user expects to get from the hackathon
    * @apiParam {String} veteran=false Is the user a veteran?
-   * @apiParam {Boolean} shareAddressMlh Does the user agree to share their address with mlh?
-   * @apiParam {Boolean} shareAddressSponsors Does the user agree to share their address with event sponsors
+   * @apiParam {Boolean} shareAddressMlh Does the user agree to share their address with MLH?
+   * @apiParam {Boolean} shareAddressSponsors Does the user agree to share their address with event sponsors?
+   * @apiParam {Boolean} shareEmailMlh Does the user agree to share their email address with MLH?
    *
    * @apiSuccess {Registration} data The inserted registration
    * @apiUse IllegalArgumentError
@@ -299,6 +301,7 @@ export class UsersController extends ParentRouter implements IExpressController 
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -322,7 +325,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    */
   private async getAllRegistrations(req: Request, res: Response, next: NextFunction) {
     try {
-      const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid, { ignoreCache: req.query.ignoreCache });
+      const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -451,7 +454,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
     try {
       const id: string = req.query.uid;
-      const result = await this.extraCreditDataMapper.get(id);
+      const result = await this.extraCreditDataMapper.get(id, {ignoreCache: req.query.ignoreCache});
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
@@ -484,7 +487,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
     try {
       const uid: string = req.query.uid;
-      const result = await this.extraCreditDataMapper.getByUser(uid, { ignoreCache: req.query.ignoreCache });
+      const result = await this.extraCreditDataMapper.getByUser(uid, {ignoreCache: req.query.ignoreCache});
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
@@ -517,7 +520,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
     try {
       const cid: number = req.query.cid;
-      const result = await this.extraCreditDataMapper.getByClass(cid);
+      const result = await this.extraCreditDataMapper.getByClass(cid, {ignoreCache: req.query.ignoreCache});
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {

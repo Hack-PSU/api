@@ -43,18 +43,23 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
       (req, res, next) => this.insertSponsorHandler(req, res, next),
     );
     app.get(
-      '/all/',
+      '/all',
       (req, res, next) => this.getAllSponsorsHandler(req, res, next),
     );
     app.post(
-      '/delete/',
+      '/delete',
       this.authService.verifyAcl(this.sponsorAclPerm, AclOperations.DELETE),
       (req, res, next) => this.deleteSponsorHandler(req, res, next),
     );
     app.post(
-      '/update/',
+      '/update',
       this.authService.verifyAcl(this.sponsorAclPerm, AclOperations.CREATE),
       (req, res, next) => this.updateSponsorHandler(req, res, next),
+    );
+    app.post(
+      '/update/all',
+      this.authService.verifyAcl(this.sponsorAclPerm, AclOperations.CREATE),
+      (req, res, next) => this.updateAllSponsorsHandler(req, res, next),
     );
   }
 
@@ -65,7 +70,7 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
    * @apiPermission UserPermission
    * @apiUse AuthArgumentRequired
    * @apiGroup Sponsorship
-   * @apiParam {number} uid The uid of this sponsor
+   * @apiParam {Number} uid The uid of this sponsor
    * @apiSuccess {Sponsor} data The requested sponsor
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
@@ -92,6 +97,8 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
    * @apiParam {String} name The sponsor's name
    * @apiParam {String} level The level of the sponsor
    * @apiParam {String} logo The link to the sponsor's logo
+   * @apiParam {Number} order The sponsor's location in the display order
+   * @apiParam {String} [websiteLink] The link to the sponsor's website
    * @apiParam {String} [hackathon] The uid of the hackathon for this sponsor
    * @apiSuccess {Sponsor} data The inserted sponsor
    * @apiUse IllegalArgumentError
@@ -153,6 +160,8 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
    * @apiParam {String} name The sponsor's name
    * @apiParam {String} level The level of the sponsor
    * @apiParam {String} logo The link to the sponsor's logo
+   * @apiParam {Number} order The sponsor's location in the display order
+   * @apiParam {String} websiteLink The link to the sponsor's website
    * @apiParam {String} [hackathon] The uid of the hackathon for this sponsor
    * @apiSuccess {Sponsor} data The inserted sponsor
    * @apiUse IllegalArgumentError
@@ -203,6 +212,50 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
     }
     try {
       const result = await this.sponsorDataMapper.deleteSponsor(req.body.uid);
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {post} /sponsorship/update/all Update the given Sponsors
+   * @apiVersion 2.0.0
+   * @apiName Update Sponsors
+   * @apiPermission TeamMemberPermission
+   * @apiUse AuthArgumentRequired
+   * @apiGroup Sponsorship
+   * @apiParam {Sponsor} sponsors The array of sponsors
+   * @apiParam {Number} sponsor.uid The sponsor's uid
+   * @apiParam {String} sponsor.name The sponsor's name
+   * @apiParam {String} sponsor.level The level of the sponsor
+   * @apiParam {String} sponsor.logo The link to the sponsor's logo
+   * @apiParam {String} [sponsor.hackathon] The uid of the hackathon for this sponsor
+   * @apiParam {String} [sponsor.websiteLink] The link to the sponsor's website
+   * @apiParam {Number} sponsor.order The sponsor's position in the display order
+   * @apiSuccess {Sponsor} data The inserted sponsor
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async updateAllSponsorsHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.body) {
+      return next(new HttpError('Could not find valid request body.', 400));
+    }
+    if (!req.body.sponsors) {
+      return next(new HttpError('Could not find array of sponsors in request body.', 400));
+    }
+    let sponsors: Sponsor[] = [];
+    try {
+      req.body.sponsors.forEach(element => {
+        const sponsor = new Sponsor(element);
+        sponsors.push(sponsor.dbRepresentation);
+      });
+    } catch (error) {
+      return next(new HttpError('Some properties were not as expected when creating sponsors.', 400));
+    }
+
+    try {
+      const result = await this.sponsorDataMapper.updateAll(sponsors);
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);

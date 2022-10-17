@@ -1,4 +1,4 @@
-import squel from "squel";
+import * as squel from "squel";
 import { map } from "rxjs/operators";
 import { from } from "rxjs";
 import { Inject, Injectable } from "injection-js";
@@ -15,6 +15,8 @@ import { IActiveHackathonDataMapper } from "../../models/hackathon/active-hackat
 
 export interface ISponsorDataMapper extends IDataMapper<Sponsor> {
   deleteSponsor(uid: number): Promise<IDbResult<void>>;
+
+  updateAll(sponsors: Sponsor[]): Promise<IDbResult<Sponsor[]>>;
 }
 
 // TODO: create tests for these
@@ -124,7 +126,22 @@ export class SponsorDataMapperImpl extends GenericDataMapper implements ISponsor
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<Sponsor>(query.text, query.values, { cache: useCache }))
-      .pipe(map((projects: Sponsor[]) => ({ result: 'Success', data: projects })))
+      .pipe(map((sponsors: Sponsor[]) => ({ result: 'Success', data: sponsors })))
+      .toPromise();
+  }
+
+  public async updateAll(sponsors: Sponsor[]): Promise<IDbResult<Sponsor[]>> {
+    let queryBuilder = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .into(this.tableName)
+      .setFieldsRows(sponsors);
+    const query = queryBuilder.toParam();
+    // ugly hardcode of fields, but I don't have a better way to handle this right now
+    const onDupUpdateClause = ' ON DUPLICATE KEY UPDATE `name`=VALUES(`name`), `level`=VALUES(`level`), ' +  
+      '`logo`=VALUES(`logo`), `hackathon`=VALUES(`hackathon`), `website_link`=VALUES(`website_link`), `order`=VALUES(`order`)';
+    query.text = query.text.concat(onDupUpdateClause);
+    query.text = query.text.concat(';');
+    return from(this.sql.query<void>(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: sponsors })))
       .toPromise();
   }
 

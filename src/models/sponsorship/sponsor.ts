@@ -7,6 +7,8 @@ export interface ISponsorApiModel {
   level: string;
   logo: string;
   hackathon?: UidType;
+  websiteLink?: string;
+  order: number;
 }
 
 export class Sponsor extends BaseObject {
@@ -16,6 +18,8 @@ export class Sponsor extends BaseObject {
   level: string;
   logo: string;
   hackathon?: UidType;
+  website_link: string;
+  order: number;
 
   constructor(data: ISponsorApiModel) {
     super();
@@ -24,6 +28,8 @@ export class Sponsor extends BaseObject {
     this.level = data.level;
     this.logo = data.logo;
     this.hackathon = data.hackathon;
+    this.website_link = data.websiteLink || "";
+    this.order = data.order;
   }
 
   public get id(): any {

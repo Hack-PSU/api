@@ -142,13 +142,15 @@ export class App extends ParentRouter {
 
   private routerConfig() {
     App.registerRouter('', 'IndexController', 2);
-    App.registerRouter('live', 'LiveController', 2);
     App.registerRouter('internal', 'InternalController', 2);
-    App.registerRouter('users', 'UsersController', 2);
     App.registerRouter('admin', 'AdminController', 2);
-    App.registerRouter('scanner', 'ScannerController', 2);
-    App.registerRouter('workshop', 'WorkshopController', 2);
+    App.registerRouter('live', 'LiveController', 2);
     App.registerRouter('judging', 'JudgingController', 2);
+    App.registerRouter('scanner', 'ScannerController', 2);
+    App.registerRouter('sponsorship', 'SponsorshipController', 2);
+    App.registerRouter('users', 'UsersController', 2);
+    App.registerRouter('workshop', 'WorkshopController', 2);
+    
     App.registeredRoutes.forEach((router, key) => {
       this.app.use(key, Util.getInstance(router).router);
     });

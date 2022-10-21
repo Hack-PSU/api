@@ -10,8 +10,8 @@ export const TABLE_NAME = 'WORKSHOP_SCANS';
   hackathonUid?: UidType;
   scanUid?: number;
   timestamp?: EpochNumber;
-  pin: number;
-  
+  pin?: number;
+  email: string;
 }
 
 export class WorkshopScan extends BaseObject {
@@ -20,8 +20,8 @@ export class WorkshopScan extends BaseObject {
   public hackathon_id?: UidType;
   public scan_uid?: number;
   public timestamp?: EpochNumber;
-  public user_pin: number;
-  
+  public user_pin?: number;
+  public email: string;
 
   public get schema() {
     return null;
@@ -37,5 +37,6 @@ export class WorkshopScan extends BaseObject {
     this.scan_uid = data.scanUid;
     this.timestamp = data.timestamp || Date.now();
     this.user_pin = data.pin;
+    this.email = data.email;
   }
 }

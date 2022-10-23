@@ -59,11 +59,11 @@ export class JudgingController extends ParentRouter implements IExpressControlle
             this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
             (req, res, next) => this.insertScoreHandler(req, res, next),
         );
-        app.post('/score',
+        app.post('/score/update',
             this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
             (req, res, next) => this.updateScoreHandler(req, res, next),
         );
-        app.post('/score',
+        app.post('/score/delete',
             this.authService.verifyAcl(this.scoreAclPerm, AclOperations.CREATE),
             (req, res, next) => this.deleteScoreHandler(req, res, next),
         );
@@ -275,11 +275,9 @@ export class JudgingController extends ParentRouter implements IExpressControlle
         if (!req.body) {
             return next(new HttpError('Could not find request body', 400));
         }
-        
-        if (!req.body.project_id || !parseInt(req.body.uid, 10)) {
+        if (!req.body.project_id || !parseInt(req.body.project_id, 10)) {
             return next(new HttpError('Could not find valid uid.', 400));
         }
-
         if (!req.body.judge) {
             return next(new HttpError('Could not find an associated judge.', 400));
         }
@@ -308,6 +306,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
         if (!req.query.judge) {
             return next(new HttpError('Could not find judge in query parameters.', 400));
         }
+        
         try {
             const result = await this.scoreDataMapper.getByUser(req.query.judge, req.query.opts);
             return this.sendResponse(res, new ResponseBody('Success', 200, result));

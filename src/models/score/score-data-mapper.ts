@@ -75,7 +75,8 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
   public async update(object: Score): Promise<IDbResult<Score>> {
     let queryBuilder = squel.update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .table(this.tableName)
-      .where(`${this.pkColumnName} = ?`, object.id)
+      .where(`project_id = ?`, object.project_id)
+      .where(`judge = ?`, object.judge)
       .setFields(object.dbRepresentation);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
@@ -89,8 +90,8 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
   public async deleteScoring(uid: number, judge: string): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
-      .where(`${this.pkColumnName} = ?`, uid)
-      .where(`${this.pkColumnName} = ?`, judge)
+      .where(`project_id = ?`, uid)
+      .where(`judge = ?`, judge)
       .toParam();
     query.text = query.text.concat(';');
     return from(

@@ -112,7 +112,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     */   
     private async getAllProjectsHandler(req: Request, res: Response, next: NextFunction) {
         try {
-            const result = await this.projectDataMapper.getAll(req.query.opts);
+            const result = await this.projectDataMapper.getAll(req.query);
             return this.sendResponse(res, new ResponseBody('Success', 200, result));
         } catch (error) {
             return Util.errorHandler500(error, next);
@@ -308,7 +308,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
         }
         
         try {
-            const result = await this.scoreDataMapper.getByUser(req.query.judge, req.query.opts);
+            const result = await this.scoreDataMapper.getByUser(req.query.judge, req.query);
             return this.sendResponse(res, new ResponseBody('Success', 200, result));
         } catch (error) {
             return Util.errorHandler500(error, next);
@@ -328,7 +328,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     */
     private async getAllScoresHandler(req: Request, res: Response, next: NextFunction) {
         try {
-            const result = await this.scoreDataMapper.getAll(req.query.opts);
+            const result = await this.scoreDataMapper.getAll(req.query);
             return this.sendResponse(res, new ResponseBody('Success', 200, result));
         } catch (error) {
             return Util.errorHandler500(error, next);

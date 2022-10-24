@@ -410,7 +410,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
-  public getByWordPin(pin: string, hackathonUid: UidType): Promise<IDbResult<Registration>> {
+  public async getByWordPin(pin: string, hackathonUid: UidType): Promise<IDbResult<Registration>> {
     const query = squel.select({
       autoQuoteFieldNames: false,
       autoQuoteTableNames: true,

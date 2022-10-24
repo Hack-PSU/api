@@ -10,6 +10,7 @@ import { ParentRouter } from '../router-types';
 import { ISponsorDataMapper } from '../../models/sponsorship/sponsor-data-mapper-impl';
 import { Sponsor } from "../../models/sponsorship/sponsor";
 import { IActiveHackathonDataMapper } from "../../models/hackathon/active-hackathon";
+import { IUowOpts } from 'services/database/svc/uow.service';
 
 @Injectable()
 export class SponsorshipController extends ParentRouter implements IExpressController {
@@ -82,7 +83,7 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
       return next(new HttpError('Valid sponsor uid must be provided.', 400));
     }
     try {
-      const result = await this.sponsorDataMapper.get(req.query.uid, req.query.opts);
+      const result = await this.sponsorDataMapper.get(req.query.uid, req.query);
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -144,7 +145,7 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
    */
   private async getAllSponsorsHandler(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await this.sponsorDataMapper.getAll(req.query.opts);
+      const result = await this.sponsorDataMapper.getAll(req.query);
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);

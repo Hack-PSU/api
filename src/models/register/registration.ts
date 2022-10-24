@@ -89,7 +89,7 @@ export interface IRegistrationApiModel {
   shareAddressMlh: boolean | null;
   shareAddressSponsors: boolean | null;
   shareEmailMlh: boolean | null;
-  wordpin: string;
+  wordPin: string;
 }
 
 export class Registration extends BaseObject {
@@ -168,7 +168,7 @@ export class Registration extends BaseObject {
     this.share_address_mlh = data.shareAddressMlh || false;
     this.share_address_sponsors = data.shareAddressSponsors || false;
     this.share_email_mlh = data.shareEmailMlh || false;
-    this.word_pin = data.wordpin || "";
+    this.word_pin = data.wordPin || "";
     // this.hackathon = data.hackathon;
   }
 

@@ -410,6 +410,26 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .toPromise();
   }
 
+  public async getByWordPin(pin: string, hackathonUid: UidType): Promise<IDbResult<Registration>> {
+    const query = squel.select({
+      autoQuoteFieldNames: false,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName)
+      .where('hackathon = ?', hackathonUid)
+      .where('word_pin = ?', pin)
+      .toParam();
+    return from(this.sql.query<Registration>(
+      query.text,
+      query.values,
+      { cache: false },
+    ))
+      .pipe(
+        map((registration: Registration[]) => ({ result: 'Success', data: registration[0] })),
+      )
+      .toPromise();
+  }
+
   public getRegistrationByEmail(email: String, hackathonUid: UidType): Promise<IDbResult<Registration>> {
     const query = squel.select({autoQuoteFieldNames: false, autoQuoteTableNames: true})
       .from(this.tableName)

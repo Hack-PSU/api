@@ -32,19 +32,21 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
 
   // TODO: Add integration tests for all of these
   public routes(app: Router): void {
-    app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     app.get(
       '/',
       (req, res, next) => this.getSponsorHandler(req, res, next),
     );
+    app.get(
+      '/all',
+      (req, res, next) => this.getAllSponsorsHandler(req, res, next),
+    );
+    
+    // all following routes require authentication
+    app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
     app.post(
       '/',
       this.authService.verifyAcl(this.sponsorAclPerm, AclOperations.CREATE),
       (req, res, next) => this.insertSponsorHandler(req, res, next),
-    );
-    app.get(
-      '/all',
-      (req, res, next) => this.getAllSponsorsHandler(req, res, next),
     );
     app.post(
       '/delete',

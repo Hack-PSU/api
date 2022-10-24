@@ -61,7 +61,7 @@ const validRegistration = new Registration({
   shareAddressMlh: false,
   shareAddressSponsors: false,
   shareEmailMlh: false,
-  wordpin: "test pin"
+  wordPin: 'test pin',
 });
 
 describe('TEST: Register data mapper', () => {
@@ -437,7 +437,7 @@ describe('TEST: Register data mapper', () => {
         shareAddressMlh: false,
         shareAddressSponsors: false,
         shareEmailMlh: false,
-        wordpin: "test pin"
+        wordPin: 'test pin',
       });
       // WHEN: Adding an invalid registration
       try {
@@ -597,7 +597,7 @@ describe('TEST: Register data mapper', () => {
         shareAddressMlh: false,
         shareAddressSponsors: false,
         shareEmailMlh: false,
-        wordpin: "test pin"
+        wordPin: 'test pin',
       });
       // WHEN: Updating an invalid registration
       try {

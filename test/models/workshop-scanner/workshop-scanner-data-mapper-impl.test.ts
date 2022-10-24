@@ -100,6 +100,7 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
             testWorkshopScan.hackathon_id,
             testWorkshopScan.timestamp,
             testWorkshopScan.user_pin,
+            testWorkshopScan.email,
         ];
         const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
             .first();

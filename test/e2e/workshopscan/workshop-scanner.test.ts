@@ -1,6 +1,6 @@
 import { slow, suite, test } from 'mocha-typescript';
 import squel from 'squel';
-import { Registration } from '../../../src/models/register/registration';
+import { AcademicYear, CodingExperience, EducationalInstitutionType, Gender, IRegistrationApiModel, Registration, ShirtSize, VeteranOptions } from '../../../src/models/register/registration';
 import { IntegrationTest } from '../integration-test';
 import { TestData } from '../test-data';
 import { WorkshopScan } from '../../../src/models/workshops-scans/workshop-scans';
@@ -10,16 +10,34 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
 
     public static async before() {
       await IntegrationTest.before();
+
+        // insert another registration to add a pin for because using the default registration will give a duplicates error
+        const insertionTestRegistration = TestData.validRegistration();
+        insertionTestRegistration.email = this.insertionTestEmail;
+        insertionTestRegistration.wordPin = this.insertionTestWordPin;
+        insertionTestRegistration.uid = this.insertionTestUid;
+        await WorkshopScanIntegrationTest.insertFakeRegistration(insertionTestRegistration);
+
+        const duplicateTestRegistration = TestData.validRegistration();
+        duplicateTestRegistration.email = WorkshopScanIntegrationTest.duplicateTestEmail;
+        duplicateTestRegistration.wordPin = WorkshopScanIntegrationTest.duplicateTestWordPin;
+        duplicateTestRegistration.uid = WorkshopScanIntegrationTest.duplicateTestUid;
+        await WorkshopScanIntegrationTest.insertFakeRegistration(duplicateTestRegistration);
     }
   
     public static async after() {
-      await IntegrationTest.after();
+        await IntegrationTest.after();
     }
 
     protected readonly apiEndpoint = '/v2/workshop';
     protected readonly tableName = 'WORKSHOP_SCANS';
     protected readonly pkColumnName = 'scan_uid';
-    protected readonly insertionTestPin = 6;
+    protected static readonly insertionTestWordPin = TestData.validRegistration().wordPin.concat('_scan1');
+    protected static readonly insertionTestEmail = TestData.validRegistration().email.concat('_scan1')
+    protected static readonly insertionTestUid = 'testuid_scan1';
+    protected static readonly duplicateTestWordPin = TestData.validRegistration().wordPin.concat('_scan2');
+    protected static readonly duplicateTestEmail = TestData.validRegistration().email.concat('_scan2')
+    protected static readonly duplicateTestUid = 'testuid_scan2';
     
     @test('obtains the registration associated with the given pin')
     @slow(1500)
@@ -28,7 +46,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         // WHEN: Getting a registration by pin
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
-        const parameters = {pin: TestData.insertedUserPin()};
+        const parameters = { wordPin: TestData.validRegistration().wordPin };
         const res = await this.chai
           .request(this.app)
           .get(`${this.apiEndpoint}/user`)
@@ -60,41 +78,42 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find pin to query by' });
     }
 
-    @test('fails to get a registration when invalid pin is provided')
-    @slow(1500)
-    public async getRegistrationFailsDueToInvalidPin() {
-        // GIVEN: API
-        // WHEN: Getting a registration by pin
-        const user = await IntegrationTest.loginAdmin();
-        const idToken = await user.getIdToken();
+    // @test('fails to get a registration when invalid pin is provided')
+    // @slow(1500)
+    // public async getRegistrationFailsDueToInvalidPin() {
+    //     // GIVEN: API
+    //     // WHEN: Getting a registration by pin
+    //     const user = await IntegrationTest.loginAdmin();
+    //     const idToken = await user.getIdToken();
         
-        const parameters = {pin: 'asdfasdf'};
-        const res = await this.chai
-        .request(this.app)
-        .get(`${this.apiEndpoint}/user`)
-        .set('idToken', idToken)
-        .set('content-type', 'application/json')
-        .query(parameters);
-        // THEN: Returns a well formed response
-        super.assertRequestFormat(res, 'Error', 400, 'Error');
-        // THEN: Failed to validate input
-        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find pin to query by' });
-    }
+    //     const parameters = {pin: 'asdfasdf'};
+    //     const res = await this.chai
+    //     .request(this.app)
+    //     .get(`${this.apiEndpoint}/user`)
+    //     .set('idToken', idToken)
+    //     .set('content-type', 'application/json')
+    //     .query(parameters);
+    //     // THEN: Returns a well formed response
+    //     super.assertRequestFormat(res, 'Error', 400, 'Error');
+    //     // THEN: Failed to validate input
+    //     this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find pin to query by' });
+    // }
 
     @test('creates new workshop scan instance')
-    public async scanWorkshopSuccessfully(){
+    @slow(1500)
+    public async scanWorkshopSuccessfully() {
         //GIVEN: API
         //WHEN: Entering a workshop scan instance by user pin
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
 
-        const parameters = {pin: this.insertionTestPin, eventUid: 'test event uid'};
+        const parameters = { wordPin: WorkshopScanIntegrationTest.insertionTestWordPin, eventUid: TestData.validEvent().uid };
         const res = await this.chai
-        .request(this.app)
-        .post(`${this.apiEndpoint}/check-in`)
-        .set('idToken', idToken)
-        .set('content-type', 'application/json')
-        .send(parameters);
+            .request(this.app)
+            .post(`${this.apiEndpoint}/check-in`)
+            .set('idToken', idToken)
+            .set('content-type', 'application/json')
+            .send(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res);
         // THEN: The response is checked
@@ -110,16 +129,20 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         const idToken = await user.getIdToken();
         
         // Needs to have a duplicate scan already in the database
-        const scan = new WorkshopScan(TestData.validWorkshopScan());
-        scan.user_pin += 2;
-        const insertionQuery = squel.insert({autoQuoteTableNames: true, autoQuoteFieldNames: true})
+        const duplicateScan = new WorkshopScan(TestData.validWorkshopScan());
+        duplicateScan.email = WorkshopScanIntegrationTest.duplicateTestEmail;
+        duplicateScan.user_pin = 8; // some dummy value. i think this one is unused, so let's use this one?
+        const insertionQuery = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
             .into(TestData.workshopScansTableName)
-            .setFieldsRows([scan.dbRepresentation])
+            .setFieldsRows([duplicateScan.dbRepresentation])
             .toParam();
         insertionQuery.text = insertionQuery.text.concat(';');
         await WorkshopScanIntegrationTest.mysqlUow.query(insertionQuery.text, insertionQuery.values);
 
-        const parameters = {pin: scan.user_pin, eventUid: scan.event_id}
+        const parameters = { 
+            wordPin: WorkshopScanIntegrationTest.duplicateTestWordPin,
+            eventUid: TestData.validWorkshopScan().eventUid,
+        }
         const res = await this.chai
           .request(this.app)
           .post(`${this.apiEndpoint}/check-in`)
@@ -137,38 +160,17 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
         
-        const parameters = {event_id: 'test event uid'};
+        const parameters = { event_id: 'test event uid' };
         const res = await this.chai
-        .request(this.app)
-        .post(`${this.apiEndpoint}/check-in`)
-        .set('idToken', idToken)
-        .set('content-type', 'application/json')
-        .send(parameters);
+            .request(this.app)
+            .post(`${this.apiEndpoint}/check-in`)
+            .set('idToken', idToken)
+            .set('content-type', 'application/json')
+            .send(parameters);
         // THEN: Returns a well formed response
         super.assertRequestFormat(res, 'Error', 400, 'Error');
         // THEN: Failed to validate input
-        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid pin' });
-    }
-
-    @test('fails to create a new workshop scan instance when invalid pin is provided')
-    @slow(1500)
-    public async scanWorkshopFailsDueToInvalidPin() {
-        // GIVEN: API
-        // WHEN: Entering a workshop scan instance by user pin
-        const user = await IntegrationTest.loginAdmin();
-        const idToken = await user.getIdToken();
-        
-        const parameters = {pin: 'asdfasdf', event_id: 'test event uid'};
-        const res = await this.chai
-        .request(this.app)
-        .post(`${this.apiEndpoint}/check-in`)
-        .set('idToken', idToken)
-        .set('content-type', 'application/json')
-        .send(parameters);
-        // THEN: Returns a well formed response
-        super.assertRequestFormat(res, 'Error', 400, 'Error');
-        // THEN: Failed to validate input
-        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid pin' });
+        this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid word pin' });
     }
 
     @test('fails to create a new workshop scan instance when no event uid is provided')
@@ -179,7 +181,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
         
-        const parameters = {pin: TestData.insertedUserPin()};
+        const parameters = { wordPin: TestData.validRegistration()};
         const res = await this.chai
         .request(this.app)
         .post(`${this.apiEndpoint}/check-in`)
@@ -200,7 +202,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         const user = await IntegrationTest.loginAdmin();
         const idToken = await user.getIdToken();
 
-        const parameters = {pin: 5, event_id: 'invalid id'};
+        const parameters = { wordPin: 'some word pin', event_id: 'invalid id' };
         const res = await this.chai
         .request(this.app)
         .post(`${this.apiEndpoint}/check-in`)
@@ -213,12 +215,24 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         this.expect(res.body.body.data).to.deep.equal({ message: 'Could not find valid event uid' });
     }
 
+    private static async insertFakeRegistration(object: IRegistrationApiModel) {
+        const testRegistration = new Registration(object);
+        const registrationQuery = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+            .into(TestData.registerTableName)
+            .setFieldsRows([testRegistration.dbRepresentation])
+            .set('pin', testRegistration.pin)
+            .set('hackathon', IntegrationTest.activeHackathon.uid)
+            .toParam();
+        registrationQuery.text = registrationQuery.text.concat(';');
+
+        await IntegrationTest.mysqlUow.query(registrationQuery.text, registrationQuery.values);
+    }
 
     private async verifyWorkshopScan(object: WorkshopScan) {
         const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
           .from(TestData.workshopScansTableName)
-          .where('user_pin = ?', object.user_pin)
-          .where('event_id = ?', 'test event uid')
+          .where('email = ?', object.email)
+          .where('event_id = ?', TestData.validWorkshopScan().eventUid)
           .toParam();
         const [result] = await WorkshopScanIntegrationTest.mysqlUow.query<WorkshopScan>(
         query.text,
@@ -229,6 +243,7 @@ class WorkshopScanIntegrationTest extends IntegrationTest {
         delete result.hackathon_id;
         delete result.scan_uid;
         delete result.timestamp;
+        delete result.user_pin;
         delete object.timestamp;
 
         this.expect(result).to.deep.equal(object);

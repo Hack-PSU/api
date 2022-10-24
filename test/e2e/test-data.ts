@@ -76,7 +76,7 @@ export class TestData {
       shareAddressMlh: false,
       shareAddressSponsors: false,
       shareEmailMlh: false,
-      wordpin: "test pin",
+      wordPin: 'test pin',
     };
   }
 
@@ -182,6 +182,7 @@ export class TestData {
       hackathonUid: IntegrationTest.activeHackathon.uid,
       timestamp: 1234567890,
       pin: this.insertedUserPin(),
+      email: this.validRegistration().email,
     }
   }
 

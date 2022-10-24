@@ -94,7 +94,7 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
         await workshopScansDataMapper.insert(testWorkshopScan);
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'INSERT INTO `WORKSHOP_SCANS` (`event_id`, `hackathon_id`, `timestamp`, `user_pin`) VALUES (?, ?, ?, ?);';
+        const expectedSQL = 'INSERT INTO `WORKSHOP_SCANS` (`event_id`, `hackathon_id`, `timestamp`, `user_pin`, `email`) VALUES (?, ?, ?, ?, ?);';
         const expectedParams = [
             testWorkshopScan.event_id,
             testWorkshopScan.hackathon_id,

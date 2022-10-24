@@ -97,7 +97,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
   private async scanWorkshopByWordPin(req: Request, res: Response, next: NextFunction) {
     if (!req.body.wordPin) {
       return Util.standardErrorHandler(
-        new HttpError('Could not find valid pin', 400),
+        new HttpError('Could not find valid word pin', 400),
         next,
       );
     }

@@ -88,6 +88,7 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
             hackathonUid: testHackathonUid,
             timestamp: Date.now(),
             pin: 12345,
+            email: 'testemail@asdfasdf.com',
         });
         // WHEN: Inserting the workshop scan
         await workshopScansDataMapper.insert(testWorkshopScan);

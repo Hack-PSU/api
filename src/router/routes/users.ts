@@ -262,7 +262,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     }
 
     // Generate a random word pin
-    request.body.wordpin = RandomWords({exactly: 4, join: " ", minLength: 3});
+    request.body.wordPin = RandomWords({exactly: 4, join: " ", minLength: 3});
 
     let registration: Registration;
     try {

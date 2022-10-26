@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
+import { WebsocketPusher } from '../../../services/communication/websocket-pusher';
 import { IExpressController, ResponseBody } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
-import { Util } from '../../../JSCommon/util';
+import { Environment, Util } from '../../../JSCommon/util';
 import { Hackathon } from '../../../models/hackathon';
 import { IActiveHackathonDataMapper } from '../../../models/hackathon/active-hackathon';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
@@ -15,6 +16,7 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
+    @Inject('WebsocketPusher') private readonly websocketPusher: WebsocketPusher,
     @Inject('IActiveHackathonDataMapper') private readonly adminHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IActiveHackathonDataMapper') private readonly acl: IAclPerm,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,
@@ -111,12 +113,12 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
     try {
       const result = await this.adminHackathonDataMapper.insert(hackathon);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-      );
-      return this.sendResponse(res, response);
+
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.HACKATHONS, req.headers.idtoken as string);
+      }
+
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
@@ -153,12 +155,12 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
     try {
       const result = await this.adminHackathonDataMapper.makeActive(req.body.uid);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-      );
-      return this.sendResponse(res, response);
+
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.HACKATHONS, req.headers.idtoken as string);
+      }
+
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
@@ -202,12 +204,12 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
 
     try {
       const result = await this.adminHackathonDataMapper.update(hackathon);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-      );
-      return this.sendResponse(res, response);
+
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.HACKATHONS, req.headers.idtoken as string);
+      }
+
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.standardErrorHandler(error, next);
     }

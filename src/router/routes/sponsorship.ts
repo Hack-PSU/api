@@ -2,15 +2,16 @@ import express, { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { IExpressController, ResponseBody } from '..';
 import { HttpError } from '../../JSCommon/errors';
-import { Util } from '../../JSCommon/util';
+import { Environment, Util } from '../../JSCommon/util';
 import { IFirebaseAuthService } from '../../services/auth/auth-types';
 import { AclOperations, IAclPerm } from '../../services/auth/RBAC/rbac-types';
 import { Logger } from '../../services/logging/logging';
+import { WebsocketPusher } from '../../services/communication/websocket-pusher';
 import { ParentRouter } from '../router-types';
 import { ISponsorDataMapper } from '../../models/sponsorship/sponsor-data-mapper-impl';
 import { Sponsor } from "../../models/sponsorship/sponsor";
 import { IActiveHackathonDataMapper } from "../../models/hackathon/active-hackathon";
-import { IUowOpts } from 'services/database/svc/uow.service';
+
 
 @Injectable()
 export class SponsorshipController extends ParentRouter implements IExpressController {
@@ -22,6 +23,7 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
     @Inject('BunyanLogger') private readonly logger: Logger,
+    @Inject('WebsocketPusher') private readonly websocketPusher: WebsocketPusher,
     @Inject('ISponsorDataMapper') private readonly sponsorDataMapper: ISponsorDataMapper,
     @Inject('ISponsorDataMapper') private readonly sponsorAclPerm: IAclPerm,
     @Inject('IActiveHackathonDataMapper') protected readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
@@ -64,6 +66,16 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
       this.authService.verifyAcl(this.sponsorAclPerm, AclOperations.CREATE),
       (req, res, next) => this.updateAllSponsorsHandler(req, res, next),
     );
+    app.post(
+      '/test',
+      this.authService.verifyAcl(this.sponsorAclPerm, AclOperations.CREATE),
+      (req, res, next) => this.testHandler(req, res, next),
+    );
+  }
+
+  private async testHandler(req: Request, res: Response, next: NextFunction) {
+    this.websocketPusher.sendUpdateRequest(WebsocketPusher.SPONSORSHIP, req.headers.idtoken as string);
+    return this.sendResponse(res, new ResponseBody('Success', 200, undefined));
   }
 
   /**
@@ -126,6 +138,9 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
 
     try {
       const result = await this.sponsorDataMapper.insert(sponsor);
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.SPONSORSHIP, req.headers.idtoken as string);
+      }
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -192,6 +207,9 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
 
     try {
       const result = await this.sponsorDataMapper.update(sponsor);
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.SPONSORSHIP, req.headers.idtoken as string);
+      }
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -215,6 +233,9 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
     }
     try {
       const result = await this.sponsorDataMapper.deleteSponsor(req.body.uid);
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.SPONSORSHIP, req.headers.idtoken as string);
+      }
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -259,6 +280,9 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
 
     try {
       const result = await this.sponsorDataMapper.updateAll(sponsors);
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.SPONSORSHIP, req.headers.idtoken as string);
+      }
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);

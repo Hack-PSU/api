@@ -4,11 +4,12 @@ import { Inject, Injectable } from 'injection-js';
 import { IRegisterDataMapper } from 'models/register';
 import * as path from 'path';
 import { map } from 'rxjs/operators';
+import { WebsocketPusher } from '../../services/communication/websocket-pusher';
 import { IExpressController, ResponseBody } from '..';
 import { Constants } from '../../assets/constants/constants';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
-import { Util } from '../../JSCommon/util';
+import { Environment, Util } from '../../JSCommon/util';
 import { IExtraCreditDataMapper } from '../../models/extra-credit';
 import { ExtraCreditAssignment } from '../../models/extra-credit/extra-credit-assignment';
 import { ExtraCreditClass } from '../../models/extra-credit/extra-credit-class';
@@ -36,6 +37,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
+    @Inject('WebsocketPusher') private readonly websocketPusher: WebsocketPusher,
     @Inject('IRegisterDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IExtraCreditDataMapper') private readonly extraCreditPerm: IAclPerm,
     @Inject('IRegistrationProcessor') private readonly registrationProcessor: IRegistrationProcessor,
@@ -358,6 +360,11 @@ export class UsersController extends ParentRouter implements IExpressController 
       try {
         const ecClass = new ExtraCreditClass(req.body);
         const result = await this.extraCreditDataMapper.insertClass(ecClass);
+
+        if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+          this.websocketPusher.sendUpdateRequest(WebsocketPusher.EXTRA_CREDIT, req.headers.idtoken as string);
+        }
+
         const response = new ResponseBody('Success', 200, result);
         return this.sendResponse(res, response);
       } catch (error) {
@@ -559,6 +566,11 @@ export class UsersController extends ParentRouter implements IExpressController 
         classUid: 1,
       });
       const result = await this.extraCreditDataMapper.delete(ecAssignment);
+
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.EXTRA_CREDIT, req.headers.idtoken as string);
+      }
+
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {

@@ -53,6 +53,7 @@ import { RtdbConnectionFactory } from '../../database/connection/rtdb-connection
 import { SqlConnectionFactory } from '../../database/connection/sql-connection-factory';
 import { MysqlUow } from '../../database/svc/mysql-uow.service';
 import { RtdbUow } from '../../database/svc/rtdb-uow.service';
+import { WebsocketPusher } from '../../communication/websocket-pusher';
 
 import { Logger } from '../../logging/logging';
 import { GoogleStorageService } from '../../storage/svc/google-storage.service';
@@ -124,6 +125,7 @@ export class ExpressProvider {
         { provide: 'IRtdbFactory', useClass: RtdbConnectionFactory },
         { provide: 'IScannerAuthService', useClass: ApikeyAuthService },
         { provide: 'IStorageService', useClass: GoogleStorageService },
+        { provide: 'WebsocketPusher', useClass: WebsocketPusher},
 
         // Classes
         { provide: 'BunyanLogger', useClass: Logger },

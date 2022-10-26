@@ -2,7 +2,7 @@ import express from 'express';
 import * as path from 'path';
 import { Inject, Injectable } from 'injection-js';
 import { HttpError } from '../../../JSCommon/errors';
-import { Util } from '../../../JSCommon/util';
+import { Environment, Util } from '../../../JSCommon/util';
 import { Constants } from '../../../assets/constants/constants';
 import { Event } from '../../../models/event/event';
 import { Url } from '../../../models/url/url';
@@ -15,6 +15,7 @@ import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
 import { IActiveHackathonDataMapper } from 'models/hackathon/active-hackathon';
 import { map } from 'rxjs/internal/operators/map';
+import { WebsocketPusher } from '../../../services/communication/websocket-pusher';
 
 @Injectable()
 export class EventsController extends LiveController {
@@ -24,6 +25,7 @@ export class EventsController extends LiveController {
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
+    @Inject('WebsocketPusher') private readonly websocketPusher: WebsocketPusher,
     @Inject('IEventDataMapper') private readonly dataMapper: IDataMapperHackathonSpecific<Event>,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IUrlDataMapper') private readonly urlDataMapper: UrlDataMapperImpl,
@@ -151,6 +153,9 @@ export class EventsController extends LiveController {
       await this.urlDataMapper.deleteByEvent(request.body.uid);
       const result = await this.dataMapper.delete(request.body);
       const res = new ResponseBody('Success', 200, result);
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.EVENTS, request.headers.idtoken as string);
+      }
       return this.sendResponse(response, res);
     } catch (error) {
       Util.standardErrorHandler(error, next);
@@ -224,6 +229,9 @@ export class EventsController extends LiveController {
         }
       }
       const res = new ResponseBody('Success', 200, result);
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.EVENTS, request.headers.idtoken as string);
+      }
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -302,6 +310,9 @@ export class EventsController extends LiveController {
       if (urls) {
         urls.forEach(url => this.urlDataMapper.insert(new Url({ eventId: event.id, url })));
         result.data.ws_urls = urls;
+      }
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(WebsocketPusher.EVENTS, request.headers.idtoken as string);
       }
       const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
@@ -392,8 +403,10 @@ export class EventsController extends LiveController {
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
-    
     const res = new ResponseBody('Success', 200, fileURL);
+    if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+      this.websocketPusher.sendUpdateRequest(WebsocketPusher.EVENTS, request.headers.idtoken as string);
+    }
     return this.sendResponse(response, res);
   }
 

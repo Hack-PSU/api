@@ -66,11 +66,6 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
       this.authService.verifyAcl(this.sponsorAclPerm, AclOperations.CREATE),
       (req, res, next) => this.updateAllSponsorsHandler(req, res, next),
     );
-    app.post(
-      '/test',
-      this.authService.verifyAcl(this.sponsorAclPerm, AclOperations.CREATE),
-      (req, res, next) => this.testHandler(req, res, next),
-    );
   }
 
   private async testHandler(req: Request, res: Response, next: NextFunction) {

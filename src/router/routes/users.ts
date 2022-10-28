@@ -327,7 +327,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    */
   private async getAllRegistrations(req: Request, res: Response, next: NextFunction) {
     try {
-      const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid);
+      const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid, { ignoreCache: req.query.ignoreCache });
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -613,7 +613,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
   
   /**
-   * @api {get} /users/registration-by-email Get the uid corresponding to an email
+   * @api {get} /users/registration-by-email Get the registration corresponding to an email
    * @apiVersion 2.0.0
    * @apiName Get User Id
    * @apiGroup User

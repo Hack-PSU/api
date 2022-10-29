@@ -15,7 +15,8 @@ import axios from 'axios';
 @Injectable()
 export class WorkshopScannerController extends ParentRouter implements IExpressController {
   public router: Router;
-  protected notificationFunctionRoute = 'https://us-central1-hackpsu18.cloudfunctions.net/notifications/message/send';
+  protected notificationFunctionRoute = 'https://us-central1-hackpsu18.cloudfunctions.net/api/notification/send/message'
+  // protected notificationFunctionRoute = 'https://us-central1-hackpsu18.cloudfunctions.net/notifications/message/send';
   constructor(
     @Inject('IWorkshopScansDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
@@ -122,9 +123,9 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
       try { 
         // don't send push notifications when testing, since this involves calling an external function
         if (Util.getCurrentEnv() == Environment.PRODUCTION) {         
-          const notificationParams = { userPin: req.body.pin, userWordPin: req.body.wordPin, title: "Check In", message: "You've just checked in to a workshop at HackPSU!" };
+          const notificationBody = { userPin: req.body.wordPin, title: "Check In", body: "You've just checked in to a workshop at HackPSU!" };
           const notificationHeaders = { headers: { idToken: req.headers.idtoken }};
-          axios.post(this.notificationFunctionRoute, notificationParams, notificationHeaders);
+          axios.post(this.notificationFunctionRoute, notificationBody, notificationHeaders);
         }
       } catch (error) {
 

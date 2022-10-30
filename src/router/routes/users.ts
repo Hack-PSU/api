@@ -364,8 +364,8 @@ export class UsersController extends ParentRouter implements IExpressController 
       await this.workshopScansDataMapper.deleteUser(email);
       await this.extraCreditDataMapper.deleteByUser(req.body.uid);
       await this.registerDataMapper.deleteUser(req.body.uid);
-      await this.authService.delete(req.body.uid);
-      this.sendResponse(res, new ResponseBody('Success', 200, undefined));
+      const result = await this.authService.delete(req.body.uid);
+      this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
     }

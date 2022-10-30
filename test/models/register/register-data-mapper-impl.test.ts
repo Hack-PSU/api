@@ -793,14 +793,14 @@ describe('TEST: Register data mapper', () => {
       reset(mysqlUowMock);
     });
     // @ts-ignore
-    it('generates the correct sql to get the email from registrtation', async () => {
+    it('generates the correct sql to get the email from registration', async () => {
       // GIVEN: A valid registration ID
       const uid = 'test registration';
       // WHEN: The current registration version is retrieved
       await registerDataMapper.getEmailByUid(uid);
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT `email` FROM `REGISTRATION` WHERE (uid = ?);';
-      const expectedParams = [uid];
+      const expectedSQL = 'SELECT `email` FROM `REGISTRATION` WHERE (uid = ?) LIMIT ?;';
+      const expectedParams = [uid, 1];
       const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

@@ -348,7 +348,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiGroup User
    * @apiPermission TechnologyAdminPermission
    * 
-   * @apiParam uid
+   * @apiParam uid The uid of the user to delete
    */
   private async deleteUser(req: Request, res: Response, next: NextFunction) {
     if (!req.body.uid) {
@@ -361,7 +361,9 @@ export class UsersController extends ParentRouter implements IExpressController 
 
     try {
       const email = await this.registerDataMapper.getEmailByUid(req.body.uid, { ignoreCache: false });
-      await this.workshopScansDataMapper.deleteUser(email);
+      if (email) {
+        await this.workshopScansDataMapper.deleteUser(email);
+      }
       await this.extraCreditDataMapper.deleteByUser(req.body.uid);
       await this.registerDataMapper.deleteUser(req.body.uid);
       const result = await this.authService.delete(req.body.uid);

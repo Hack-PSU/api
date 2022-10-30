@@ -800,7 +800,7 @@ describe('TEST: Register data mapper', () => {
       await registerDataMapper.getEmailByUid(uid);
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'SELECT `email` FROM `REGISTRATION` WHERE (uid = ?) LIMIT ?;';
-      const expectedParams = [uid];
+      const expectedParams = [uid, 1];
       const [generatedSQL, generatedParams] = capture<string, string[]>(mysqlUowMock.query)
         .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

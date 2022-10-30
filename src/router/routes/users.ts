@@ -360,7 +360,8 @@ export class UsersController extends ParentRouter implements IExpressController 
     }
 
     try {
-      await this.workshopScansDataMapper.deleteUser(res.locals.user.email);
+      const email = await this.registerDataMapper.getEmailByUid(req.query.uid, { ignoreCache: false });
+      await this.workshopScansDataMapper.deleteUser(email);
       await this.extraCreditDataMapper.deleteByUser(req.query.uid);
       await this.registerDataMapper.deleteUser(req.query.uid);
       await this.authService.delete(req.query.uid);

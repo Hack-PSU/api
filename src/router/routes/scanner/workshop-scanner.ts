@@ -16,7 +16,6 @@ import axios from 'axios';
 export class WorkshopScannerController extends ParentRouter implements IExpressController {
   public router: Router;
   protected notificationFunctionRoute = 'https://us-central1-hackpsu18.cloudfunctions.net/api/notification/send/message'
-  // protected notificationFunctionRoute = 'https://us-central1-hackpsu18.cloudfunctions.net/notifications/message/send';
   constructor(
     @Inject('IWorkshopScansDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,

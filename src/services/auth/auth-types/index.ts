@@ -66,6 +66,8 @@ export interface IFirebaseAuthService extends IAuthService {
     userToken: admin.auth.DecodedIdToken,
     customVerifierParams?: any,
   ): boolean;
+
+  delete(uid: UidType);
 }
 
 export enum AuthLevel {

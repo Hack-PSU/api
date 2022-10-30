@@ -24,6 +24,7 @@ import { Logger } from '../../services/logging/logging';
 import { IStorageService } from '../../services/storage';
 import { IStorageMapper } from '../../services/storage/svc/storage.service';
 import { ParentRouter } from '../router-types';
+import { IWorkshopScansDataMapper } from '../../models/workshops-scans/workshop-scanner-data-mapper';
 const RandomWords = require('random-words');
 
 @Injectable()
@@ -45,6 +46,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IExtraCreditDataMapper,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IWorkshopScansDataMapper') private readonly workshopScansDataMapper: IWorkshopScansDataMapper,
     @Inject('IStorageService') private readonly storageService: IStorageService,
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
@@ -93,6 +95,11 @@ export class UsersController extends ParentRouter implements IExpressController 
       '/register',
       this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
       (req, res, next) => this.getAllRegistrations(req, res, next),
+    );
+    app.post(
+      '/delete',
+      // authentication is handled later, so skip the call to verifyAcl here
+      (req, res, next) => this.deleteUser(req, res, next),
     );
     app.get(
       '/extra-credit',
@@ -329,6 +336,35 @@ export class UsersController extends ParentRouter implements IExpressController 
     try {
       const response = await this.registrationProcessor.getAllRegistrationsByUser(res.locals.user.uid, { ignoreCache: req.query.ignoreCache });
       return this.sendResponse(res, response);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /users/delete Delete the information for a user
+   * @apiversion 2.0.0
+   * @apiName Delete a user
+   * @apiGroup User
+   * @apiPermission TechnologyAdminPermission
+   * 
+   * @apiParam uid
+   */
+  private async deleteUser(req: Request, res: Response, next: NextFunction) {
+    if (!req.query.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid uid', 400), next);
+    }
+
+    if (res.locals.user.privilege < 4 && res.locals.user.uid != req.query.uid) {
+      return Util.standardErrorHandler(new HttpError('Insufficient Permissions to delete another user', 401), next);
+    }
+
+    try {
+      await this.workshopScansDataMapper.deleteUser(res.locals.user.email);
+      await this.extraCreditDataMapper.deleteByUser(req.query.uid);
+      await this.registerDataMapper.deleteUser(req.query.uid);
+      await this.authService.delete(req.query.uid);
+      this.sendResponse(res, new ResponseBody('Success', 200, undefined));
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
@@ -628,18 +664,12 @@ export class UsersController extends ParentRouter implements IExpressController 
    private async getRegistrationByEmailHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.query || !req.query.email) {
       return Util.standardErrorHandler(
-        new HttpError('Email could not be found in request parameters', 400),
-        next,
-      );
+        new HttpError('Email could not be found in request parameters', 400), next);
     }
     try {
       const hackathon = (await this.activeHackathonDataMapper.activeHackathon.toPromise());
       const result = await this.registerDataMapper.getRegistrationByEmail(req.query.email, hackathon.uid);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-    );
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

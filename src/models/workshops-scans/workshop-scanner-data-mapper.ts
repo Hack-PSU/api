@@ -25,7 +25,7 @@ import { Registration } from 'models/register/registration';
   
   getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>>;
 
-  deleteUser(emaill: string): Promise<IDbResult<void>>;
+  deleteUser(email: string): Promise<IDbResult<void>>;
 
  }
 @Injectable()

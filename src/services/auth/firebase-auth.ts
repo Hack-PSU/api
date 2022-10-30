@@ -122,9 +122,9 @@ export class FirebaseAuthService implements IFirebaseAuthService {
       response.locals.user = decodedToken;
       response.locals.privilege = decodedToken.privilege;
       next();
-    } catch (e) {
-      this.logger.info(e);
-      return Util.standardErrorHandler(new HttpError(e.message || e, 401), next);
+    } catch (error) {
+      this.logger.info(error);
+      return Util.standardErrorHandler(new HttpError(error.message || error, 401), next);
     }
   }
 
@@ -147,19 +147,11 @@ export class FirebaseAuthService implements IFirebaseAuthService {
         response.locals.user.privilege = AuthLevel.PARTICIPANT;
       }
       try {
-        if (this.verifyAclRaw(
-          permission,
-          requestedOp,
-          response.locals.user,
-          response.locals.customVerifierParams,
-        )) return next();
+        if (this.verifyAclRaw(permission, requestedOp, response.locals.user, response.locals.customVerifierParams)) {
+          return next();
+        }
         return Util.standardErrorHandler(
-          new HttpError(
-            'Insufficient permissions for this operation',
-            401,
-          ),
-          next,
-        );
+          new HttpError('Insufficient permissions for this operation', 401, ), next);
       } catch (error) {
         return Util.standardErrorHandler(error, next);
       }
@@ -181,12 +173,7 @@ export class FirebaseAuthService implements IFirebaseAuthService {
       });
       return true;
     }
-    this.verifyAclInternalOrThrow(
-      requestedOp,
-      permission,
-      userToken,
-      customVerifierParams,
-    );
+    this.verifyAclInternalOrThrow(requestedOp, permission, userToken, customVerifierParams);
     return true;
   }
 
@@ -215,6 +202,10 @@ export class FirebaseAuthService implements IFirebaseAuthService {
 
   public elevate(uid: UidType, privilege: AuthLevel) {
     return this.admin.setCustomUserClaims(uid, { privilege, admin: true });
+  }
+
+  public delete(uid: UidType) {
+    return this.admin.deleteUser(uid);
   }
 
   private verifyAclInternalOrThrow(

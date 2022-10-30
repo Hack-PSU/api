@@ -21,6 +21,8 @@ export interface IRegisterDataMapper
 
   getRegistrationByEmail(email: String, hackathonUid: UidType): Promise<IDbResult<Registration>>;
 
+  deleteUser(uid: UidType): Promise<IDbResult<void>>;
+
   /**
    * Returns a generated query for counting the statistics for
    * a given table column

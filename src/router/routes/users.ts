@@ -342,7 +342,7 @@ export class UsersController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {get} /users/delete Delete the information for a user
+   * @api {post} /users/delete Delete the information for a user
    * @apiversion 2.0.0
    * @apiName Delete a user
    * @apiGroup User
@@ -351,20 +351,20 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam uid
    */
   private async deleteUser(req: Request, res: Response, next: NextFunction) {
-    if (!req.query.uid) {
+    if (!req.body.uid) {
       return Util.standardErrorHandler(new HttpError('Could not find valid uid', 400), next);
     }
 
-    if (res.locals.user.privilege < 4 && res.locals.user.uid != req.query.uid) {
+    if (res.locals.user.privilege < 4 && res.locals.user.uid != req.body.uid) {
       return Util.standardErrorHandler(new HttpError('Insufficient Permissions to delete another user', 401), next);
     }
 
     try {
-      const email = await this.registerDataMapper.getEmailByUid(req.query.uid, { ignoreCache: false });
+      const email = await this.registerDataMapper.getEmailByUid(req.body.uid, { ignoreCache: false });
       await this.workshopScansDataMapper.deleteUser(email);
-      await this.extraCreditDataMapper.deleteByUser(req.query.uid);
-      await this.registerDataMapper.deleteUser(req.query.uid);
-      await this.authService.delete(req.query.uid);
+      await this.extraCreditDataMapper.deleteByUser(req.body.uid);
+      await this.registerDataMapper.deleteUser(req.body.uid);
+      await this.authService.delete(req.body.uid);
       this.sendResponse(res, new ResponseBody('Success', 200, undefined));
     } catch (error) {
       return Util.errorHandler500(error, next);

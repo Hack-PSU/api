@@ -17,7 +17,7 @@ export interface IRegisterDataMapper
 
   getRegistrationStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats[]>>;
 
-  getEmailByUid(uid: UidType): Promise<IDbResult<string>>;
+  getEmailByUid(uid: UidType, opts?:IUowOpts): Promise<string>;
 
   getRegistrationByEmail(email: String, hackathonUid: UidType): Promise<IDbResult<Registration>>;
 

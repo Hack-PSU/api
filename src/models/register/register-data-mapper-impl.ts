@@ -378,7 +378,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return queryBuilder.group(fieldname);
   }
 
-  public getEmailByUid(uid: UidType): Promise<IDbResult<string>> {
+  public async getEmailByUid(uid: UidType, opts?:IUowOpts): Promise<string> {
     const query = squel.select({
       autoQuoteFieldNames: true,
       autoQuoteTableNames: true,
@@ -386,17 +386,15 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .from(this.tableName)
       .field('email')
       .where('uid = ?', uid)
+      .limit(1)
       .toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<string>(
-      query.text,
-      query.values,
-      { cache: true },
-    ))
-      .pipe(
-        map((email: string) => ({ result: 'Success', data: email })),
-      )
-      .toPromise();
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
+    const result = await this.sql.query<string>(query.text, query.values, { cache: checkCache });
+    return result[0].email as string;
   }
 
   public getByPin(pin: number, hackathonUid: UidType): Promise<IDbResult<Registration>> {

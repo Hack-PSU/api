@@ -54,6 +54,17 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     );
   }
 
+  public deleteUser(uid: string): Promise<IDbResult<void>> {
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(this.tableName)
+      .where(`${this.pkColumnName} = ?`, uid)
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: undefined })))
+      .toPromise();
+  }
+
   public delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
@@ -61,11 +72,9 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .where('hackathon = ?', id.hackathon)
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query(query.text, query.values, { cache: false }),
-    ).pipe(
-      map(() => ({ result: 'Success', data: undefined })),
-    ).toPromise();
+    return from(this.sql.query(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: undefined })))
+      .toPromise();
   }
 
   public get(id: ICompoundHackathonUidType, opts?: IUowOpts): Promise<IDbResult<Registration>> {

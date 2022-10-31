@@ -401,7 +401,11 @@ export class UsersController extends ParentRouter implements IExpressController 
         const result = await this.extraCreditDataMapper.insertClass(ecClass);
 
         if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-          this.websocketPusher.sendUpdateRequest(WebsocketPusher.EXTRA_CREDIT, req.headers.idtoken as string);
+          this.websocketPusher.sendUpdateRequest(
+            WebsocketPusher.EXTRA_CREDIT,
+            WebsocketPusher.MOBILE,
+            req.headers.idtoken as string
+          );
         }
 
         const response = new ResponseBody('Success', 200, result);
@@ -607,7 +611,11 @@ export class UsersController extends ParentRouter implements IExpressController 
       const result = await this.extraCreditDataMapper.delete(ecAssignment);
 
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.EXTRA_CREDIT, req.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.EXTRA_CREDIT,
+          WebsocketPusher.MOBILE,
+          req.headers.idtoken as string,
+        );
       }
 
       const response = new ResponseBody('Success', 200, result);

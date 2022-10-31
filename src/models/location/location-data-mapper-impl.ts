@@ -13,9 +13,14 @@ import { IUowOpts } from '../../services/database/svc/uow.service';
 import { Logger } from '../../services/logging/logging';
 import { Location } from './location';
 
+export interface ILocationDataMapper extends IDataMapper<Location> {
+
+  getByName(name: string): Promise<IDbResult<Location>>;
+
+}
+
 @Injectable()
-export class LocationDataMapperImpl extends GenericDataMapper
-  implements IDataMapper<Location>, IAclPerm {
+export class LocationDataMapperImpl extends GenericDataMapper implements ILocationDataMapper, IAclPerm {
   // ACL permissions
   public readonly CREATE: string = 'location:create';
   public readonly DELETE: string = 'location:delete';
@@ -42,6 +47,17 @@ export class LocationDataMapperImpl extends GenericDataMapper
     super.addRBAC([this.READ, this.READ_ALL], [AuthLevel.PARTICIPANT]);
   }
 
+  getByName(name: string): Promise<IDbResult<Location>> {
+    const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .from(this.tableName)
+      .where(`location_name = ?`, name)
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query<Location>(query.text, query.values, { cache: false }))
+      .pipe(map((location: Location[]) => ({ result: 'Success', data: location[0] })))
+      .toPromise();
+  }
+
   public delete(object: Location): Promise<IDbResult<void>> {
     const query = squel
       .delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
@@ -49,9 +65,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName} = ?`, object.uid)
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query(query.text, query.values, { cache: false }),
-    )
+    return from(this.sql.query(query.text, query.values, { cache: false }))
       .pipe(map(() => ({ result: 'Success', data: undefined })))
       .toPromise();
   }
@@ -70,14 +84,8 @@ export class LocationDataMapperImpl extends GenericDataMapper
     queryBuilder = queryBuilder.where(`${this.pkColumnName}= ?`, id);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query<Location>(query.text, query.values, {
-        cache: checkCache,
-      }),
-    )
-      .pipe(
-        map((location: Location[]) => ({ result: 'Success', data: location[0] })),
-      )
+    return from(this.sql.query<Location>(query.text, query.values, { cache: checkCache }))
+      .pipe(map((location: Location[]) => ({ result: 'Success', data: location[0] })))
       .toPromise();
   }
 
@@ -101,15 +109,8 @@ export class LocationDataMapperImpl extends GenericDataMapper
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query<Location>(query.text, query.values, { cache: checkCache }),
-    )
-      .pipe(
-        map((locations: Location[]) => ({
-          data: locations,
-          result: 'Success',
-        })),
-      )
+    return from(this.sql.query<Location>(query.text, query.values, { cache: checkCache }))
+      .pipe(map((locations: Location[]) => ({ data: locations, result: 'Success' })))
       .toPromise();
   }
 
@@ -121,22 +122,17 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .toParam();
     query.text = query.text
       .concat(';');
-    return from(
-      this.sql.query<number>(query.text, query.values, { cache: true }),
-    )
+    return from(this.sql.query<number>(query.text, query.values, { cache: true }))
       .pipe(map((result: number[]) => ({ result: 'Success', data: result[0] })))
       .toPromise();
   }
 
-  public insert(object: Location): Promise<IDbResult<Location>> {
+  public async insert(object: Location): Promise<IDbResult<Location>> {
     const validation = object.validate();
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
       this.logger.warn(object.dbRepresentation);
-      return Promise.reject({
-        data: new HttpError(validation.error, 400),
-        result: 'error',
-      });
+      return Promise.reject({ result: 'error', data: new HttpError(validation.error, 400) });
     }
     const query = squel
       .insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
@@ -144,9 +140,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .setFieldsRows([object.dbRepresentation])
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query<void>(query.text, query.values, { cache: false }),
-    )
+    return from(this.sql.query<void>(query.text, query.values, { cache: false }))
       .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
       .toPromise();
   }
@@ -156,10 +150,7 @@ export class LocationDataMapperImpl extends GenericDataMapper
     if (!validation.result) {
       this.logger.warn('Validation failed while adding object.');
       this.logger.warn(object.dbRepresentation);
-      return Promise.reject({
-        data: new HttpError(validation.error, 400),
-        result: 'error',
-      });
+      return Promise.reject({ data: new HttpError(validation.error, 400), result: 'error' });
     }
     const query = squel
       .update({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
@@ -168,9 +159,8 @@ export class LocationDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName} = ?`, object.id)
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query<void>(query.text, query.values, { cache: false }),
-    ).pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })),
-    ).toPromise();
+    return from(this.sql.query<void>(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
+      .toPromise();
   }
 }

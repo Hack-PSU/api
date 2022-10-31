@@ -34,7 +34,7 @@ export class WebsocketPusher {
     }
   }
 
-  public async doRequestIgnoringError(route: string, body: { to: string }, headers: { headers: { idtoken: string }}) {;
+  public async doRequestIgnoringError(route: string, body: { to: string }, headers: { headers: { idtoken: string }}) {
     try {
       axios.post(route, body, headers);
     } catch (error) {

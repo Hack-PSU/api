@@ -68,11 +68,6 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
     );
   }
 
-  private async testHandler(req: Request, res: Response, next: NextFunction) {
-    this.websocketPusher.sendUpdateRequest(WebsocketPusher.SPONSORSHIP, req.headers.idtoken as string);
-    return this.sendResponse(res, new ResponseBody('Success', 200, undefined));
-  }
-
   /**
    * @api {get} /sponsorship Get a sponsor by their uid
    * @apiVersion 2.0.0
@@ -134,7 +129,11 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
     try {
       const result = await this.sponsorDataMapper.insert(sponsor);
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.SPONSORSHIP, req.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.SPONSORSHIP,
+          WebsocketPusher.MOBILE,
+          req.headers.idtoken as string,
+        );
       }
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
@@ -203,7 +202,11 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
     try {
       const result = await this.sponsorDataMapper.update(sponsor);
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.SPONSORSHIP, req.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.SPONSORSHIP,
+          WebsocketPusher.MOBILE,
+          req.headers.idtoken as string,
+        );
       }
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
@@ -229,7 +232,11 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
     try {
       const result = await this.sponsorDataMapper.deleteSponsor(req.body.uid);
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.SPONSORSHIP, req.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.SPONSORSHIP,
+          WebsocketPusher.MOBILE,
+          req.headers.idtoken as string,
+        );
       }
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
@@ -276,7 +283,11 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
     try {
       const result = await this.sponsorDataMapper.updateAll(sponsors);
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.SPONSORSHIP, req.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.SPONSORSHIP,
+          WebsocketPusher.MOBILE,
+          req.headers.idtoken as string,
+        );
       }
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {

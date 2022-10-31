@@ -154,7 +154,11 @@ export class EventsController extends LiveController {
       const result = await this.dataMapper.delete(request.body);
       const res = new ResponseBody('Success', 200, result);
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.EVENTS, request.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.EVENTS,
+          [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+          request.headers.idtoken as string,
+        );
       }
       return this.sendResponse(response, res);
     } catch (error) {
@@ -230,7 +234,11 @@ export class EventsController extends LiveController {
       }
       const res = new ResponseBody('Success', 200, result);
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.EVENTS, request.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.EVENTS,
+          [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+          request.headers.idtoken as string,
+        );
       }
       return this.sendResponse(response, res);
     } catch (error) {
@@ -312,7 +320,11 @@ export class EventsController extends LiveController {
         result.data.ws_urls = urls;
       }
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.EVENTS, request.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.EVENTS,
+          [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+          request.headers.idtoken as string,
+        );
       }
       const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
@@ -405,8 +417,12 @@ export class EventsController extends LiveController {
     }
     const res = new ResponseBody('Success', 200, fileURL);
     if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-      this.websocketPusher.sendUpdateRequest(WebsocketPusher.EVENTS, request.headers.idtoken as string);
-    }
+      this.websocketPusher.sendUpdateRequest(
+        WebsocketPusher.EVENTS,
+        [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+        request.headers.idtoken as string,
+      );
+  }
     return this.sendResponse(response, res);
   }
 

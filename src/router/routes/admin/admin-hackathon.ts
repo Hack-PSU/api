@@ -115,7 +115,11 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
       const result = await this.adminHackathonDataMapper.insert(hackathon);
 
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.HACKATHONS, req.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.HACKATHONS, 
+          [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+          req.headers.idtoken as string,
+        );
       }
 
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
@@ -157,7 +161,12 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
       const result = await this.adminHackathonDataMapper.makeActive(req.body.uid);
 
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.HACKATHONS, req.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.HACKATHONS, 
+          [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+          req.headers.idtoken as string,
+        );
+
       }
 
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
@@ -206,7 +215,11 @@ export class AdminHackathonController extends ParentRouter implements IExpressCo
       const result = await this.adminHackathonDataMapper.update(hackathon);
 
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-        this.websocketPusher.sendUpdateRequest(WebsocketPusher.HACKATHONS, req.headers.idtoken as string);
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.HACKATHONS, 
+          [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+          req.headers.idtoken as string,
+        );
       }
 
       return this.sendResponse(res, new ResponseBody('Success', 200, result));

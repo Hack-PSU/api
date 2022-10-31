@@ -174,7 +174,6 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
   }
 
   public async delete(object: Score): Promise<IDbResult<void>> {
-    throw new Error("Method not implemented.");
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
       .where(`${this.pkColumnName} = ?`, object.project_id)

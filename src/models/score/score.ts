@@ -58,11 +58,11 @@ export class Score extends BaseObject {
     return new Score({
       judge: judge,
       project_id: project_id,
-      creativity: 1,
-      technical: 1,
-      implementation: 1,
-      clarity: 1,
-      growth: 1,
+      creativity: -1,
+      technical: -1,
+      implementation: -1,
+      clarity: -1,
+      growth: -1,
       submitted: false,
     })
   }

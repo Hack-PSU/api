@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { Inject } from 'injection-js';
+import { WebsocketPusher } from '../../../services/communication/websocket-pusher';
 import { IExpressController } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
@@ -15,6 +16,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
+    @Inject('WebsocketPusher') private readonly websocketPusher: WebsocketPusher,
     @Inject('ILocationDataMapper') private readonly locationDataMapper: IDataMapper<Location>,
     @Inject('ILocationDataMapper') private readonly locationAcl: IAclPerm,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,
@@ -151,11 +153,12 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
     try {
       const location = new Location(req.body);
       const result = await this.locationDataMapper.update(location);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
+      this.websocketPusher.sendUpdateRequest(
+        WebsocketPusher.EVENTS, 
+        [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+        req.headers.idtoken as string,
       );
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.standardErrorHandler(error, next);
@@ -191,11 +194,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
     try {
       const location = new Location(req.body);
       const result = await this.locationDataMapper.delete(location);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-      );
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.standardErrorHandler(error, next);

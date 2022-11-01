@@ -44,11 +44,9 @@ export class EventDataMapperImpl extends GenericDataMapper
     );
     super.addRBAC(
       [this.READ, this.READ_ALL],
-      [
-        AuthLevel.PARTICIPANT,
-      ],
+      [AuthLevel.PARTICIPANT],
     );
-  }
+    }
 
   public async delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
@@ -72,6 +70,8 @@ export class EventDataMapperImpl extends GenericDataMapper
 
   public get(id: ICompoundHackathonUidType, opts?: IUowOpts): Promise<IDbResult<Event>> {
     let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .field(`${this.tableName}.*`)
+      .field('locations.location_name')
       .from(this.tableName);
     if (opts && opts.fields) {
       queryBuilder = queryBuilder.fields(opts.fields);
@@ -81,15 +81,12 @@ export class EventDataMapperImpl extends GenericDataMapper
       checkCache = false;
     }
     queryBuilder = queryBuilder
-      .where(`${this.tableName}.${this.pkColumnName}= ?`, id.uid)
-      .where('hackathon = ?', id.hackathon)
-      .join(`${this.locationTableName}`, "locations", `locations.uid = ${this.tableName}.event_location`);
+      .where(`${this.tableName}.${this.pkColumnName} = ?`, id.uid)
+      .join(`${this.locationTableName}`, 'locations', `locations.uid = ${this.tableName}.event_location`);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<Event>(query.text, query.values, { cache: checkCache }))
-      .pipe(
-        map((event: Event[]) => ({ result: 'Success', data: event[0] })),
-      )
+      .pipe(map((event: Event[]) => ({ result: 'Success', data: event[0] })))
       .toPromise();
   }
 
@@ -115,13 +112,8 @@ export class EventDataMapperImpl extends GenericDataMapper
     }
     if (opts && opts.byHackathon) {
       queryBuilder = queryBuilder
-        .join(
-          'HACKATHON',
-          'h',
-          'h.uid = event.hackathon',
-        )
-        .where(
-          'h.uid = ?',
+        .join('HACKATHON', 'h', 'h.uid = event.hackathon')
+        .where('h.uid = ?',
           await (opts.hackathon ?
             Promise.resolve(opts.hackathon) :
             this.activeHackathonDataMapper.activeHackathon
@@ -129,18 +121,14 @@ export class EventDataMapperImpl extends GenericDataMapper
               .toPromise()),
         );
     }
-    const query = queryBuilder
-      .toParam();
+    const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(this.sql.query<Event>(query.text, query.values, { cache: checkCache }))
-      .pipe(
-        map((events: Event[]) => events.map((event) => {
+      .pipe(map((events: Event[]) => events.map((event) => {
           event.event_start_time = parseInt(event.event_start_time as any as string, 10);
           event.event_end_time = parseInt(event.event_end_time as any as string, 10);
           return event;
-        })),
-        map((event: Event[]) => ({ result: 'Success', data: event })),
-      )
+        })), map((event: Event[]) => ({ result: 'Success', data: event })))
       .toPromise();
   }
 
@@ -150,11 +138,9 @@ export class EventDataMapperImpl extends GenericDataMapper
       .field(`COUNT(${this.pkColumnName})`, 'count')
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query<number>(query.text, query.values, { cache: true }),
-    ).pipe(
-      map((result: number[]) => ({ result: 'Success', data: result[0] })),
-    ).toPromise();
+    return from(this.sql.query<number>(query.text, query.values, { cache: true }))
+      .pipe(map((result: number[]) => ({ result: 'Success', data: result[0] })))
+      .toPromise();
   }
 
   public async insert(object: Event): Promise<IDbResult<Event>> {
@@ -176,11 +162,9 @@ export class EventDataMapperImpl extends GenericDataMapper
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query<void>(query.text, query.values, { cache: false }),
-    ).pipe(
-      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
-    ).toPromise();
+    return from(this.sql.query<void>(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
+      .toPromise();
   }
 
   public update(object: Event): Promise<IDbResult<Event>> {
@@ -196,10 +180,8 @@ export class EventDataMapperImpl extends GenericDataMapper
       .where(`${this.pkColumnName} = ?`, object.id)
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query<void>(query.text, query.values, { cache: false }),
-    ).pipe(
-      map(() => ({ result: 'Success', data: object.cleanRepresentation })),
-    ).toPromise();
+    return from(this.sql.query<void>(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: object.cleanRepresentation })))
+      .toPromise();
   }
 }

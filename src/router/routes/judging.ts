@@ -259,7 +259,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     }
 
     /**
-    * @api {post} /judging/score Delete a Scoring
+    * @api {post} /judging/score/delete Delete a Scoring
     * @apiVersion 2.0.0
     * @apiName Delete Scoring
     * @apiPermission TeamMemberPermission

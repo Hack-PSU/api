@@ -152,6 +152,13 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
   }
 
   public async generateAssignments(judges: string[], projectsPerOrganizer: number): Promise<IDbResult<Score[]>> {
+    const projectsQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .field(`COUNT(project_id)`, 'project_count')
+      .from(this.PROJECTS_TABLE_NAME, 'p')
+      .outer_join(this.tableName, 's', `p.uid = s.project_id AND`)
+      .group('project_id')
+      .toParam();
+    
     const projects: Project[] = (await this.projectDataMapper.getAll()).data;
     const assignments: Score[] = [];
     var index = 0;
@@ -163,8 +170,10 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
       }
     });
 
-    let queryBuilder = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true }).into(this.tableName).setFieldsRows(assignments);
-    const query = queryBuilder.toParam();
+    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .into(this.tableName)
+      .setFieldsRows(assignments)
+      .toParam();
     await this.sql.query<void>(query.text, query.values, { cache: false });
     return await this.getAll();
   }

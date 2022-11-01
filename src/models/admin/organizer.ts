@@ -23,7 +23,7 @@ export class Organizer extends BaseObject {
     this.email = data.email;
     this.firstname = data.firstname;
     this.lastname = data.lastname;
-    this.privilege = data.privilege;
+    // this.privilege = data.privilege;
   }
 
   public get id(): any {

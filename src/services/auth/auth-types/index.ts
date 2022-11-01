@@ -46,7 +46,7 @@ export interface IFirebaseAuthService extends IAuthService {
     next: NextFunction,
   ) => void;
 
-  getUserId(identifier: UidType | string): Promise<admin.auth.UserRecord>;
+  getUserById(identifier: UidType | string): Promise<admin.auth.UserRecord>;
 
   /**
    * Returns whether the ACL found is allowed to access the operation of the requested

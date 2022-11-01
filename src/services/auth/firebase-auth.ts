@@ -177,7 +177,7 @@ export class FirebaseAuthService implements IFirebaseAuthService {
     return true;
   }
 
-  public getUserId(identifier: UidType | string) {
+  public getUserById(identifier: UidType | string) {
     if (validate(identifier)) {
       return this.admin.getUserByEmail(identifier);
     }
@@ -188,11 +188,7 @@ export class FirebaseAuthService implements IFirebaseAuthService {
    * Returns whether the ACL found is allowed to access the operation of the requested
    * level
    */
-  public aclVerifier(
-    foundAcl: AuthLevel | AuthLevel[],
-    requestedOp: string,
-    customParams?: any,
-  ): boolean {
+  public aclVerifier(foundAcl: AuthLevel | AuthLevel[], requestedOp: string, customParams?: any): boolean {
     if (Array.isArray(foundAcl)) {
       return (foundAcl as AuthLevel[]).some(
         acl => this.acl.can(AuthLevel[acl], requestedOp, customParams));

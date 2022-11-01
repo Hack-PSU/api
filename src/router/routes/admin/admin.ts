@@ -168,7 +168,7 @@ export class AdminController extends ParentRouter implements IExpressController 
       return Util.standardErrorHandler(new HttpError('Could not find uid in query parameters.', 400), next);
     }
     try {
-      const result = await this.authService.getUserId(req.query.uid);
+      const result = await this.authService.getUserById(req.query.uid);
       return this.sendResponse(res, new ResponseBody('Success', 200, { result: 'Success', data: result }));
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -427,7 +427,7 @@ export class AdminController extends ParentRouter implements IExpressController 
     try {
       const result = await this.organizerDataMapper.get(req.query.uid);
       result.data.privilege = (
-        (await this.authService.getUserId(result.data.uid)).customClaims as ICustomPermissions).privilege;
+        (await this.authService.getUserById(result.data.uid)).customClaims as ICustomPermissions).privilege;
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -448,10 +448,16 @@ export class AdminController extends ParentRouter implements IExpressController 
   private async getAllOrganizersHandler(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await this.organizerDataMapper.getAll();
-      result.data.forEach(async element => (
-        element.privilege = (
-          (await this.authService.getUserId(element.uid)).customClaims as ICustomPermissions).privilege
-      ));
+      for (const organizer of result.data) {
+        try {
+          organizer.privilege = ((await this.authService.getUserById(organizer.uid))
+            .customClaims as ICustomPermissions).privilege;
+        } catch (error) {
+          // if the user does not exist in firebase, then set their privilege level to 0
+          organizer.privilege = 0;
+        }
+      }
+      
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);

@@ -182,7 +182,7 @@ export class AdminRegisterController extends ParentRouter implements IExpressCon
     }
     let uid: UidType;
     if (req.query.email) {
-      ({ uid } = await this.authService.getUserId(req.query.email));
+      ({ uid } = await this.authService.getUserById(req.query.email));
     } else {
       uid = req.query.uid;
     }

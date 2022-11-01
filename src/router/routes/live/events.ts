@@ -109,19 +109,15 @@ export class EventsController extends LiveController {
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-  private async getEventByUidHandler(
-    request: express.Request,
-    response: express.Response,
-    next: express.NextFunction,
-  ) {
-    if (!request.query || !request.query.uid) {
+  private async getEventByUidHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
+    if (!req.query || !req.query.uid) {
       return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
     }
     try {
       const activeHackathonUid = await this.activeHackathonDataMapper.activeHackathon.pipe(
         map(hackathon => hackathon.uid)).toPromise();
-      const result = await this.dataMapper.get({uid: request.query.uid, hackathon: request.query.hackathon || activeHackathonUid});
-      return this.sendResponse(response, new ResponseBody('Success', 200, result));
+      const result = await this.dataMapper.get({uid: req.query.uid, hackathon: req.query.hackathon || activeHackathonUid});
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       Util.standardErrorHandler(error, next);
     }
@@ -191,18 +187,14 @@ export class EventsController extends LiveController {
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-  private async updateEventHandler(
-    request: express.Request,
-    response: express.Response,
-    next: express.NextFunction,
-  ) {
-    if (!request.body.uid) {
+  private async updateEventHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
+    if (!req.body.uid) {
       return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
     }
     let urls: string[] | undefined;
-    if (request.body.wsUrls) {
+    if (req.body.wsUrls) {
       try {
-        urls = (request.body.wsUrls as string).split('|');
+        urls = (req.body.wsUrls as string).split('|');
       } catch (error) {
         return Util.standardErrorHandler(new HttpError('Failed to parse workshop URLs', 400), next);
       }
@@ -210,7 +202,7 @@ export class EventsController extends LiveController {
 
     let event;
     try {
-      event = new Event(request.body);
+      event = new Event(req.body);
     } catch (error) {
       return Util.standardErrorHandler(new HttpError('Some properties were not as expected', 400), next);
     }
@@ -232,15 +224,15 @@ export class EventsController extends LiveController {
           // Event had no previous urls
         }
       }
-      const res = new ResponseBody('Success', 200, result);
+      const response = new ResponseBody('Success', 200, result);
       if (Util.getCurrentEnv() == Environment.PRODUCTION) {
         this.websocketPusher.sendUpdateRequest(
           WebsocketPusher.EVENTS,
           [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
-          request.headers.idtoken as string,
+          req.headers.idtoken as string,
         );
       }
-      return this.sendResponse(response, res);
+      return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
@@ -345,18 +337,14 @@ export class EventsController extends LiveController {
    * @apiUse RequestOpts
    * @apiUse ResponseBodyDescription
    */
-  private async getEventHandler(
-    request: express.Request,
-    response: express.Response,
-    next: express.NextFunction,
-  ) {
+  private async getEventHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
     try {
       const events = await this.dataMapper.getAll({
-        byHackathon: !request.query.allHackathons,
-        count: request.query.limit,
-        hackathon: request.query.hackathon,
-        startAt: request.query.offset,
-        ignoreCache: request.query.ignoreCache,
+        byHackathon: !req.query.allHackathons,
+        count: req.query.limit,
+        hackathon: req.query.hackathon,
+        startAt: req.query.offset,
+        ignoreCache: req.query.ignoreCache,
       });
       try {
         const allUrls = (await this.urlDataMapper.getAll()).data;
@@ -367,8 +355,8 @@ export class EventsController extends LiveController {
         // There are no URLs at all
       }
 
-      const res = new ResponseBody('Success', 200, events);
-      return this.sendResponse(response, res);
+      const response = new ResponseBody('Success', 200, events);
+      return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }

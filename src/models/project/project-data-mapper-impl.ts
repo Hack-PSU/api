@@ -132,10 +132,8 @@ export class ProjectDataMapperImpl extends GenericDataMapper implements IAclPerm
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Project>(query.text, query.values, { cache: true },
-      ))
-      .pipe(map((projects: Project[]) => ({ result: 'Success', data: projects })),
-      )
+    return from(this.sql.query<Project>(query.text, query.values, { cache: false }))
+      .pipe(map((projects: Project[]) => ({ result: 'Success', data: projects })))
       .toPromise();
   }
 

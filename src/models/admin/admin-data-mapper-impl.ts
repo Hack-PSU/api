@@ -66,7 +66,7 @@ export class AdminDataMapperImpl extends GenericDataMapper
   }
 
   public async getEmailFromId(id: UidType): Promise<IDbResult<UserRecord>> {
-    return from(this.authService.getUserId(id))
+    return from(this.authService.getUserById(id))
       .pipe(
         map((uid: UserRecord) => ({ result: 'Success', data: uid })),
       ).toPromise();
@@ -156,7 +156,7 @@ export class AdminDataMapperImpl extends GenericDataMapper
     // Verify that if the permission is reduced, the user has the authority to do so
     let userRecord: admin.auth.UserRecord;
     try {
-      userRecord = await this.authService.getUserId(identifier);
+      userRecord = await this.authService.getUserById(identifier);
     } catch (error) {
       throw new HttpError(
         'Could not retrieve user record. Did you provide a valid identifier?',

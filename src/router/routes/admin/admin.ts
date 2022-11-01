@@ -363,9 +363,6 @@ export class AdminController extends ParentRouter implements IExpressController 
     if (!req.body.uid) {
       return Util.standardErrorHandler(new HttpError('Could not find uid in request.', 400), next);
     }
-    if (!req.body.permission || !parseInt(req.body.permission, 10)) {
-      return Util.standardErrorHandler(new HttpError('Could not find valid permission in request.', 400), next);
-    }
     
     let organizer;
     try {

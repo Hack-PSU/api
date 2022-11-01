@@ -1,8 +1,7 @@
 import { IAcl, IAclPerm } from "services/auth/RBAC/rbac-types";
 import { GenericDataMapper } from "../../services/database/svc/generic-data-mapper";
 import { IDataMapper, IDbResult } from "../../services/database";
-import { Score } from "./score";
-import { UidType } from '../../JSCommon/common-types';
+import { ProjectScoreCount, Score } from "./score";
 import { IUowOpts } from "services/database/svc/uow.service";
 import * as squel from "squel";
 import { from } from "rxjs";
@@ -151,31 +150,39 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
       .toPromise();
   }
 
-  public async generateAssignments(judges: string[], projectsPerOrganizer: number): Promise<IDbResult<Score[]>> {
+  public async generateAssignments(judges: string[], projectsPerJudge: number): Promise<IDbResult<Score[]>> {
+    const activeHackathonUid = (await this.activeHackathonDataMapper.activeHackathon.toPromise()).uid;
+    
     const projectsQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .field('project_id')
       .field(`COUNT(project_id)`, 'project_count')
       .from(this.PROJECTS_TABLE_NAME, 'p')
-      .outer_join(this.tableName, 's', `p.uid = s.project_id AND`)
+      .outer_join(this.tableName, 's', `p.uid = s.project_id AND p.hackathon = ${activeHackathonUid}`)
       .group('project_id')
+      .order('project_count')
       .toParam();
-    
-    const projects: Project[] = (await this.projectDataMapper.getAll()).data;
-    const assignments: Score[] = [];
-    var index = 0;
+    const projects: ProjectScoreCount[] = (await this.sql.query<ProjectScoreCount>(
+      projectsQuery.text, projectsQuery.values, {cache: false })) as ProjectScoreCount[];
 
-    judges.forEach(element => {
-      for (let i=0; i<projectsPerOrganizer; i++) {
-        assignments.push(Score.blankScore(projects[index % projects.length].uid as number, element).dbRepresentation)
+    /* TODO: deal with the possibility of this assigning the same project to the same judge twice
+       This would break if there were there same number of judges and projects, but there are other
+       cases where the multiples could line up as well that we would want to avoid.
+    */
+    var assignmentsToAdd: Score[] = [];
+    var index = 0;
+    for (let i=0; i<projectsPerJudge; i++) {
+      judges.forEach(judge => {
+        assignmentsToAdd.push(Score.blankScore(projects[index % projects.length].project_id as number, judge));
         index++;
-      }
-    });
+      })
+    }
 
     const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .into(this.tableName)
-      .setFieldsRows(assignments)
+      .setFieldsRows(assignmentsToAdd)
       .toParam();
     await this.sql.query<void>(query.text, query.values, { cache: false });
-    return await this.getAll();
+    return this.getAll();
   }
 
   get(object: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score>> {
@@ -189,11 +196,9 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
       .where(`${this.pkColumnName} = ?`, object.judge)
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query(query.text, query.values, { cache: false }),
-    ).pipe(
-      map(() => ({ result: 'Success', data: undefined })),
-    ).toPromise();
+    return from(this.sql.query(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: undefined })))
+      .toPromise();
   }
 
   public async getCount(opts?: IUowOpts | undefined): Promise<IDbResult<number>> {

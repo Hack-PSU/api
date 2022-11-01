@@ -72,11 +72,9 @@ export class OrganizerDataMapperImpl extends GenericDataMapper implements IAclPe
       .where(`${this.pkColumnName} = ?`, uid)
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query(query.text, query.values, { cache: false }),
-    ).pipe(
-      map(() => ({ result: 'Success', data: undefined })),
-    ).toPromise();
+    return from(this.sql.query(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: undefined })))
+      .toPromise();
   }
 
   public async get(uid: UidType, opts?: IUowOpts): Promise<IDbResult<Organizer>> {
@@ -89,14 +87,8 @@ export class OrganizerDataMapperImpl extends GenericDataMapper implements IAclPe
       .where(`${this.pkColumnName} = ?`, uid);
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Organizer>(
-      query.text,
-      query.values,
-      { cache: true },
-    ))
-      .pipe(
-        map((event: Organizer[]) => ({ result: 'Success', data: event[0] })),
-      )
+    return from(this.sql.query<Organizer>(query.text, query.values, { cache: false }))
+      .pipe(map((event: Organizer[]) => ({ result: 'Success', data: event[0] })))
       .toPromise();
   }
 
@@ -111,10 +103,8 @@ export class OrganizerDataMapperImpl extends GenericDataMapper implements IAclPe
     }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<Organizer>(query.text, query.values, { cache: true },
-      ))
-      .pipe(map((projects: Organizer[]) => ({ result: 'Success', data: projects })),
-      )
+    return from(this.sql.query<Organizer>(query.text, query.values, { cache: false }))
+      .pipe(map((organizers: Organizer[]) => ({ result: 'Success', data: organizers })))
       .toPromise();
   }
 
@@ -126,7 +116,7 @@ export class OrganizerDataMapperImpl extends GenericDataMapper implements IAclPe
       .toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query<number>(query.text, query.values, { cache: true }),
+      this.sql.query<number>(query.text, query.values, { cache: false }),
     ).pipe(
       map((result: number[]) => ({ result: 'Success', data: result[0] })),
     ).toPromise();

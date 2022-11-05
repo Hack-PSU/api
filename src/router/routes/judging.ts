@@ -217,7 +217,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     }
 
     /**
-    * @api {post} /judging/score Update a Scoring
+    * @api {post} /judging/score/update Update a Scoring
     * @apiVersion 2.0.0
     * @apiName Update Scoring
     * @apiPermission TeamMemberPermission
@@ -291,7 +291,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     }
 
    /**
-    * @api {get} /judging/score/ Get scoring assignments for a specific judge
+    * @api {get} /judging/score Get scoring assignments for a specific judge
     * @apiVersion 2.0.0
     * @apiPermission DirectorPermission
     * @apiUse AuthArgumentRequired

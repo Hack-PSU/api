@@ -272,7 +272,7 @@ export class SponsorshipController extends ParentRouter implements IExpressContr
     }
     let sponsors: Sponsor[] = [];
     try {
-      const activeHackathonUid = (await this.activeHackathonDataMapper.activeHackathon.toPromise()).uid
+      const activeHackathonUid = (await this.activeHackathonDataMapper.activeHackathon.toPromise()).uid;
       req.body.sponsors.forEach(element => {
         const sponsor = new Sponsor(element);
         if (!sponsor.hackathon) {

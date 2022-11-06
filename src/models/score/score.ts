@@ -70,17 +70,17 @@ export class Score extends BaseObject {
 }
 
 export interface IProjectScoreCountApiModel {
-  project_id: number,
+uid: number,
   project_count: number,
 }
 
 export class ProjectScoreCount {
 
-  public readonly project_id: number;
+  public readonly uid: number;
   public readonly project_count: number;
 
   constructor(data: IProjectScoreCountApiModel) {
-    this.project_id = data.project_id;
+    this.uid = data.uid;
     this.project_count = data.project_count;
   }
 }

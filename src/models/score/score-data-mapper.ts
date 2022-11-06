@@ -1,8 +1,7 @@
 import { IAcl, IAclPerm } from "services/auth/RBAC/rbac-types";
 import { GenericDataMapper } from "../../services/database/svc/generic-data-mapper";
 import { IDataMapper, IDbResult } from "../../services/database";
-import { Score } from "./score";
-import { UidType } from '../../JSCommon/common-types';
+import { ProjectScoreCount, Score } from "./score";
 import { IUowOpts } from "services/database/svc/uow.service";
 import * as squel from "squel";
 import { from } from "rxjs";
@@ -151,22 +150,47 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
       .toPromise();
   }
 
-  public async generateAssignments(judges: string[], projectsPerOrganizer: number): Promise<IDbResult<Score[]>> {
-    const projects: Project[] = (await this.projectDataMapper.getAll()).data;
-    const assignments: Score[] = [];
+  public async generateAssignments(judges: string[], projectsPerJudge: number): Promise<IDbResult<Score[]>> {
+    const activeHackathonUid = (await this.activeHackathonDataMapper.activeHackathon.toPromise()).uid;
+
+    const projectsQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true }).toParam();
+    projectsQuery.text = 'SELECT p.uid, COUNT(s.project_id) AS project_count FROM PROJECTS p LEFT JOIN SCORES s ON (p.uid = s.project_id) WHERE (p.hackathon = ?) GROUP BY uid ORDER BY project_count ASC';
+    projectsQuery.values = [activeHackathonUid];
+
+    // const projectsQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    //   .field('uid')
+    //   .field(`COUNT(*)`, 'project_count')
+    //   .from(this.PROJECTS_TABLE_NAME, 'p')
+    //   .left_join(this.tableName, 's', `p.uid = s.project_id`) // ensure we get projects with zero scorings
+    //   .where(`p.hackathon = ${activeHackathonUid}`)
+    //   .group('project_id')
+    //   .order('project_count')
+    //   .toParam();
+    const projects: ProjectScoreCount[] = (await this.sql.query<ProjectScoreCount>(
+      projectsQuery.text, projectsQuery.values, {cache: false })) as ProjectScoreCount[];
+
+    /* TODO: deal with the possibility of this assigning the same project to the same judge twice
+       This would break if there were there same number of judges and projects, but there are other
+       cases where the multiples could line up as well that we would want to avoid.
+    */
+    var assignmentsToAdd: Score[] = [];
     var index = 0;
-
-    judges.forEach(element => {
-      for (let i=0; i<projectsPerOrganizer; i++) {
-        assignments.push(Score.blankScore(projects[index % projects.length].uid as number, element).dbRepresentation)
+    for (let i=0; i<projectsPerJudge; i++) {
+      judges.forEach(judge => {
+        assignmentsToAdd.push(Score.blankScore(projects[index % projects.length].uid as number, judge));
         index++;
-      }
-    });
+      });
+    }
 
-    let queryBuilder = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true }).into(this.tableName).setFieldsRows(assignments);
-    const query = queryBuilder.toParam();
-    await this.sql.query<void>(query.text, query.values, { cache: false });
-    return await this.getAll();
+    // var offset: number;
+    assignmentsToAdd.forEach(async assignment => {
+        const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+          .into(this.tableName)
+          .setFieldsRows([assignment.dbRepresentation])
+          .toParam();
+        await this.sql.query<void>(query.text, query.values, { cache: false });
+    });
+    return this.getAll();
   }
 
   get(object: string, opts?: IUowOpts | undefined): Promise<IDbResult<Score>> {
@@ -180,11 +204,9 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
       .where(`${this.pkColumnName} = ?`, object.judge)
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query(query.text, query.values, { cache: false }),
-    ).pipe(
-      map(() => ({ result: 'Success', data: undefined })),
-    ).toPromise();
+    return from(this.sql.query(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: undefined })))
+      .toPromise();
   }
 
   public async getCount(opts?: IUowOpts | undefined): Promise<IDbResult<number>> {

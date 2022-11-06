@@ -152,15 +152,20 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
 
   public async generateAssignments(judges: string[], projectsPerJudge: number): Promise<IDbResult<Score[]>> {
     const activeHackathonUid = (await this.activeHackathonDataMapper.activeHackathon.toPromise()).uid;
-    
-    const projectsQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
-      .field('project_id')
-      .field(`COUNT(project_id)`, 'project_count')
-      .from(this.PROJECTS_TABLE_NAME, 'p')
-      .outer_join(this.tableName, 's', `p.uid = s.project_id AND p.hackathon = ${activeHackathonUid}`)
-      .group('project_id')
-      .order('project_count')
-      .toParam();
+
+    const projectsQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true }).toParam();
+    projectsQuery.text = 'SELECT p.uid, COUNT(s.project_id) AS project_count FROM PROJECTS p LEFT JOIN SCORES s ON (p.uid = s.project_id) WHERE (p.hackathon = ?) GROUP BY uid ORDER BY project_count ASC';
+    projectsQuery.values = [activeHackathonUid];
+
+    // const projectsQuery = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+    //   .field('uid')
+    //   .field(`COUNT(*)`, 'project_count')
+    //   .from(this.PROJECTS_TABLE_NAME, 'p')
+    //   .left_join(this.tableName, 's', `p.uid = s.project_id`) // ensure we get projects with zero scorings
+    //   .where(`p.hackathon = ${activeHackathonUid}`)
+    //   .group('project_id')
+    //   .order('project_count')
+    //   .toParam();
     const projects: ProjectScoreCount[] = (await this.sql.query<ProjectScoreCount>(
       projectsQuery.text, projectsQuery.values, {cache: false })) as ProjectScoreCount[];
 
@@ -172,16 +177,19 @@ export class ScoreDataMapperImpl extends GenericDataMapper implements IScoreData
     var index = 0;
     for (let i=0; i<projectsPerJudge; i++) {
       judges.forEach(judge => {
-        assignmentsToAdd.push(Score.blankScore(projects[index % projects.length].project_id as number, judge));
+        assignmentsToAdd.push(Score.blankScore(projects[index % projects.length].uid as number, judge));
         index++;
-      })
+      });
     }
 
-    const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
-      .into(this.tableName)
-      .setFieldsRows(assignmentsToAdd)
-      .toParam();
-    await this.sql.query<void>(query.text, query.values, { cache: false });
+    // var offset: number;
+    assignmentsToAdd.forEach(async assignment => {
+        const query = squel.insert({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+          .into(this.tableName)
+          .setFieldsRows([assignment.dbRepresentation])
+          .toParam();
+        await this.sql.query<void>(query.text, query.values, { cache: false });
+    });
     return this.getAll();
   }
 

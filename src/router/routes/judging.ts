@@ -189,7 +189,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     * @apiParam {Number} clarity Score for the 'Clarity' category
     * @apiParam {Number} growth Score for the 'Growth' category
     * @apiParam {Boolean} submitted Whether this scoring is finished
-    * @apiParam {Number} [humanitarian] Score for the 'Humanitarian' award
+    * @apiParam {Number} [energy] Score for the 'Energy' award
     * @apiParam {Number} [supply_chain] Score for the 'Supply Chain' award
     * @apiParam {Number} [environmental] Score for the 'environmental' award
     * @apiSuccess {Score} data The inserted score
@@ -231,7 +231,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     * @apiParam {Number} clarity Score for the 'Clarity' category
     * @apiParam {Number} growth Score for the 'Growth' category
     * @apiParam {Boolean} submitted Whether this scoring is finished
-    * @apiParam {Number} [humanitarian] Score for the 'Humanitarian' award
+    * @apiParam {Number} [energy] Score for the 'Energy' award
     * @apiParam {Number} [supply_chain] Score for the 'Supply Chain' award
     * @apiParam {Number} [environmental] Score for the 'environmental' award
     * @apiSuccess {Score} data The updated score

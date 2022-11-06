@@ -189,7 +189,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     * @apiParam {Number} clarity Score for the 'Clarity' category
     * @apiParam {Number} growth Score for the 'Growth' category
     * @apiParam {Boolean} submitted Whether this scoring is finished
-    * @apiParam {Number} [humanitarian] Score for the 'Humanitarian' award
+    * @apiParam {Number} [energy] Score for the 'Energy' award
     * @apiParam {Number} [supply_chain] Score for the 'Supply Chain' award
     * @apiParam {Number} [environmental] Score for the 'environmental' award
     * @apiSuccess {Score} data The inserted score
@@ -231,7 +231,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     * @apiParam {Number} clarity Score for the 'Clarity' category
     * @apiParam {Number} growth Score for the 'Growth' category
     * @apiParam {Boolean} submitted Whether this scoring is finished
-    * @apiParam {Number} [humanitarian] Score for the 'Humanitarian' award
+    * @apiParam {Number} [energy] Score for the 'Energy' award
     * @apiParam {Number} [supply_chain] Score for the 'Supply Chain' award
     * @apiParam {Number} [environmental] Score for the 'environmental' award
     * @apiSuccess {Score} data The updated score
@@ -259,7 +259,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
     }
 
     /**
-    * @api {post} /judging/score Delete a Scoring
+    * @api {post} /judging/score/delete Delete a Scoring
     * @apiVersion 2.0.0
     * @apiName Delete Scoring
     * @apiPermission TeamMemberPermission
@@ -362,6 +362,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
             return next(new HttpError('Could not find an integer for projectsPerOrganizer', 400));
         }
         try {
+            // logic for deleting all previous responses would go here
             const result = await this.scoreDataMapper.generateAssignments(req.body.judges, req.body.projectsPerOrganizer);
             return this.sendResponse(res, new ResponseBody('Success', 200, result));    
         } catch (error) {

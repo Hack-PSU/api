@@ -9,7 +9,7 @@ export interface IScoreApiModel {
   clarity: number,
   growth: number,
   submitted?: boolean,
-  humanitarian?: number,
+  energy?: number,
   supply_chain?: number,
   environmental?: number
   project?: string,
@@ -25,7 +25,7 @@ export class Score extends BaseObject {
   public clarity: number;
   public growth: number;
   public submitted?: boolean;
-  public humanitarian?: number;
+  public energy?: number;
   public supply_chain?: number;
   public environmental?: number;
   public project?: string;
@@ -40,7 +40,7 @@ export class Score extends BaseObject {
     this.clarity = data.clarity;
     this.growth = data.growth;
     this.submitted = data.submitted;
-    this.humanitarian = data.humanitarian;
+    this.energy = data.energy;
     this.supply_chain = data.supply_chain;
     this.environmental = data.environmental;
     this.project = data.project;
@@ -67,4 +67,20 @@ export class Score extends BaseObject {
     })
   }
   
+}
+
+export interface IProjectScoreCountApiModel {
+uid: number,
+  project_count: number,
+}
+
+export class ProjectScoreCount {
+
+  public readonly uid: number;
+  public readonly project_count: number;
+
+  constructor(data: IProjectScoreCountApiModel) {
+    this.uid = data.uid;
+    this.project_count = data.project_count;
+  }
 }

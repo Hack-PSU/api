@@ -362,6 +362,7 @@ export class JudgingController extends ParentRouter implements IExpressControlle
             return next(new HttpError('Could not find an integer for projectsPerOrganizer', 400));
         }
         try {
+            // logic for deleting all previous responses would go here
             const result = await this.scoreDataMapper.generateAssignments(req.body.judges, req.body.projectsPerOrganizer);
             return this.sendResponse(res, new ResponseBody('Success', 200, result));    
         } catch (error) {

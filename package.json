@@ -89,7 +89,7 @@
     "dev-null": "^0.1.1",
     "dotenv": "6.0.0",
     "email-validator": "1.2.3",
-    "express": "4.16.3",
+    "express": "4.17.3",
     "express-query-boolean": "latest",
     "fast-crc32c": "1.0.4",
     "firebase": "5.5.5",

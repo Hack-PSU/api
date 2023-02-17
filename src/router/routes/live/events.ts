@@ -88,7 +88,7 @@ export class EventsController extends LiveController {
       );
     app.post(
       '/image', 
-      // this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
+      this.authService.verifyAcl(this.aclPerm, AclOperations.CREATE),
       this.imageUploader.upload(),
       (req, res, next) => this.postImageHandler(req, res, next),
     );
@@ -248,6 +248,8 @@ export class EventsController extends LiveController {
    * @apiParam {String} [wsRelevantSkills] The relevant skills needed for a workshop
    * @apiParam {String} [wsUrls] The download links for workshop materials separated by '|'.
    * @apiParam {String} eventIcon The URL for the icon image
+   * @apiParam {String} filename the filename of the image
+   * @apiParam {FILE} image The image file for the event (.png format)
    * @apiParam {Enum} eventType The type of the event. Accepted values: ["food","workshop","activity"]
    * @apiParam {String} [hackathon] Optional uid of hackathon
    * @apiUse AuthArgumentRequired
@@ -281,6 +283,16 @@ export class EventsController extends LiveController {
     if (isNaN(Number(request.body.eventLocation))) {
       return Util.standardErrorHandler(new HttpError('Event location must be a parsable number', 400), next);
     }
+    if (!request.body.filename) {
+      return Util.standardErrorHandler(new HttpError('Could not find filename', 400), next);
+    }
+    if (!request.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find event uid', 400), next);
+    }
+
+    const fileURL = this.imageUploader.uploadedFileUrl(
+      await this.generateImageFileName(request.body.filename),
+    );
 
     let urls: string[] | undefined;
     if (request.body.wsUrls && request.body.eventType === 'workshop') {
@@ -289,6 +301,19 @@ export class EventsController extends LiveController {
       } catch (error) {
         return Util.standardErrorHandler(new HttpError('Failed to parse workshop URLs', 400), next);
       }
+    }
+
+    let url: Url;
+    try {
+      url = new Url({url: fileURL, eventId: request.body.uid});
+    } catch (error) {
+      return Util.standardErrorHandler(new HttpError('Some properties were not as expected when creating URL', 400), next);
+    }
+
+    try {
+      await this.urlDataMapper.insert(url);
+    } catch (error) {
+      return Util.errorHandler500(error, next);
     }
 
     let event;
@@ -396,7 +421,7 @@ export class EventsController extends LiveController {
     const res = new ResponseBody('Success', 200, fileURL);
     return this.sendResponse(response, res);
   }
-
+  
   private async generateImageFileName(filename: String) {
     return `${filename}.png`;
   }

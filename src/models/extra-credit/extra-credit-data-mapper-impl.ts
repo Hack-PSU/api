@@ -55,10 +55,7 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   }
 
   public delete(object: ExtraCreditAssignment): Promise<IDbResult<void>> {
-    const query = squel.delete({
-      autoQuoteTableNames: true,
-      autoQuoteFieldNames: true,
-    })
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
      .from(this.assignmentsTableName)
      .where(`${this.pkColumnName} = ?`, object.uid)
      .toParam();
@@ -71,30 +68,18 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
   }
 
   public async deleteByUser(user_id: UidType, hackathon?: UidType): Promise<IDbResult<void>> {
-    let queryBuilder = squel.delete({
-      autoQuoteTableNames: true,
-      autoQuoteFieldNames: true,
-    })
+    let queryBuilder = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.assignmentsTableName)
       .where(`${this.UserColumnName} = ?`, user_id);
-
-    // If no hackathon is provided, use the active hackathon
-    queryBuilder = queryBuilder
-      .where(
-        'hackathon = ?',
-        await (hackathon ?
-          Promise.resolve(hackathon) :
-          this.activeHackathonDataMapper.activeHackathon
-            .pipe(map(activeHackathon => activeHackathon.uid))
-            .toPromise()),
-      );
+    if (hackathon) {
+      queryBuilder = queryBuilder.where('hackathon = ?', hackathon);
+    }
     const query = queryBuilder.toParam();
     query.text = query.text.concat(';');
     return from(
-      this.sql.query(query.text, query.values, { cache: false }),
-    ).pipe(
-      map(() => ({ result: 'Success', data: undefined })),
-    ).toPromise();
+      this.sql.query(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: undefined })))
+      .toPromise();
   }
 
   public get(uid: UidType, opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment>> {

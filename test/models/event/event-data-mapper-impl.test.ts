@@ -51,10 +51,9 @@ describe('TEST: Event Data Mapper', () => {
       await eventDataMapper.get(uid);
 
       // THEN: Generated SQL matches the expectation
-      const expectedSQL = 'SELECT * FROM `EVENTS` WHERE (uid= ?) AND (hackathon = ?);';
-      const expectedParams = [uid.uid, uid.hackathon];
-      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
-        .first();
+      const expectedSQL = 'SELECT `EVENTS`.*, `locations`.`location_name` FROM `EVENTS` INNER JOIN `LOCATIONS` `locations` ON (locations.uid = EVENTS.event_location) WHERE (EVENTS.uid = ?);';
+      const expectedParams = [uid.uid];
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query).first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
       expect(generatedSQL).to.equal(expectedSQL);
       expect(generatedParams).to.deep.equal(expectedParams);
@@ -72,8 +71,7 @@ describe('TEST: Event Data Mapper', () => {
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'DELETE FROM `EVENTS` WHERE (uid = ?) AND (hackathon = ?);';
       const expectedParams = [uid.uid, uid.hackathon];
-      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
-        .first();
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query).first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
       expect(generatedSQL).to.equal(expectedSQL);
       expect(generatedParams).to.deep.equal(expectedParams);
@@ -129,8 +127,7 @@ describe('TEST: Event Data Mapper', () => {
         testEvent.event_icon,
         'test uid',
       ];
-      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
-        .first();
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query).first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
       expect(generatedSQL).to.equal(expectedSQL);
       expect(generatedParams).to.deep.equal(expectedParams);
@@ -173,8 +170,7 @@ describe('TEST: Event Data Mapper', () => {
         testEvent.event_icon,
         testEvent.uid,
       ];
-      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
-        .first();
+      const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query).first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();
       expect(generatedSQL).to.equal(expectedSQL);
       expect(generatedParams).to.deep.equal(expectedParams);

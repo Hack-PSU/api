@@ -25,6 +25,8 @@ import { Registration } from 'models/register/registration';
   
   getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>>;
 
+  deleteUser(email: string): Promise<IDbResult<void>>;
+
  }
 @Injectable()
 export class WorkshopDataMapperImpl extends GenericDataMapper
@@ -65,6 +67,16 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
     )
   }
 
+  deleteUser(email: string): Promise<IDbResult<void>> {
+    const query = squel.delete({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
+      .from(this.tableName)
+      .where('email = ?', email)
+      .toParam();
+      return from(this.sql.query(query.text, query.values, { cache: false }))
+        .pipe(map(() => ({ result: 'Success', data: undefined })))
+        .toPromise();
+  }
+
   // TODO: Should probably move this to the Registration mapper instead
   public async getByPin(pin: number, hackathon: Hackathon): Promise<IDbResult<Registration>> {
     const query = squel.select({
@@ -78,7 +90,7 @@ export class WorkshopDataMapperImpl extends GenericDataMapper
     return from(this.sql.query<Registration>(
       query.text,
       query.values,
-      { cache: true },
+      { cache: false },
     ))
       .pipe(
         map((registration: Registration[]) => ({ result: 'Success', data: registration[0] })),

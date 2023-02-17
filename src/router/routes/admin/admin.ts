@@ -14,6 +14,7 @@ import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
 import { IDataMapper } from '../../../services/database';
 import { ParentRouter } from '../../router-types';
+import { ICustomPermissions } from 'services/auth';
 
 @Injectable()
 export class AdminController extends ParentRouter implements IExpressController {
@@ -82,6 +83,11 @@ export class AdminController extends ParentRouter implements IExpressController 
       this.authService.verifyAcl(this.adminAcl, AclOperations.GET_EMAIL),
       (req, res, next) => this.getUserIdHandler(req, res, next),
     );
+    app.get(
+      '/user-from-uid',
+      this.authService.verifyAcl(this.organizerAcl, AclOperations.READ),
+      (req, res, next) => this.getUserPrivilegeLevelHandler(req, res, next),
+    )
     app.post(
       '/email',
       this.authService.verifyAcl(this.adminAcl, AclOperations.SEND_EMAIL),
@@ -146,11 +152,35 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {get} /admin/userid Get the uid corresponding to an email
+   * @api {get} /admin/user-from-uid Get the user's privilege level
+   * @apiVersion 2.0.0
+   * @apiName Get User Privilege
+   * @apiGroup Admin
+   * @apiPermission TeamMemberPermission
+   * @apiUse AuthArgumentRequired
+   * @apiParam {String} uid The firebase uid of the user to get level of
+   * @apiSuccess {UserRecord} Object {uid, displayName, privilege, admin}
+   * @apiUse IllegalArgumentError
+   * @apiUse ResponseBodyDescription
+   */
+  private async getUserPrivilegeLevelHandler(req: Request, res: Response, next: NextFunction) {
+    if (!req.query.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find uid in query parameters.', 400), next);
+    }
+    try {
+      const result = await this.authService.getUserById(req.query.uid);
+      return this.sendResponse(res, new ResponseBody('Success', 200, { result: 'Success', data: result }));
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
+   * @api {get} /admin/userid Get the firebase user record corresponding to an email
    * @apiVersion 2.0.0
    * @apiName Get User Id
    * @apiGroup Admin
-   * @apiPermission DirectorPermission
+   * @apiPermission TeamMemberPermission
    *
    * @apiUse AuthArgumentRequired
    * @apiParam {String} email The email to query user id by
@@ -314,7 +344,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {post} /admin/organizer Insert an organizer with the given privilege level
+   * @api {post} /admin/organizers Insert an organizer with the given privilege level
    * @apiVersion 2.0.0
    * @apiName Add Organizer
    * @apiGroup Admin
@@ -323,8 +353,7 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiParam {String} uid the firebase uid of the organizer to add
    * @apiParam {String} email the email of the organizer to add
    * @apiParam {String} firstname the first name of the organizer to add
-   * @apiParam {String} lastname the last name of the organizer to add
-   * @apiParam {Number} [permission] the permission of the organizer to add
+   * @apiParam {String} lastname the last name of the organizer to ad
    * 
    * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
@@ -333,9 +362,6 @@ export class AdminController extends ParentRouter implements IExpressController 
   private async insertOrganizerHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.body.uid) {
       return Util.standardErrorHandler(new HttpError('Could not find uid in request.', 400), next);
-    }
-    if (!req.body.permission || !parseInt(req.body.permission, 10)) {
-      return Util.standardErrorHandler(new HttpError('Could not find valid permission in request.', 400), next);
     }
     
     let organizer;
@@ -346,7 +372,6 @@ export class AdminController extends ParentRouter implements IExpressController 
     }
 
     try {
-      await this.adminDataMapper.modifyPermissions(req.body.uid, parseInt(req.body.permission), res.locals.user.privilege);
       const result = await this.organizerDataMapper.insert(organizer);
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
@@ -355,7 +380,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {post} /admin/organizer/delete Delete the organizer with the given uid
+   * @api {post} /admin/organizers/delete Delete the organizer with the given uid
    * @apiVersion 2.0.0
    * @apiName Delete Organizer
    * @apiGroup Admin
@@ -382,7 +407,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {get} /admin/organizer/ Retrieve the organizer with the given uid
+   * @api {get} /admin/organizers Retrieve the organizer with the given uid
    * @apiVersion 2.0.0
    * @apiName Get Organizer
    * @apiGroup Admin
@@ -395,12 +420,14 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiUse ResponseBodyDescription
    */
   private async getOrganizerByUidHandler(req: Request, res: Response, next: NextFunction) {
-    if (!req.body.uid) {
+    if (!req.query.uid) {
       return Util.standardErrorHandler(new HttpError('Could not find uid in request.', 400), next);
     }
 
     try {
-      const result = await this.organizerDataMapper.get(req.body.uid);
+      const result = await this.organizerDataMapper.get(req.query.uid);
+      result.data.privilege = (
+        (await this.authService.getUserById(result.data.uid)).customClaims as ICustomPermissions).privilege;
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -408,7 +435,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {get} /admin/organizer/all Get all organizers
+   * @api {get} /admin/organizers/all Get all organizers
    * @apiVersion 2.0.0
    * @apiName Get All Organizers
    * @apiGroup Admin
@@ -421,6 +448,16 @@ export class AdminController extends ParentRouter implements IExpressController 
   private async getAllOrganizersHandler(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await this.organizerDataMapper.getAll();
+      for (const organizer of result.data) {
+        try {
+          organizer.privilege = ((await this.authService.getUserById(organizer.uid))
+            .customClaims as ICustomPermissions).privilege;
+        } catch (error) {
+          // if the user does not exist in firebase, then set their privilege level to 0
+          organizer.privilege = 0;
+        }
+      }
+      
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -428,7 +465,7 @@ export class AdminController extends ParentRouter implements IExpressController 
   }
 
   /**
-   * @api {post} /admin/organizer/update Update an organizer with the given information
+   * @api {post} /admin/organizers/update Update an organizer with the given information
    * @apiVersion 2.0.0
    * @apiName Delete Organizer
    * @apiGroup Admin
@@ -438,7 +475,6 @@ export class AdminController extends ParentRouter implements IExpressController 
    * @apiParam {String} email the email of the organizer to add
    * @apiParam {String} firstname the first name of the organizer to add
    * @apiParam {String} lastname the last name of the organizer to add
-   * @apiParam {Number} [permission] the permission of the organizer to add
    * 
    * @apiUse AuthArgumentRequired
    * @apiUse IllegalArgumentError
@@ -458,12 +494,12 @@ export class AdminController extends ParentRouter implements IExpressController 
 
     try {
       // only attempt to update permissions if permissions are given
-      if (req.body.permission) {
-        if (!parseInt(req.body.permission, 10)) {
-          return Util.standardErrorHandler(new HttpError('Permission could not be parsed as a base-10 integer.', 400), next);
-        }
-        await this.adminDataMapper.modifyPermissions(req.body.uid, parseInt(req.body.privilege), res.locals.user.privilege);
-      }
+      // if (req.body.permission) {
+      //   if (!parseInt(req.body.permission, 10)) {
+      //     return Util.standardErrorHandler(new HttpError('Permission could not be parsed as a base-10 integer.', 400), next);
+      //   }
+        // await this.adminDataMapper.modifyPermissions(req.body.uid, parseInt(req.body.privilege), res.locals.user.privilege);
+      // }
       const result = await this.organizerDataMapper.update(organizer);
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {

@@ -15,7 +15,7 @@ import axios from 'axios';
 @Injectable()
 export class WorkshopScannerController extends ParentRouter implements IExpressController {
   public router: Router;
-  protected notificationFunctionRoute = 'https://us-central1-hackpsu18.cloudfunctions.net/notifications/message/send';
+  protected notificationFunctionRoute = 'https://us-central1-hackpsu18.cloudfunctions.net/api/notification/send/message'
   constructor(
     @Inject('IWorkshopScansDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
@@ -40,7 +40,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     app.post(
       '/check-in',
       this.authService.verifyAcl(this.aclPerm, AclOperations.CHECK_IN),
-      (req, res, next) => this.scanWorkshopByPin(req, res, next),
+      (req, res, next) => this.scanWorkshopByWordPin(req, res, next),
     )
     // TODO: We should probably re-implmement the queries for the attendance tracking. Unsure 
     //       whether they should go here or in attendance, or part of some larger refactor
@@ -62,7 +62,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
    * @apiUse ResponseBodyDescription
    */
   private async getUserByPin(req: Request, res: Response, next: NextFunction) {
-    if ((!req.query.pin || !parseInt(req.query.pin, 10)) && parseInt(req.query.pin, 10) !== 0) {
+    if (!req.query.wordPin) {
       return Util.standardErrorHandler(
         new HttpError('Could not find pin to query by', 400),
         next,
@@ -72,12 +72,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     try {
       const hackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
       var result;
-      if (req.query.relativePin) {
-        result = await this.registerDataMapper.getByPin(req.query.pin + (hackathon.base_pin as number), hackathon.uid);
-      } else {
-        result = await this.registerDataMapper.getByPin(req.query.pin, hackathon.uid);
-      }
-      
+      result = await this.registerDataMapper.getByWordPin(req.query.wordPin, hackathon.uid);
       return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch(error) {
       return Util.errorHandler500(error, next);
@@ -88,7 +83,7 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
    * @api {post} /workshop/check-in Inputs a users workshop attendance given a pin
    * @apiVersion 2.0.0
    * @apiName Scan Workshop By Pin (Scanner)
-   * @apiParam {Number} pin Current pin for the user
+   * @apiParam {String} wordPin Current word pin for the user
    * @apiParam {String} eventUid uid of the event
    * @apiParam {Boolean} [relativePin=true] whether the pin is relative to the current hackathon's base pin  
    * @apiGroup Admin Scanner
@@ -99,10 +94,10 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-  private async scanWorkshopByPin(req: Request, res: Response, next: NextFunction) {
-    if (!req.body.pin || !parseInt(req.body.pin, 10)) {
+  private async scanWorkshopByWordPin(req: Request, res: Response, next: NextFunction) {
+    if (!req.body.wordPin) {
       return Util.standardErrorHandler(
-        new HttpError('Could not find valid pin', 400),
+        new HttpError('Could not find valid word pin', 400),
         next,
       );
     }
@@ -115,18 +110,21 @@ export class WorkshopScannerController extends ParentRouter implements IExpressC
     }
     
     try {
+      const activeHackathon = await this.activeHackathonDataMapper.activeHackathon.toPromise();
+      const registration = await this.registerDataMapper.getByWordPin(req.body.wordPin, activeHackathon.uid);
+      req.body.email = registration.data.email;
       const scan = new WorkshopScan(req.body); 
-      if (req.body.relativePin) {
-        scan.user_pin = scan.user_pin + ((await this.activeHackathonDataMapper.activeHackathon.toPromise()).base_pin as number);
+      if (req.body.relativePin && scan.user_pin) {
+        scan.user_pin = scan.user_pin + ((activeHackathon).base_pin as number);
       }
       const result = await this.workshopScansDataMapper.insert(scan);
       const response = new ResponseBody('Success', 200, result);
       try { 
         // don't send push notifications when testing, since this involves calling an external function
-        if (Util.getCurrentEnv() == Environment.PRODUCTION) {
-          const notificationParams = {userPin: req.body.pin, title: "Check In", message: "You've just checked in to a workshop at HackPSU!"};
-          const notificationHeaders = {headers: {idToken: req.headers.idtoken}};
-          axios.post(this.notificationFunctionRoute, notificationParams, notificationHeaders);
+        if (Util.getCurrentEnv() == Environment.PRODUCTION) {         
+          const notificationBody = { userPin: req.body.wordPin, title: "Check In", body: "You've just checked in to a workshop at HackPSU!" };
+          const notificationHeaders = { headers: { idToken: req.headers.idtoken }};
+          axios.post(this.notificationFunctionRoute, notificationBody, notificationHeaders);
         }
       } catch (error) {
 

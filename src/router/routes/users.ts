@@ -4,11 +4,12 @@ import { Inject, Injectable } from 'injection-js';
 import { IRegisterDataMapper } from 'models/register';
 import * as path from 'path';
 import { map } from 'rxjs/operators';
+import { WebsocketPusher } from '../../services/communication/websocket-pusher';
 import { IExpressController, ResponseBody } from '..';
 import { Constants } from '../../assets/constants/constants';
 import { UidType } from '../../JSCommon/common-types';
 import { HttpError } from '../../JSCommon/errors';
-import { Util } from '../../JSCommon/util';
+import { Environment, Util } from '../../JSCommon/util';
 import { IExtraCreditDataMapper } from '../../models/extra-credit';
 import { ExtraCreditAssignment } from '../../models/extra-credit/extra-credit-assignment';
 import { ExtraCreditClass } from '../../models/extra-credit/extra-credit-class';
@@ -23,6 +24,7 @@ import { Logger } from '../../services/logging/logging';
 import { IStorageService } from '../../services/storage';
 import { IStorageMapper } from '../../services/storage/svc/storage.service';
 import { ParentRouter } from '../router-types';
+import { IWorkshopScansDataMapper } from '../../models/workshops-scans/workshop-scanner-data-mapper';
 const RandomWords = require('random-words');
 
 @Injectable()
@@ -36,6 +38,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
+    @Inject('WebsocketPusher') private readonly websocketPusher: WebsocketPusher,
     @Inject('IRegisterDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IExtraCreditDataMapper') private readonly extraCreditPerm: IAclPerm,
     @Inject('IRegistrationProcessor') private readonly registrationProcessor: IRegistrationProcessor,
@@ -43,6 +46,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     @Inject('IExtraCreditDataMapper') private readonly extraCreditDataMapper: IExtraCreditDataMapper,
     @Inject('IActiveHackathonDataMapper') private readonly activeHackathonDataMapper: IActiveHackathonDataMapper,
     @Inject('IRegisterDataMapper') private readonly registerDataMapper: IRegisterDataMapper,
+    @Inject('IWorkshopScansDataMapper') private readonly workshopScansDataMapper: IWorkshopScansDataMapper,
     @Inject('IStorageService') private readonly storageService: IStorageService,
     @Inject('BunyanLogger') private readonly logger: Logger,
   ) {
@@ -91,6 +95,11 @@ export class UsersController extends ParentRouter implements IExpressController 
       '/register',
       this.authService.verifyAcl(this.aclPerm, AclOperations.READ),
       (req, res, next) => this.getAllRegistrations(req, res, next),
+    );
+    app.post(
+      '/delete',
+      // authentication is handled later, so skip the call to verifyAcl here
+      (req, res, next) => this.deleteUser(req, res, next),
     );
     app.get(
       '/extra-credit',
@@ -226,6 +235,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} university The university that the user attends
    * @apiParam {String} email The user's school email
    * @apiParam {String} academicYear The user's current year in school
+   * @apiParam {String} educationalInstitutionType The user's current type of institution attended
    * @apiParam {String} major Intended or current major
    * @apiParam {String} phone The user's phone number (For MLH)
    * @apiParam {String} [address] The user's address
@@ -240,8 +250,9 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} project A project description that the user is proud of
    * @apiParam {String} expectations What the user expects to get from the hackathon
    * @apiParam {String} veteran=false Is the user a veteran?
-   * @apiParam {Boolean} shareAddressMlh Does the user agree to share their address with mlh?
-   * @apiParam {Boolean} shareAddressSponsors Does the user agree to share their address with event sponsors
+   * @apiParam {Boolean} shareAddressMlh Does the user agree to share their address with MLH?
+   * @apiParam {Boolean} shareAddressSponsors Does the user agree to share their address with event sponsors?
+   * @apiParam {Boolean} shareEmailMlh Does the user agree to share their email address with MLH?
    *
    * @apiSuccess {Registration} data The inserted registration
    * @apiUse IllegalArgumentError
@@ -260,7 +271,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     }
 
     // Generate a random word pin
-    request.body.wordpin = RandomWords({exactly: 4, join: " ", minLength: 3});
+    request.body.wordPin = RandomWords({exactly: 4, join: " ", minLength: 3});
 
     let registration: Registration;
     try {
@@ -299,6 +310,7 @@ export class UsersController extends ParentRouter implements IExpressController 
         count: res.locals.limit,
         hackathon: res.locals.hackathon,
         startAt: res.locals.offset,
+        ignoreCache: res.locals.ignoreCache,
       });
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
@@ -330,6 +342,38 @@ export class UsersController extends ParentRouter implements IExpressController 
   }
 
   /**
+   * @api {post} /users/delete Delete the information for a user
+   * @apiversion 2.0.0
+   * @apiName Delete a user
+   * @apiGroup User
+   * @apiPermission TechnologyAdminPermission
+   * 
+   * @apiParam uid The uid of the user to delete
+   */
+  private async deleteUser(req: Request, res: Response, next: NextFunction) {
+    if (!req.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Could not find valid uid', 400), next);
+    }
+
+    if (res.locals.user.privilege < 4 && res.locals.user.uid != req.body.uid) {
+      return Util.standardErrorHandler(new HttpError('Insufficient Permissions to delete another user', 401), next);
+    }
+
+    try {
+      const email = await this.registerDataMapper.getEmailByUid(req.body.uid, { ignoreCache: false });
+      if (email) {
+        await this.workshopScansDataMapper.deleteUser(email);
+      }
+      await this.extraCreditDataMapper.deleteByUser(req.body.uid);
+      await this.registerDataMapper.deleteUser(req.body.uid);
+      const result = await this.authService.delete(req.body.uid);
+      this.sendResponse(res, new ResponseBody('Success', 200, result));
+    } catch (error) {
+      return Util.errorHandler500(error, next);
+    }
+  }
+
+  /**
    * @api {post} /users/extra-credit/add-class Add an Extra Credit Class
    * @apiName Add Extra Credit Class
    * @apiVersion 2.0.0
@@ -355,6 +399,15 @@ export class UsersController extends ParentRouter implements IExpressController 
       try {
         const ecClass = new ExtraCreditClass(req.body);
         const result = await this.extraCreditDataMapper.insertClass(ecClass);
+
+        if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+          this.websocketPusher.sendUpdateRequest(
+            WebsocketPusher.EXTRA_CREDIT,
+            WebsocketPusher.MOBILE,
+            req.headers.idtoken as string
+          );
+        }
+
         const response = new ResponseBody('Success', 200, result);
         return this.sendResponse(res, response);
       } catch (error) {
@@ -451,7 +504,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
     try {
       const id: string = req.query.uid;
-      const result = await this.extraCreditDataMapper.get(id);
+      const result = await this.extraCreditDataMapper.get(id, {ignoreCache: req.query.ignoreCache});
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
@@ -484,7 +537,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
     try {
       const uid: string = req.query.uid;
-      const result = await this.extraCreditDataMapper.getByUser(uid, { ignoreCache: req.query.ignoreCache });
+      const result = await this.extraCreditDataMapper.getByUser(uid, {ignoreCache: req.query.ignoreCache});
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
@@ -517,7 +570,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
     try {
       const cid: number = req.query.cid;
-      const result = await this.extraCreditDataMapper.getByClass(cid);
+      const result = await this.extraCreditDataMapper.getByClass(cid, {ignoreCache: req.query.ignoreCache});
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
@@ -556,6 +609,15 @@ export class UsersController extends ParentRouter implements IExpressController 
         classUid: 1,
       });
       const result = await this.extraCreditDataMapper.delete(ecAssignment);
+
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.EXTRA_CREDIT,
+          WebsocketPusher.MOBILE,
+          req.headers.idtoken as string,
+        );
+      }
+
       const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
@@ -598,7 +660,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
   
   /**
-   * @api {get} /users/registration-by-email Get the uid corresponding to an email
+   * @api {get} /users/registration-by-email Get the registration corresponding to an email
    * @apiVersion 2.0.0
    * @apiName Get User Id
    * @apiGroup User
@@ -613,18 +675,12 @@ export class UsersController extends ParentRouter implements IExpressController 
    private async getRegistrationByEmailHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.query || !req.query.email) {
       return Util.standardErrorHandler(
-        new HttpError('Email could not be found in request parameters', 400),
-        next,
-      );
+        new HttpError('Email could not be found in request parameters', 400), next);
     }
     try {
       const hackathon = (await this.activeHackathonDataMapper.activeHackathon.toPromise());
       const result = await this.registerDataMapper.getRegistrationByEmail(req.query.email, hackathon.uid);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-    );
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);

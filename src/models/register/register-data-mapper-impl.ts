@@ -54,6 +54,17 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     );
   }
 
+  public deleteUser(uid: string): Promise<IDbResult<void>> {
+    const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
+      .from(this.tableName)
+      .where(`${this.pkColumnName} = ?`, uid)
+      .toParam();
+    query.text = query.text.concat(';');
+    return from(this.sql.query(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: undefined })))
+      .toPromise();
+  }
+
   public delete(id: ICompoundHackathonUidType): Promise<IDbResult<void>> {
     const query = squel.delete({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.tableName)
@@ -61,11 +72,9 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .where('hackathon = ?', id.hackathon)
       .toParam();
     query.text = query.text.concat(';');
-    return from(
-      this.sql.query(query.text, query.values, { cache: false }),
-    ).pipe(
-      map(() => ({ result: 'Success', data: undefined })),
-    ).toPromise();
+    return from(this.sql.query(query.text, query.values, { cache: false }))
+      .pipe(map(() => ({ result: 'Success', data: undefined })))
+      .toPromise();
   }
 
   public get(id: ICompoundHackathonUidType, opts?: IUowOpts): Promise<IDbResult<Registration>> {
@@ -369,25 +378,28 @@ export class RegisterDataMapperImpl extends GenericDataMapper
     return queryBuilder.group(fieldname);
   }
 
-  public getEmailByUid(uid: UidType): Promise<IDbResult<string>> {
-    const query = squel.select({
-      autoQuoteFieldNames: true,
-      autoQuoteTableNames: true,
-    })
+  public async getEmailByUid(uid: UidType, opts?:IUowOpts): Promise<string> {
+    const query = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName)
       .field('email')
       .where('uid = ?', uid)
+      .limit(1)
       .toParam();
     query.text = query.text.concat(';');
-    return from(this.sql.query<string>(
-      query.text,
-      query.values,
-      { cache: true },
-    ))
-      .pipe(
-        map((email: string) => ({ result: 'Success', data: email })),
-      )
-      .toPromise();
+    let checkCache = true;
+    if (opts && opts.ignoreCache) {
+      checkCache = false;
+    }
+    try {
+      const result = await this.sql.query<string>(query.text, query.values, { cache: checkCache });
+      return result[0].email as string;
+    } catch (error) {
+      if (error.message && error.message == 'no data was found for this query') {
+        return '';
+      } else {
+        throw error;
+      }
+    }
   }
 
   public getByPin(pin: number, hackathonUid: UidType): Promise<IDbResult<Registration>> {
@@ -403,6 +415,26 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       query.text,
       query.values,
       { cache: true },
+    ))
+      .pipe(
+        map((registration: Registration[]) => ({ result: 'Success', data: registration[0] })),
+      )
+      .toPromise();
+  }
+
+  public async getByWordPin(pin: string, hackathonUid: UidType): Promise<IDbResult<Registration>> {
+    const query = squel.select({
+      autoQuoteFieldNames: false,
+      autoQuoteTableNames: true,
+    })
+      .from(this.tableName)
+      .where('hackathon = ?', hackathonUid)
+      .where('word_pin = ?', pin)
+      .toParam();
+    return from(this.sql.query<Registration>(
+      query.text,
+      query.values,
+      { cache: false },
     ))
       .pipe(
         map((registration: Registration[]) => ({ result: 'Success', data: registration[0] })),

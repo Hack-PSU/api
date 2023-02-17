@@ -88,17 +88,19 @@ describe('TEST: Workshop Scanner Data Mapper', () => {
             hackathonUid: testHackathonUid,
             timestamp: Date.now(),
             pin: 12345,
+            email: 'testemail@asdfasdf.com',
         });
         // WHEN: Inserting the workshop scan
         await workshopScansDataMapper.insert(testWorkshopScan);
 
         // THEN: Generated SQL matches the expectation
-        const expectedSQL = 'INSERT INTO `WORKSHOP_SCANS` (`event_id`, `hackathon_id`, `timestamp`, `user_pin`) VALUES (?, ?, ?, ?);';
+        const expectedSQL = 'INSERT INTO `WORKSHOP_SCANS` (`event_id`, `hackathon_id`, `timestamp`, `user_pin`, `email`) VALUES (?, ?, ?, ?, ?);';
         const expectedParams = [
             testWorkshopScan.event_id,
             testWorkshopScan.hackathon_id,
             testWorkshopScan.timestamp,
             testWorkshopScan.user_pin,
+            testWorkshopScan.email,
         ];
         const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
             .first();

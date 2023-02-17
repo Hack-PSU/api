@@ -1,21 +1,23 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { Inject } from 'injection-js';
+import { WebsocketPusher } from '../../../services/communication/websocket-pusher';
 import { IExpressController } from '../..';
 import { HttpError } from '../../../JSCommon/errors';
 import { Util } from '../../../JSCommon/util';
 import { Location } from '../../../models/location/location';
 import { IFirebaseAuthService } from '../../../services/auth/auth-types';
 import { AclOperations, IAclPerm, IAdminAclPerm } from '../../../services/auth/RBAC/rbac-types';
-import { IDataMapper } from '../../../services/database';
 import { Logger } from '../../../services/logging/logging';
 import { ParentRouter, ResponseBody } from '../../router-types';
+import { ILocationDataMapper } from '../../../models/location/location-data-mapper-impl';
 
 export class AdminLocationController extends ParentRouter implements IExpressController {
   public router: Router;
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
-    @Inject('ILocationDataMapper') private readonly locationDataMapper: IDataMapper<Location>,
+    @Inject('WebsocketPusher') private readonly websocketPusher: WebsocketPusher,
+    @Inject('ILocationDataMapper') private readonly locationDataMapper: ILocationDataMapper,
     @Inject('ILocationDataMapper') private readonly locationAcl: IAclPerm,
     @Inject('IAdminDataMapper') private readonly adminAcl: IAdminAclPerm,
     @Inject('BunyanLogger') private readonly logger: Logger,
@@ -35,7 +37,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
     app.post(
       '/',
       this.authService.verifyAcl(this.locationAcl, AclOperations.CREATE),
-      (req, res, next) => this.createLocationHandler(req, res, next),
+      (req, res, next) => this.insertLocationHandler(req, res, next),
     );
 
     app.post(
@@ -81,7 +83,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
   }
 
   /**
-   * @api {post} /admin/location Create a new location
+   * @api {post} /admin/location Insert a new location
    * @apiVersion 2.0.0
    * @apiName Create Location
    * @apiGroup Admin Location
@@ -93,7 +95,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-  private async createLocationHandler(req: Request, res: Response, next: NextFunction) {
+  private async insertLocationHandler(req: Request, res: Response, next: NextFunction) {
     if (!req.body) {
       return Util.standardErrorHandler(new HttpError('Illegal request format', 400), next);
     }
@@ -101,16 +103,12 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
       return Util.standardErrorHandler(new HttpError('Cannot find Location Name', 400), next);
     }
     try {
-      const locationObject = new Location({
-        locationName: req.body.locationName,
-        uid: req.body.uid,
-      });
-      const result = await this.locationDataMapper.insert(locationObject);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-      );
+      const locationObject = new Location(req.body);
+      let result = await this.locationDataMapper.insert(locationObject);
+      if (!result.data.uid) {
+        result = await this.locationDataMapper.getByName(locationObject.location_name);
+      }
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.standardErrorHandler(error, next);
@@ -151,11 +149,12 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
     try {
       const location = new Location(req.body);
       const result = await this.locationDataMapper.update(location);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
+      this.websocketPusher.sendUpdateRequest(
+        WebsocketPusher.EVENTS, 
+        [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+        req.headers.idtoken as string,
       );
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.standardErrorHandler(error, next);
@@ -191,11 +190,7 @@ export class AdminLocationController extends ParentRouter implements IExpressCon
     try {
       const location = new Location(req.body);
       const result = await this.locationDataMapper.delete(location);
-      const response = new ResponseBody(
-        'Success',
-        200,
-        result,
-      );
+      const response = new ResponseBody('Success', 200, result);
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.standardErrorHandler(error, next);

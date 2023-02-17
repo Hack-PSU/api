@@ -15,6 +15,7 @@ import { RegisterDataMapperImpl } from '../../../models/register/register-data-m
 import { RsvpDataMapperImpl } from '../../../models/RSVP/RSVP-data-mapper-impl';
 import { ScannerDataMapperImpl } from '../../../models/scanner/scanner-data-mapper-impl';
 import { ScoreDataMapperImpl } from '../../../models/score/score-data-mapper';
+import { SponsorDataMapperImpl } from '../../../models/sponsorship/sponsor-data-mapper-impl';
 import { UpdateDataMapperImpl } from '../../../models/update/update-data-mapper-impl';
 import { UrlDataMapperImpl } from '../../../models/url/url-data-mapper-impl';
 import { WorkshopDataMapperImpl } from '../../../models/workshops-scans/workshop-scanner-data-mapper';
@@ -38,6 +39,7 @@ import { LiveController } from '../../../router/routes/live/live';
 import { UpdatesController } from '../../../router/routes/live/updates';
 import { UsersController } from '../../../router/routes/users';
 import { ScannerController } from '../../../router/routes/scanner/scanner';
+import { SponsorshipController } from '../../../router/routes/sponsorship';
 import { WorkshopScannerController } from '../../../router/routes/scanner/workshop-scanner';
 
 import { ApikeyAuthService } from '../../auth/apikey-auth';
@@ -51,6 +53,7 @@ import { RtdbConnectionFactory } from '../../database/connection/rtdb-connection
 import { SqlConnectionFactory } from '../../database/connection/sql-connection-factory';
 import { MysqlUow } from '../../database/svc/mysql-uow.service';
 import { RtdbUow } from '../../database/svc/rtdb-uow.service';
+import { WebsocketPusher } from '../../communication/websocket-pusher';
 
 import { Logger } from '../../logging/logging';
 import { GoogleStorageService } from '../../storage/svc/google-storage.service';
@@ -75,6 +78,7 @@ export class ExpressProvider {
         { provide: 'JudgingController', useClass: JudgingController },
         { provide: 'LiveController', useClass: LiveController },
         { provide: 'ScannerController', useClass: ScannerController },
+        { provide: 'SponsorshipController', useClass: SponsorshipController },
         { provide: 'UpdatesController', useClass: UpdatesController },
         { provide: 'UsersController', useClass: UsersController },
         { provide: 'WorkshopController', useClass: WorkshopScannerController},
@@ -106,6 +110,7 @@ export class ExpressProvider {
         { provide: 'IRsvpDataMapper', useClass: RsvpDataMapperImpl },
         { provide: 'IScannerDataMapper', useClass: ScannerDataMapperImpl },
         { provide: 'IScoreDataMapper', useClass: ScoreDataMapperImpl },
+        { provide: 'ISponsorDataMapper', useClass: SponsorDataMapperImpl },
         { provide: 'IUpdateDataMapper', useClass: UpdateDataMapperImpl },
         { provide: 'IUrlDataMapper', useClass: UrlDataMapperImpl },
         { provide: 'IWorkshopScansDataMapper', useClass: WorkshopDataMapperImpl },
@@ -120,6 +125,7 @@ export class ExpressProvider {
         { provide: 'IRtdbFactory', useClass: RtdbConnectionFactory },
         { provide: 'IScannerAuthService', useClass: ApikeyAuthService },
         { provide: 'IStorageService', useClass: GoogleStorageService },
+        { provide: 'WebsocketPusher', useClass: WebsocketPusher},
 
         // Classes
         { provide: 'BunyanLogger', useClass: Logger },

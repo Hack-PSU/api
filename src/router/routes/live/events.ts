@@ -2,7 +2,7 @@ import express from 'express';
 import * as path from 'path';
 import { Inject, Injectable } from 'injection-js';
 import { HttpError } from '../../../JSCommon/errors';
-import { Util } from '../../../JSCommon/util';
+import { Environment, Util } from '../../../JSCommon/util';
 import { Constants } from '../../../assets/constants/constants';
 import { Event } from '../../../models/event/event';
 import { Url } from '../../../models/url/url';
@@ -15,6 +15,7 @@ import { ResponseBody } from '../../router-types';
 import { LiveController } from '../controllers';
 import { IActiveHackathonDataMapper } from 'models/hackathon/active-hackathon';
 import { map } from 'rxjs/internal/operators/map';
+import { WebsocketPusher } from '../../../services/communication/websocket-pusher';
 
 @Injectable()
 export class EventsController extends LiveController {
@@ -24,6 +25,7 @@ export class EventsController extends LiveController {
 
   constructor(
     @Inject('IAuthService') private readonly authService: IFirebaseAuthService,
+    @Inject('WebsocketPusher') private readonly websocketPusher: WebsocketPusher,
     @Inject('IEventDataMapper') private readonly dataMapper: IDataMapperHackathonSpecific<Event>,
     @Inject('IEventDataMapper') private readonly aclPerm: IAclPerm,
     @Inject('IUrlDataMapper') private readonly urlDataMapper: UrlDataMapperImpl,
@@ -96,7 +98,7 @@ export class EventsController extends LiveController {
 
   /**
    * Get an event by its uid
-   * @api {get} /live/event
+   * @api {get} /live/events/get-by-uid
    * @apiVersion 2.0.0
    * @apiName Get Event by Uid
    * @apiGroup Events
@@ -107,19 +109,15 @@ export class EventsController extends LiveController {
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-  private async getEventByUidHandler(
-    request: express.Request,
-    response: express.Response,
-    next: express.NextFunction,
-  ) {
-    if (!request.query || !request.query.uid) {
+  private async getEventByUidHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
+    if (!req.query || !req.query.uid) {
       return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
     }
     try {
       const activeHackathonUid = await this.activeHackathonDataMapper.activeHackathon.pipe(
         map(hackathon => hackathon.uid)).toPromise();
-      const result = await this.dataMapper.get({uid: request.query.uid, hackathon: request.query.hackathon || activeHackathonUid});
-      return this.sendResponse(response, new ResponseBody('Success', 200, result));
+      const result = await this.dataMapper.get({uid: req.query.uid, hackathon: req.query.hackathon || activeHackathonUid});
+      return this.sendResponse(res, new ResponseBody('Success', 200, result));
     } catch (error) {
       Util.standardErrorHandler(error, next);
     }
@@ -151,6 +149,13 @@ export class EventsController extends LiveController {
       await this.urlDataMapper.deleteByEvent(request.body.uid);
       const result = await this.dataMapper.delete(request.body);
       const res = new ResponseBody('Success', 200, result);
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.EVENTS,
+          [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+          request.headers.idtoken as string,
+        );
+      }
       return this.sendResponse(response, res);
     } catch (error) {
       Util.standardErrorHandler(error, next);
@@ -182,18 +187,14 @@ export class EventsController extends LiveController {
    * @apiUse IllegalArgumentError
    * @apiUse ResponseBodyDescription
    */
-  private async updateEventHandler(
-    request: express.Request,
-    response: express.Response,
-    next: express.NextFunction,
-  ) {
-    if (!request.body.uid) {
+  private async updateEventHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
+    if (!req.body.uid) {
       return Util.standardErrorHandler(new HttpError('Event uid must be provided', 400), next);
     }
     let urls: string[] | undefined;
-    if (request.body.wsUrls) {
+    if (req.body.wsUrls) {
       try {
-        urls = (request.body.wsUrls as string).split('|');
+        urls = (req.body.wsUrls as string).split('|');
       } catch (error) {
         return Util.standardErrorHandler(new HttpError('Failed to parse workshop URLs', 400), next);
       }
@@ -201,7 +202,7 @@ export class EventsController extends LiveController {
 
     let event;
     try {
-      event = new Event(request.body);
+      event = new Event(req.body);
     } catch (error) {
       return Util.standardErrorHandler(new HttpError('Some properties were not as expected', 400), next);
     }
@@ -223,8 +224,15 @@ export class EventsController extends LiveController {
           // Event had no previous urls
         }
       }
-      const res = new ResponseBody('Success', 200, result);
-      return this.sendResponse(response, res);
+      const response = new ResponseBody('Success', 200, result);
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.EVENTS,
+          [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+          req.headers.idtoken as string,
+        );
+      }
+      return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
@@ -328,6 +336,13 @@ export class EventsController extends LiveController {
         urls.forEach(url => this.urlDataMapper.insert(new Url({ eventId: event.id, url })));
         result.data.ws_urls = urls;
       }
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.websocketPusher.sendUpdateRequest(
+          WebsocketPusher.EVENTS,
+          [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+          request.headers.idtoken as string,
+        );
+      }
       const res = new ResponseBody('Success', 200, result);
       return this.sendResponse(response, res);
     } catch (error) {
@@ -347,18 +362,14 @@ export class EventsController extends LiveController {
    * @apiUse RequestOpts
    * @apiUse ResponseBodyDescription
    */
-  private async getEventHandler(
-    request: express.Request,
-    response: express.Response,
-    next: express.NextFunction,
-  ) {
+  private async getEventHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
     try {
       const events = await this.dataMapper.getAll({
-        byHackathon: !request.query.allHackathons,
-        count: request.query.limit,
-        hackathon: request.query.hackathon,
-        startAt: request.query.offset,
-        ignoreCache: request.query.ignoreCache,
+        byHackathon: !req.query.allHackathons,
+        count: req.query.limit,
+        hackathon: req.query.hackathon,
+        startAt: req.query.offset,
+        ignoreCache: req.query.ignoreCache,
       });
       try {
         const allUrls = (await this.urlDataMapper.getAll()).data;
@@ -369,8 +380,8 @@ export class EventsController extends LiveController {
         // There are no URLs at all
       }
 
-      const res = new ResponseBody('Success', 200, events);
-      return this.sendResponse(response, res);
+      const response = new ResponseBody('Success', 200, events);
+      return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
@@ -417,8 +428,14 @@ export class EventsController extends LiveController {
     } catch (error) {
       return Util.errorHandler500(error, next);
     }
-    
     const res = new ResponseBody('Success', 200, fileURL);
+    if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+      this.websocketPusher.sendUpdateRequest(
+        WebsocketPusher.EVENTS,
+        [WebsocketPusher.ADMIN, WebsocketPusher.MOBILE],
+        request.headers.idtoken as string,
+      );
+  }
     return this.sendResponse(response, res);
   }
   

@@ -6,6 +6,7 @@ import { RegisterDataMapperImpl } from '../../src/models/register/register-data-
 import {
   AcademicYear,
   CodingExperience,
+  EducationalInstitutionType,
   Gender,
   Registration,
   ShirtSize,
@@ -28,6 +29,7 @@ const registration = new Registration({
   allergies: null,
   codingExperience: CodingExperience.NONE,
   dietaryRestriction: null,
+  educationalInstitutionType: EducationalInstitutionType.CODE_SCHOOL_BOOTCAMP,
   eighteenBeforeEvent: true,
   email: 'test@email.com',
   ethnicity: 'test ethnicity',
@@ -53,7 +55,8 @@ const registration = new Registration({
   submitted: true,
   shareAddressMlh: false,
   shareAddressSponsors: false,
-  wordpin: "test pin"
+  shareEmailMlh: false,
+  wordPin: 'test pin',
 });
 
 describe('TEST: Registration Processor', () => {

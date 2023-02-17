@@ -31,18 +31,13 @@ describe('TEST: Admin data mapper', () => {
 
   describe('TEST: Get user record by id', () => {
     beforeEach(() => {
-      when(authServiceMock.getUserId(anyString()))
+      when(authServiceMock.getUserById(anyString()))
         .thenResolve(Substitute.for<UserRecord>());
       authService = instance(authServiceMock);
       emailService = instance(emailServiceMock);
       mysqlUow = instance(mysqlUowMock);
       // Configure Admin Data Mapper
-      adminDataMapper = new AdminDataMapperImpl(
-        acl,
-        authService,
-        mysqlUow,
-        emailService,
-      );
+      adminDataMapper = new AdminDataMapperImpl(acl, authService, mysqlUow, emailService);
     });
     afterEach(() => {
       reset(mysqlUowMock);
@@ -56,7 +51,7 @@ describe('TEST: Admin data mapper', () => {
       await adminDataMapper.getEmailFromId('test uid');
 
       // THEN: Calls firebase to get the user record
-      verify(authServiceMock.getUserId('test uid')).once();
+      verify(authServiceMock.getUserById('test uid')).once();
     });
   });
 
@@ -65,7 +60,7 @@ describe('TEST: Admin data mapper', () => {
       const mockedUserRecord = Substitute.for<UserRecord>();
       // @ts-ignore
       mockedUserRecord.customClaims.returns({ privilege: 3, admin: true });
-      when(authServiceMock.getUserId(anyString()))
+      when(authServiceMock.getUserById(anyString()))
         .thenResolve(mockedUserRecord);
       when(authServiceMock.elevate(anything(), anything()))
         .thenResolve();
@@ -73,12 +68,7 @@ describe('TEST: Admin data mapper', () => {
       emailService = instance(emailServiceMock);
       mysqlUow = instance(mysqlUowMock);
       // Configure Admin Data Mapper
-      adminDataMapper = new AdminDataMapperImpl(
-        acl,
-        authService,
-        mysqlUow,
-        emailService,
-      );
+      adminDataMapper = new AdminDataMapperImpl(acl, authService, mysqlUow, emailService);
     });
     afterEach(() => {
       reset(mysqlUowMock);
@@ -92,36 +82,25 @@ describe('TEST: Admin data mapper', () => {
       await adminDataMapper.modifyPermissions('test uid', AuthLevel.TECHNOLOGY, AuthLevel.DIRECTOR);
 
       // THEN: Calls firebase to get the user record
-      verify(authServiceMock.getUserId('test uid')).once();
+      verify(authServiceMock.getUserById('test uid')).once();
       // THEN: Calls firebase to elevate the user's permissions
       verify(authServiceMock.elevate('test uid', AuthLevel.TEAM_MEMBER));
     });
 
     it('throws an error when no identifier provided', async () => {
       // GIVEN: An admin data mapper
-      when(authServiceMock.getUserId(anyString()))
+      when(authServiceMock.getUserById(anyString()))
         .thenThrow(new Error('test error'));
       authService = instance(authServiceMock);
       // Configure Admin Data Mapper
-      adminDataMapper = new AdminDataMapperImpl(
-        acl,
-        authService,
-        mysqlUow,
-        emailService,
-      );
+      adminDataMapper = new AdminDataMapperImpl(acl, authService, mysqlUow, emailService);
       // WHEN: Elevating user privilege
       try {
-        await adminDataMapper.modifyPermissions(
-          'test uid',
-          AuthLevel.TECHNOLOGY,
-          AuthLevel.DIRECTOR,
-        );
+        await adminDataMapper.modifyPermissions('test uid', AuthLevel.TECHNOLOGY, AuthLevel.DIRECTOR);
       } catch (error) {
         // THEN: Error was thrown
         expect(error.status).to.equal(400);
-        expect(error.message)
-          .to
-          .equal('Could not retrieve user record. Did you provide a valid identifier?');
+        expect(error.message).to.equal('Could not retrieve user record. Did you provide a valid identifier?');
         return;
       }
       expect(true).to.equal(false);
@@ -131,17 +110,11 @@ describe('TEST: Admin data mapper', () => {
       // GIVEN: An admin data mapper
       // WHEN: Elevating user privilege
       try {
-        await adminDataMapper.modifyPermissions(
-          'test uid',
-          AuthLevel.TEAM_MEMBER,
-          AuthLevel.VOLUNTEER,
-        );
+        await adminDataMapper.modifyPermissions('test uid', AuthLevel.TEAM_MEMBER, AuthLevel.VOLUNTEER);
       } catch (error) {
         // THEN: Error was thrown
         expect(error.status).to.equal(400);
-        expect(error.message)
-          .to
-          .equal('You do not have permission to reduce someone else\'s permission');
+        expect(error.message).to.equal('You do not have permission to reduce someone else\'s permission');
         return;
       }
       expect(true).to.equal(false);
@@ -154,21 +127,12 @@ describe('TEST: Admin data mapper', () => {
         when(authServiceMock.aclVerifier(anything(), anything()))
           .thenReturn(true);
         authService = instance(authServiceMock);
-        adminDataMapper = new AdminDataMapperImpl(
-          acl,
-          authService,
-          mysqlUow,
-          emailService,
-        );
+        adminDataMapper = new AdminDataMapperImpl(acl, authService, mysqlUow, emailService);
         // WHEN: Elevating user privilege
-        await adminDataMapper.modifyPermissions(
-          'test uid',
-          AuthLevel.VOLUNTEER,
-          AuthLevel.TECHNOLOGY,
-        );
+        await adminDataMapper.modifyPermissions('test uid', AuthLevel.VOLUNTEER, AuthLevel.TECHNOLOGY);
 
         // THEN: Calls firebase to get the user record
-        verify(authServiceMock.getUserId('test uid')).once();
+        verify(authServiceMock.getUserById('test uid')).once();
         // THEN: Calls firebase to elevate the user's permissions
         verify(authServiceMock.elevate('test uid', AuthLevel.TEAM_MEMBER));
       },
@@ -185,7 +149,7 @@ describe('TEST: Admin data mapper', () => {
     };
 
     beforeEach(() => {
-      when(authServiceMock.getUserId(anyString()))
+      when(authServiceMock.getUserById(anyString()))
         .thenResolve(Substitute.for<UserRecord>());
       when(emailServiceMock.emailSubstitute(anyString(), anyString(), anything()))
         .thenReturn('substituted html');
@@ -195,12 +159,7 @@ describe('TEST: Admin data mapper', () => {
       emailService = instance(emailServiceMock);
       mysqlUow = instance(mysqlUowMock);
       // Configure Admin Data Mapper
-      adminDataMapper = new AdminDataMapperImpl(
-        acl,
-        authService,
-        mysqlUow,
-        emailService,
-      );
+      adminDataMapper = new AdminDataMapperImpl(acl, authService, mysqlUow, emailService);
     });
     afterEach(() => {
       reset(mysqlUowMock);
@@ -212,16 +171,8 @@ describe('TEST: Admin data mapper', () => {
       const substitutions = new Map<string, string>([['substitutable', 'new-word']]);
       // GIVEN: Well formatted emails to send
       const emails = [
-        {
-          email: 'test@email.com',
-          name: 'test name',
-          substitutions: new Map<string, string>(),
-        },
-        {
-          email: 'test2@email.com',
-          name: 'test name 2',
-          substitutions: substitutions,
-        },
+        { email: 'test@email.com', name: 'test name', substitutions: new Map<string, string>()},
+        { email: 'test2@email.com', name: 'test name 2', substitutions: substitutions },
       ];
       // WHEN: Sending emails
       await adminDataMapper.sendEmails(
@@ -256,12 +207,7 @@ describe('TEST: Admin data mapper', () => {
       emailService = instance(emailServiceMock);
       mysqlUow = instance(mysqlUowMock);
       // Configure Admin Data Mapper
-      adminDataMapper = new AdminDataMapperImpl(
-        acl,
-        authService,
-        mysqlUow,
-        emailService,
-      );
+      adminDataMapper = new AdminDataMapperImpl(acl, authService, mysqlUow, emailService);
     });
     afterEach(() => {
       reset(mysqlUowMock);

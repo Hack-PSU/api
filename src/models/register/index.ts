@@ -17,9 +17,11 @@ export interface IRegisterDataMapper
 
   getRegistrationStats(opts?: IUowOpts): Promise<IDbResult<IRegistrationStats[]>>;
 
-  getEmailByUid(uid: UidType): Promise<IDbResult<string>>;
+  getEmailByUid(uid: UidType, opts?:IUowOpts): Promise<string>;
 
   getRegistrationByEmail(email: String, hackathonUid: UidType): Promise<IDbResult<Registration>>;
+
+  deleteUser(uid: UidType): Promise<IDbResult<void>>;
 
   /**
    * Returns a generated query for counting the statistics for
@@ -30,6 +32,8 @@ export interface IRegisterDataMapper
   getCountQuery(opts?: IUowOpts): Promise<squel.Select>;
 
   getByPin(pin: number, hackathonUid: UidType): Promise<IDbResult<Registration>>;
+
+  getByWordPin(pin: string, hackathonUid: UidType): Promise<IDbResult<Registration>>;
 }
 
 export interface IPreRegisterDataMapper extends IDataMapper<PreRegistration> {

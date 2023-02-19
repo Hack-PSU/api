@@ -150,7 +150,7 @@
     "share_email_mlh": {
       "type": "boolean"
     },
-    "address": {
+    "country": {
       "type": [
         "string",
         "null"

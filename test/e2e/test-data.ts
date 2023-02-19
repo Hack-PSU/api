@@ -59,7 +59,7 @@ export class TestData {
       educationalInstitutionType: EducationalInstitutionType.CODE_SCHOOL_BOOTCAMP,
       major: 'test major',
       phone: '1234567890',
-      address: 'test address',
+      country: 'test country',
       resume: null,
       ethnicity: 'test ethnicity',
       codingExperience: CodingExperience.INTERMEDIATE,

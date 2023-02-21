@@ -291,16 +291,23 @@ export class EventsController extends LiveController {
     if (isNaN(Number(request.body.eventLocation))) {
       return Util.standardErrorHandler(new HttpError('Event location must be a parsable number', 400), next);
     }
-    if (!request.body.filename) {
-      return Util.standardErrorHandler(new HttpError('Could not find filename', 400), next);
-    }
     if (!request.body.uid) {
       return Util.standardErrorHandler(new HttpError('Could not find event uid', 400), next);
     }
 
-    const fileURL = this.imageUploader.uploadedFileUrl(
-      await this.generateImageFileName(request.body.filename),
-    );
+    if (request.body.filename){
+
+      const fileURL = this.imageUploader.uploadedFileUrl(
+        await this.generateImageFileName(request.body.filename),
+      );
+
+      let url: Url;
+      try {
+        url = new Url({url: fileURL, eventId: request.body.uid});
+        await this.urlDataMapper.insert(url);
+      } catch (error) {
+      }
+    }
 
     let urls: string[] | undefined;
     if (request.body.wsUrls && request.body.eventType === 'workshop') {
@@ -309,19 +316,6 @@ export class EventsController extends LiveController {
       } catch (error) {
         return Util.standardErrorHandler(new HttpError('Failed to parse workshop URLs', 400), next);
       }
-    }
-
-    let url: Url;
-    try {
-      url = new Url({url: fileURL, eventId: request.body.uid});
-    } catch (error) {
-      return Util.standardErrorHandler(new HttpError('Some properties were not as expected when creating URL', 400), next);
-    }
-
-    try {
-      await this.urlDataMapper.insert(url);
-    } catch (error) {
-      return Util.errorHandler500(error, next);
     }
 
     let event;

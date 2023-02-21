@@ -47,6 +47,7 @@ class LiveEventsIntegrationTest extends IntegrationTest {
       .set('idToken', idToken)
       .set('content-type', 'application/json')
       .send(parameters);
+    console.log(res);
     // THEN: Returns a well formed response
     super.assertRequestFormat(res);
     // THEN: The inserted event is checked

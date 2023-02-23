@@ -30,7 +30,7 @@ const mysqlUowMock = mock(MysqlUow);
 const acl: IAcl = new RBAC();
 const validRegistration = new Registration({
   academicYear: AcademicYear.FRESHMAN,
-  address: 'test address',
+  country: 'test country',
   allergies: null,
   codingExperience: CodingExperience.NONE,
   dietaryRestriction: null,
@@ -357,7 +357,7 @@ describe('TEST: Register data mapper', () => {
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'INSERT INTO `REGISTRATION` (`firstname`, `lastname`, `gender`, ' +
         '`shirt_size`, `travel_reimbursement`, `driving`, `first_hackathon`, `university`, `email`, ' +
-        '`academic_year`, `educational_institution_type`, `major`, `phone`, `address`, `race`, `coding_experience`, `uid`, ' +
+        '`academic_year`, `educational_institution_type`, `major`, `phone`, `country`, `race`, `coding_experience`, `uid`, ' +
         '`eighteenBeforeEvent`, `mlh_coc`, `mlh_dcp`, `referral`, `project`, `expectations`, ' +
         '`veteran`, `time`, `submitted`, `share_address_mlh`, `share_address_sponsors`, `share_email_mlh`, `word_pin`, `hackathon`) ' +
         'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);';
@@ -375,7 +375,7 @@ describe('TEST: Register data mapper', () => {
         validRegistration.educational_institution_type,
         validRegistration.major,
         validRegistration.phone,
-        validRegistration.address,
+        validRegistration.country,
         validRegistration.race,
         validRegistration.coding_experience,
         validRegistration.uid,
@@ -406,7 +406,7 @@ describe('TEST: Register data mapper', () => {
       // GIVEN: A registration to insert
       const registration = new Registration({
         academicYear: AcademicYear.FRESHMAN,
-        address: 'test address',
+        country: 'test country',
         allergies: null,
         codingExperience: CodingExperience.NONE,
         dietaryRestriction: null,
@@ -513,7 +513,7 @@ describe('TEST: Register data mapper', () => {
       // THEN: Generated SQL matches the expectation
       const expectedSQL = 'UPDATE `REGISTRATION` SET `firstname` = ?, `lastname` = ?, `gender` = ?, ' +
         '`shirt_size` = ?, `travel_reimbursement` = ?, `driving` = ?, `first_hackathon` = ?, `university` = ?, ' +
-        '`email` = ?, `academic_year` = ?, `educational_institution_type` = ?, `major` = ?, `phone` = ?, `address` = ?, `race` = ?, ' +
+        '`email` = ?, `academic_year` = ?, `educational_institution_type` = ?, `major` = ?, `phone` = ?, `country` = ?, `race` = ?, ' +
         '`coding_experience` = ?, `uid` = ?, `eighteenBeforeEvent` = ?, `mlh_coc` = ?, `mlh_dcp` = ?, ' +
         '`referral` = ?, `project` = ?, `expectations` = ?, `veteran` = ?, `time` = ?, `submitted` = ?, ' +
         '`share_address_mlh` = ?, `share_address_sponsors` = ?, `share_email_mlh` = ?, `word_pin` = ?, `hackathon` = ? ' +
@@ -533,7 +533,7 @@ describe('TEST: Register data mapper', () => {
         validRegistration.educational_institution_type,
         validRegistration.major,
         validRegistration.phone,
-        validRegistration.address,
+        validRegistration.country,
         validRegistration.race,
         validRegistration.coding_experience,
         validRegistration.uid,
@@ -566,7 +566,7 @@ describe('TEST: Register data mapper', () => {
       // GIVEN: A registration to update
       const registration = new Registration({
         academicYear: AcademicYear.FRESHMAN,
-        address: 'test address',
+        country: 'test country',
         allergies: null,
         codingExperience: CodingExperience.NONE,
         dietaryRestriction: null,

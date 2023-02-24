@@ -56,8 +56,8 @@ export class Constants {
   };
 
   public static readonly GCS = {
-    resumeBucket: Util.readEnv('RESUME_BUCKET', 'resumes'),
-    travelReimbursementBucket: Util.readEnv('TRAVEL_REIMBURSEMENT_BUCKET', 'travel-reimbursement-receipts'),
+    resumeBucket: Util.readEnv('RESUME_BUCKET', 'hackpsu-resumes-test'),
+    travelReimbursementBucket: Util.readEnv('TRAVEL_REIMBURSEMENT_BUCKET', 'hackpsu-resumes-test'),
     eventImageBucket: 'event-icons', //TODO: put this in the actual environment variables?
     projectId: Util.readEnv('GOOGLE_CLOUD_PROJECT', ''),
     keyFile: 'gcs_config.json',

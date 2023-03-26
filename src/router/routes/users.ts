@@ -104,7 +104,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     app.get(
       '/extra-credit',
       this.authService.verifyAcl(this.extraCreditPerm, AclOperations.READ_ALL_CLASSES),
-      (req, res, next) => this.getExtraCreditClassesHandler(res, next),
+      (req, res, next) => this.getExtraCreditClassesHandler(req, res, next),
     );
     app.post(
       '/extra-credit',
@@ -297,15 +297,16 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiGroup User
    * @apiPermission UserPermission
    *
+   * @apiParam {string} [hackathon] hackathon to get extra credit classes
    * @apiUse AuthArgumentRequired
    *
    * @apiSuccess {ExtraCreditClasses[]} data Array of extra credit classes
    * @apiUse ResponseBodyDescription
    * @apiUse RequestOpts
    */
-  private async getExtraCreditClassesHandler(res: Response, next: NextFunction) {
+  private async getExtraCreditClassesHandler(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await this.extraCreditDataMapper.getAllClasses({
+      const result = await this.extraCreditDataMapper.getAllClasses(req.query.hackathon, {
         byHackathon: !res.locals.allHackathons,
         count: res.locals.limit,
         hackathon: res.locals.hackathon,

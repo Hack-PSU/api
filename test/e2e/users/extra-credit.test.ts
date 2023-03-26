@@ -334,7 +334,7 @@ class ExtraCreditIntegrationTest extends UsersIntegrationTest {
       registrationQuery.text = registrationQuery.text.concat(';');
     
     const ecClassName = 'abc';
-    const ecClass = new ExtraCreditClass({uid: this.extraClassUid, className: ecClassName});
+    const ecClass = new ExtraCreditClass({hackathon: IntegrationTest.activeHackathon.uid,uid: this.extraClassUid, className: ecClassName});
     const classQuery = squel.insert({ autoQuoteTableNames: true, autoQuoteFieldNames: true})
       .into(this.classesTableName)
       .setFieldsRows([ecClass.dbRepresentation])

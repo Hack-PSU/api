@@ -238,7 +238,7 @@ export class UsersController extends ParentRouter implements IExpressController 
    * @apiParam {String} educationalInstitutionType The user's current type of institution attended
    * @apiParam {String} major Intended or current major
    * @apiParam {String} phone The user's phone number (For MLH)
-   * @apiParam {String} [address] The user's address
+   * @apiParam {String} [country] The user's country
    * @apiParam {FILE} [resume] The resume file for the user (Max size: 10 MB)
    * @apiParam {String} [ethnicity] The user's ethnicity
    * @apiParam {String} codingExperience The coding experience that the user has

@@ -3,6 +3,8 @@ import express, { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { IRegisterDataMapper } from 'models/register';
 import * as path from 'path';
+import axios from 'axios';
+import FormData from 'form-data';
 import { map } from 'rxjs/operators';
 import { WebsocketPusher } from '../../services/communication/websocket-pusher';
 import { IExpressController, ResponseBody } from '..';
@@ -31,6 +33,7 @@ const RandomWords = require('random-words');
 export class UsersController extends ParentRouter implements IExpressController {
 
   protected static baseRoute = '/users';
+  protected static v3Route = 'https://apiv3-production-apgi25sgea-uc.a.run.app';
 
   public router: Router;
 
@@ -283,7 +286,12 @@ export class UsersController extends ParentRouter implements IExpressController 
       );
     }
     try {
-      const res = await this.registrationProcessor.processRegistration(registration);
+      const res = await this.registrationProcessor.processRegistration(registration);      
+      
+      // if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.forwardToV3(registration, request.headers.idtoken as string);
+      // }
+      
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -684,6 +692,113 @@ export class UsersController extends ParentRouter implements IExpressController 
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
+    }
+  }
+
+  private async forwardToV3(registration: Registration, idtoken: string) {
+    const userV3 = new FormData();
+    // userV3.append('id', registration.uid as string);
+    userV3.append('id', 'GevrDpeNQaNH9yOcTezBj6466El2');
+    userV3.append('firstName', registration.firstname);
+    userV3.append('lastName', registration.lastname);
+    userV3.append('gender', registration.gender);
+    userV3.append('shirtSize', registration.shirt_size);
+    userV3.append('university', registration.university);
+    userV3.append('email', registration.email);
+    userV3.append('major', registration.major);
+    userV3.append('phone', registration.phone);
+    userV3.append('country', registration.country);
+    // if (registration.dietary_restriction) {
+      userV3.append('dietaryRestriction', "optionals");
+    // }
+    // if (registration.allergies) {
+      userV3.append('allergies', "optionals");
+    // }
+    // if (registration.race) {
+      userV3.append('race', "optionals");
+    // }
+
+    // const registrationV3 = new FormData();
+    // registrationV3.append('eighteenBeforeEvent', String(registration.eighteenBeforeEvent));
+    // registrationV3.append('shareAddressSponsors', String(registration.share_address_sponsors));
+    // registrationV3.append('travelReimbursement', String(registration.travel_reimbursement));
+    // registrationV3.append('shareAddressMlh', String(registration.share_address_mlh));
+    // registrationV3.append('educationalInstitutionType', registration.educational_institution_type);
+    // registrationV3.append('academicYear', registration.academic_year);
+    // registrationV3.append('shareEmailMlh', String(registration.share_email_mlh));
+    // registrationV3.append('time', String(registration.time));
+    // registrationV3.append('veteran', registration.veteran);
+    // registrationV3.append('driving', String(registration.driving));
+    // registrationV3.append('firstHackathon', String(registration.first_hackathon));
+    // registrationV3.append('mlhCoc', String(registration.mlh_coc));
+    // registrationV3.append('mlhDcp', String(registration.mlh_dcp));
+    // // if (registration.coding_experience) {
+    //   registrationV3.append('codingExperience', "optionals");
+    // // }
+    // // if (registration.expectations) {
+    //   registrationV3.append('expectations', "optionals");
+    // // }
+    // // if (registration.project) {
+    //   registrationV3.append('project', "optionals");
+    // // }
+    // // if (registration.referral) {
+    //   registrationV3.append('referral', "optionals");
+    // }
+    let registrationV3 = {
+      eighteenBeforeEvent: String(registration.eighteenBeforeEvent),
+      shareAddressSponsors: String(registration.share_address_sponsors),
+      travelReimbursement: String(registration.travel_reimbursement),
+      shareAddressMlh: String(registration.share_address_mlh),
+      educationalInstitutionType: registration.educational_institution_type,
+      academicYear: registration.academic_year,
+      codingExperience: registration.coding_experience,
+      expectations: registration.expectations,
+      driving: String(registration.driving),
+      firstHackathon: String(registration.first_hackathon),
+      mlhCoc: String(registration.mlh_coc),
+      mlhDcp: String(registration.mlh_dcp),
+      project: registration.project,
+      referral: registration.referral,
+      shareEmailMlh: String(registration.share_email_mlh),
+      time: registration.time,
+      veteran: registration.veteran,
+    }
+
+    // console.log(userV3);
+    // console.log(registrationV3);
+
+    // UsersController.v3Route = 'http://localhost:3000';
+
+    // create user in v3
+    try {
+      const asdf = await axios.post(`${UsersController.v3Route}/users`, userV3, {
+        headers: {
+          // Authorization: `Bearer ${idtoken}`,
+          Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk3OWVkMTU1OTdhYjM1Zjc4MjljZTc0NDMwN2I3OTNiN2ViZWIyZjAiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vaGFja3BzdTE4IiwiYXVkIjoiaGFja3BzdTE4IiwiYXV0aF90aW1lIjoxNjc5NTM1NjMwLCJ1c2VyX2lkIjoiR2V2ckRwZU5RYU5IOXlPY1RlekJqNjQ2NkVsMiIsInN1YiI6IkdldnJEcGVOUWFOSDl5T2NUZXpCajY0NjZFbDIiLCJpYXQiOjE2Nzk1MzU2MzAsImV4cCI6MTY3OTUzOTIzMCwiZW1haWwiOiJ0ZXN0aGFja2F0aG9uZW1haWxAaGFja3BzdS5oYWNrIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7ImVtYWlsIjpbInRlc3RoYWNrYXRob25lbWFpbEBoYWNrcHN1LmhhY2siXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwYXNzd29yZCJ9fQ.DJJQJEuR4cPO6KyyGLXKPJ5oGw8rp9a2L6gSk0BKA2tvFhHuyax74CU0p6IDdMJCsI438O3MmLMwZs0dmv_X8-r9j3o1ukS5jEbyyCvmBQTDZDwmNE23B2qOaQRHlVD0xXeqR0Rep2esisUGPTUVtb57b9Qf8M-IkqnkWhRQMGdnNypT_8X5DG7sjj5EDARO29KjlOBwn_Qe7EnwTT748aULQgECUUoLQOXVJClqJGdoSKSa-3W0vTj6gcHiuOX_1Ry4cwN3siPX82rsNH7KX7a6iAJXkzLaSs7qgoCSBHXiX_Bjwn7NBrMPK2iShpzpKR89tB71f6EnvDL32g8Jvw',
+          "Content-Type": `multipart/form-data; boundary=${userV3.getBoundary()}`,
+        }
+      });
+      console.log("first response");
+      console.log(asdf);
+    } catch (error) {
+      console.log("first error");
+      console.log(error);
+    }
+
+    try {
+      const qwer = await axios.post(`${UsersController.v3Route}/users/GevrDpeNQaNH9yOcTezBj6466El2/register`, registrationV3, {
+        headers: {
+          // Authorization: `Bearer ${idtoken}`,
+          Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk3OWVkMTU1OTdhYjM1Zjc4MjljZTc0NDMwN2I3OTNiN2ViZWIyZjAiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vaGFja3BzdTE4IiwiYXVkIjoiaGFja3BzdTE4IiwiYXV0aF90aW1lIjoxNjc5NTM1NjMwLCJ1c2VyX2lkIjoiR2V2ckRwZU5RYU5IOXlPY1RlekJqNjQ2NkVsMiIsInN1YiI6IkdldnJEcGVOUWFOSDl5T2NUZXpCajY0NjZFbDIiLCJpYXQiOjE2Nzk1MzU2MzAsImV4cCI6MTY3OTUzOTIzMCwiZW1haWwiOiJ0ZXN0aGFja2F0aG9uZW1haWxAaGFja3BzdS5oYWNrIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7ImVtYWlsIjpbInRlc3RoYWNrYXRob25lbWFpbEBoYWNrcHN1LmhhY2siXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwYXNzd29yZCJ9fQ.DJJQJEuR4cPO6KyyGLXKPJ5oGw8rp9a2L6gSk0BKA2tvFhHuyax74CU0p6IDdMJCsI438O3MmLMwZs0dmv_X8-r9j3o1ukS5jEbyyCvmBQTDZDwmNE23B2qOaQRHlVD0xXeqR0Rep2esisUGPTUVtb57b9Qf8M-IkqnkWhRQMGdnNypT_8X5DG7sjj5EDARO29KjlOBwn_Qe7EnwTT748aULQgECUUoLQOXVJClqJGdoSKSa-3W0vTj6gcHiuOX_1Ry4cwN3siPX82rsNH7KX7a6iAJXkzLaSs7qgoCSBHXiX_Bjwn7NBrMPK2iShpzpKR89tB71f6EnvDL32g8Jvw',
+          // "Content-Type": `multipart/form-data; boundary=${registrationV3.getBoundary()}`,
+          "Content-Type": "application/json"
+        },
+      });
+      console.log("second response");
+      console.log(qwer);
+    } catch (error) {
+      console.log("second error");
+      console.log(error);
     }
   }
 }

@@ -150,9 +150,12 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public async getAllClasses(opts?: IUowOpts): Promise<IDbResult<ExtraCreditClass[]>> {
+  public async getAllClasses(hackathon?: string, opts?: IUowOpts): Promise<IDbResult<ExtraCreditClass[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.classesTableName);
+    if (hackathon) {
+      queryBuilder = queryBuilder.where("hackathon = ?", hackathon);
+    }
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }

@@ -80,6 +80,11 @@ export class UsersController extends ParentRouter implements IExpressController 
 
   public routes(app: Router): void {
     // Unauthenticated routes
+    app.get(
+      '/extra-credit',
+      
+      (req, res, next) => this.getExtraCreditClassesHandler(req, res, next),
+    );
     app.post('/pre-register', (req, res, next) => this.preRegistrationHandler(req, res, next));
     // Use authentication
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));
@@ -101,11 +106,7 @@ export class UsersController extends ParentRouter implements IExpressController 
       // authentication is handled later, so skip the call to verifyAcl here
       (req, res, next) => this.deleteUser(req, res, next),
     );
-    app.get(
-      '/extra-credit',
-      this.authService.verifyAcl(this.extraCreditPerm, AclOperations.READ_ALL_CLASSES),
-      (req, res, next) => this.getExtraCreditClassesHandler(req, res, next),
-    );
+    
     app.post(
       '/extra-credit',
       this.authService.verifyAcl(this.extraCreditPerm, AclOperations.CREATE),

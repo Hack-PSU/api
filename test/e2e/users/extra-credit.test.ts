@@ -47,10 +47,12 @@ class ExtraCreditIntegrationTest extends UsersIntegrationTest {
     //WHEN: Adding a new extra credit class
     const user = await IntegrationTest.loginAdmin();
     const idToken = await user.getIdToken();
-    const parameters = {
-      uid: TestData.validExtraCreditClass().uid,
-      className: TestData.validExtraCreditClass().className,
-    }
+    // const parameters = {
+    //   uid: TestData.validExtraCreditClass().uid,
+    //   className: TestData.validExtraCreditClass().className,
+    //   hackathon: 
+    // }
+    const parameters = TestData.validExtraCreditClass();
     const res = await this.chai.request(this.app)
       .post(`${this.apiEndpoint}/add-class`)
       .set('idToken', idToken)

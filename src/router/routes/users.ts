@@ -745,21 +745,21 @@ export class UsersController extends ParentRouter implements IExpressController 
     //   registrationV3.append('referral', "optionals");
     // }
     let registrationV3 = {
-      eighteenBeforeEvent: String(registration.eighteenBeforeEvent),
-      shareAddressSponsors: String(registration.share_address_sponsors),
-      travelReimbursement: String(registration.travel_reimbursement),
-      shareAddressMlh: String(registration.share_address_mlh),
+      eighteenBeforeEvent: registration.eighteenBeforeEvent,
+      shareAddressSponsors: registration.share_address_sponsors,
+      travelReimbursement: registration.travel_reimbursement,
+      shareAddressMlh: registration.share_address_mlh,
       educationalInstitutionType: registration.educational_institution_type,
       academicYear: registration.academic_year,
       codingExperience: registration.coding_experience,
       expectations: registration.expectations,
-      driving: String(registration.driving),
-      firstHackathon: String(registration.first_hackathon),
-      mlhCoc: String(registration.mlh_coc),
-      mlhDcp: String(registration.mlh_dcp),
+      driving: registration.driving,
+      firstHackathon: registration.first_hackathon,
+      mlhCoc: registration.mlh_coc,
+      mlhDcp: registration.mlh_dcp,
       project: registration.project,
       referral: registration.referral,
-      shareEmailMlh: String(registration.share_email_mlh),
+      shareEmailMlh: registration.share_email_mlh,
       time: registration.time,
       veteran: registration.veteran,
     }
@@ -774,7 +774,7 @@ export class UsersController extends ParentRouter implements IExpressController 
       const asdf = await axios.post(`${UsersController.v3Route}/users`, userV3, {
         headers: {
           // Authorization: `Bearer ${idtoken}`,
-          Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk3OWVkMTU1OTdhYjM1Zjc4MjljZTc0NDMwN2I3OTNiN2ViZWIyZjAiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vaGFja3BzdTE4IiwiYXVkIjoiaGFja3BzdTE4IiwiYXV0aF90aW1lIjoxNjc5NTM1NjMwLCJ1c2VyX2lkIjoiR2V2ckRwZU5RYU5IOXlPY1RlekJqNjQ2NkVsMiIsInN1YiI6IkdldnJEcGVOUWFOSDl5T2NUZXpCajY0NjZFbDIiLCJpYXQiOjE2Nzk1MzU2MzAsImV4cCI6MTY3OTUzOTIzMCwiZW1haWwiOiJ0ZXN0aGFja2F0aG9uZW1haWxAaGFja3BzdS5oYWNrIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7ImVtYWlsIjpbInRlc3RoYWNrYXRob25lbWFpbEBoYWNrcHN1LmhhY2siXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwYXNzd29yZCJ9fQ.DJJQJEuR4cPO6KyyGLXKPJ5oGw8rp9a2L6gSk0BKA2tvFhHuyax74CU0p6IDdMJCsI438O3MmLMwZs0dmv_X8-r9j3o1ukS5jEbyyCvmBQTDZDwmNE23B2qOaQRHlVD0xXeqR0Rep2esisUGPTUVtb57b9Qf8M-IkqnkWhRQMGdnNypT_8X5DG7sjj5EDARO29KjlOBwn_Qe7EnwTT748aULQgECUUoLQOXVJClqJGdoSKSa-3W0vTj6gcHiuOX_1Ry4cwN3siPX82rsNH7KX7a6iAJXkzLaSs7qgoCSBHXiX_Bjwn7NBrMPK2iShpzpKR89tB71f6EnvDL32g8Jvw',
+          Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk3OWVkMTU1OTdhYjM1Zjc4MjljZTc0NDMwN2I3OTNiN2ViZWIyZjAiLCJ0eXAiOiJKV1QifQ.eyJwcml2aWxlZ2UiOjAsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9oYWNrcHN1MTgiLCJhdWQiOiJoYWNrcHN1MTgiLCJhdXRoX3RpbWUiOjE2Nzk4OTQyMTgsInVzZXJfaWQiOiJHZXZyRHBlTlFhTkg5eU9jVGV6Qmo2NDY2RWwyIiwic3ViIjoiR2V2ckRwZU5RYU5IOXlPY1RlekJqNjQ2NkVsMiIsImlhdCI6MTY3OTg5NDIxOCwiZXhwIjoxNjc5ODk3ODE4LCJlbWFpbCI6InRlc3RoYWNrYXRob25lbWFpbEBoYWNrcHN1LmhhY2siLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsidGVzdGhhY2thdGhvbmVtYWlsQGhhY2twc3UuaGFjayJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.FZgDnj1fiKJQYEkCMMcYVx0rUizZRSj-tdhLsP51wVVtwv3pFnb5EFwuPfUBlQTwKHgCFo6gygAQFHWLfSS6UhJz1HFzRH9w7m28xHqo4_n23jbIqQmJcHm9L9fwHmC-hnC-ikHn3evA7lVYyl8b_fpi9_jbcjZ79iWgCnndRYhHd7_qeadW9xEgUgDTy2WOfZuILycugzzeZUH0XIQ9Lt1hYOlcgNwoOUxHiYG7ozD7jQoH9_-2oyvibPmxvzFcVGsIHUF-9XCaWqxZp3gqwxIwj631GYlpgCFAbmK-mJaYam4f5gikiAB1Jurzx_d5jD4Bm4jD-W7vwAI5PyAPrQ',
           "Content-Type": `multipart/form-data; boundary=${userV3.getBoundary()}`,
         }
       });
@@ -786,10 +786,11 @@ export class UsersController extends ParentRouter implements IExpressController 
     }
 
     try {
+      console.log(registrationV3);
       const qwer = await axios.post(`${UsersController.v3Route}/users/GevrDpeNQaNH9yOcTezBj6466El2/register`, registrationV3, {
         headers: {
           // Authorization: `Bearer ${idtoken}`,
-          Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk3OWVkMTU1OTdhYjM1Zjc4MjljZTc0NDMwN2I3OTNiN2ViZWIyZjAiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vaGFja3BzdTE4IiwiYXVkIjoiaGFja3BzdTE4IiwiYXV0aF90aW1lIjoxNjc5NTM1NjMwLCJ1c2VyX2lkIjoiR2V2ckRwZU5RYU5IOXlPY1RlekJqNjQ2NkVsMiIsInN1YiI6IkdldnJEcGVOUWFOSDl5T2NUZXpCajY0NjZFbDIiLCJpYXQiOjE2Nzk1MzU2MzAsImV4cCI6MTY3OTUzOTIzMCwiZW1haWwiOiJ0ZXN0aGFja2F0aG9uZW1haWxAaGFja3BzdS5oYWNrIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7ImVtYWlsIjpbInRlc3RoYWNrYXRob25lbWFpbEBoYWNrcHN1LmhhY2siXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwYXNzd29yZCJ9fQ.DJJQJEuR4cPO6KyyGLXKPJ5oGw8rp9a2L6gSk0BKA2tvFhHuyax74CU0p6IDdMJCsI438O3MmLMwZs0dmv_X8-r9j3o1ukS5jEbyyCvmBQTDZDwmNE23B2qOaQRHlVD0xXeqR0Rep2esisUGPTUVtb57b9Qf8M-IkqnkWhRQMGdnNypT_8X5DG7sjj5EDARO29KjlOBwn_Qe7EnwTT748aULQgECUUoLQOXVJClqJGdoSKSa-3W0vTj6gcHiuOX_1Ry4cwN3siPX82rsNH7KX7a6iAJXkzLaSs7qgoCSBHXiX_Bjwn7NBrMPK2iShpzpKR89tB71f6EnvDL32g8Jvw',
+          Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk3OWVkMTU1OTdhYjM1Zjc4MjljZTc0NDMwN2I3OTNiN2ViZWIyZjAiLCJ0eXAiOiJKV1QifQ.eyJwcml2aWxlZ2UiOjAsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9oYWNrcHN1MTgiLCJhdWQiOiJoYWNrcHN1MTgiLCJhdXRoX3RpbWUiOjE2Nzk4OTQyMTgsInVzZXJfaWQiOiJHZXZyRHBlTlFhTkg5eU9jVGV6Qmo2NDY2RWwyIiwic3ViIjoiR2V2ckRwZU5RYU5IOXlPY1RlekJqNjQ2NkVsMiIsImlhdCI6MTY3OTg5NDIxOCwiZXhwIjoxNjc5ODk3ODE4LCJlbWFpbCI6InRlc3RoYWNrYXRob25lbWFpbEBoYWNrcHN1LmhhY2siLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsidGVzdGhhY2thdGhvbmVtYWlsQGhhY2twc3UuaGFjayJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.FZgDnj1fiKJQYEkCMMcYVx0rUizZRSj-tdhLsP51wVVtwv3pFnb5EFwuPfUBlQTwKHgCFo6gygAQFHWLfSS6UhJz1HFzRH9w7m28xHqo4_n23jbIqQmJcHm9L9fwHmC-hnC-ikHn3evA7lVYyl8b_fpi9_jbcjZ79iWgCnndRYhHd7_qeadW9xEgUgDTy2WOfZuILycugzzeZUH0XIQ9Lt1hYOlcgNwoOUxHiYG7ozD7jQoH9_-2oyvibPmxvzFcVGsIHUF-9XCaWqxZp3gqwxIwj631GYlpgCFAbmK-mJaYam4f5gikiAB1Jurzx_d5jD4Bm4jD-W7vwAI5PyAPrQ',
           // "Content-Type": `multipart/form-data; boundary=${registrationV3.getBoundary()}`,
           "Content-Type": "application/json"
         },

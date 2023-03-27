@@ -43,7 +43,7 @@ export class RegistrationProcessor implements IRegistrationProcessor {
   public async processRegistration(registration: Registration) {
     const result = await this.registerDataMapper.insert(registration);
     const submission = await this.registerDataMapper.submit(registration);
-    await this.sendRegistrationEmail(registration);
+    // await this.sendRegistrationEmail(registration);
     return new ResponseBody(
       'Success',
       200,

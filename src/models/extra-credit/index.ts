@@ -6,7 +6,7 @@ import { ExtraCreditClass } from './extra-credit-class';
 
 interface IExtraCreditDataMapper extends IDataMapper<ExtraCreditAssignment> {
 
-  getAllClasses(opts?: IUowOpts): Promise<IDbResult<ExtraCreditClass[]>>;
+  getAllClasses(hackathon?: string, opts?: IUowOpts): Promise<IDbResult<ExtraCreditClass[]>>;
 
   getByUser(userId: UidType, opts?: IUowOpts): Promise<IDbResult<ExtraCreditAssignment[]>>;
 

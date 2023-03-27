@@ -150,17 +150,23 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
     throw new MethodNotImplementedError('this action is not supported');
   }
 
-  public async getAllClasses(opts?: IUowOpts): Promise<IDbResult<ExtraCreditClass[]>> {
+  public async getAllClasses(hackathon?: string, opts?: IUowOpts): Promise<IDbResult<ExtraCreditClass[]>> {
     let queryBuilder = squel.select({ autoQuoteTableNames: true, autoQuoteFieldNames: true })
       .from(this.classesTableName);
+    if (hackathon) {
+      queryBuilder = queryBuilder.where("hackathon = ?", hackathon);
+    } else if (opts && opts.byHackathon) {
+      queryBuilder = queryBuilder.where("hackathon = ?", 
+        (await this.activeHackathonDataMapper.activeHackathon.toPromise()).uid
+      );
+    }
     if (opts && opts.startAt) {
       queryBuilder = queryBuilder.offset(opts.startAt);
     }
     if (opts && opts.count) {
       queryBuilder = queryBuilder.limit(opts.count);
     }
-    const query = queryBuilder
-      .toParam();
+    const query = queryBuilder.toParam();
 
     query.text = query.text.concat(';');
     return from(this.sql.query<ExtraCreditClass>(query.text, query.values, { cache: true }))
@@ -200,11 +206,9 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
         );
     }
 
-    queryBuilder = queryBuilder
-      .where('user_uid = ?', userId);
+    queryBuilder = queryBuilder.where('user_uid = ?', userId);
 
-    const query = queryBuilder
-      .toParam();
+    const query = queryBuilder.toParam();
 
     query.text = query.text.concat(';');
     return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: checkCache }))
@@ -240,10 +244,8 @@ export class ExtraCreditDataMapperImpl extends GenericDataMapper
         );
     }
 
-    queryBuilder = queryBuilder
-      .where('class_uid = ?', cid);
-    const query = queryBuilder
-      .toParam();
+    queryBuilder = queryBuilder.where('class_uid = ?', cid);
+    const query = queryBuilder.toParam();
 
     query.text = query.text.concat(';');
     return from(this.sql.query<ExtraCreditAssignment>(query.text, query.values, { cache: true }))

@@ -80,11 +80,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
   public routes(app: Router): void {
     // Unauthenticated routes
-    app.get(
-      '/extra-credit',
-      
-      (req, res, next) => this.getExtraCreditClassesHandler(req, res, next),
-    );
+    app.get('/extra-credit', (req, res, next) => this.getExtraCreditClassesHandler(req, res, next));
     app.post('/pre-register', (req, res, next) => this.preRegistrationHandler(req, res, next));
     // Use authentication
     app.use((req, res, next) => this.authService.authenticationMiddleware(req, res, next));

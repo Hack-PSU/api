@@ -140,6 +140,7 @@ export class TestData {
     return {
       uid: 5,
       className: 'test class',
+      hackathon: IntegrationTest.activeHackathon.uid,
     };
   }
 

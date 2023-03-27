@@ -25,7 +25,7 @@ let emailService: SendgridService;
 let hackathonDataMapper: HackathonDataMapperImpl;
 const registration = new Registration({
   academicYear: AcademicYear.FRESHMAN,
-  address: 'test address',
+  country: 'test country',
   allergies: null,
   codingExperience: CodingExperience.NONE,
   dietaryRestriction: null,

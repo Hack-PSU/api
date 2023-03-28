@@ -767,30 +767,28 @@ export class UsersController extends ParentRouter implements IExpressController 
     // console.log(userV3);
     // console.log(registrationV3);
 
-    // UsersController.v3Route = 'http://localhost:3000';
+    UsersController.v3Route = 'http://localhost:3000';
 
     // create user in v3
-    try {
-      const asdf = await axios.post(`${UsersController.v3Route}/users`, userV3, {
-        headers: {
-          // Authorization: `Bearer ${idtoken}`,
-          Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk3OWVkMTU1OTdhYjM1Zjc4MjljZTc0NDMwN2I3OTNiN2ViZWIyZjAiLCJ0eXAiOiJKV1QifQ.eyJwcml2aWxlZ2UiOjAsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9oYWNrcHN1MTgiLCJhdWQiOiJoYWNrcHN1MTgiLCJhdXRoX3RpbWUiOjE2Nzk4OTQyMTgsInVzZXJfaWQiOiJHZXZyRHBlTlFhTkg5eU9jVGV6Qmo2NDY2RWwyIiwic3ViIjoiR2V2ckRwZU5RYU5IOXlPY1RlekJqNjQ2NkVsMiIsImlhdCI6MTY3OTg5NDIxOCwiZXhwIjoxNjc5ODk3ODE4LCJlbWFpbCI6InRlc3RoYWNrYXRob25lbWFpbEBoYWNrcHN1LmhhY2siLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsidGVzdGhhY2thdGhvbmVtYWlsQGhhY2twc3UuaGFjayJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.FZgDnj1fiKJQYEkCMMcYVx0rUizZRSj-tdhLsP51wVVtwv3pFnb5EFwuPfUBlQTwKHgCFo6gygAQFHWLfSS6UhJz1HFzRH9w7m28xHqo4_n23jbIqQmJcHm9L9fwHmC-hnC-ikHn3evA7lVYyl8b_fpi9_jbcjZ79iWgCnndRYhHd7_qeadW9xEgUgDTy2WOfZuILycugzzeZUH0XIQ9Lt1hYOlcgNwoOUxHiYG7ozD7jQoH9_-2oyvibPmxvzFcVGsIHUF-9XCaWqxZp3gqwxIwj631GYlpgCFAbmK-mJaYam4f5gikiAB1Jurzx_d5jD4Bm4jD-W7vwAI5PyAPrQ',
-          "Content-Type": `multipart/form-data; boundary=${userV3.getBoundary()}`,
-        }
-      });
-      console.log("first response");
-      console.log(asdf);
-    } catch (error) {
-      console.log("first error");
-      console.log(error);
-    }
+    // try {
+    //   const asdf = await axios.post(`${UsersController.v3Route}/users`, userV3, {
+    //     headers: {
+    //       // Authorization: `Bearer ${idtoken}`,
+    //       "Content-Type": `multipart/form-data; boundary=${userV3.getBoundary()}`,
+    //     }
+    //   });
+    //   console.log("first response");
+    //   console.log(asdf);
+    // } catch (error) {
+    //   console.log("first error");
+    //   console.log(error);
+    // }
 
     try {
       console.log(registrationV3);
-      const qwer = await axios.post(`${UsersController.v3Route}/users/GevrDpeNQaNH9yOcTezBj6466El2/register`, registrationV3, {
+      const qwer = await axios.post(`${UsersController.v3Route}/users/${registration.uid}/register`, registrationV3, {
         headers: {
-          // Authorization: `Bearer ${idtoken}`,
-          Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk3OWVkMTU1OTdhYjM1Zjc4MjljZTc0NDMwN2I3OTNiN2ViZWIyZjAiLCJ0eXAiOiJKV1QifQ.eyJwcml2aWxlZ2UiOjAsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9oYWNrcHN1MTgiLCJhdWQiOiJoYWNrcHN1MTgiLCJhdXRoX3RpbWUiOjE2Nzk4OTQyMTgsInVzZXJfaWQiOiJHZXZyRHBlTlFhTkg5eU9jVGV6Qmo2NDY2RWwyIiwic3ViIjoiR2V2ckRwZU5RYU5IOXlPY1RlekJqNjQ2NkVsMiIsImlhdCI6MTY3OTg5NDIxOCwiZXhwIjoxNjc5ODk3ODE4LCJlbWFpbCI6InRlc3RoYWNrYXRob25lbWFpbEBoYWNrcHN1LmhhY2siLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsidGVzdGhhY2thdGhvbmVtYWlsQGhhY2twc3UuaGFjayJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.FZgDnj1fiKJQYEkCMMcYVx0rUizZRSj-tdhLsP51wVVtwv3pFnb5EFwuPfUBlQTwKHgCFo6gygAQFHWLfSS6UhJz1HFzRH9w7m28xHqo4_n23jbIqQmJcHm9L9fwHmC-hnC-ikHn3evA7lVYyl8b_fpi9_jbcjZ79iWgCnndRYhHd7_qeadW9xEgUgDTy2WOfZuILycugzzeZUH0XIQ9Lt1hYOlcgNwoOUxHiYG7ozD7jQoH9_-2oyvibPmxvzFcVGsIHUF-9XCaWqxZp3gqwxIwj631GYlpgCFAbmK-mJaYam4f5gikiAB1Jurzx_d5jD4Bm4jD-W7vwAI5PyAPrQ',
+          Authorization: `Bearer ${idtoken}`,
           // "Content-Type": `multipart/form-data; boundary=${registrationV3.getBoundary()}`,
           "Content-Type": "application/json"
         },
@@ -800,6 +798,7 @@ export class UsersController extends ParentRouter implements IExpressController 
     } catch (error) {
       console.log("second error");
       console.log(error);
+      console.log(error.message);
     }
   }
 }

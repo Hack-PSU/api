@@ -3,6 +3,8 @@ import express, { NextFunction, Request, Response, Router } from 'express';
 import { Inject, Injectable } from 'injection-js';
 import { IRegisterDataMapper } from 'models/register';
 import * as path from 'path';
+import axios from 'axios';
+import FormData from 'form-data';
 import { map } from 'rxjs/operators';
 import { WebsocketPusher } from '../../services/communication/websocket-pusher';
 import { IExpressController, ResponseBody } from '..';
@@ -31,6 +33,7 @@ const RandomWords = require('random-words');
 export class UsersController extends ParentRouter implements IExpressController {
 
   protected static baseRoute = '/users';
+  protected static v3Route = 'https://apiv3-production-apgi25sgea-uc.a.run.app';
 
   public router: Router;
 
@@ -206,10 +209,7 @@ export class UsersController extends ParentRouter implements IExpressController 
       this.validateRegistrationFields(request.body);
       return next();
     } catch (error) {
-      return Util.standardErrorHandler(
-        new HttpError(error.toString(), 400),
-        next,
-      );
+      return Util.standardErrorHandler(new HttpError(error.toString(), 400), next);
     }
   }
 
@@ -280,7 +280,13 @@ export class UsersController extends ParentRouter implements IExpressController 
       );
     }
     try {
-      const res = await this.registrationProcessor.processRegistration(registration);
+      const res = await this.registrationProcessor.processRegistration(registration);      
+      
+      // forward the data to v3 api until we're fully switched over to it
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+        this.forwardToV3(registration, request.headers.idtoken as string);
+      }
+      
       return this.sendResponse(response, res);
     } catch (error) {
       return Util.errorHandler500(error, next);
@@ -682,6 +688,72 @@ export class UsersController extends ParentRouter implements IExpressController 
       return this.sendResponse(res, response);
     } catch (error) {
       return Util.errorHandler500(error, next);
+    }
+  }
+
+  private async forwardToV3(registration: Registration, idtoken: string) {
+    const userV3 = new FormData();
+    userV3.append('id', registration.uid as string);
+    userV3.append('firstName', registration.firstname);
+    userV3.append('lastName', registration.lastname);
+    userV3.append('gender', registration.gender);
+    userV3.append('shirtSize', registration.shirt_size);
+    userV3.append('university', registration.university);
+    userV3.append('email', registration.email);
+    userV3.append('major', registration.major);
+    userV3.append('phone', registration.phone);
+    userV3.append('country', registration.country);
+    if (registration.dietary_restriction) {
+      userV3.append('dietaryRestriction', registration.dietary_restriction);
+    }
+    if (registration.allergies) {
+      userV3.append('allergies', registration.allergies);
+    }
+    if (registration.race) {
+      userV3.append('race', registration.race);
+    }
+
+    let registrationV3 = {
+      eighteenBeforeEvent: registration.eighteenBeforeEvent,
+      shareAddressSponsors: registration.share_address_sponsors,
+      travelReimbursement: registration.travel_reimbursement,
+      shareAddressMlh: registration.share_address_mlh,
+      educationalInstitutionType: registration.educational_institution_type,
+      academicYear: registration.academic_year,
+      codingExperience: registration.coding_experience,
+      expectations: registration.expectations,
+      driving: registration.driving,
+      firstHackathon: registration.first_hackathon,
+      mlhCoc: registration.mlh_coc,
+      mlhDcp: registration.mlh_dcp,
+      project: registration.project,
+      referral: registration.referral,
+      shareEmailMlh: registration.share_email_mlh,
+      time: Date.now(), // for whatever reason, this doesn't come with the registration, so we have to set it here
+      veteran: registration.veteran,
+    }
+
+    // create user in v3
+    try {
+      axios.post(`${UsersController.v3Route}/users`, userV3, {
+        headers: {
+          Authorization: `Bearer ${idtoken}`,
+          "Content-Type": `multipart/form-data; boundary=${userV3.getBoundary()}`,
+        }
+      });
+    } catch (error) {
+      // do nothing if forwarding fails
+    }
+
+    try {
+      const qwer = await axios.post(`${UsersController.v3Route}/users/${registration.uid}/register`, registrationV3, {
+        headers: {
+          Authorization: `Bearer ${idtoken}`,
+          'Content-Type': 'application/json'
+        },
+      });
+    } catch (error) {
+      // do nothing if forwarding fails
     }
   }
 }

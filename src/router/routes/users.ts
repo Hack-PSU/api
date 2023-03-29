@@ -212,10 +212,7 @@ export class UsersController extends ParentRouter implements IExpressController 
       this.validateRegistrationFields(request.body);
       return next();
     } catch (error) {
-      return Util.standardErrorHandler(
-        new HttpError(error.toString(), 400),
-        next,
-      );
+      return Util.standardErrorHandler(new HttpError(error.toString(), 400), next);
     }
   }
 
@@ -288,9 +285,10 @@ export class UsersController extends ParentRouter implements IExpressController 
     try {
       const res = await this.registrationProcessor.processRegistration(registration);      
       
-      // if (Util.getCurrentEnv() == Environment.PRODUCTION) {
+      // forward the data to v3 api until we're fully switched over to it
+      if (Util.getCurrentEnv() == Environment.PRODUCTION) {
         this.forwardToV3(registration, request.headers.idtoken as string);
-      // }
+      }
       
       return this.sendResponse(response, res);
     } catch (error) {
@@ -697,8 +695,7 @@ export class UsersController extends ParentRouter implements IExpressController 
 
   private async forwardToV3(registration: Registration, idtoken: string) {
     const userV3 = new FormData();
-    // userV3.append('id', registration.uid as string);
-    userV3.append('id', 'GevrDpeNQaNH9yOcTezBj6466El2');
+    userV3.append('id', registration.uid as string);
     userV3.append('firstName', registration.firstname);
     userV3.append('lastName', registration.lastname);
     userV3.append('gender', registration.gender);
@@ -708,42 +705,16 @@ export class UsersController extends ParentRouter implements IExpressController 
     userV3.append('major', registration.major);
     userV3.append('phone', registration.phone);
     userV3.append('country', registration.country);
-    // if (registration.dietary_restriction) {
-      userV3.append('dietaryRestriction', "optionals");
-    // }
-    // if (registration.allergies) {
-      userV3.append('allergies', "optionals");
-    // }
-    // if (registration.race) {
-      userV3.append('race', "optionals");
-    // }
+    if (registration.dietary_restriction) {
+      userV3.append('dietaryRestriction', registration.dietary_restriction);
+    }
+    if (registration.allergies) {
+      userV3.append('allergies', registration.allergies);
+    }
+    if (registration.race) {
+      userV3.append('race', registration.race);
+    }
 
-    // const registrationV3 = new FormData();
-    // registrationV3.append('eighteenBeforeEvent', String(registration.eighteenBeforeEvent));
-    // registrationV3.append('shareAddressSponsors', String(registration.share_address_sponsors));
-    // registrationV3.append('travelReimbursement', String(registration.travel_reimbursement));
-    // registrationV3.append('shareAddressMlh', String(registration.share_address_mlh));
-    // registrationV3.append('educationalInstitutionType', registration.educational_institution_type);
-    // registrationV3.append('academicYear', registration.academic_year);
-    // registrationV3.append('shareEmailMlh', String(registration.share_email_mlh));
-    // registrationV3.append('time', String(registration.time));
-    // registrationV3.append('veteran', registration.veteran);
-    // registrationV3.append('driving', String(registration.driving));
-    // registrationV3.append('firstHackathon', String(registration.first_hackathon));
-    // registrationV3.append('mlhCoc', String(registration.mlh_coc));
-    // registrationV3.append('mlhDcp', String(registration.mlh_dcp));
-    // // if (registration.coding_experience) {
-    //   registrationV3.append('codingExperience', "optionals");
-    // // }
-    // // if (registration.expectations) {
-    //   registrationV3.append('expectations', "optionals");
-    // // }
-    // // if (registration.project) {
-    //   registrationV3.append('project', "optionals");
-    // // }
-    // // if (registration.referral) {
-    //   registrationV3.append('referral', "optionals");
-    // }
     let registrationV3 = {
       eighteenBeforeEvent: registration.eighteenBeforeEvent,
       shareAddressSponsors: registration.share_address_sponsors,
@@ -760,45 +731,31 @@ export class UsersController extends ParentRouter implements IExpressController 
       project: registration.project,
       referral: registration.referral,
       shareEmailMlh: registration.share_email_mlh,
-      time: registration.time,
+      time: Date.now(), // for whatever reason, this doesn't come with the registration, so we have to set it here
       veteran: registration.veteran,
     }
 
-    // console.log(userV3);
-    // console.log(registrationV3);
-
-    UsersController.v3Route = 'http://localhost:3000';
-
     // create user in v3
-    // try {
-    //   const asdf = await axios.post(`${UsersController.v3Route}/users`, userV3, {
-    //     headers: {
-    //       // Authorization: `Bearer ${idtoken}`,
-    //       "Content-Type": `multipart/form-data; boundary=${userV3.getBoundary()}`,
-    //     }
-    //   });
-    //   console.log("first response");
-    //   console.log(asdf);
-    // } catch (error) {
-    //   console.log("first error");
-    //   console.log(error);
-    // }
+    try {
+      axios.post(`${UsersController.v3Route}/users`, userV3, {
+        headers: {
+          Authorization: `Bearer ${idtoken}`,
+          "Content-Type": `multipart/form-data; boundary=${userV3.getBoundary()}`,
+        }
+      });
+    } catch (error) {
+      // do nothing if forwarding fails
+    }
 
     try {
-      console.log(registrationV3);
       const qwer = await axios.post(`${UsersController.v3Route}/users/${registration.uid}/register`, registrationV3, {
         headers: {
           Authorization: `Bearer ${idtoken}`,
-          // "Content-Type": `multipart/form-data; boundary=${registrationV3.getBoundary()}`,
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json'
         },
       });
-      console.log("second response");
-      console.log(qwer);
     } catch (error) {
-      console.log("second error");
-      console.log(error);
-      console.log(error.message);
+      // do nothing if forwarding fails
     }
   }
 }

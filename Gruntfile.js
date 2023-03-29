@@ -1,3 +1,6 @@
+/* eslint-disable max-len */
+/* eslint-disable no-nested-ternary */
+/* eslint-disable import/no-extraneous-dependencies */
 // Gruntfile.js
 const nodecipher = require('node-cipher');
 const { spawn } = require('cross-spawn');

@@ -138,7 +138,6 @@ describe('TEST: Project Data Mapper', () => {
         testProject.uid,
         testProject.uid
       ];
-      console.log(await activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise());
       const [generatedSQL, generatedParams] = capture<string, any[]>(mysqlUowMock.query)
                 .first();
       verify(mysqlUowMock.query(anything(), anything(), anything())).once();

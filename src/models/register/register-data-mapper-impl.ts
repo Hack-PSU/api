@@ -111,10 +111,7 @@ export class RegisterDataMapperImpl extends GenericDataMapper
   }
 
   public async getAll(opts?: IUowOpts): Promise<IDbResult<Registration[]>> {
-    let queryBuilder = squel.select({
-      autoQuoteFieldNames: true,
-      autoQuoteTableNames: true,
-    })
+    let queryBuilder = squel.select({ autoQuoteFieldNames: true, autoQuoteTableNames: true })
       .from(this.tableName, 'registration')
       .join(
         this.activeHackathonDataMapper.tableName,
@@ -207,12 +204,10 @@ export class RegisterDataMapperImpl extends GenericDataMapper
       .setFieldsRows([object.dbRepresentation])
       .set(
         'hackathon',
-        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid))
-          .toPromise(),
+        await this.activeHackathonDataMapper.activeHackathon.pipe(map(hackathon => hackathon.uid)).toPromise(),
       );
     if (!object.time) {
-      queryBuilder = queryBuilder
-        .set('time', Date.now());
+      queryBuilder = queryBuilder.set('time', Date.now());
     }
     const query = queryBuilder
       .toParam();

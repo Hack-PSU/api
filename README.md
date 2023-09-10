@@ -1,6 +1,6 @@
 # HackPSU-api
 
-This is the backend monolith for HackPSU.
+This is the defunct backend monolith for HackPSU. This project is no longer in use, and active development is underway in a different repository.
 
 ### Development Setup
 
